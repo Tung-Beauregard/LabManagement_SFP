@@ -1,0 +1,2361 @@
+
+<!-- saved from url=(0062)file:///C:/Users/phant/Downloads/lab_inventory_standalone.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script src="./index_files/qrcode.min.js.下載"></script>
+<style>
+  :root{
+    --bg:#EEF2F0;
+    --panel:#FFFFFF;
+    --ink:#1C2624;
+    --ink-soft:#5A6B65;
+    --pine:#1B4B43;
+    --pine-deep:#123430;
+    --line:#D9E1DD;
+    --amber:#A9631C;
+    --amber-bg:#F4E6D6;
+    --danger:#B23A2E;
+    --radius:10px;
+    --mono: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang TC", "Microsoft JhengHei", sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:var(--sans);background:var(--bg);color:var(--ink);}
+
+  /* ---- layout / sidebar ---- */
+  .layout{display:flex;gap:24px;max-width:1280px;margin:0 auto;padding:28px 20px 80px;align-items:flex-start;}
+  .sidebar{width:196px;flex-shrink:0;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px 10px;position:sticky;top:28px;}
+  .brand{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;color:var(--ink-soft);padding:4px 10px 14px;border-bottom:1px solid var(--line);margin-bottom:10px;}
+  .nav-item{display:flex;align-items:center;gap:9px;width:100%;text-align:left;background:none;border:none;border-radius:8px;padding:10px 10px;font-size:14px;color:var(--ink);cursor:pointer;margin-bottom:4px;font-weight:500;}
+  .nav-item .ic{font-size:15px;}
+  .nav-item:hover{background:#F2F6F4;}
+  .nav-item.active{background:var(--pine);color:#fff;}
+  .user-badge{border-bottom:1px solid var(--line);padding:0 10px 12px;margin-bottom:8px;}
+  .user-badge .ub-name{font-size:13px;font-weight:700;color:var(--ink);}
+  .user-badge .ub-code{font-family:var(--mono);font-size:11px;color:var(--pine);background:#EAF3F0;display:inline-block;padding:2px 8px;border-radius:6px;margin-top:4px;}
+  .user-badge .ub-switch{display:block;background:none;border:none;color:var(--ink-soft);font-size:11px;text-decoration:underline;cursor:pointer;padding:6px 0 0;}
+  .main{flex:1;min-width:0;}
+  .page{display:none;}
+  .page.active{display:block;}
+
+  /* header */
+  .hdr{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:22px;flex-wrap:wrap;}
+  .hdr h1{font-size:22px;letter-spacing:.3px;margin:0 0 4px;font-weight:700;}
+  .hdr .sub{font-family:var(--mono);font-size:12px;color:var(--ink-soft);letter-spacing:.4px;}
+  .stats{display:flex;gap:10px;flex-wrap:wrap;}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:8px 14px;min-width:84px;}
+  .stat .n{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--pine);}
+  .stat .l{font-size:11px;color:var(--ink-soft);}
+
+  /* toolbar */
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px;}
+  .toolbar input[type=text], .toolbar select{
+    background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--ink);
+  }
+  .toolbar input[type=text]{flex:1;min-width:180px;}
+  .btn{border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;transition:opacity .15s;}
+  .btn:hover{opacity:.88;}
+  .btn-primary{background:var(--pine);color:#fff;}
+  .btn-ghost{background:var(--panel);color:var(--ink);border:1px solid var(--line);}
+  .btn-danger{background:var(--danger);color:#fff;}
+  .btn-sm{padding:5px 10px;font-size:12px;}
+
+  /* table */
+  .tablewrap{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;}
+  table{width:100%;border-collapse:collapse;}
+  th{text-align:left;font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.5px;padding:10px 12px;border-bottom:1px solid var(--line);background:#F5F8F6;}
+  td{padding:10px 12px;border-bottom:1px solid var(--line);font-size:13px;vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  tr.row{cursor:pointer;}
+  tr.row:hover{background:#F7FAF9;}
+  .name-zh{font-weight:600;}
+  .name-en{color:var(--ink-soft);font-size:12px;}
+  .haz-row{display:flex;gap:4px;flex-wrap:wrap;}
+  .haz-tag{font-size:10px;padding:2px 7px;border-radius:20px;color:#fff;white-space:nowrap;font-weight:600;}
+  .plain-tag{font-size:10px;padding:2px 7px;border-radius:20px;background:#E3EAE6;color:var(--pine-deep);white-space:nowrap;font-weight:600;}
+  .loc-tag{font-size:11px;padding:3px 9px;border-radius:20px;font-weight:700;white-space:nowrap;display:inline-block;}
+  .loc-chem{background:#DCEAE6;color:#155147;}
+  .loc-solvent{background:#F4E6D6;color:#8A4B12;}
+  .loc-cold{background:#DCEAF4;color:#155A8A;}
+  .id-badge{font-family:var(--mono);font-size:11.5px;color:var(--pine);background:#EAF3F0;padding:3px 9px;border-radius:6px;display:inline-block;white-space:nowrap;}
+  .qty-low{color:var(--danger);font-weight:700;}
+  .thumb{width:34px;height:34px;border-radius:6px;object-fit:cover;border:1px solid var(--line);background:#eee;}
+  .empty{padding:60px 20px;text-align:center;color:var(--ink-soft);}
+  .empty b{display:block;color:var(--ink);font-size:15px;margin-bottom:6px;}
+
+  /* modal */
+  .overlay{position:fixed;inset:0;background:rgba(18,52,48,.45);display:none;align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto;z-index:50;}
+  .overlay.show{display:flex;}
+  .modal{background:var(--panel);border-radius:14px;max-width:560px;width:100%;padding:26px;position:relative;}
+  .modal h2{margin:0 0 18px;font-size:17px;}
+  .modal .close{position:absolute;top:16px;right:18px;background:none;border:none;font-size:18px;cursor:pointer;color:var(--ink-soft);}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:12px;color:var(--ink-soft);margin-bottom:5px;font-weight:600;}
+  .field input[type=text], .field input[type=date], .field input[type=number], .field textarea, .field select{
+    width:100%;border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-size:13px;font-family:var(--sans);background:#FCFDFC;
+  }
+  .field input[readonly]{background:#F2F4F3;color:var(--ink-soft);}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .row3{display:grid;grid-template-columns:2fr 1fr;gap:12px;}
+  .haz-picker{display:flex;flex-wrap:wrap;gap:6px;}
+  .haz-chip{border:1px solid var(--line);border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer;user-select:none;background:#fff;}
+  .haz-chip.on{color:#fff;border-color:transparent;}
+  .photo-drop{border:1.5px dashed var(--line);border-radius:10px;padding:14px;text-align:center;font-size:12px;color:var(--ink-soft);cursor:pointer;}
+  .photo-preview{width:100%;max-height:160px;object-fit:contain;border-radius:8px;margin-top:8px;}
+  .modal-actions{display:flex;justify-content:space-between;margin-top:20px;}
+  .unknown-row{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px;color:var(--ink-soft);}
+  .unknown-row input{width:auto;}
+  .section-title{font-size:11.5px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.6px;margin:20px 0 10px;padding-top:16px;border-top:1px solid var(--line);}
+  .section-title.first{margin-top:0;padding-top:0;border-top:none;}
+  .id-preview{margin-bottom:14px;}
+
+  /* calc box */
+  .calc-box{border:1.5px dashed var(--pine);background:#F2F8F6;border-radius:10px;padding:14px;margin:16px 0;}
+  .calc-box .calc-title{font-size:12px;font-weight:700;color:var(--pine-deep);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+  .calc-result{background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-top:10px;display:flex;justify-content:space-around;flex-wrap:wrap;gap:10px;text-align:center;}
+  .calc-result .item{display:flex;flex-direction:column;min-width:90px;}
+  .calc-result .item .v{font-family:var(--mono);font-weight:700;color:var(--pine);font-size:16px;}
+  .calc-result .item .l{font-size:10.5px;color:var(--ink-soft);margin-top:2px;}
+  .calc-box .btn{margin-top:10px;width:100%;}
+
+  /* detail / QR modal */
+  .label-card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:18px;position:relative;overflow:hidden;}
+  .label-stripe{position:absolute;left:0;top:0;bottom:0;width:6px;}
+  .label-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding-left:10px;}
+  .label-top h3{margin:0 0 2px;font-size:16px;}
+  .label-top .en{color:var(--ink-soft);font-size:12px;margin-bottom:8px;}
+  .label-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;padding-left:10px;margin-top:10px;font-size:12.5px;}
+  .label-grid .k{color:var(--ink-soft);}
+  .qr-box{text-align:center;flex-shrink:0;}
+  .qr-box #qrTarget{display:inline-block;padding:8px;background:#fff;border:1px solid var(--line);border-radius:8px;}
+  .qr-id{font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-top:6px;}
+  .save-notice{font-size:11px;color:var(--ink-soft);text-align:center;margin-top:14px;}
+
+  /* ---- responsive: phones & narrow screens ---- */
+  @media (max-width: 680px){
+    .layout{flex-direction:column;padding:14px 12px 90px;gap:12px;}
+    .sidebar{width:100%;position:static;display:flex;gap:6px;padding:8px;overflow-x:auto;}
+    .brand{display:none;}
+    .nav-item{flex:1;justify-content:center;white-space:nowrap;padding:11px 8px;font-size:13px;margin-bottom:0;}
+    .user-badge{width:auto;flex-shrink:0;border-bottom:none;padding:0 8px;margin-bottom:0;display:flex;align-items:center;gap:6px;}
+    .user-badge .ub-name{display:none;}
+    .user-badge .ub-switch{padding:0;font-size:10px;margin-top:0;}
+
+    .hdr{flex-direction:column;align-items:flex-start;gap:12px;}
+    .hdr h1{font-size:19px;}
+    .stats{width:100%;}
+    .stat{flex:1;min-width:0;text-align:center;}
+
+    .toolbar{flex-direction:column;align-items:stretch;}
+    .toolbar input[type=text], .toolbar select{width:100%;}
+    .toolbar .btn{width:100%;padding:12px 16px;font-size:14px;}
+
+    /* table -> stacked cards */
+    .tablewrap{border:none;background:none;}
+    table, thead, tbody, tr, td{display:block;width:100%;}
+    thead{display:none;}
+    tr.row{
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:12px;
+      margin-bottom:10px;
+      padding:12px 14px;
+      position:relative;
+    }
+    tr.row td{
+      border-bottom:none;
+      padding:4px 0;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      font-size:13.5px;
+    }
+    tr.row td:empty{display:none;}
+    tr.row td[data-label]::before{
+      content:attr(data-label);
+      color:var(--ink-soft);
+      font-size:11px;
+      flex-shrink:0;
+    }
+    tr.row td.cell-head{
+      justify-content:flex-start;
+      padding-bottom:8px;
+      margin-bottom:6px;
+      border-bottom:1px solid var(--line);
+    }
+    tr.row td.cell-head::before{content:none;}
+    tr.row td.cell-head .thumb{width:44px;height:44px;}
+    tr.row td.cell-head .name-block{flex:1;}
+    tr.row td.cell-actions{justify-content:flex-end;padding-top:6px;}
+    .haz-row{justify-content:flex-end;}
+
+    /* modal */
+    .overlay{padding:0;align-items:stretch;}
+    .modal{max-width:none;width:100%;min-height:100%;border-radius:0;padding:20px 16px 100px;}
+    .modal .close{top:18px;right:14px;font-size:22px;padding:4px 8px;}
+    .row2, .row3{grid-template-columns:1fr;}
+    .field input, .field textarea, .field select{font-size:16px;padding:11px 12px;}
+    .modal-actions{position:fixed;left:0;right:0;bottom:0;background:var(--panel);padding:12px 16px;border-top:1px solid var(--line);margin-top:0;}
+    .btn{padding:11px 16px;font-size:14px;}
+    .haz-chip{padding:7px 13px;font-size:13px;}
+
+    .label-top{flex-direction:column;align-items:center;text-align:center;}
+    .label-top h3{font-size:17px;}
+    .qr-box{margin-top:10px;}
+    .label-grid{grid-template-columns:1fr;padding-left:0;text-align:left;}
+  }
+</style>
+
+</head><body><datalist id="speciesList"></datalist>
+
+<!-- Login Overlay -->
+<div class="overlay" id="loginOverlay" style="z-index:100;">
+  <div class="modal" style="max-width:380px;text-align:center;">
+    <div style="font-size:28px;margin-bottom:6px;">🔬</div>
+    <h2 style="margin-bottom:4px;">歡迎使用 SFPLAB</h2>
+    <div style="font-size:12px;color:var(--ink-soft);margin-bottom:18px;">請輸入使用者代號與4位數Pin碼登入</div>
+
+    <div id="loginPane" style="display: none;">
+      <div class="field" style="text-align:left;">
+        <label>使用者代號</label>
+        <input type="text" id="login_code" placeholder="例如 W">
+      </div>
+      <div class="field" style="text-align:left;">
+        <label>4位數Pin碼</label>
+        <input type="password" id="login_pin" maxlength="4" inputmode="numeric" placeholder="●●●●">
+      </div>
+      <button class="btn btn-primary" id="loginSubmitBtn" style="width:100%;margin-top:6px;">登入</button>
+      <button class="btn btn-ghost" id="showRegisterBtn" type="button" style="width:100%;margin-top:8px;">還沒有帳號?註冊新帳號</button>
+    </div>
+
+    <div id="registerPane" style="display: block;">
+      <div class="field" style="text-align:left;">
+        <label>使用者名稱</label>
+        <input type="text" id="reg_name" placeholder="例如 王小明">
+      </div>
+      <div class="field" style="text-align:left;">
+        <label>使用者代號 *</label>
+        <input type="text" id="reg_code" placeholder="例如 W(建議1~3個大寫字母)">
+      </div>
+      <div class="field" style="text-align:left;">
+        <label>設定 4位數Pin碼 *</label>
+        <input type="password" id="reg_pin" maxlength="4" inputmode="numeric" placeholder="●●●●">
+      </div>
+      <div class="field" style="text-align:left;">
+        <label>再輸入一次Pin碼 *</label>
+        <input type="password" id="reg_pin2" maxlength="4" inputmode="numeric" placeholder="●●●●">
+      </div>
+      <div style="font-size:11px;color:var(--amber);margin-bottom:10px;text-align:left;">⚠️ 管理員看得到所有人的Pin碼,請不要使用你自己其他地方常用的密碼。</div>
+      <button class="btn btn-primary" id="registerSubmitBtn" style="width:100%;">建立帳號並登入</button>
+      <button class="btn btn-ghost" id="showLoginBtn" type="button" style="width:100%;margin-top:8px;">已經有帳號?返回登入</button>
+    </div>
+
+    <div id="setupPinPane" style="display:none;">
+      <div style="font-size:12px;color:var(--ink-soft);margin-bottom:14px;">這是你第一次登入,請設定屬於你自己的4位數Pin碼</div>
+      <div class="field" style="text-align:left;">
+        <label>設定 4位數Pin碼 *</label>
+        <input type="password" id="setup_pin" maxlength="4" inputmode="numeric" placeholder="●●●●">
+      </div>
+      <div class="field" style="text-align:left;">
+        <label>再輸入一次Pin碼 *</label>
+        <input type="password" id="setup_pin2" maxlength="4" inputmode="numeric" placeholder="●●●●">
+      </div>
+      <div style="font-size:11px;color:var(--amber);margin-bottom:10px;text-align:left;">⚠️ 管理員看得到所有人的Pin碼,請不要使用你自己其他地方常用的密碼。</div>
+      <button class="btn btn-primary" id="setupPinSubmitBtn" style="width:100%;">完成設定並登入</button>
+    </div>
+  </div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">SFPLAB</div>
+    <div class="user-badge" id="userBadge">
+      <div class="ub-name" id="ub_name">W</div>
+      <div class="ub-code" id="ub_code">W</div>
+      <button class="ub-switch" id="switchUserBtn" type="button">登出 / 切換帳號</button>
+    </div>
+    <nav>
+      <button class="nav-item active" id="navChem" data-page="chemicals"><span class="ic">🧪</span> 藥品清單</button>
+      <button class="nav-item" id="navMat" data-page="materials"><span class="ic">🌿</span> 試材清單</button>
+      <button class="nav-item" id="navSample" data-page="samples"><span class="ic">📦</span> 樣品清單</button>
+      <button class="nav-item" id="navAdmin" data-page="admin" style="display:none;"><span class="ic">👤</span> 帳號管理</button>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <!-- ================= PAGE: 藥品清單 ================= -->
+    <section class="page active" id="page-chemicals">
+      <div class="hdr">
+        <div>
+          <h1>藥品清單</h1>
+          <div class="sub">SFPLAB · CHEMICAL INVENTORY</div>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="n" id="statTotal">0</div><div class="l">品項總數</div></div>
+          <div class="stat"><div class="n" id="statLow">0</div><div class="l">低庫存</div></div>
+          <div class="stat"><div class="n" id="statLoc">0</div><div class="l">存放位置數</div></div>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <input type="text" id="search" placeholder="搜尋名稱 / CAS No. / 位置...">
+        <select id="filterLoc"><option value="">所有位置</option><option value="藥品櫃A">藥品櫃A</option><option value="藥品櫃B">藥品櫃B</option><option value="藥品櫃C">藥品櫃C</option><option value="藥品櫃D">藥品櫃D</option><option value="溶劑櫃A">溶劑櫃A</option><option value="溶劑櫃B">溶劑櫃B</option><option value="溶劑櫃C">溶劑櫃C</option><option value="溶劑櫃D">溶劑櫃D</option><option value="溶劑櫃E">溶劑櫃E</option><option value="溶劑櫃小A">溶劑櫃小A</option><option value="溶劑櫃小B">溶劑櫃小B</option><option value="溶劑櫃小C">溶劑櫃小C</option><option value="溶劑櫃小D">溶劑櫃小D</option><option value="溶劑櫃小E">溶劑櫃小E</option><option value="LC溶劑櫃">LC溶劑櫃</option><option value="冷藏">冷藏</option><option value="冷凍">冷凍</option></select>
+        <select id="filterHaz"><option value="">所有危害性</option><option value="flammable">易燃</option><option value="corrosive">腐蝕性</option><option value="toxic">毒性</option><option value="oxidizing">氧化性</option><option value="irritant">刺激性</option><option value="health">健康危害</option><option value="environment">環境危害</option><option value="explosive">爆炸性</option><option value="none">無/未知</option></select>
+        <button class="btn btn-ghost" id="exportBtn">匯出 CSV</button>
+        <button class="btn btn-ghost" id="chemExportJsonBtn" style="display: none;">匯出備份</button>
+        <button class="btn btn-ghost" id="chemImportJsonBtn" style="display: none;">匯入備份</button>
+        <input type="file" id="chemImportJsonInput" accept="application/json" style="display:none;">
+        <button class="btn btn-primary" id="addBtn">＋ 新增藥品</button>
+      </div>
+
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr>
+              <th></th><th>藥品名稱</th><th>位置</th><th>存量</th><th>級別</th><th>危害性</th><th>SDS頁數</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+        <div class="empty" id="emptyState" style="display: block;">
+          <b>目前沒有資料</b>
+          點選右上角「＋ 新增藥品」開始建立清單
+        </div>
+      </div>
+      <div class="save-notice" id="loadingNotice" style="display: none;">載入中...</div>
+    </section>
+
+    <!-- ================= PAGE: 試材清單 ================= -->
+    <section class="page" id="page-materials">
+      <div class="hdr">
+        <div>
+          <h1>試材清單</h1>
+          <div class="sub">SFPLAB · RAW MATERIAL INVENTORY</div>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="n" id="matStatTotal">0</div><div class="l">品項總數</div></div>
+          <div class="stat"><div class="n" id="matStatSpecies">0</div><div class="l">物種數</div></div>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <input type="text" id="matSearch" placeholder="搜尋物種 / 來源 / 編號...">
+        <select id="matFilterPart"><option value="">所有部位</option><option value="根">根</option><option value="枝條">枝條</option><option value="嫩枝">嫩枝</option><option value="葉">葉</option><option value="花">花</option><option value="全果">全果</option><option value="果皮">果皮</option><option value="種子">種子</option><option value="木材">木材</option><option value="心材">心材</option><option value="邊材">邊材</option><option value="樹皮">樹皮</option><option value="其他">其他</option></select>
+        <select id="matFilterUse"><option value="">所有用途</option><option value="萃取">萃取</option><option value="精油蒸餾">精油蒸餾</option><option value="其他">其他</option></select>
+        <button class="btn btn-ghost" id="matExportBtn">匯出 CSV</button>
+        <button class="btn btn-ghost" id="matExportJsonBtn" style="display: none;">匯出備份</button>
+        <button class="btn btn-ghost" id="matImportJsonBtn" style="display: none;">匯入備份</button>
+        <input type="file" id="matImportJsonInput" accept="application/json" style="display:none;">
+        <button class="btn btn-primary" id="matAddBtn">＋ 新增試材</button>
+      </div>
+
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr>
+              <th></th><th>編號</th><th>物種</th><th>來源</th><th>部位</th><th>存放位置</th><th>取得日期</th><th>預計用途</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="matTbody"></tbody>
+        </table>
+        <div class="empty" id="matEmptyState" style="display: block;">
+          <b>目前沒有資料</b>
+          點選右上角「＋ 新增試材」開始建立清單
+        </div>
+      </div>
+      <div class="save-notice" id="matLoadingNotice" style="display: none;">載入中...</div>
+    </section>
+
+    <!-- ================= PAGE: 樣品清單 ================= -->
+    <section class="page" id="page-samples">
+      <div class="hdr">
+        <div>
+          <h1>樣品清單</h1>
+          <div class="sub">SFPLAB · EXTRACTED SAMPLE INVENTORY</div>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="n" id="smpStatTotal">0</div><div class="l">品項總數</div></div>
+          <div class="stat"><div class="n" id="smpStatSpecies">0</div><div class="l">物種數</div></div>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <input type="text" id="smpSearch" placeholder="搜尋物種 / 編號...">
+        <select id="smpFilterSolvent"><option value="">所有萃取物</option></select>
+        <button class="btn btn-ghost" id="smpExportJsonBtn" style="display: none;">匯出備份</button>
+        <button class="btn btn-ghost" id="smpImportJsonBtn" style="display: none;">匯入備份</button>
+        <input type="file" id="smpImportJsonInput" accept="application/json" style="display:none;">
+        <button class="btn btn-primary" id="smpAddBtn">＋ 新增樣品</button>
+      </div>
+
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr>
+              <th>中文名稱</th><th>編號</th><th>物種</th><th>萃取日期</th><th>萃取物</th><th>分離部</th><th>萃取物重量</th><th>萃取率</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="smpTbody"></tbody>
+        </table>
+        <div class="empty" id="smpEmptyState" style="display: block;">
+          <b>目前沒有資料</b>
+          點選右上角「＋ 新增樣品」開始建立清單
+        </div>
+      </div>
+      <div class="save-notice" id="smpLoadingNotice" style="display: none;">載入中...</div>
+    </section>
+
+    <!-- ================= PAGE: 帳號管理(僅管理員) ================= -->
+    <section class="page" id="page-admin">
+      <div class="hdr">
+        <div>
+          <h1>帳號管理</h1>
+          <div class="sub">SFPLAB · USER ACCOUNTS</div>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="n" id="adminStatTotal">0</div><div class="l">帳號總數</div></div>
+        </div>
+      </div>
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr><th>代號</th><th>名稱</th><th>Pin碼</th><th>角色</th><th>建立時間</th><th></th></tr>
+          </thead>
+          <tbody id="adminTbody"></tbody>
+        </table>
+      </div>
+      <div style="font-size:11px;color:var(--ink-soft);margin-top:10px;">說明:管理員看得到所有人的Pin碼,請提醒大家不要使用自己在別處常用的密碼。忘記Pin碼的人,也可以由管理員直接在下方查看,或幫他「重設Pin碼」讓對方重新設定。</div>
+    </section>
+  </main>
+</div>
+
+<!-- Import Mode Overlay -->
+<div class="overlay" id="importModeOverlay">
+  <div class="modal" style="max-width:400px;text-align:center;">
+    <button class="close" id="importModeCloseX">✕</button>
+    <h2 style="margin-bottom:8px;">選擇匯入方式</h2>
+    <div style="font-size:12px;color:var(--ink-soft);margin-bottom:18px;" id="importModeDesc"></div>
+    <button class="btn btn-primary" id="importModeAddBtn" style="width:100%;margin-bottom:8px;">新增(合併到現有清單)</button>
+    <button class="btn btn-danger" id="importModeReplaceBtn" style="width:100%;">覆蓋全部(取代現有清單)</button>
+    <button class="btn btn-ghost" id="importModeCancelBtn" style="width:100%;margin-top:10px;">取消</button>
+  </div>
+</div>
+
+<!-- Add/Edit Modal: 藥品 -->
+<div class="overlay" id="formOverlay">
+  <div class="modal">
+    <button class="close" id="formClose">✕</button>
+    <h2 id="formTitle">新增藥品</h2>
+    <div class="field row2">
+      <div><label>中文名稱 *</label><input type="text" id="f_name_zh"></div>
+      <div><label>英文名稱</label><input type="text" id="f_name_en"></div>
+    </div>
+    <div class="field">
+      <label>IUPAC 名(選填)</label>
+      <input type="text" id="f_iupac" placeholder="例如 Propan-2-ol">
+    </div>
+    <div class="field row2">
+      <div><label>CAS No.</label><input type="text" id="f_cas" placeholder="例如 64-17-5"></div>
+      <div><label>存放位置 *</label>
+        <select id="f_location">
+          <option value="">請選擇位置</option>
+        </select>
+      </div>
+    </div>
+    <div class="field row2">
+      <div><label>級別</label>
+        <select id="f_grade">
+          <option value="">請選擇級別</option>
+          <option value="試藥級">試藥級</option>
+          <option value="工業級">工業級</option>
+          <option value="LC級">LC級</option>
+          <option value="電子級">電子級</option>
+        </select>
+      </div>
+      <div><label>型態</label>
+        <div style="display:flex;gap:14px;padding-top:9px;">
+          <label style="display:flex;align-items:center;gap:4px;font-weight:400;font-size:13px;color:var(--ink);"><input type="radio" name="f_state" value="固體" style="width:auto;">固體</label>
+          <label style="display:flex;align-items:center;gap:4px;font-weight:400;font-size:13px;color:var(--ink);"><input type="radio" name="f_state" value="液體" style="width:auto;">液體</label>
+          <label style="display:flex;align-items:center;gap:4px;font-weight:400;font-size:13px;color:var(--ink);"><input type="radio" name="f_state" value="氣體" style="width:auto;">氣體</label>
+        </div>
+      </div>
+    </div>
+    <div class="field row2">
+      <div><label>存量</label>
+        <div style="display:flex;gap:6px;">
+          <input type="number" id="f_quantity" step="any" style="flex:1;">
+          <input type="text" id="f_unit" placeholder="單位(mL/g/瓶)" style="width:110px;">
+        </div>
+      </div>
+      <div><label>購買日期</label><input type="date" id="f_purchase_date"></div>
+    </div>
+    <div class="field row2">
+      <div><label>低庫存警戒值(選填)</label><input type="number" id="f_low_threshold" step="any" placeholder="低於此值標紅"></div>
+      <div><label>SDS 頁數</label><input type="text" id="f_sds" placeholder="例如 8 或 p.3-8"></div>
+    </div>
+    <div class="field">
+      <label>危害性(可複選)</label>
+      <div class="haz-picker" id="hazPicker"></div>
+    </div>
+    <div class="field">
+      <label>備註</label>
+      <textarea id="f_note" rows="2"></textarea>
+    </div>
+    <div class="field">
+      <label>照片(藥品瓶身 / 存放位置)</label>
+      <div class="photo-drop" id="photoDrop">點擊上傳照片或拍照</div>
+      <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none;">
+      <img id="photoPreview" class="photo-preview" style="display:none;">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="deleteBtn" style="display:none;">刪除此品項</button>
+      <button class="btn btn-ghost" id="clearChemBtn" type="button">全部清除</button>
+      <div style="flex:1;"></div>
+      <button class="btn btn-ghost" id="cancelBtn">取消</button>
+      <button class="btn btn-primary" id="saveBtn" style="margin-left:8px;">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Detail / QR Modal: 藥品 -->
+<div class="overlay" id="detailOverlay">
+  <div class="modal" style="max-width:460px;">
+    <button class="close" id="detailClose">✕</button>
+    <div class="label-card">
+      <div class="label-stripe" id="detailStripe"></div>
+      <div class="label-top">
+        <div>
+          <h3 id="d_name_zh"></h3>
+          <div class="en" id="d_name_en"></div>
+        </div>
+        <div class="qr-box">
+          <div id="qrTarget"></div>
+          <div class="qr-id" id="d_id"></div>
+        </div>
+      </div>
+      <div class="label-grid">
+        <div><span class="k">IUPAC 名</span> <span id="d_iupac"></span></div>
+        <div><span class="k">CAS No.</span> <span id="d_cas"></span></div>
+        <div><span class="k">位置</span> <span id="d_location"></span></div>
+        <div><span class="k">存量</span> <span id="d_qty"></span></div>
+        <div><span class="k">購買日期</span> <span id="d_date"></span></div>
+        <div><span class="k">SDS 頁數</span> <span id="d_sds"></span></div>
+        <div><span class="k">危害性</span> <span id="d_haz"></span></div>
+        <div><span class="k">建立者</span> <span id="d_creator"></span></div>
+      </div>
+      <div id="d_note" style="padding-left:10px;margin-top:10px;font-size:12.5px;color:var(--ink-soft);"></div>
+      <div id="d_photoWrap" style="padding-left:10px;margin-top:10px;"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-sm" id="downloadQrBtn">下載 QR code 圖片</button>
+      <div style="flex:1;"></div>
+      <button class="btn btn-primary btn-sm" id="editFromDetailBtn">編輯</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Modal: 試材 -->
+<div class="overlay" id="matFormOverlay">
+  <div class="modal">
+    <button class="close" id="matFormClose">✕</button>
+    <h2 id="matFormTitle">新增試材</h2>
+    <div id="matCreatorBanner" style="display:none;font-size:12px;padding:8px 10px;border-radius:8px;margin-bottom:14px;"></div>
+    <div class="field id-preview">
+      <label>編號</label>
+      <input type="text" id="m_id" readonly="">
+    </div>
+    <div class="field row2">
+      <div><label>物種 *</label><input type="text" id="m_species" list="speciesList" placeholder="例如 台灣土肉桂"><div style="font-size:11px;color:var(--ink-soft);margin-top:4px;">請填寫學名,例如 Acacia confusa;之前輸入過的物種會出現在下拉選單中</div></div>
+      <div><label>來源</label><input type="text" id="m_source" placeholder="例如 宜蘭 / 採集人"></div>
+    </div>
+    <div class="field row2">
+      <div>
+        <label>取得日期</label>
+        <input type="date" id="m_acquired_date">
+        <div class="unknown-row"><input type="checkbox" id="m_acquired_unknown"><label for="m_acquired_unknown" style="margin:0;">日期未知</label></div>
+      </div>
+      <div><label>部位 *</label>
+        <select id="m_part">
+          <option value="">請選擇部位</option>
+        </select>
+      </div>
+    </div>
+    <div class="field row2">
+      <div><label>存放位置 *</label>
+        <select id="m_storage">
+          <option value="">請選擇位置</option>
+        </select>
+      </div>
+      <div><label>預計用途</label>
+        <select id="m_use">
+          <option value="">請選擇用途</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label>備註</label>
+      <textarea id="m_note" rows="2"></textarea>
+    </div>
+    <div class="field">
+      <label>照片</label>
+      <div class="photo-drop" id="m_photoDrop">點擊上傳照片或拍照</div>
+      <input type="file" id="m_photoInput" accept="image/*" capture="environment" style="display:none;">
+      <img id="m_photoPreview" class="photo-preview" style="display:none;">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="matDeleteBtn" style="display:none;">刪除此品項</button>
+      <button class="btn btn-ghost" id="clearMatBtn" type="button">全部清除</button>
+      <div style="flex:1;"></div>
+      <button class="btn btn-ghost" id="matCancelBtn">取消</button>
+      <button class="btn btn-primary" id="matSaveBtn" style="margin-left:8px;">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Modal: 樣品 -->
+<div class="overlay" id="smpFormOverlay">
+  <div class="modal">
+    <button class="close" id="smpFormClose">✕</button>
+    <h2 id="smpFormTitle">新增樣品</h2>
+    <div id="smpCreatorBanner" style="display:none;font-size:12px;padding:8px 10px;border-radius:8px;margin-bottom:14px;"></div>
+    <div class="field id-preview">
+      <label>編號</label>
+      <input type="text" id="s_id" readonly="">
+    </div>
+
+    <div class="section-title first">試材資料</div>
+    <div class="field">
+      <label>從試材匯入(選填)</label>
+      <select id="s_import_material"><option value="">不匯入 / 手動填寫</option></select>
+    </div>
+    <div class="field row2">
+      <div><label>中文名稱 *</label><input type="text" id="s_name_zh" placeholder="例如 相思樹"></div>
+      <div><label>物種 *</label><input type="text" id="s_species" list="speciesList"><div style="font-size:11px;color:var(--ink-soft);margin-top:4px;">請填寫學名,例如 Acacia confusa;之前輸入過的物種會出現在下拉選單中</div></div>
+    </div>
+    <div class="field row2">
+      <div><label>來源</label><input type="text" id="s_source"></div>
+    </div>
+    <div class="field row2">
+      <div>
+        <label>取得日期</label>
+        <input type="date" id="s_acquired_date">
+        <div class="unknown-row"><input type="checkbox" id="s_acquired_unknown"><label for="s_acquired_unknown" style="margin:0;">日期未知</label></div>
+      </div>
+      <div><label>部位</label>
+        <select id="s_part"><option value="">請選擇部位</option></select>
+      </div>
+    </div>
+    <div class="section-title">萃取資訊</div>
+    <div class="field row2">
+      <div><label>萃取日期</label><input type="date" id="s_extraction_date"></div>
+      <div><label>萃取方法</label>
+        <select id="s_extraction_method">
+          <option value="">請選擇方法</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label>萃取者</label>
+      <input type="text" id="s_extractor" placeholder="預設帶入目前登入者">
+    </div>
+    <div class="field row2">
+      <div id="s_solvent_wrap"><label>萃取溶劑</label>
+        <select id="s_solvent"></select>
+      </div>
+      <div id="s_solvent_other_wrap" style="display:none;">
+        <label>自填溶劑名稱</label>
+        <input type="text" id="s_solvent_other">
+      </div>
+      <div id="s_extract_type_wrap" style="display:none;">
+        <label>萃取物</label>
+        <select id="s_extract_type">
+          <option value="精油">精油</option>
+          <option value="熱水萃取物">熱水萃取物</option>
+          <option value="水蒸氣淋溶物">水蒸氣淋溶物</option>
+        </select>
+      </div>
+    </div>
+    <div class="field row2" id="s_fraction_row">
+      <div><label>是否為分離部</label>
+        <select id="s_fraction_type">
+          <option value="none">不是分離部</option>
+          <option value="liquid_liquid">液-液分配</option>
+        </select>
+      </div>
+      <div id="s_fraction_layer_wrap" style="display:none;">
+        <label>分離部</label>
+        <select id="s_fraction_layer">
+          <option value="正己烷分離部">正己烷分離部</option>
+          <option value="乙酸乙酯分離部">乙酸乙酯分離部</option>
+          <option value="正丁醇分離部">正丁醇分離部</option>
+          <option value="水層">水層</option>
+        </select>
+      </div>
+    </div>
+    <div class="field row2">
+      <div><label>試材鮮重(g)</label><input type="number" id="s_material_fresh_weight" step="any" placeholder="萃取投入的試材總鮮重"></div>
+      <div><label>萃取物重量(g)</label><input type="number" id="s_sample_weight" step="any"></div>
+    </div>
+    <div class="field">
+      <label>絕乾重(g)</label>
+      <div style="display:flex;gap:8px;">
+        <input type="number" id="s_dry_weight" step="any" placeholder="可手動輸入,或用下方按鈕帶入" style="flex:1;">
+        <button class="btn btn-ghost btn-sm" id="calcDryFromMoistureBtn" type="button">由含水量換算</button>
+      </div>
+      <div class="unknown-row" style="margin-top:8px;">若試材已為絕乾狀態,可直接在此欄位輸入乾重,不需使用下方含水量測定區。</div>
+    </div>
+    <div class="field">
+      <label>萃取率</label>
+      <input type="text" id="s_extraction_rate" readonly="" placeholder="自動計算">
+    </div>
+
+    <!-- 含水量計算區 -->
+    <div class="calc-box">
+      <div class="calc-title">🧮 取樣含水量測定(用於換算絕乾重)</div>
+      <div class="field row2">
+        <div><label>取樣鮮重(含容器,g)</label><input type="number" id="mc_fresh_gross" step="any"></div>
+        <div><label>取樣乾重(含容器,g)</label><input type="number" id="mc_dry_gross" step="any"></div>
+      </div>
+      <div class="field">
+        <label>容器重(g)</label>
+        <input type="number" id="mc_container" step="any" style="max-width:200px;">
+      </div>
+      <div class="field">
+        <label>含水量照片</label>
+        <div class="photo-drop" id="mc_photoDrop">點擊上傳照片或拍照</div>
+        <input type="file" id="mc_photoInput" accept="image/*" capture="environment" style="display:none;">
+        <img id="mc_photoPreview" class="photo-preview" style="display:none;">
+      </div>
+      <div class="calc-result">
+        <div class="item"><div class="v" id="mc_moisture_wet">-</div><div class="l">濕基含水率</div></div>
+        <div class="item"><div class="v" id="mc_moisture_dry">-</div><div class="l">乾基含水率</div></div>
+        <div class="item"><div class="v" id="mc_dry_net">-</div><div class="l">取樣乾重(g)</div></div>
+      </div>
+      <button class="btn btn-primary" id="mc_importBtn" type="button">匯入此乾重至上方「絕乾重」</button>
+    </div>
+
+    <div class="section-title">照片</div>
+    <div class="field">
+      <label>萃取材照片</label>
+      <div class="photo-drop" id="s_photoExtractDrop">點擊上傳照片或拍照</div>
+      <input type="file" id="s_photoExtractInput" accept="image/*" capture="environment" style="display:none;">
+      <img id="s_photoExtractPreview" class="photo-preview" style="display:none;">
+    </div>
+    <div class="field">
+      <label>樣品瓶照片</label>
+      <div class="photo-drop" id="s_photoBottleDrop">點擊上傳照片或拍照</div>
+      <input type="file" id="s_photoBottleInput" accept="image/*" capture="environment" style="display:none;">
+      <img id="s_photoBottlePreview" class="photo-preview" style="display:none;">
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="smpDeleteBtn" style="display:none;">刪除此品項</button>
+      <button class="btn btn-ghost" id="clearSmpBtn" type="button">全部清除</button>
+      <div style="flex:1;"></div>
+      <button class="btn btn-ghost" id="smpCancelBtn">取消</button>
+      <button class="btn btn-primary" id="smpSaveBtn" style="margin-left:8px;">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================
+     Firebase 設定(取代 Claude 專屬的 window.storage)
+     共用資料(shared=true)存在 Firestore,個人/裝置資料(shared=false)存在瀏覽器 localStorage
+====================================================== -->
+<script src="./index_files/firebase-app-compat.js.下載"></script>
+<script src="./index_files/firebase-firestore-compat.js.下載"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyAlhm9oAPZMsUcj1pmGFoUiqJIoHHCZXKc",
+  authDomain: "labmanagementapp-d5b03.firebaseapp.com",
+  projectId: "labmanagementapp-d5b03",
+  storageBucket: "labmanagementapp-d5b03.firebasestorage.app",
+  messagingSenderId: "549177150333",
+  appId: "1:549177150333:web:a14dc141f2ab75b90bda14"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const FS_COLLECTION = 'lab-data';
+
+window.storage = {
+  async get(key, shared){
+    if(shared){
+      try{
+        const doc = await db.collection(FS_COLLECTION).doc(key).get();
+        if(!doc.exists) return null;
+        return { key, value: doc.data().value, shared: true };
+      }catch(e){ console.error('storage.get(shared) failed:', e); return null; }
+    }else{
+      try{
+        const raw = localStorage.getItem('local:'+key);
+        if(raw===null) return null;
+        return { key, value: raw, shared: false };
+      }catch(e){ console.error('storage.get(local) failed:', e); return null; }
+    }
+  },
+  async set(key, value, shared){
+    if(shared){
+      try{
+        await db.collection(FS_COLLECTION).doc(key).set({ value: value, updated_at: Date.now() });
+        return { key, value, shared: true };
+      }catch(e){ console.error('storage.set(shared) failed:', e); return null; }
+    }else{
+      try{
+        localStorage.setItem('local:'+key, value);
+        return { key, value, shared: false };
+      }catch(e){ console.error('storage.set(local) failed:', e); return null; }
+    }
+  },
+  async delete(key, shared){
+    if(shared){
+      try{
+        await db.collection(FS_COLLECTION).doc(key).delete();
+        return { key, deleted: true, shared: true };
+      }catch(e){ console.error('storage.delete(shared) failed:', e); return null; }
+    }else{
+      try{
+        localStorage.removeItem('local:'+key);
+        return { key, deleted: true, shared: false };
+      }catch(e){ console.error('storage.delete(local) failed:', e); return null; }
+    }
+  }
+};
+
+/* ---- 逐筆文件儲存(藥品/試材/樣品清單專用,避免整份清單擠在同一份1MB文件裡) ---- */
+async function fsGetAll(collectionName){
+  try{
+    const snap = await db.collection(collectionName).get();
+    return snap.docs.map(d => d.data());
+  }catch(e){ console.error('fsGetAll failed:', e); return []; }
+}
+async function fsSetItem(collectionName, item){
+  try{
+    await db.collection(collectionName).doc(String(item.id)).set(item);
+    return true;
+  }catch(e){ console.error('fsSetItem failed:', e); return false; }
+}
+async function fsDeleteItem(collectionName, id){
+  try{
+    await db.collection(collectionName).doc(String(id)).delete();
+    return true;
+  }catch(e){ console.error('fsDeleteItem failed:', e); return false; }
+}
+async function fsReplaceAll(collectionName, itemsArray){
+  try{
+    const snap = await db.collection(collectionName).get();
+    const existingIds = snap.docs.map(d=>d.id);
+    for(let i=0;i<existingIds.length;i+=400){
+      const batch = db.batch();
+      existingIds.slice(i,i+400).forEach(id => batch.delete(db.collection(collectionName).doc(id)));
+      await batch.commit();
+    }
+    for(let i=0;i<itemsArray.length;i+=400){
+      const batch = db.batch();
+      itemsArray.slice(i,i+400).forEach(item => batch.set(db.collection(collectionName).doc(String(item.id)), item));
+      await batch.commit();
+    }
+    return true;
+  }catch(e){ console.error('fsReplaceAll failed:', e); return false; }
+}
+</script>
+
+<script>
+/* ======================================================
+   共用資料
+====================================================== */
+const GHS = [
+  {code:'flammable', label:'易燃', color:'#C0392B'},
+  {code:'corrosive', label:'腐蝕性', color:'#7D3C98'},
+  {code:'toxic', label:'毒性', color:'#1B4B43'},
+  {code:'oxidizing', label:'氧化性', color:'#D68910'},
+  {code:'irritant', label:'刺激性', color:'#B9770E'},
+  {code:'health', label:'健康危害', color:'#2874A6'},
+  {code:'environment', label:'環境危害', color:'#1E8449'},
+  {code:'explosive', label:'爆炸性', color:'#943126'},
+  {code:'none', label:'無/未知', color:'#7F8C8D'}
+];
+const GHS_ICON_PATH = {
+  flammable: '<polygon points="20,2 38,20 20,38 2,20" fill="#fff" stroke="#E2231A" stroke-width="3"/><path d="M20 8c-2 5-8 8-8 15a8 8 0 0016 0c0-3-1.5-5-3-5 .5 3-2 4-3 3 1.5-5-1-9-2-13z"/>',
+  corrosive: '<polygon points="20,2 38,20 20,38 2,20" fill="#fff" stroke="#E2231A" stroke-width="3"/><path d="M15 8l-2 10a3 3 0 006 0l-2-10h-2z"/><path d="M25 12l-1.5 8a2.5 2.5 0 005 0L27 12h-2z"/><rect x="8" y="30" width="10" height="2"/><path d="M22 30c2-1 4-1 6 0 2 1 4 2.5 4 2.5l-2 2s-2.3-2-4.5-2-4 1.5-4 1.5l-2-2s1-1.4 2.5-2z"/>',
+  toxic: '<polygon points="20,2 38,20 20,38 2,20" fill="#fff" stroke="#E2231A" stroke-width="3"/><path d="M20 9a7 7 0 00-7 7c0 3 1.5 4.5 2 6h1.5v2h1.5v2h4v-2h1.5v-2H25c.5-1.5 2-3 2-6a7 7 0 00-7-7z"/><circle cx="17" cy="16.5" r="1.6" fill="#fff"/><circle cx="23" cy="16.5" r="1.6" fill="#fff"/><g stroke="#000" stroke-width="2.2" stroke-linecap="round"><line x1="13" y1="28" x2="27" y2="35"/><line x1="27" y1="28" x2="13" y2="35"/></g>',
+  oxidizing: '<polygon points="20,2 38,20 20,38 2,20" fill="#fff" stroke="#E2231A" stroke-width="3"/><circle cx="20" cy="28" r="6"/><path d="M20 8c-2 4-6 6-6 11a6 6 0 0012 0c0-5-4-7-6-11z"/>',
+  irritant: '<polygon points="20,2 38,20 20,38 2,20" fill="#fff" stroke="#E2231A" stroke-width="3"/><rect x="18.3" y="9" width="3.4" height="15" rx="1.7"/><circle cx="20" cy="28" r="2.3"/>',
+  health: '<polygon points="20,2 38,20 20,38 2,20" fill="#fff" stroke="#E2231A" stroke-width="3"/><circle cx="20" cy="14" r="4"/><path d="M12 31c0-5 4-9 8-9s8 4 8 9" fill="none" stroke="#000" stroke-width="2.2"/><g stroke="#000" stroke-width="1.6"><line x1="20" y1="19" x2="20" y2="24"/><line x1="16" y1="22" x2="24" y2="26"/><line x1="24" y1="22" x2="16" y2="26"/></g>',
+  environment: '<polygon points="20,2 38,20 20,38 2,20" fill="#fff" stroke="#E2231A" stroke-width="3"/><path d="M13 30h6l-3-13z"/><path d="M23 20c3 1 5 3 5 6s-2.2 3-4.2 2-3-3-1-4c1-1 .2-3 .2-4z"/><line x1="9" y1="31" x2="31" y2="31" stroke="#000" stroke-width="1.6"/>',
+  explosive: '<polygon points="20,2 38,20 20,38 2,20" fill="#fff" stroke="#E2231A" stroke-width="3"/><circle cx="20" cy="25" r="5"/><g stroke="#000" stroke-width="1.8" stroke-linecap="round"><line x1="20" y1="15" x2="20" y2="10"/><line x1="12" y1="18" x2="8" y2="14"/><line x1="28" y1="18" x2="32" y2="14"/></g><circle cx="12" cy="12" r="1.4"/><circle cx="28" cy="12" r="1.4"/>',
+  none: '<circle cx="20" cy="20" r="16" fill="none" stroke="currentColor" stroke-width="2"/><text x="20" y="27" font-size="18" text-anchor="middle" fill="currentColor" font-family="sans-serif">?</text>'
+};
+function ghsIconSvg(code, size){
+  size = size || 18;
+  const p = GHS_ICON_PATH[code] || GHS_ICON_PATH.none;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 40 40" style="vertical-align:-5px;margin-right:4px;flex-shrink:0;">${p}</svg>`;
+}
+
+const CHEM_LOCATIONS = [
+  '藥品櫃A','藥品櫃B','藥品櫃C','藥品櫃D',
+  '溶劑櫃A','溶劑櫃B','溶劑櫃C','溶劑櫃D','溶劑櫃E',
+  '溶劑櫃小A','溶劑櫃小B','溶劑櫃小C','溶劑櫃小D','溶劑櫃小E',
+  'LC溶劑櫃','冷藏','冷凍'
+];
+function locCategory(loc){
+  if(!loc) return 'other';
+  if(loc.startsWith('藥品櫃')) return 'chem';
+  if(loc.startsWith('溶劑櫃') || loc==='LC溶劑櫃') return 'solvent';
+  if(loc==='冷藏' || loc==='冷凍') return 'cold';
+  return 'other';
+}
+function locTag(loc){
+  if(!loc) return '-';
+  const cat = locCategory(loc);
+  const cls = cat==='chem' ? 'loc-chem' : cat==='solvent' ? 'loc-solvent' : cat==='cold' ? 'loc-cold' : 'plain-tag';
+  return `<span class="loc-tag ${cls}">${escapeHtml(loc)}</span>`;
+}
+
+const PART_OPTIONS = ['根','枝條','嫩枝','葉','花','全果','果皮','種子','木材','心材','邊材','樹皮','其他'];
+const USE_OPTIONS = ['萃取','精油蒸餾','其他'];
+const SOLVENT_OPTIONS = ['水','甲醇','乙醇','丙酮','50%甲醇50%丙酮','50%乙醇50%丙酮','70%丙酮','正己烷','乙酸乙酯','乙醚','其他'];
+const EXTRACTION_METHOD_OPTIONS = ['索式萃取','冷浸萃取','水蒸氣蒸餾','水蒸餾','超音波萃取'];
+const SHELVES = ['A','B','C','D','E','F','G'];
+const LAYERS = [0,1,2,3];
+function buildStorageOptions(){
+  const opts = [];
+  SHELVES.forEach(s=>{ LAYERS.forEach(l=>{ opts.push({ value: s+l, label: s+l }); }); });
+  return opts;
+}
+const STORAGE_OPTIONS = buildStorageOptions();
+function storageLabel(value){
+  const found = STORAGE_OPTIONS.find(o=>o.value===value);
+  return found ? found.label : (value || '-');
+}
+
+function ghsInfo(code){ return GHS.find(g=>g.code===code) || {label:code,color:'#7F8C8D'}; }
+function escapeHtml(s){
+  return String(s ?? '').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ---- 樣品編號命名用縮寫對照表 ---- */
+const PART_ABBR = {
+  '根':'R','枝條':'B','嫩枝':'TB','葉':'L','花':'Fl','全果':'Fr','果皮':'P',
+  '種子':'S','木材':'Wd','心材':'HW','邊材':'SW','樹皮':'Bk','其他':'Ot'
+};
+const SOLVENT_ABBR = {
+  '水':'W','甲醇':'Me','乙醇':'Et','丙酮':'Ac','50%甲醇50%丙酮':'MeAc','50%乙醇50%丙酮':'EtAc',
+  '70%丙酮':'Ac70','正己烷':'Hex','乙酸乙酯':'EA','乙醚':'Ee','其他':'Ot'
+};
+const FRACTION_ABBR = { '正己烷分離部':'Hex','乙酸乙酯分離部':'EA','正丁醇分離部':'Bu','水層':'Aq' };
+const DISTILLATION_METHODS = ['水蒸氣蒸餾','水蒸餾'];
+const EXTRACT_TYPE_OPTIONS = ['精油','熱水萃取物','水蒸氣淋溶物'];
+const EXTRACT_TYPE_ABBR = { '熱水萃取物':'HWE','水蒸氣淋溶物':'HDE','精油':'EO' };
+
+function customAbbr(text){
+  const letters = (text||'').replace(/[^A-Za-z]/g,'');
+  if(letters.length>=2) return letters[0].toUpperCase() + letters[1].toLowerCase();
+  if(letters.length===1) return letters.toUpperCase();
+  return 'Ot';
+}
+function speciesAbbr(name){
+  const trimmed = (name||'').trim();
+  if(!trimmed) return 'Sp';
+  const parts = trimmed.split(/\s+/);
+  if(parts.length>=2 && /^[A-Za-z]/.test(parts[0]) && /^[A-Za-z]/.test(parts[1])){
+    return parts[0][0].toUpperCase() + parts[1][0].toLowerCase();
+  }
+  return trimmed.slice(0,2);
+}
+function compressPhoto(file, onDone){
+  const TARGET_BYTES = 180 * 1024; // 目標約180KB,讓每張照片壓縮後大小相近
+  const reader = new FileReader();
+  reader.onload = (ev)=>{
+    const img = new Image();
+    img.onload = ()=>{
+      function render(maxW, quality){
+        const scale = Math.min(1, maxW / img.width);
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(img.width * scale));
+        canvas.height = Math.max(1, Math.round(img.height * scale));
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        return canvas.toDataURL('image/jpeg', quality);
+      }
+      let maxW = 480, quality = 0.7;
+      let dataUrl = render(maxW, quality);
+      let bytes = Math.round(dataUrl.length * 0.75);
+      let attempts = 0;
+      while(bytes > TARGET_BYTES && attempts < 7){
+        if(quality > 0.35){ quality = Math.round((quality - 0.1) * 100) / 100; }
+        else{ maxW = Math.round(maxW * 0.85); }
+        dataUrl = render(maxW, quality);
+        bytes = Math.round(dataUrl.length * 0.75);
+        attempts++;
+      }
+      onDone(dataUrl);
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+function bindPhotoUpload(dropId, inputId, previewId){
+  document.getElementById(dropId).addEventListener('click', ()=> document.getElementById(inputId).click());
+  document.getElementById(inputId).addEventListener('change', (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    compressPhoto(file, (dataUrl)=>{
+      const preview = document.getElementById(previewId);
+      preview.src = dataUrl;
+      preview.style.display = 'block';
+    });
+  });
+}
+function nextSeq(list){
+  let max = 0;
+  list.forEach(i=>{
+    const m = /-(\d+)$/.exec(i.id || '');
+    if(m){ const n = parseInt(m[1],10); if(n>max) max = n; }
+  });
+  return max+1;
+}
+function genId(list, prefix){ return `${prefix}-${String(nextSeq(list)).padStart(4,'0')}`; }
+
+/* ======================================================
+   表單草稿自動保存(個人專屬,離開頁面/不小心關閉也不會遺失)
+====================================================== */
+function collectFormValues(ids){
+  const obj = {};
+  ids.forEach(id=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    obj[id] = (el.type==='checkbox') ? el.checked : el.value;
+  });
+  return obj;
+}
+function restoreFormValues(ids, data){
+  if(!data) return;
+  ids.forEach(id=>{
+    if(!(id in data)) return;
+    const el = document.getElementById(id);
+    if(!el) return;
+    if(el.type==='checkbox') el.checked = !!data[id];
+    else el.value = data[id];
+  });
+}
+async function saveDraft(key, data){
+  try{ await window.storage.set(key, JSON.stringify(data), false); }catch(e){ /* 靜默失敗,不打擾使用者輸入 */ }
+}
+async function loadDraft(key){
+  try{ const res = await window.storage.get(key, false); return res && res.value ? JSON.parse(res.value) : null; }
+  catch(e){ return null; }
+}
+async function clearDraft(key){
+  try{ await window.storage.delete(key, false); }catch(e){}
+}
+function debounce(fn, delay){
+  let t;
+  return (...args)=>{ clearTimeout(t); t = setTimeout(()=>fn(...args), delay); };
+}
+
+/* ======================================================
+   使用者帳號系統(代號 + 4位數Pin碼)
+====================================================== */
+const ACCOUNTS_KEY = 'lab-accounts';   // 共用:所有人看到同一份帳號清單
+const SESSION_KEY = 'current-session'; // 個人:只記錄自己登入的帳號代號,不存Pin碼
+const WEAK_PINS = ['0000','1111','2222','3333','4444','5555','6666','7777','8888','9999','1234','4321','1212','2121','1122','2211','0123','1230','2580','9876','6789','1004'];
+function isWeakPin(pin){ return WEAK_PINS.includes(pin); }
+function isValidPinFormat(pin){ return /^\d{4}$/.test(pin); }
+
+let accounts = [];
+let currentUser = null; // {code, name, role}
+
+function findAccount(code){
+  return accounts.find(a=>a.code.toLowerCase()===String(code||'').toLowerCase());
+}
+async function ensureBuiltinAccounts(){
+  const builtins = [
+    { code: 'phantasy199302', name: '管理員' },
+    { code: 'SFPLab', name: '管理員' }
+  ];
+  let changed = false;
+  builtins.forEach(b=>{
+    if(!findAccount(b.code)){
+      accounts.push({ code: b.code, name: b.name, pin: null, role: 'admin', mustChangePin: true, created_at: new Date().toISOString() });
+      changed = true;
+    }
+  });
+  return changed;
+}
+async function loadAccounts(){
+  try{
+    const res = await window.storage.get(ACCOUNTS_KEY, true);
+    accounts = res && res.value ? JSON.parse(res.value) : [];
+  }catch(e){ accounts = []; }
+  if(await ensureBuiltinAccounts()) await saveAccounts();
+}
+async function saveAccounts(){
+  try{ await window.storage.set(ACCOUNTS_KEY, JSON.stringify(accounts), true); }catch(e){}
+}
+async function saveSession(code){
+  try{ await window.storage.set(SESSION_KEY, JSON.stringify({code}), false); }catch(e){}
+}
+async function clearSession(){
+  try{ await window.storage.delete(SESSION_KEY, false); }catch(e){}
+}
+function isAdmin(){
+  return !!(currentUser && currentUser.role==='admin');
+}
+function canEdit(item){
+  // 建立者本人或管理員可以編輯
+  if(isAdmin()) return true;
+  return !!(item && currentUser && item.created_by === currentUser.code);
+}
+function canDelete(item){
+  // 只有管理員能刪除
+  return isAdmin();
+}
+
+function showLoginPane(name){
+  document.getElementById('loginPane').style.display = name==='login' ? 'block':'none';
+  document.getElementById('registerPane').style.display = name==='register' ? 'block':'none';
+  document.getElementById('setupPinPane').style.display = name==='setup' ? 'block':'none';
+}
+function renderUserBadge(){
+  document.getElementById('ub_name').textContent = (currentUser && currentUser.name) ? currentUser.name : '(未命名)';
+  document.getElementById('ub_code').textContent = (currentUser && currentUser.code) ? currentUser.code + (currentUser.role==='admin' ? ' · 管理員' : '') : '-';
+  document.getElementById('navAdmin').style.display = isAdmin() ? 'flex' : 'none';
+  ['chemExportJsonBtn','chemImportJsonBtn','matExportJsonBtn','matImportJsonBtn','smpExportJsonBtn','smpImportJsonBtn'].forEach(id=>{
+    document.getElementById(id).style.display = isAdmin() ? 'inline-block' : 'none';
+  });
+}
+async function completeLogin(acc){
+  currentUser = { code: acc.code, name: acc.name, role: acc.role };
+  await saveSession(acc.code);
+  document.getElementById('loginOverlay').classList.remove('show');
+  document.getElementById('login_code').value = '';
+  document.getElementById('login_pin').value = '';
+  renderUserBadge();
+  renderAll(); renderMatAll(); renderSmpAll();
+  if(currentUser.role==='admin') renderAdminTable();
+}
+
+async function loadCurrentUser(){
+  await loadAccounts();
+  let session = null;
+  try{
+    const res = await window.storage.get(SESSION_KEY, false);
+    session = res && res.value ? JSON.parse(res.value) : null;
+  }catch(e){ session = null; }
+  const acc = session && session.code ? findAccount(session.code) : null;
+  if(acc && !acc.mustChangePin){
+    currentUser = { code: acc.code, name: acc.name, role: acc.role };
+    document.getElementById('loginOverlay').classList.remove('show');
+    renderUserBadge();
+  }else{
+    showLoginPane('login');
+    document.getElementById('loginOverlay').classList.add('show');
+  }
+}
+
+let pendingSetupCode = null;
+
+document.getElementById('showRegisterBtn').addEventListener('click', ()=> showLoginPane('register'));
+document.getElementById('showLoginBtn').addEventListener('click', ()=> showLoginPane('login'));
+
+document.getElementById('loginSubmitBtn').addEventListener('click', async ()=>{
+  const code = document.getElementById('login_code').value.trim();
+  const pin = document.getElementById('login_pin').value.trim();
+  if(!code || !pin){ alert('請輸入使用者代號與4位數Pin碼'); return; }
+  const acc = findAccount(code);
+  if(!acc){ alert('找不到這個使用者代號,請確認,或點下方註冊新帳號。'); return; }
+  if(acc.mustChangePin || acc.pin===null){
+    pendingSetupCode = acc.code;
+    showLoginPane('setup');
+    return;
+  }
+  if(acc.pin !== pin){ alert('Pin碼不正確,請再試一次。'); return; }
+  await completeLogin(acc);
+});
+
+document.getElementById('registerSubmitBtn').addEventListener('click', async ()=>{
+  const name = document.getElementById('reg_name').value.trim();
+  const code = document.getElementById('reg_code').value.trim();
+  const pin = document.getElementById('reg_pin').value.trim();
+  const pin2 = document.getElementById('reg_pin2').value.trim();
+  if(!code){ alert('請填寫使用者代號'); return; }
+  if(findAccount(code)){ alert('這個代號已經有人使用了,換一個試試。'); return; }
+  if(!isValidPinFormat(pin)){ alert('Pin碼需為4位數字'); return; }
+  if(pin !== pin2){ alert('兩次輸入的Pin碼不一致'); return; }
+  const acc = { code, name, pin, role: 'member', mustChangePin: false, created_at: new Date().toISOString() };
+  accounts.push(acc);
+  await saveAccounts();
+  await completeLogin(acc);
+});
+
+document.getElementById('setupPinSubmitBtn').addEventListener('click', async ()=>{
+  const pin = document.getElementById('setup_pin').value.trim();
+  const pin2 = document.getElementById('setup_pin2').value.trim();
+  if(!isValidPinFormat(pin)){ alert('Pin碼需為4位數字'); return; }
+  if(pin !== pin2){ alert('兩次輸入的Pin碼不一致'); return; }
+  const acc = findAccount(pendingSetupCode);
+  if(!acc){ alert('發生錯誤,請重新登入。'); showLoginPane('login'); return; }
+  acc.pin = pin;
+  acc.mustChangePin = false;
+  await saveAccounts();
+  pendingSetupCode = null;
+  await completeLogin(acc);
+});
+
+document.getElementById('switchUserBtn').addEventListener('click', async ()=>{
+  await clearSession();
+  currentUser = null;
+  showLoginPane('login');
+  document.getElementById('loginOverlay').classList.add('show');
+});
+
+/* ---- 帳號管理(僅管理員可見) ---- */
+function renderAdminTable(){
+  document.getElementById('adminStatTotal').textContent = accounts.length;
+  const tbody = document.getElementById('adminTbody');
+  tbody.innerHTML = '';
+  accounts.slice().sort((a,b)=>(a.code||'').localeCompare(b.code||'')).forEach(acc=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td data-label="代號"><span class="id-badge">${escapeHtml(acc.code)}</span></td>
+      <td data-label="名稱">${escapeHtml(acc.name||'-')}</td>
+      <td data-label="Pin碼"><span class="id-badge">${acc.pin ? escapeHtml(acc.pin) : '(尚未設定)'}</span></td>
+      <td data-label="角色">${acc.role==='admin' ? '<span class="plain-tag">管理員</span>' : '一般成員'}</td>
+      <td data-label="建立時間">${escapeHtml((acc.created_at||'').slice(0,10))}</td>
+      <td class="cell-actions">
+        <button class="btn btn-ghost btn-sm" data-code="${escapeHtml(acc.code)}" data-action="toggle">${acc.role==='admin'?'降為成員':'設為管理員'}</button>
+        <button class="btn btn-ghost btn-sm" data-code="${escapeHtml(acc.code)}" data-action="reset">重設Pin碼</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+document.getElementById('adminTbody').addEventListener('click', async (e)=>{
+  const btn = e.target.closest('button[data-action]');
+  if(!btn) return;
+  const code = btn.dataset.code;
+  const acc = findAccount(code);
+  if(!acc) return;
+  if(btn.dataset.action==='toggle'){
+    if(code===currentUser.code){ alert('不能修改自己的角色。'); return; }
+    acc.role = acc.role==='admin' ? 'member' : 'admin';
+  }else if(btn.dataset.action==='reset'){
+    if(!confirm(`確定要重設 ${acc.name||acc.code} 的Pin碼嗎?對方下次登入時,系統會要求他重新設定一組新的Pin碼。`)) return;
+    acc.pin = null;
+    acc.mustChangePin = true;
+  }
+  await saveAccounts();
+  renderAdminTable();
+});
+
+/* ======================================================
+   分頁切換
+====================================================== */
+document.getElementById('navChem').addEventListener('click', ()=>switchPage('chemicals'));
+document.getElementById('navMat').addEventListener('click', ()=>switchPage('materials'));
+document.getElementById('navSample').addEventListener('click', ()=>switchPage('samples'));
+document.getElementById('navAdmin').addEventListener('click', ()=>{ switchPage('admin'); renderAdminTable(); });
+function switchPage(name){
+  document.getElementById('navChem').classList.toggle('active', name==='chemicals');
+  document.getElementById('navMat').classList.toggle('active', name==='materials');
+  document.getElementById('navSample').classList.toggle('active', name==='samples');
+  document.getElementById('navAdmin').classList.toggle('active', name==='admin');
+  document.getElementById('page-chemicals').classList.toggle('active', name==='chemicals');
+  document.getElementById('page-materials').classList.toggle('active', name==='materials');
+  document.getElementById('page-samples').classList.toggle('active', name==='samples');
+  document.getElementById('page-admin').classList.toggle('active', name==='admin');
+}
+
+/* ======================================================
+   藥品清單
+====================================================== */
+const STORAGE_KEY = 'chemicals-data';
+let items = [];
+let editingId = null;
+let selectedHaz = new Set();
+
+async function loadItems(){
+  items = await fsGetAll('chemicals');
+  document.getElementById('loadingNotice').style.display = 'none';
+  renderAll();
+}
+async function saveItems(){
+  const ok = await fsReplaceAll('chemicals', items);
+  if(!ok) alert('儲存失敗,請檢查網路連線後再試一次。');
+}
+function populateLocationSelect(){
+  document.getElementById('f_location').innerHTML = '<option value="">請選擇位置</option>' + CHEM_LOCATIONS.map(l=>`<option value="${l}">${l}</option>`).join('');
+}
+const CHEM_FIELD_IDS = ['f_name_zh','f_name_en','f_iupac','f_cas','f_location','f_grade','f_quantity','f_unit','f_purchase_date','f_low_threshold','f_sds','f_note'];
+const CHEM_DRAFT_KEY = 'draft-chemical';
+const saveChemDraftDebounced = debounce(()=>{ if(!editingId) saveDraft(CHEM_DRAFT_KEY, gatherChemDraft()); }, 700);
+function gatherChemDraft(){
+  return {
+    fields: collectFormValues(CHEM_FIELD_IDS),
+    hazards: [...selectedHaz],
+    state: (document.querySelector('input[name="f_state"]:checked') || {}).value || '',
+    photo: document.getElementById('photoPreview').style.display !== 'none' ? document.getElementById('photoPreview').src : null
+  };
+}
+function applyChemDraft(d){
+  if(!d) return;
+  restoreFormValues(CHEM_FIELD_IDS, d.fields);
+  selectedHaz = new Set(d.hazards||[]);
+  document.querySelectorAll('#hazPicker .haz-chip').forEach(chip=>{
+    const code = chip.dataset.code;
+    if(selectedHaz.has(code)){ const g=ghsInfo(code); chip.classList.add('on'); chip.style.background=g.color; chip.style.borderColor=g.color; }
+  });
+  if(d.state){ document.querySelectorAll('input[name="f_state"]').forEach(r=>{ r.checked = (r.value===d.state); }); }
+  if(d.photo){ document.getElementById('photoPreview').src = d.photo; document.getElementById('photoPreview').style.display='block'; }
+}
+function renderHazPicker(){
+  const el = document.getElementById('hazPicker');
+  el.innerHTML = '';
+  GHS.forEach(g=>{
+    const chip = document.createElement('div');
+    chip.className = 'haz-chip';
+    chip.innerHTML = `${ghsIconSvg(g.code, 14, g.color)}<span style="vertical-align:middle;">${g.label}</span>`;
+    chip.dataset.code = g.code;
+    chip.addEventListener('click', ()=>{
+      if(selectedHaz.has(g.code)){ selectedHaz.delete(g.code); chip.classList.remove('on'); chip.style.background=''; chip.style.borderColor=''; }
+      else{ selectedHaz.add(g.code); chip.classList.add('on'); chip.style.background=g.color; chip.style.borderColor=g.color; }
+      saveChemDraftDebounced();
+    });
+    el.appendChild(chip);
+  });
+}
+function populateFilters(){
+  const locSel = document.getElementById('filterLoc');
+  const curLoc = locSel.value;
+  locSel.innerHTML = '<option value="">所有位置</option>' + CHEM_LOCATIONS.map(l=>`<option value="${l}">${l}</option>`).join('');
+  locSel.value = curLoc;
+  const hazSel = document.getElementById('filterHaz');
+  const curHaz = hazSel.value;
+  hazSel.innerHTML = '<option value="">所有危害性</option>' + GHS.map(g=>`<option value="${g.code}">${g.label}</option>`).join('');
+  hazSel.value = curHaz;
+}
+function renderStats(){
+  document.getElementById('statTotal').textContent = items.length;
+  const low = items.filter(i=> i.low_threshold !== '' && i.low_threshold != null && Number(i.quantity) <= Number(i.low_threshold)).length;
+  document.getElementById('statLow').textContent = low;
+  document.getElementById('statLoc').textContent = new Set(items.map(i=>i.location).filter(Boolean)).size;
+}
+function renderTable(){
+  const search = document.getElementById('search').value.trim().toLowerCase();
+  const fLoc = document.getElementById('filterLoc').value;
+  const fHaz = document.getElementById('filterHaz').value;
+  let filtered = items.filter(i=>{
+    if(fLoc && i.location !== fLoc) return false;
+    if(fHaz && !(i.hazards||[]).includes(fHaz)) return false;
+    if(search){
+      const hay = [i.name_zh,i.name_en,i.cas,i.location,i.iupac].join(' ').toLowerCase();
+      if(!hay.includes(search)) return false;
+    }
+    return true;
+  });
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = '';
+  document.getElementById('emptyState').style.display = filtered.length ? 'none' : 'block';
+  filtered.sort((a,b)=> (a.name_zh||'').localeCompare(b.name_zh||'', 'zh-Hant'));
+  filtered.forEach(item=>{
+    const tr = document.createElement('tr');
+    tr.className = 'row';
+    const isLow = item.low_threshold !== '' && item.low_threshold != null && Number(item.quantity) <= Number(item.low_threshold);
+    tr.innerHTML = `
+      <td class="cell-head" colspan="2">${item.photo ? `<img class="thumb" src="${item.photo}">` : ''}<div class="name-block"><div class="name-zh">${escapeHtml(item.name_zh)}</div><div class="name-en">${escapeHtml(item.name_en||'')}</div></div></td>
+      <td data-label="位置">${locTag(item.location)}</td>
+      <td data-label="存量" class="${isLow?'qty-low':''}">${item.quantity ?? '-'} ${escapeHtml(item.unit||'')}</td>
+      <td data-label="級別">${item.grade ? `<span class="plain-tag">${escapeHtml(item.grade)}</span>` : '-'}</td>
+      <td data-label="危害性"><div class="haz-row">${(item.hazards||[]).map(c=>{const g=ghsInfo(c);return `<span class="haz-tag" style="background:${g.color}">${ghsIconSvg(c)}${g.label}</span>`;}).join('') || '<span style="color:var(--ink-soft);font-size:12px;">-</span>'}</div></td>
+      <td data-label="SDS頁數">${escapeHtml(item.sds_pages||'-')}</td>
+      <td class="cell-actions"><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation()">···</button></td>
+    `;
+    tr.addEventListener('click', ()=> openDetail(item.id));
+    tbody.appendChild(tr);
+  });
+}
+function renderAll(){ populateFilters(); renderStats(); renderTable(); }
+
+async function openForm(id){
+  editingId = id || null;
+  selectedHaz = new Set();
+  populateLocationSelect();
+  document.getElementById('formTitle').textContent = id ? '編輯藥品' : '新增藥品';
+  document.getElementById('deleteBtn').style.display = (id && isAdmin()) ? 'inline-block' : 'none';
+  document.getElementById('photoPreview').style.display = 'none';
+  document.getElementById('photoPreview').src = '';
+  if(id){
+    const item = items.find(i=>i.id===id);
+    document.getElementById('f_name_zh').value = item.name_zh||'';
+    document.getElementById('f_name_en').value = item.name_en||'';
+    document.getElementById('f_iupac').value = item.iupac||'';
+    document.getElementById('f_cas').value = item.cas||'';
+    document.getElementById('f_location').value = item.location||'';
+    document.getElementById('f_grade').value = item.grade||'';
+    document.querySelectorAll('input[name="f_state"]').forEach(r=>{ r.checked = (r.value === item.state); });
+    document.getElementById('f_quantity').value = item.quantity ?? '';
+    document.getElementById('f_unit').value = item.unit||'';
+    document.getElementById('f_purchase_date').value = item.purchase_date||'';
+    document.getElementById('f_low_threshold').value = item.low_threshold ?? '';
+    document.getElementById('f_sds').value = item.sds_pages||'';
+    document.getElementById('f_note').value = item.note||'';
+    if(item.photo){ document.getElementById('photoPreview').src = item.photo; document.getElementById('photoPreview').style.display='block'; }
+    (item.hazards||[]).forEach(c=>selectedHaz.add(c));
+    renderHazPicker();
+    selectedHaz.forEach(code=>{
+      const chip = document.querySelector(`.haz-chip[data-code="${code}"]`);
+      if(chip){ const g = ghsInfo(code); chip.classList.add('on'); chip.style.background=g.color; chip.style.borderColor=g.color; }
+    });
+  }else{
+    ['f_name_zh','f_name_en','f_iupac','f_cas','f_location','f_grade','f_quantity','f_unit','f_purchase_date','f_low_threshold','f_sds','f_note'].forEach(id=>document.getElementById(id).value='');
+    document.querySelectorAll('input[name="f_state"]').forEach(r=>{ r.checked = false; });
+    renderHazPicker();
+    const draft = await loadDraft(CHEM_DRAFT_KEY);
+    applyChemDraft(draft);
+  }
+  document.getElementById('formOverlay').classList.add('show');
+}
+function closeForm(){ document.getElementById('formOverlay').classList.remove('show'); editingId = null; }
+function clearChemForm(){
+  CHEM_FIELD_IDS.forEach(fid=>document.getElementById(fid).value='');
+  document.querySelectorAll('input[name="f_state"]').forEach(r=>{ r.checked = false; });
+  selectedHaz = new Set();
+  document.querySelectorAll('#hazPicker .haz-chip').forEach(chip=>{ chip.classList.remove('on'); chip.style.background=''; chip.style.borderColor=''; });
+  document.getElementById('photoPreview').style.display = 'none';
+  document.getElementById('photoPreview').src = '';
+  clearDraft(CHEM_DRAFT_KEY);
+}
+document.getElementById('clearChemBtn').addEventListener('click', ()=>{
+  if(confirm('確定要清空目前表單所有已輸入的內容嗎?此動作無法復原。')) clearChemForm();
+});
+CHEM_FIELD_IDS.forEach(fid=>{
+  document.getElementById(fid).addEventListener('input', saveChemDraftDebounced);
+  document.getElementById(fid).addEventListener('change', saveChemDraftDebounced);
+});
+document.querySelectorAll('input[name="f_state"]').forEach(r=>{
+  r.addEventListener('change', saveChemDraftDebounced);
+});
+
+async function handleSave(){
+  const name_zh = document.getElementById('f_name_zh').value.trim();
+  const location = document.getElementById('f_location').value;
+  if(!name_zh || !location){ alert('請至少填寫「中文名稱」與「存放位置」'); return; }
+  const data = {
+    id: editingId || genId(items, 'CHEM'),
+    name_zh,
+    name_en: document.getElementById('f_name_en').value.trim(),
+    iupac: document.getElementById('f_iupac').value.trim(),
+    cas: document.getElementById('f_cas').value.trim(),
+    location,
+    grade: document.getElementById('f_grade').value,
+    state: (document.querySelector('input[name="f_state"]:checked') || {}).value || '',
+    quantity: document.getElementById('f_quantity').value === '' ? null : Number(document.getElementById('f_quantity').value),
+    unit: document.getElementById('f_unit').value.trim(),
+    purchase_date: document.getElementById('f_purchase_date').value,
+    low_threshold: document.getElementById('f_low_threshold').value === '' ? null : Number(document.getElementById('f_low_threshold').value),
+    sds_pages: document.getElementById('f_sds').value.trim(),
+    note: document.getElementById('f_note').value.trim(),
+    hazards: [...selectedHaz],
+    photo: document.getElementById('photoPreview').style.display !== 'none' ? document.getElementById('photoPreview').src : null,
+    updated_at: new Date().toISOString(),
+    created_by: editingId ? (items.find(i=>i.id===editingId)?.created_by || (currentUser && currentUser.code) || null) : ((currentUser && currentUser.code) || null),
+    created_at: editingId ? (items.find(i=>i.id===editingId)?.created_at || new Date().toISOString()) : new Date().toISOString()
+  };
+  if(editingId){ items[items.findIndex(i=>i.id===editingId)] = data; }
+  else{ items.push(data); }
+  const ok = await fsSetItem('chemicals', data);
+  if(!ok){ alert('儲存失敗,請檢查網路連線後再試一次。'); return; }
+  if(!editingId) await clearDraft(CHEM_DRAFT_KEY);
+  closeForm();
+  renderAll();
+}
+async function handleDelete(){
+  if(!editingId || !isAdmin()) return;
+  if(!confirm('確定要刪除此品項嗎?此動作無法復原。')) return;
+  const idToDelete = editingId;
+  items = items.filter(i=>i.id!==idToDelete);
+  const ok = await fsDeleteItem('chemicals', idToDelete);
+  if(!ok){ alert('刪除失敗,請檢查網路連線後再試一次。'); }
+  closeForm();
+  renderAll();
+}
+bindPhotoUpload('photoDrop','photoInput','photoPreview');
+document.getElementById('photoInput').addEventListener('change', ()=> setTimeout(saveChemDraftDebounced, 50));
+
+function openDetail(id){
+  const item = items.find(i=>i.id===id);
+  if(!item) return;
+  document.getElementById('d_name_zh').textContent = item.name_zh;
+  document.getElementById('d_name_en').textContent = item.name_en||'';
+  document.getElementById('d_iupac').textContent = item.iupac || '-';
+  document.getElementById('d_cas').textContent = item.cas || '-';
+  document.getElementById('d_location').innerHTML = locTag(item.location);
+  document.getElementById('d_qty').textContent = (item.quantity ?? '-') + ' ' + (item.unit||'');
+  document.getElementById('d_date').textContent = item.purchase_date || '-';
+  document.getElementById('d_sds').textContent = item.sds_pages || '-';
+  document.getElementById('d_haz').innerHTML = (item.hazards||[]).map(c=>{const g=ghsInfo(c);return `<span class="haz-tag" style="background:${g.color}">${ghsIconSvg(c)}${g.label}</span>`;}).join(' ') || '-';
+  document.getElementById('d_note').textContent = item.note || '';
+  document.getElementById('d_id').textContent = item.id;
+  const creatorAcc = findAccount(item.created_by);
+  document.getElementById('d_creator').textContent = item.created_by ? (creatorAcc ? (creatorAcc.name||creatorAcc.code) : item.created_by) : '未知';
+  document.getElementById('editFromDetailBtn').style.display = canEdit(item) ? 'inline-block' : 'none';
+  document.getElementById('d_photoWrap').innerHTML = item.photo ? `<img src="${item.photo}" style="max-width:100%;max-height:140px;border-radius:8px;border:1px solid var(--line);">` : '';
+  const topHaz = (item.hazards||[])[0];
+  document.getElementById('detailStripe').style.background = topHaz ? ghsInfo(topHaz).color : '#B9C4BF';
+  const qrTarget = document.getElementById('qrTarget');
+  qrTarget.innerHTML = '';
+  new QRCode(qrTarget, { text: 'CHEM:' + item.id, width: 108, height: 108, colorDark: '#1B4B43', colorLight: '#ffffff' });
+  document.getElementById('editFromDetailBtn').onclick = ()=>{ closeDetail(); openForm(item.id); };
+  document.getElementById('downloadQrBtn').onclick = ()=>{
+    setTimeout(()=>{
+      const canvas = qrTarget.querySelector('canvas');
+      const img = qrTarget.querySelector('img');
+      const src = canvas ? canvas.toDataURL('image/png') : (img ? img.src : null);
+      if(!src) return;
+      const a = document.createElement('a');
+      a.href = src;
+      a.download = `QR_${item.name_zh}_${item.id}.png`;
+      a.click();
+    }, 50);
+  };
+  document.getElementById('detailOverlay').classList.add('show');
+}
+function closeDetail(){ document.getElementById('detailOverlay').classList.remove('show'); }
+
+function downloadCsv(filename, headers, rows){
+  const csv = [headers, ...rows].map(r=> r.map(v=>{
+    const s = String(v ?? '');
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
+  }).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF' + csv], {type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+function exportCsv(){
+  const headers = ['編號','名稱(中)','名稱(英)','IUPAC名','CAS No.','位置','存量','單位','購買日期','危害性','SDS頁數','備註'];
+  const rows = items.map(i=>[
+    i.id, i.name_zh, i.name_en, i.iupac, i.cas, i.location, i.quantity, i.unit, i.purchase_date,
+    (i.hazards||[]).map(c=>ghsInfo(c).label).join('/'), i.sds_pages, i.note
+  ]);
+  downloadCsv(`藥品清單_${new Date().toISOString().slice(0,10)}.csv`, headers, rows);
+}
+
+document.getElementById('addBtn').addEventListener('click', ()=>openForm(null));
+document.getElementById('formClose').addEventListener('click', closeForm);
+document.getElementById('cancelBtn').addEventListener('click', closeForm);
+document.getElementById('saveBtn').addEventListener('click', handleSave);
+document.getElementById('deleteBtn').addEventListener('click', handleDelete);
+document.getElementById('detailClose').addEventListener('click', closeDetail);
+document.getElementById('search').addEventListener('input', renderTable);
+document.getElementById('filterLoc').addEventListener('change', renderTable);
+document.getElementById('filterHaz').addEventListener('change', renderTable);
+document.getElementById('exportBtn').addEventListener('click', exportCsv);
+document.getElementById('formOverlay').addEventListener('click', (e)=>{ if(e.target.id==='formOverlay') closeForm(); });
+document.getElementById('detailOverlay').addEventListener('click', (e)=>{ if(e.target.id==='detailOverlay') closeDetail(); });
+
+/* ======================================================
+   試材清單
+====================================================== */
+const MAT_STORAGE_KEY = 'materials-data';
+let matItems = [];
+let editingMatId = null;
+let pendingMatId = null;
+
+async function loadMatItems(){
+  matItems = await fsGetAll('materials');
+  document.getElementById('matLoadingNotice').style.display = 'none';
+  renderMatAll();
+}
+async function saveMatItems(){
+  const ok = await fsReplaceAll('materials', matItems);
+  if(!ok) alert('儲存失敗,請檢查網路連線後再試一次。');
+}
+function populateMatSelects(){
+  document.getElementById('m_part').innerHTML = '<option value="">請選擇部位</option>' + PART_OPTIONS.map(p=>`<option value="${p}">${p}</option>`).join('');
+  document.getElementById('m_use').innerHTML = '<option value="">請選擇用途</option>' + USE_OPTIONS.map(u=>`<option value="${u}">${u}</option>`).join('');
+  document.getElementById('m_storage').innerHTML = '<option value="">請選擇位置</option>' + STORAGE_OPTIONS.map(o=>`<option value="${o.value}">${o.label}</option>`).join('');
+}
+const MAT_FIELD_IDS = ['m_species','m_source','m_acquired_date','m_acquired_unknown','m_part','m_storage','m_use','m_note'];
+const MAT_DRAFT_KEY = 'draft-material';
+const saveMatDraftDebounced = debounce(()=>{ if(!editingMatId) saveDraft(MAT_DRAFT_KEY, gatherMatDraft()); }, 700);
+function gatherMatDraft(){
+  return {
+    fields: collectFormValues(MAT_FIELD_IDS),
+    photo: document.getElementById('m_photoPreview').style.display !== 'none' ? document.getElementById('m_photoPreview').src : null
+  };
+}
+function applyMatDraft(d){
+  if(!d) return;
+  restoreFormValues(MAT_FIELD_IDS, d.fields);
+  document.getElementById('m_acquired_date').disabled = !!document.getElementById('m_acquired_unknown').checked;
+  if(d.photo){ document.getElementById('m_photoPreview').src = d.photo; document.getElementById('m_photoPreview').style.display='block'; }
+}
+function populateMatFilters(){
+  const partSel = document.getElementById('matFilterPart');
+  const curPart = partSel.value;
+  partSel.innerHTML = '<option value="">所有部位</option>' + PART_OPTIONS.map(p=>`<option value="${p}">${p}</option>`).join('');
+  partSel.value = curPart;
+  const useSel = document.getElementById('matFilterUse');
+  const curUse = useSel.value;
+  useSel.innerHTML = '<option value="">所有用途</option>' + USE_OPTIONS.map(u=>`<option value="${u}">${u}</option>`).join('');
+  useSel.value = curUse;
+}
+function renderMatStats(){
+  document.getElementById('matStatTotal').textContent = matItems.length;
+  document.getElementById('matStatSpecies').textContent = new Set(matItems.map(i=>i.species).filter(Boolean)).size;
+}
+function renderMatTable(){
+  const search = document.getElementById('matSearch').value.trim().toLowerCase();
+  const fPart = document.getElementById('matFilterPart').value;
+  const fUse = document.getElementById('matFilterUse').value;
+  let filtered = matItems.filter(i=>{
+    if(fPart && i.part !== fPart) return false;
+    if(fUse && i.intended_use !== fUse) return false;
+    if(search){
+      const hay = [i.species, i.source, i.id].join(' ').toLowerCase();
+      if(!hay.includes(search)) return false;
+    }
+    return true;
+  });
+  const tbody = document.getElementById('matTbody');
+  tbody.innerHTML = '';
+  document.getElementById('matEmptyState').style.display = filtered.length ? 'none' : 'block';
+  filtered.sort((a,b)=> (a.species||'').localeCompare(b.species||'', 'zh-Hant'));
+  filtered.forEach(item=>{
+    const tr = document.createElement('tr');
+    tr.className = 'row';
+    const dateLabel = item.acquired_unknown ? '未知' : (item.acquired_date || '-');
+    tr.innerHTML = `
+      <td class="cell-head">${item.photo ? `<img class="thumb" src="${item.photo}">` : ''}<div class="name-block"><div class="name-zh">${escapeHtml(item.species)}</div></div></td>
+      <td data-label="編號"><span class="id-badge">${item.id}</span></td>
+      <td data-label="物種">${escapeHtml(item.species)}</td>
+      <td data-label="來源">${escapeHtml(item.source||'-')}</td>
+      <td data-label="部位">${item.part ? `<span class="plain-tag">${escapeHtml(item.part)}</span>` : '-'}</td>
+      <td data-label="存放位置">${escapeHtml(storageLabel(item.storage_location))}</td>
+      <td data-label="取得日期">${escapeHtml(dateLabel)}</td>
+      <td data-label="預計用途">${item.intended_use ? `<span class="plain-tag">${escapeHtml(item.intended_use)}</span>` : '-'}</td>
+      <td class="cell-actions"><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation()">···</button></td>
+    `;
+    tr.addEventListener('click', ()=> openMatForm(item.id));
+    tbody.appendChild(tr);
+  });
+}
+function renderMatAll(){ populateMatFilters(); renderMatStats(); renderMatTable(); }
+
+function populateSpeciesDatalist(){
+  const set = new Set();
+  matItems.forEach(i=>{ if(i.species) set.add(i.species); });
+  smpItems.forEach(i=>{ if(i.species) set.add(i.species); });
+  document.getElementById('speciesList').innerHTML = [...set].sort().map(s=>`<option value="${escapeHtml(s)}"></option>`).join('');
+}
+async function openMatForm(id){
+  editingMatId = id || null;
+  populateMatSelects();
+  populateSpeciesDatalist();
+  document.getElementById('matFormTitle').textContent = id ? '編輯試材' : '新增試材';
+  document.getElementById('matDeleteBtn').style.display = 'none';
+  document.getElementById('m_photoPreview').style.display = 'none';
+  document.getElementById('m_photoPreview').src = '';
+  document.getElementById('m_acquired_date').disabled = false;
+  if(id){
+    const item = matItems.find(i=>i.id===id);
+    document.getElementById('m_id').value = item.id;
+    document.getElementById('m_species').value = item.species||'';
+    document.getElementById('m_source').value = item.source||'';
+    document.getElementById('m_acquired_date').value = item.acquired_date||'';
+    document.getElementById('m_acquired_unknown').checked = !!item.acquired_unknown;
+    document.getElementById('m_acquired_date').disabled = !!item.acquired_unknown;
+    document.getElementById('m_part').value = item.part||'';
+    document.getElementById('m_storage').value = item.storage_location||'';
+    document.getElementById('m_use').value = item.intended_use||'';
+    document.getElementById('m_note').value = item.note||'';
+    if(item.photo){ document.getElementById('m_photoPreview').src = item.photo; document.getElementById('m_photoPreview').style.display='block'; }
+
+    const editable = canEdit(item);
+    const creatorAcc = findAccount(item.created_by);
+    const creatorLabel = item.created_by ? (creatorAcc ? (creatorAcc.name||creatorAcc.code) : item.created_by) : '未知';
+    const banner = document.getElementById('matCreatorBanner');
+    banner.style.display = 'block';
+    if(editable){
+      banner.style.background = '#EAF3F0';
+      banner.style.color = 'var(--pine-deep)';
+      banner.textContent = `建立者:${creatorLabel}`;
+    }else{
+      banner.style.background = '#F4E6D6';
+      banner.style.color = '#8A4B12';
+      banner.textContent = `此筆資料由 ${creatorLabel} 建立,只有建立者本人或管理員能編輯,目前為唯讀模式。`;
+    }
+    MAT_FIELD_IDS.forEach(fid=> document.getElementById(fid).disabled = !editable);
+    document.getElementById('matSaveBtn').style.display = editable ? 'inline-block' : 'none';
+    document.getElementById('clearMatBtn').style.display = editable ? 'inline-block' : 'none';
+    document.getElementById('matDeleteBtn').style.display = isAdmin() ? 'inline-block' : 'none';
+  }else{
+    document.getElementById('matCreatorBanner').style.display = 'none';
+    MAT_FIELD_IDS.forEach(fid=> document.getElementById(fid).disabled = false);
+    document.getElementById('matSaveBtn').style.display = 'inline-block';
+    document.getElementById('clearMatBtn').style.display = 'inline-block';
+    pendingMatId = genId(matItems, 'MAT');
+    document.getElementById('m_id').value = pendingMatId;
+    ['m_species','m_source','m_acquired_date','m_part','m_storage','m_use','m_note'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('m_acquired_unknown').checked = false;
+    const draft = await loadDraft(MAT_DRAFT_KEY);
+    applyMatDraft(draft);
+  }
+  document.getElementById('matFormOverlay').classList.add('show');
+}
+function closeMatForm(){ document.getElementById('matFormOverlay').classList.remove('show'); editingMatId = null; }
+function clearMatForm(){
+  MAT_FIELD_IDS.forEach(fid=>{
+    const el = document.getElementById(fid);
+    if(el.type==='checkbox') el.checked = false; else el.value='';
+  });
+  document.getElementById('m_acquired_date').disabled = false;
+  document.getElementById('m_photoPreview').style.display = 'none';
+  document.getElementById('m_photoPreview').src = '';
+  clearDraft(MAT_DRAFT_KEY);
+}
+document.getElementById('clearMatBtn').addEventListener('click', ()=>{
+  if(confirm('確定要清空目前表單所有已輸入的內容嗎?此動作無法復原。')) clearMatForm();
+});
+MAT_FIELD_IDS.forEach(fid=>{
+  document.getElementById(fid).addEventListener('input', saveMatDraftDebounced);
+  document.getElementById(fid).addEventListener('change', saveMatDraftDebounced);
+});
+document.getElementById('m_acquired_unknown').addEventListener('change', (e)=>{
+  document.getElementById('m_acquired_date').disabled = e.target.checked;
+  if(e.target.checked) document.getElementById('m_acquired_date').value = '';
+});
+
+async function handleMatSave(){
+  const species = document.getElementById('m_species').value.trim();
+  const part = document.getElementById('m_part').value;
+  const storage_location = document.getElementById('m_storage').value;
+  if(!species || !part || !storage_location){ alert('請至少填寫「物種」「部位」與「存放位置」'); return; }
+  const data = {
+    id: editingMatId || pendingMatId || genId(matItems, 'MAT'),
+    species,
+    source: document.getElementById('m_source').value.trim(),
+    acquired_unknown: document.getElementById('m_acquired_unknown').checked,
+    acquired_date: document.getElementById('m_acquired_unknown').checked ? '' : document.getElementById('m_acquired_date').value,
+    part,
+    storage_location,
+    intended_use: document.getElementById('m_use').value,
+    note: document.getElementById('m_note').value.trim(),
+    photo: document.getElementById('m_photoPreview').style.display !== 'none' ? document.getElementById('m_photoPreview').src : null,
+    updated_at: new Date().toISOString(),
+    created_by: editingMatId ? (matItems.find(i=>i.id===editingMatId)?.created_by || (currentUser && currentUser.code) || null) : ((currentUser && currentUser.code) || null),
+    created_at: editingMatId ? (matItems.find(i=>i.id===editingMatId)?.created_at || new Date().toISOString()) : new Date().toISOString()
+  };
+  if(editingMatId){ matItems[matItems.findIndex(i=>i.id===editingMatId)] = data; }
+  else{ matItems.push(data); }
+  const ok = await fsSetItem('materials', data);
+  if(!ok){ alert('儲存失敗,請檢查網路連線後再試一次。'); return; }
+  if(!editingMatId) await clearDraft(MAT_DRAFT_KEY);
+  closeMatForm();
+  renderMatAll();
+}
+async function handleMatDelete(){
+  if(!editingMatId || !isAdmin()) return;
+  if(!confirm('確定要刪除此品項嗎?此動作無法復原。')) return;
+  const idToDelete = editingMatId;
+  matItems = matItems.filter(i=>i.id!==idToDelete);
+  const ok = await fsDeleteItem('materials', idToDelete);
+  if(!ok){ alert('刪除失敗,請檢查網路連線後再試一次。'); }
+  closeMatForm();
+  renderMatAll();
+}
+bindPhotoUpload('m_photoDrop','m_photoInput','m_photoPreview');
+document.getElementById('m_photoInput').addEventListener('change', ()=> setTimeout(saveMatDraftDebounced, 50));
+
+function exportMatCsv(){
+  const headers = ['編號','物種','來源','取得日期','部位','存放位置','預計用途','備註'];
+  const rows = matItems.map(i=>[
+    i.id, i.species, i.source, i.acquired_unknown ? '未知' : i.acquired_date, i.part, storageLabel(i.storage_location), i.intended_use, i.note
+  ]);
+  downloadCsv(`試材清單_${new Date().toISOString().slice(0,10)}.csv`, headers, rows);
+}
+
+document.getElementById('matAddBtn').addEventListener('click', ()=>openMatForm(null));
+document.getElementById('matFormClose').addEventListener('click', closeMatForm);
+document.getElementById('matCancelBtn').addEventListener('click', closeMatForm);
+document.getElementById('matSaveBtn').addEventListener('click', handleMatSave);
+document.getElementById('matDeleteBtn').addEventListener('click', handleMatDelete);
+document.getElementById('matSearch').addEventListener('input', renderMatTable);
+document.getElementById('matFilterPart').addEventListener('change', renderMatTable);
+document.getElementById('matFilterUse').addEventListener('change', renderMatTable);
+document.getElementById('matExportBtn').addEventListener('click', exportMatCsv);
+document.getElementById('matFormOverlay').addEventListener('click', (e)=>{ if(e.target.id==='matFormOverlay') closeMatForm(); });
+
+/* ======================================================
+   樣品清單
+====================================================== */
+const SMP_STORAGE_KEY = 'samples-data';
+let smpItems = [];
+let editingSmpId = null;
+let pendingSmpId = null;
+
+async function loadSmpItems(){
+  smpItems = await fsGetAll('samples');
+  document.getElementById('smpLoadingNotice').style.display = 'none';
+  renderSmpAll();
+}
+async function saveSmpItems(){
+  const ok = await fsReplaceAll('samples', smpItems);
+  if(!ok) alert('儲存失敗,請檢查網路連線後再試一次。');
+}
+const SMP_FIELD_IDS = [
+  's_import_material','s_name_zh','s_species','s_source','s_acquired_date','s_acquired_unknown','s_part',
+  's_extraction_date','s_extraction_method','s_extractor','s_fraction_type','s_fraction_layer',
+  's_solvent','s_solvent_other','s_extract_type',
+  's_material_fresh_weight','s_sample_weight','s_dry_weight',
+  'mc_fresh_gross','mc_dry_gross','mc_container'
+];
+const SMP_DRAFT_KEY = 'draft-sample';
+const saveSmpDraftDebounced = debounce(()=>{ if(!editingSmpId) saveDraft(SMP_DRAFT_KEY, gatherSmpDraft()); }, 700);
+function gatherSmpDraft(){
+  return {
+    fields: collectFormValues(SMP_FIELD_IDS),
+    photos: {
+      extract: document.getElementById('s_photoExtractPreview').style.display !== 'none' ? document.getElementById('s_photoExtractPreview').src : null,
+      bottle: document.getElementById('s_photoBottlePreview').style.display !== 'none' ? document.getElementById('s_photoBottlePreview').src : null,
+      moisture: document.getElementById('mc_photoPreview').style.display !== 'none' ? document.getElementById('mc_photoPreview').src : null
+    }
+  };
+}
+function applySmpDraft(d){
+  if(!d) return;
+  restoreFormValues(SMP_FIELD_IDS, d.fields);
+  document.getElementById('s_acquired_date').disabled = !!document.getElementById('s_acquired_unknown').checked;
+  document.getElementById('s_fraction_layer_wrap').style.display = document.getElementById('s_fraction_type').value==='liquid_liquid' ? 'block' : 'none';
+  toggleSolventVsExtractType();
+  if(d.photos){
+    if(d.photos.extract){ document.getElementById('s_photoExtractPreview').src = d.photos.extract; document.getElementById('s_photoExtractPreview').style.display='block'; }
+    if(d.photos.bottle){ document.getElementById('s_photoBottlePreview').src = d.photos.bottle; document.getElementById('s_photoBottlePreview').style.display='block'; }
+    if(d.photos.moisture){ document.getElementById('mc_photoPreview').src = d.photos.moisture; document.getElementById('mc_photoPreview').style.display='block'; }
+  }
+  updateMoistureCalc();
+  updateExtractionRate();
+  updateSampleId();
+}
+function populateSmpSelects(){
+  document.getElementById('s_part').innerHTML = '<option value="">請選擇部位</option>' + PART_OPTIONS.map(p=>`<option value="${p}">${p}</option>`).join('');
+  document.getElementById('s_extraction_method').innerHTML = '<option value="">請選擇方法</option>' + EXTRACTION_METHOD_OPTIONS.map(m=>`<option value="${m}">${m}</option>`).join('');
+  document.getElementById('s_solvent').innerHTML = SOLVENT_OPTIONS.map(s=>`<option value="${s}">${s}</option>`).join('');
+  document.getElementById('s_import_material').innerHTML = '<option value="">不匯入 / 手動填寫</option>' +
+    matItems.map(m=>`<option value="${m.id}">${m.id} - ${escapeHtml(m.species)}</option>`).join('');
+}
+function extractDisplay(item){
+  if(item.extract_type) return item.extract_type;
+  const solvent = item.solvent==='其他' ? (item.solvent_other||'其他') : item.solvent;
+  return solvent ? solvent + '萃取物' : '';
+}
+function populateSmpFilters(){
+  const sel = document.getElementById('smpFilterSolvent');
+  const cur = sel.value;
+  const usedSolvents = [...new Set(smpItems.map(i=>extractDisplay(i)).filter(Boolean))];
+  sel.innerHTML = '<option value="">所有萃取物</option>' + usedSolvents.map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
+  sel.value = cur;
+}
+function renderSmpStats(){
+  document.getElementById('smpStatTotal').textContent = smpItems.length;
+  document.getElementById('smpStatSpecies').textContent = new Set(smpItems.map(i=>i.species).filter(Boolean)).size;
+}
+function renderSmpTable(){
+  const search = document.getElementById('smpSearch').value.trim().toLowerCase();
+  const fSolvent = document.getElementById('smpFilterSolvent').value;
+  let filtered = smpItems.filter(i=>{
+    if(fSolvent && extractDisplay(i) !== fSolvent) return false;
+    if(search){
+      const hay = [i.species, i.id].join(' ').toLowerCase();
+      if(!hay.includes(search)) return false;
+    }
+    return true;
+  });
+  const tbody = document.getElementById('smpTbody');
+  tbody.innerHTML = '';
+  document.getElementById('smpEmptyState').style.display = filtered.length ? 'none' : 'block';
+  filtered.sort((a,b)=> (b.extraction_date||'').localeCompare(a.extraction_date||''));
+  filtered.forEach(item=>{
+    const tr = document.createElement('tr');
+    tr.className = 'row';
+    const solventDisplay = extractDisplay(item);
+    tr.innerHTML = `
+      <td data-label="中文名稱"><span class="name-zh">${escapeHtml(item.name_zh||'-')}</span></td>
+      <td data-label="編號"><span class="id-badge">${item.id}</span></td>
+      <td data-label="物種">${escapeHtml(item.species||'-')}</td>
+      <td data-label="萃取日期">${escapeHtml(item.extraction_date||'-')}</td>
+      <td data-label="萃取物">${solventDisplay ? `<span class="plain-tag">${escapeHtml(solventDisplay)}</span>` : '-'}</td>
+      <td data-label="分離部">${item.fraction_type==='liquid_liquid' ? `<span class="plain-tag">${escapeHtml(item.fraction_layer||'-')}</span>` : '-'}</td>
+      <td data-label="萃取物重量">${item.sample_weight ?? '-'} ${item.sample_weight!=null?'g':''}</td>
+      <td data-label="萃取率">${escapeHtml(item.extraction_rate || '-')}</td>
+      <td class="cell-actions"><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation()">···</button></td>
+    `;
+    tr.addEventListener('click', ()=> openSmpForm(item.id));
+    tbody.appendChild(tr);
+  });
+}
+function renderSmpAll(){ populateSmpFilters(); renderSmpStats(); renderSmpTable(); }
+
+function getMoistureRates(){
+  const fresh = parseFloat(document.getElementById('mc_fresh_gross').value);
+  const dry = parseFloat(document.getElementById('mc_dry_gross').value);
+  const container = parseFloat(document.getElementById('mc_container').value);
+  if(isNaN(fresh) || isNaN(dry) || isNaN(container)) return null;
+  const freshNet = fresh - container;
+  const dryNet = dry - container;
+  if(freshNet <= 0 || dryNet < 0 || dryNet > freshNet) return 'error';
+  const wet = ((freshNet - dryNet) / freshNet) * 100;   // 濕基含水率
+  const dryBasis = ((freshNet - dryNet) / dryNet) * 100; // 乾基含水率
+  return { wet, dry: dryBasis, dryNet };
+}
+function updateMoistureCalc(){
+  const wetEl = document.getElementById('mc_moisture_wet');
+  const dryEl = document.getElementById('mc_moisture_dry');
+  const netEl = document.getElementById('mc_dry_net');
+  const rates = getMoistureRates();
+  if(rates === null){ wetEl.textContent = '-'; dryEl.textContent = '-'; netEl.textContent = '-'; }
+  else if(rates === 'error'){ wetEl.textContent = '數值有誤'; dryEl.textContent = '數值有誤'; netEl.textContent = '-'; }
+  else{ wetEl.textContent = rates.wet.toFixed(2) + '%'; dryEl.textContent = rates.dry.toFixed(2) + '%'; netEl.textContent = rates.dryNet.toFixed(2); }
+}
+['mc_fresh_gross','mc_dry_gross','mc_container'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', updateMoistureCalc);
+});
+bindPhotoUpload('mc_photoDrop','mc_photoInput','mc_photoPreview');
+
+document.getElementById('mc_importBtn').addEventListener('click', ()=>{
+  const netEl = document.getElementById('mc_dry_net');
+  if(netEl.textContent === '-' || netEl.textContent === '數值有誤'){
+    alert('請先完整填寫含水量測定區的三個重量欄位');
+    return;
+  }
+  document.getElementById('s_dry_weight').value = netEl.textContent;
+  updateExtractionRate();
+});
+
+document.getElementById('calcDryFromMoistureBtn').addEventListener('click', ()=>{
+  const freshMaterial = parseFloat(document.getElementById('s_material_fresh_weight').value);
+  const rates = getMoistureRates();
+  if(isNaN(freshMaterial)){ alert('請先填寫「試材鮮重」'); return; }
+  if(!rates || rates === 'error'){ alert('請先完整填寫下方含水量測定區的三個重量欄位'); return; }
+  const absDryWeight = freshMaterial * (1 - rates.wet/100);
+  document.getElementById('s_dry_weight').value = absDryWeight.toFixed(3);
+  updateExtractionRate();
+});
+
+function updateExtractionRate(){
+  const dry = parseFloat(document.getElementById('s_dry_weight').value);
+  const extractWeight = parseFloat(document.getElementById('s_sample_weight').value);
+  const rateEl = document.getElementById('s_extraction_rate');
+  if(isNaN(dry) || dry <= 0 || isNaN(extractWeight)){ rateEl.value = ''; return; }
+  rateEl.value = ((extractWeight / dry) * 100).toFixed(2) + '%';
+}
+['s_dry_weight','s_sample_weight'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', updateExtractionRate);
+});
+
+document.getElementById('s_fraction_type').addEventListener('change', (e)=>{
+  document.getElementById('s_fraction_layer_wrap').style.display = e.target.value==='liquid_liquid' ? 'block' : 'none';
+});
+
+document.getElementById('s_solvent').addEventListener('change', (e)=>{
+  document.getElementById('s_solvent_other_wrap').style.display = e.target.value==='其他' ? 'block' : 'none';
+});
+
+function toggleSolventVsExtractType(){
+  const isDistillation = DISTILLATION_METHODS.includes(document.getElementById('s_extraction_method').value);
+  document.getElementById('s_solvent_wrap').style.display = isDistillation ? 'none' : 'block';
+  document.getElementById('s_solvent_other_wrap').style.display = (!isDistillation && document.getElementById('s_solvent').value==='其他') ? 'block' : 'none';
+  document.getElementById('s_extract_type_wrap').style.display = isDistillation ? 'block' : 'none';
+  document.getElementById('s_fraction_row').style.display = isDistillation ? 'none' : 'grid';
+  if(isDistillation){
+    document.getElementById('s_fraction_type').value = 'none';
+    document.getElementById('s_fraction_layer_wrap').style.display = 'none';
+  }
+}
+document.getElementById('s_extraction_method').addEventListener('change', ()=>{
+  toggleSolventVsExtractType();
+  updateSampleId();
+});
+
+document.getElementById('s_import_material').addEventListener('change', (e)=>{
+  const mid = e.target.value;
+  if(!mid) return;
+  const m = matItems.find(i=>i.id===mid);
+  if(!m) return;
+  document.getElementById('s_species').value = m.species||'';
+  document.getElementById('s_source').value = m.source||'';
+  document.getElementById('s_acquired_date').value = m.acquired_date||'';
+  document.getElementById('s_acquired_unknown').checked = !!m.acquired_unknown;
+  document.getElementById('s_acquired_date').disabled = !!m.acquired_unknown;
+  document.getElementById('s_part').value = m.part||'';
+  updateSampleId();
+});
+document.getElementById('s_acquired_unknown').addEventListener('change', (e)=>{
+  document.getElementById('s_acquired_date').disabled = e.target.checked;
+  if(e.target.checked) document.getElementById('s_acquired_date').value = '';
+});
+
+/* ---- 樣品編號自動生成:代號_物種縮寫_部位_溶劑(E)_分離部(F,選填)_序號 ---- */
+function computeSamplePrefix(){
+  const userCode = (currentUser && currentUser.code) ? currentUser.code : '?';
+  const spAbbr = speciesAbbr(document.getElementById('s_species').value);
+  const part = document.getElementById('s_part').value;
+  const partAbbr = PART_ABBR[part] || 'Xx';
+  const method = document.getElementById('s_extraction_method').value;
+  let mainCode;
+  if(DISTILLATION_METHODS.includes(method)){
+    const extractType = document.getElementById('s_extract_type').value;
+    mainCode = EXTRACT_TYPE_ABBR[extractType] || 'Xx';
+  }else{
+    const solvent = document.getElementById('s_solvent').value;
+    const solventOther = document.getElementById('s_solvent_other').value;
+    let solventBase = SOLVENT_ABBR[solvent] || 'Xx';
+    if(solvent==='其他' && solventOther.trim()) solventBase = customAbbr(solventOther);
+    mainCode = solventBase + 'E';
+  }
+  const parts = [userCode, spAbbr, partAbbr, mainCode];
+  if(document.getElementById('s_fraction_type').value === 'liquid_liquid'){
+    const layer = document.getElementById('s_fraction_layer').value;
+    const layerBase = FRACTION_ABBR[layer] || 'Xx';
+    parts.push(layerBase + 'F');
+  }
+  return parts.join('_');
+}
+function nextSeqForPrefix(prefix, excludeId){
+  let max = 0;
+  smpItems.forEach(i=>{
+    if(excludeId && i.id===excludeId) return;
+    if(i.id && i.id.startsWith(prefix+'_')){
+      const m = /_(\d+)$/.exec(i.id);
+      if(m){ const n = parseInt(m[1],10); if(n>max) max = n; }
+    }
+  });
+  return max+1;
+}
+function updateSampleId(){
+  if(editingSmpId) return; // 編輯既有樣品時編號不重新產生,避免與舊資料脫鉤
+  const prefix = computeSamplePrefix();
+  const seq = nextSeqForPrefix(prefix, null);
+  pendingSmpId = prefix + '_' + String(seq).padStart(2,'0');
+  document.getElementById('s_id').value = pendingSmpId;
+}
+['s_species','s_part','s_extraction_method','s_solvent','s_solvent_other','s_extract_type','s_fraction_type','s_fraction_layer'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', updateSampleId);
+  document.getElementById(id).addEventListener('change', updateSampleId);
+});
+
+async function openSmpForm(id){
+  editingSmpId = id || null;
+  populateSmpSelects();
+  populateSpeciesDatalist();
+  document.getElementById('smpFormTitle').textContent = id ? '編輯樣品' : '新增樣品';
+  document.getElementById('smpDeleteBtn').style.display = 'none';
+  document.getElementById('s_solvent_other_wrap').style.display = 'none';
+  document.getElementById('s_fraction_layer_wrap').style.display = 'none';
+  ['s_photoExtractPreview','s_photoBottlePreview','mc_photoPreview'].forEach(pid=>{
+    document.getElementById(pid).style.display = 'none';
+    document.getElementById(pid).src = '';
+  });
+  document.getElementById('s_acquired_date').disabled = false;
+
+  if(id){
+    const item = smpItems.find(i=>i.id===id);
+    document.getElementById('s_id').value = item.id;
+    document.getElementById('s_import_material').value = item.material_id || '';
+    document.getElementById('s_name_zh').value = item.name_zh||'';
+    document.getElementById('s_species').value = item.species||'';
+    document.getElementById('s_source').value = item.source||'';
+    document.getElementById('s_acquired_date').value = item.acquired_date||'';
+    document.getElementById('s_acquired_unknown').checked = !!item.acquired_unknown;
+    document.getElementById('s_acquired_date').disabled = !!item.acquired_unknown;
+    document.getElementById('s_part').value = item.part||'';
+    document.getElementById('s_extraction_date').value = item.extraction_date||'';
+    document.getElementById('s_extraction_method').value = item.extraction_method||'';
+    document.getElementById('s_extractor').value = item.extractor||'';
+    document.getElementById('s_fraction_type').value = item.fraction_type||'none';
+    document.getElementById('s_fraction_layer').value = item.fraction_layer||'正己烷分離部';
+    if(item.fraction_type==='liquid_liquid') document.getElementById('s_fraction_layer_wrap').style.display = 'block';
+    document.getElementById('s_solvent').value = item.solvent||SOLVENT_OPTIONS[0];
+    document.getElementById('s_solvent_other').value = item.solvent_other||'';
+    if(item.solvent==='其他') document.getElementById('s_solvent_other_wrap').style.display = 'block';
+    document.getElementById('s_extract_type').value = item.extract_type || EXTRACT_TYPE_OPTIONS[0];
+    toggleSolventVsExtractType();
+    document.getElementById('s_material_fresh_weight').value = item.material_fresh_weight ?? '';
+    document.getElementById('s_sample_weight').value = item.sample_weight ?? '';
+    document.getElementById('s_dry_weight').value = item.dry_weight ?? '';
+    document.getElementById('s_extraction_rate').value = item.extraction_rate || '';
+    document.getElementById('mc_fresh_gross').value = item.moisture?.fresh_gross ?? '';
+    document.getElementById('mc_dry_gross').value = item.moisture?.dry_gross ?? '';
+    document.getElementById('mc_container').value = item.moisture?.container ?? '';
+    if(item.photo_extract){ document.getElementById('s_photoExtractPreview').src = item.photo_extract; document.getElementById('s_photoExtractPreview').style.display='block'; }
+    if(item.photo_bottle){ document.getElementById('s_photoBottlePreview').src = item.photo_bottle; document.getElementById('s_photoBottlePreview').style.display='block'; }
+    if(item.moisture?.photo){ document.getElementById('mc_photoPreview').src = item.moisture.photo; document.getElementById('mc_photoPreview').style.display='block'; }
+    updateMoistureCalc();
+
+    const editable = canEdit(item);
+    const creatorAcc = findAccount(item.created_by);
+    const creatorLabel = item.created_by ? (creatorAcc ? (creatorAcc.name||creatorAcc.code) : item.created_by) : '未知';
+    const banner = document.getElementById('smpCreatorBanner');
+    banner.style.display = 'block';
+    if(editable){
+      banner.style.background = '#EAF3F0';
+      banner.style.color = 'var(--pine-deep)';
+      banner.textContent = `建立者:${creatorLabel}`;
+    }else{
+      banner.style.background = '#F4E6D6';
+      banner.style.color = '#8A4B12';
+      banner.textContent = `此筆資料由 ${creatorLabel} 建立,只有建立者本人或管理員能編輯,目前為唯讀模式。`;
+    }
+    SMP_FIELD_IDS.forEach(fid=> document.getElementById(fid).disabled = !editable);
+    document.getElementById('smpSaveBtn').style.display = editable ? 'inline-block' : 'none';
+    document.getElementById('clearSmpBtn').style.display = editable ? 'inline-block' : 'none';
+    document.getElementById('smpDeleteBtn').style.display = isAdmin() ? 'inline-block' : 'none';
+  }else{
+    document.getElementById('smpCreatorBanner').style.display = 'none';
+    SMP_FIELD_IDS.forEach(fid=> document.getElementById(fid).disabled = false);
+    document.getElementById('smpSaveBtn').style.display = 'inline-block';
+    document.getElementById('clearSmpBtn').style.display = 'inline-block';
+    ['s_import_material','s_name_zh','s_species','s_source','s_acquired_date','s_part','s_extraction_date','s_extraction_method','s_solvent_other','s_material_fresh_weight','s_sample_weight','s_dry_weight','mc_fresh_gross','mc_dry_gross','mc_container'].forEach(fid=>document.getElementById(fid).value='');
+    document.getElementById('s_acquired_unknown').checked = false;
+    document.getElementById('s_solvent').value = SOLVENT_OPTIONS[0];
+    document.getElementById('s_extract_type').value = EXTRACT_TYPE_OPTIONS[0];
+    toggleSolventVsExtractType();
+    document.getElementById('s_fraction_type').value = 'none';
+    document.getElementById('s_fraction_layer').value = '正己烷分離部';
+    document.getElementById('s_extraction_rate').value = '';
+    document.getElementById('s_extractor').value = (currentUser && currentUser.name) ? currentUser.name : ((currentUser && currentUser.code) || '');
+    document.getElementById('mc_moisture_wet').textContent = '-';
+    document.getElementById('mc_moisture_dry').textContent = '-';
+    document.getElementById('mc_dry_net').textContent = '-';
+    updateSampleId();
+    const draft = await loadDraft(SMP_DRAFT_KEY);
+    applySmpDraft(draft);
+  }
+  document.getElementById('smpFormOverlay').classList.add('show');
+}
+function closeSmpForm(){ document.getElementById('smpFormOverlay').classList.remove('show'); editingSmpId = null; }
+
+async function handleSmpSave(){
+  const species = document.getElementById('s_species').value.trim();
+  if(!species){ alert('請至少填寫「物種」(可從上方選擇匯入試材,或手動輸入)'); return; }
+  const finalId = editingSmpId || computeSamplePrefix() + '_' + String(nextSeqForPrefix(computeSamplePrefix(), null)).padStart(2,'0');
+  const data = {
+    id: finalId,
+    material_id: document.getElementById('s_import_material').value || null,
+    name_zh: document.getElementById('s_name_zh').value.trim(),
+    species,
+    source: document.getElementById('s_source').value.trim(),
+    acquired_unknown: document.getElementById('s_acquired_unknown').checked,
+    acquired_date: document.getElementById('s_acquired_unknown').checked ? '' : document.getElementById('s_acquired_date').value,
+    part: document.getElementById('s_part').value,
+    extraction_date: document.getElementById('s_extraction_date').value,
+    extraction_method: document.getElementById('s_extraction_method').value,
+    extractor: document.getElementById('s_extractor').value.trim(),
+    fraction_type: document.getElementById('s_fraction_type').value,
+    fraction_layer: document.getElementById('s_fraction_type').value==='liquid_liquid' ? document.getElementById('s_fraction_layer').value : null,
+    solvent: document.getElementById('s_solvent').value,
+    extract_type: DISTILLATION_METHODS.includes(document.getElementById('s_extraction_method').value) ? document.getElementById('s_extract_type').value : null,
+    solvent_other: document.getElementById('s_solvent_other').value.trim(),
+    material_fresh_weight: document.getElementById('s_material_fresh_weight').value === '' ? null : Number(document.getElementById('s_material_fresh_weight').value),
+    sample_weight: document.getElementById('s_sample_weight').value === '' ? null : Number(document.getElementById('s_sample_weight').value),
+    dry_weight: document.getElementById('s_dry_weight').value === '' ? null : Number(document.getElementById('s_dry_weight').value),
+    extraction_rate: document.getElementById('s_extraction_rate').value,
+    photo_extract: document.getElementById('s_photoExtractPreview').style.display !== 'none' ? document.getElementById('s_photoExtractPreview').src : null,
+    photo_bottle: document.getElementById('s_photoBottlePreview').style.display !== 'none' ? document.getElementById('s_photoBottlePreview').src : null,
+    moisture: {
+      fresh_gross: document.getElementById('mc_fresh_gross').value === '' ? null : Number(document.getElementById('mc_fresh_gross').value),
+      dry_gross: document.getElementById('mc_dry_gross').value === '' ? null : Number(document.getElementById('mc_dry_gross').value),
+      container: document.getElementById('mc_container').value === '' ? null : Number(document.getElementById('mc_container').value),
+      photo: document.getElementById('mc_photoPreview').style.display !== 'none' ? document.getElementById('mc_photoPreview').src : null
+    },
+    updated_at: new Date().toISOString(),
+    created_by: editingSmpId ? (smpItems.find(i=>i.id===editingSmpId)?.created_by || (currentUser && currentUser.code) || null) : ((currentUser && currentUser.code) || null),
+    created_at: editingSmpId ? (smpItems.find(i=>i.id===editingSmpId)?.created_at || new Date().toISOString()) : new Date().toISOString()
+  };
+  if(editingSmpId){ smpItems[smpItems.findIndex(i=>i.id===editingSmpId)] = data; }
+  else{ smpItems.push(data); }
+  const ok = await fsSetItem('samples', data);
+  if(!ok){ alert('儲存失敗,請檢查網路連線後再試一次。'); return; }
+  if(!editingSmpId) await clearDraft(SMP_DRAFT_KEY);
+  closeSmpForm();
+  renderSmpAll();
+}
+async function handleSmpDelete(){
+  if(!editingSmpId || !isAdmin()) return;
+  if(!confirm('確定要刪除此品項嗎?此動作無法復原。')) return;
+  const idToDelete = editingSmpId;
+  smpItems = smpItems.filter(i=>i.id!==idToDelete);
+  const ok = await fsDeleteItem('samples', idToDelete);
+  if(!ok){ alert('刪除失敗,請檢查網路連線後再試一次。'); }
+  closeSmpForm();
+  renderSmpAll();
+}
+bindPhotoUpload('s_photoExtractDrop','s_photoExtractInput','s_photoExtractPreview');
+bindPhotoUpload('s_photoBottleDrop','s_photoBottleInput','s_photoBottlePreview');
+document.getElementById('s_photoExtractInput').addEventListener('change', ()=> setTimeout(saveSmpDraftDebounced, 50));
+document.getElementById('s_photoBottleInput').addEventListener('change', ()=> setTimeout(saveSmpDraftDebounced, 50));
+document.getElementById('mc_photoInput').addEventListener('change', ()=> setTimeout(saveSmpDraftDebounced, 50));
+
+function clearSmpForm(){
+  SMP_FIELD_IDS.forEach(fid=>{
+    const el = document.getElementById(fid);
+    if(el.type==='checkbox') el.checked = false; else el.value='';
+  });
+  document.getElementById('s_acquired_date').disabled = false;
+  document.getElementById('s_solvent').value = SOLVENT_OPTIONS[0];
+  document.getElementById('s_extract_type').value = EXTRACT_TYPE_OPTIONS[0];
+  document.getElementById('s_fraction_type').value = 'none';
+  document.getElementById('s_fraction_layer').value = '正己烷分離部';
+  toggleSolventVsExtractType();
+  document.getElementById('s_extraction_rate').value = '';
+  document.getElementById('mc_moisture_wet').textContent = '-';
+  document.getElementById('mc_moisture_dry').textContent = '-';
+  document.getElementById('mc_dry_net').textContent = '-';
+  ['s_photoExtractPreview','s_photoBottlePreview','mc_photoPreview'].forEach(pid=>{
+    document.getElementById(pid).style.display = 'none';
+    document.getElementById(pid).src = '';
+  });
+  clearDraft(SMP_DRAFT_KEY);
+  updateSampleId();
+}
+document.getElementById('clearSmpBtn').addEventListener('click', ()=>{
+  if(confirm('確定要清空目前表單所有已輸入的內容嗎?此動作無法復原。')) clearSmpForm();
+});
+SMP_FIELD_IDS.forEach(fid=>{
+  document.getElementById(fid).addEventListener('input', saveSmpDraftDebounced);
+  document.getElementById(fid).addEventListener('change', saveSmpDraftDebounced);
+});
+
+document.getElementById('smpAddBtn').addEventListener('click', ()=>openSmpForm(null));
+document.getElementById('smpFormClose').addEventListener('click', closeSmpForm);
+document.getElementById('smpCancelBtn').addEventListener('click', closeSmpForm);
+document.getElementById('smpSaveBtn').addEventListener('click', handleSmpSave);
+document.getElementById('smpDeleteBtn').addEventListener('click', handleSmpDelete);
+document.getElementById('smpSearch').addEventListener('input', renderSmpTable);
+document.getElementById('smpFilterSolvent').addEventListener('change', renderSmpTable);
+document.getElementById('smpFormOverlay').addEventListener('click', (e)=>{ if(e.target.id==='smpFormOverlay') closeSmpForm(); });
+
+/* ======================================================
+   初始化
+====================================================== */
+/* ======================================================
+   JSON 備份匯出 / 匯入(含照片,可新增或覆蓋全部)
+====================================================== */
+let pendingImport = null;
+
+function exportJsonFile(dataArr, filenamePrefix){
+  const dataStr = JSON.stringify(dataArr);
+  const blob = new Blob([dataStr], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${filenamePrefix}_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+}
+
+function handleImportFile(file, cfg){
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    let parsed;
+    try{ parsed = JSON.parse(e.target.result); }
+    catch(err){ alert('檔案格式錯誤,無法解析,請確認是本系統匯出的備份檔(.json)。'); return; }
+    if(!Array.isArray(parsed)){ alert('檔案格式不正確,需為本系統匯出的清單陣列。'); return; }
+    pendingImport = { data: parsed, cfg };
+    document.getElementById('importModeDesc').textContent =
+      `這個備份檔案裡有 ${parsed.length} 筆資料。「新增」會加進目前清單(編號重複的會自動略過);「覆蓋全部」會先自動下載目前資料的備份檔,再整個取代成這個檔案的內容。`;
+    document.getElementById('importModeOverlay').classList.add('show');
+  };
+  reader.readAsText(file);
+}
+
+function closeImportModeDialog(){
+  document.getElementById('importModeOverlay').classList.remove('show');
+  pendingImport = null;
+}
+document.getElementById('importModeCancelBtn').addEventListener('click', closeImportModeDialog);
+document.getElementById('importModeCloseX').addEventListener('click', closeImportModeDialog);
+document.getElementById('importModeOverlay').addEventListener('click', (e)=>{ if(e.target.id==='importModeOverlay') closeImportModeDialog(); });
+
+document.getElementById('importModeAddBtn').addEventListener('click', async ()=>{
+  if(!pendingImport) return;
+  const { data, cfg } = pendingImport;
+  const current = cfg.getItems();
+  const existingIds = new Set(current.map(i=>i.id));
+  let added = 0, skipped = 0;
+  data.forEach(item=>{
+    if(item && item.id && !existingIds.has(item.id)){
+      current.push(item);
+      existingIds.add(item.id);
+      added++;
+    }else{
+      skipped++;
+    }
+  });
+  await cfg.persist();
+  cfg.render();
+  closeImportModeDialog();
+  alert(`匯入完成:新增 ${added} 筆,略過 ${skipped} 筆編號重複的資料。`);
+});
+
+document.getElementById('importModeReplaceBtn').addEventListener('click', async ()=>{
+  if(!pendingImport) return;
+  if(!confirm('覆蓋全部會取代目前清單裡所有的資料。系統會先自動幫你下載目前資料的備份檔,確定要繼續嗎?')) return;
+  const { data, cfg } = pendingImport;
+  exportJsonFile(cfg.getItems(), cfg.filenamePrefix + '_覆蓋前備份');
+  cfg.setItems(data);
+  await cfg.persist();
+  cfg.render();
+  closeImportModeDialog();
+  alert(`已覆蓋全部資料,共 ${data.length} 筆。`);
+});
+
+document.getElementById('chemExportJsonBtn').addEventListener('click', ()=> exportJsonFile(items, '藥品清單備份'));
+document.getElementById('chemImportJsonBtn').addEventListener('click', ()=> document.getElementById('chemImportJsonInput').click());
+document.getElementById('chemImportJsonInput').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(file) handleImportFile(file, {
+    getItems: ()=>items,
+    setItems: (arr)=>{ items = arr; },
+    persist: saveItems,
+    render: renderAll,
+    filenamePrefix: '藥品清單'
+  });
+  e.target.value = '';
+});
+
+document.getElementById('matExportJsonBtn').addEventListener('click', ()=> exportJsonFile(matItems, '試材清單備份'));
+document.getElementById('matImportJsonBtn').addEventListener('click', ()=> document.getElementById('matImportJsonInput').click());
+document.getElementById('matImportJsonInput').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(file) handleImportFile(file, {
+    getItems: ()=>matItems,
+    setItems: (arr)=>{ matItems = arr; },
+    persist: saveMatItems,
+    render: renderMatAll,
+    filenamePrefix: '試材清單'
+  });
+  e.target.value = '';
+});
+
+document.getElementById('smpExportJsonBtn').addEventListener('click', ()=> exportJsonFile(smpItems, '樣品清單備份'));
+document.getElementById('smpImportJsonBtn').addEventListener('click', ()=> document.getElementById('smpImportJsonInput').click());
+document.getElementById('smpImportJsonInput').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(file) handleImportFile(file, {
+    getItems: ()=>smpItems,
+    setItems: (arr)=>{ smpItems = arr; },
+    persist: saveSmpItems,
+    render: renderSmpAll,
+    filenamePrefix: '樣品清單'
+  });
+  e.target.value = '';
+});
+
+(async function init(){
+  await loadCurrentUser();
+  await loadItems();
+  await loadMatItems();
+  await loadSmpItems();
+})();
+</script>
+</body></html>
