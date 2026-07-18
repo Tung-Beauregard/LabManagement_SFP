@@ -1,6 +1,4 @@
-
-<!-- saved from url=(0062)file:///C:/Users/phant/Downloads/lab_inventory_standalone.html -->
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script src="./index_files/qrcode.min.js.下載"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
   :root{
     --bg:#EEF2F0;
@@ -205,16 +203,16 @@
   }
 </style>
 
-</head><body><datalist id="speciesList"></datalist>
+<datalist id="speciesList"></datalist>
 
 <!-- Login Overlay -->
-<div class="overlay" id="loginOverlay" style="z-index:100;">
+<div class="overlay show" id="loginOverlay" style="z-index:100;">
   <div class="modal" style="max-width:380px;text-align:center;">
     <div style="font-size:28px;margin-bottom:6px;">🔬</div>
     <h2 style="margin-bottom:4px;">歡迎使用 SFPLAB</h2>
     <div style="font-size:12px;color:var(--ink-soft);margin-bottom:18px;">請輸入使用者代號與4位數Pin碼登入</div>
 
-    <div id="loginPane" style="display: none;">
+    <div id="loginPane">
       <div class="field" style="text-align:left;">
         <label>使用者代號</label>
         <input type="text" id="login_code" placeholder="例如 W">
@@ -227,7 +225,7 @@
       <button class="btn btn-ghost" id="showRegisterBtn" type="button" style="width:100%;margin-top:8px;">還沒有帳號?註冊新帳號</button>
     </div>
 
-    <div id="registerPane" style="display: block;">
+    <div id="registerPane" style="display:none;">
       <div class="field" style="text-align:left;">
         <label>使用者名稱</label>
         <input type="text" id="reg_name" placeholder="例如 王小明">
@@ -269,8 +267,8 @@
   <aside class="sidebar">
     <div class="brand">SFPLAB</div>
     <div class="user-badge" id="userBadge">
-      <div class="ub-name" id="ub_name">W</div>
-      <div class="ub-code" id="ub_code">W</div>
+      <div class="ub-name" id="ub_name">-</div>
+      <div class="ub-code" id="ub_code">-</div>
       <button class="ub-switch" id="switchUserBtn" type="button">登出 / 切換帳號</button>
     </div>
     <nav>
@@ -298,11 +296,11 @@
 
       <div class="toolbar">
         <input type="text" id="search" placeholder="搜尋名稱 / CAS No. / 位置...">
-        <select id="filterLoc"><option value="">所有位置</option><option value="藥品櫃A">藥品櫃A</option><option value="藥品櫃B">藥品櫃B</option><option value="藥品櫃C">藥品櫃C</option><option value="藥品櫃D">藥品櫃D</option><option value="溶劑櫃A">溶劑櫃A</option><option value="溶劑櫃B">溶劑櫃B</option><option value="溶劑櫃C">溶劑櫃C</option><option value="溶劑櫃D">溶劑櫃D</option><option value="溶劑櫃E">溶劑櫃E</option><option value="溶劑櫃小A">溶劑櫃小A</option><option value="溶劑櫃小B">溶劑櫃小B</option><option value="溶劑櫃小C">溶劑櫃小C</option><option value="溶劑櫃小D">溶劑櫃小D</option><option value="溶劑櫃小E">溶劑櫃小E</option><option value="LC溶劑櫃">LC溶劑櫃</option><option value="冷藏">冷藏</option><option value="冷凍">冷凍</option></select>
-        <select id="filterHaz"><option value="">所有危害性</option><option value="flammable">易燃</option><option value="corrosive">腐蝕性</option><option value="toxic">毒性</option><option value="oxidizing">氧化性</option><option value="irritant">刺激性</option><option value="health">健康危害</option><option value="environment">環境危害</option><option value="explosive">爆炸性</option><option value="none">無/未知</option></select>
+        <select id="filterLoc"><option value="">所有位置</option></select>
+        <select id="filterHaz"><option value="">所有危害性</option></select>
         <button class="btn btn-ghost" id="exportBtn">匯出 CSV</button>
-        <button class="btn btn-ghost" id="chemExportJsonBtn" style="display: none;">匯出備份</button>
-        <button class="btn btn-ghost" id="chemImportJsonBtn" style="display: none;">匯入備份</button>
+        <button class="btn btn-ghost" id="chemExportJsonBtn">匯出備份</button>
+        <button class="btn btn-ghost" id="chemImportJsonBtn">匯入備份</button>
         <input type="file" id="chemImportJsonInput" accept="application/json" style="display:none;">
         <button class="btn btn-primary" id="addBtn">＋ 新增藥品</button>
       </div>
@@ -316,12 +314,12 @@
           </thead>
           <tbody id="tbody"></tbody>
         </table>
-        <div class="empty" id="emptyState" style="display: block;">
+        <div class="empty" id="emptyState" style="display:none;">
           <b>目前沒有資料</b>
           點選右上角「＋ 新增藥品」開始建立清單
         </div>
       </div>
-      <div class="save-notice" id="loadingNotice" style="display: none;">載入中...</div>
+      <div class="save-notice" id="loadingNotice">載入中...</div>
     </section>
 
     <!-- ================= PAGE: 試材清單 ================= -->
@@ -339,11 +337,11 @@
 
       <div class="toolbar">
         <input type="text" id="matSearch" placeholder="搜尋物種 / 來源 / 編號...">
-        <select id="matFilterPart"><option value="">所有部位</option><option value="根">根</option><option value="枝條">枝條</option><option value="嫩枝">嫩枝</option><option value="葉">葉</option><option value="花">花</option><option value="全果">全果</option><option value="果皮">果皮</option><option value="種子">種子</option><option value="木材">木材</option><option value="心材">心材</option><option value="邊材">邊材</option><option value="樹皮">樹皮</option><option value="其他">其他</option></select>
-        <select id="matFilterUse"><option value="">所有用途</option><option value="萃取">萃取</option><option value="精油蒸餾">精油蒸餾</option><option value="其他">其他</option></select>
+        <select id="matFilterPart"><option value="">所有部位</option></select>
+        <select id="matFilterUse"><option value="">所有用途</option></select>
         <button class="btn btn-ghost" id="matExportBtn">匯出 CSV</button>
-        <button class="btn btn-ghost" id="matExportJsonBtn" style="display: none;">匯出備份</button>
-        <button class="btn btn-ghost" id="matImportJsonBtn" style="display: none;">匯入備份</button>
+        <button class="btn btn-ghost" id="matExportJsonBtn">匯出備份</button>
+        <button class="btn btn-ghost" id="matImportJsonBtn">匯入備份</button>
         <input type="file" id="matImportJsonInput" accept="application/json" style="display:none;">
         <button class="btn btn-primary" id="matAddBtn">＋ 新增試材</button>
       </div>
@@ -357,12 +355,12 @@
           </thead>
           <tbody id="matTbody"></tbody>
         </table>
-        <div class="empty" id="matEmptyState" style="display: block;">
+        <div class="empty" id="matEmptyState" style="display:none;">
           <b>目前沒有資料</b>
           點選右上角「＋ 新增試材」開始建立清單
         </div>
       </div>
-      <div class="save-notice" id="matLoadingNotice" style="display: none;">載入中...</div>
+      <div class="save-notice" id="matLoadingNotice">載入中...</div>
     </section>
 
     <!-- ================= PAGE: 樣品清單 ================= -->
@@ -381,8 +379,8 @@
       <div class="toolbar">
         <input type="text" id="smpSearch" placeholder="搜尋物種 / 編號...">
         <select id="smpFilterSolvent"><option value="">所有萃取物</option></select>
-        <button class="btn btn-ghost" id="smpExportJsonBtn" style="display: none;">匯出備份</button>
-        <button class="btn btn-ghost" id="smpImportJsonBtn" style="display: none;">匯入備份</button>
+        <button class="btn btn-ghost" id="smpExportJsonBtn">匯出備份</button>
+        <button class="btn btn-ghost" id="smpImportJsonBtn">匯入備份</button>
         <input type="file" id="smpImportJsonInput" accept="application/json" style="display:none;">
         <button class="btn btn-primary" id="smpAddBtn">＋ 新增樣品</button>
       </div>
@@ -396,12 +394,12 @@
           </thead>
           <tbody id="smpTbody"></tbody>
         </table>
-        <div class="empty" id="smpEmptyState" style="display: block;">
+        <div class="empty" id="smpEmptyState" style="display:none;">
           <b>目前沒有資料</b>
           點選右上角「＋ 新增樣品」開始建立清單
         </div>
       </div>
-      <div class="save-notice" id="smpLoadingNotice" style="display: none;">載入中...</div>
+      <div class="save-notice" id="smpLoadingNotice">載入中...</div>
     </section>
 
     <!-- ================= PAGE: 帳號管理(僅管理員) ================= -->
@@ -561,7 +559,7 @@
     <div id="matCreatorBanner" style="display:none;font-size:12px;padding:8px 10px;border-radius:8px;margin-bottom:14px;"></div>
     <div class="field id-preview">
       <label>編號</label>
-      <input type="text" id="m_id" readonly="">
+      <input type="text" id="m_id" readonly>
     </div>
     <div class="field row2">
       <div><label>物種 *</label><input type="text" id="m_species" list="speciesList" placeholder="例如 台灣土肉桂"><div style="font-size:11px;color:var(--ink-soft);margin-top:4px;">請填寫學名,例如 Acacia confusa;之前輸入過的物種會出現在下拉選單中</div></div>
@@ -619,7 +617,7 @@
     <div id="smpCreatorBanner" style="display:none;font-size:12px;padding:8px 10px;border-radius:8px;margin-bottom:14px;"></div>
     <div class="field id-preview">
       <label>編號</label>
-      <input type="text" id="s_id" readonly="">
+      <input type="text" id="s_id" readonly>
     </div>
 
     <div class="section-title first">試材資料</div>
@@ -705,7 +703,7 @@
     </div>
     <div class="field">
       <label>萃取率</label>
-      <input type="text" id="s_extraction_rate" readonly="" placeholder="自動計算">
+      <input type="text" id="s_extraction_rate" readonly placeholder="自動計算">
     </div>
 
     <!-- 含水量計算區 -->
@@ -761,8 +759,8 @@
      Firebase 設定(取代 Claude 專屬的 window.storage)
      共用資料(shared=true)存在 Firestore,個人/裝置資料(shared=false)存在瀏覽器 localStorage
 ====================================================== -->
-<script src="./index_files/firebase-app-compat.js.下載"></script>
-<script src="./index_files/firebase-firestore-compat.js.下載"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyAlhm9oAPZMsUcj1pmGFoUiqJIoHHCZXKc",
@@ -2358,4 +2356,3 @@ document.getElementById('smpImportJsonInput').addEventListener('change', (e)=>{
   await loadSmpItems();
 })();
 </script>
-</body></html>
