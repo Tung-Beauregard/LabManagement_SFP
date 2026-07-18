@@ -1,3 +1,9 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>SFPLAB 實驗室管理系統</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
   :root{
@@ -97,6 +103,8 @@
   .haz-chip{border:1px solid var(--line);border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer;user-select:none;background:#fff;}
   .haz-chip.on{color:#fff;border-color:transparent;}
   .photo-drop{border:1.5px dashed var(--line);border-radius:10px;padding:14px;text-align:center;font-size:12px;color:var(--ink-soft);cursor:pointer;}
+  .photo-btn-row{display:flex;gap:8px;}
+  .photo-btn-row .btn{flex:1;}
   .photo-preview{width:100%;max-height:160px;object-fit:contain;border-radius:8px;margin-top:8px;}
   .modal-actions{display:flex;justify-content:space-between;margin-top:20px;}
   .unknown-row{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px;color:var(--ink-soft);}
@@ -202,10 +210,17 @@
     .label-grid{grid-template-columns:1fr;padding-left:0;text-align:left;}
   }
 </style>
+</head>
+<body>
 
 <datalist id="speciesList"></datalist>
 
 <!-- Login Overlay -->
+<!-- Photo Lightbox -->
+<div class="overlay" id="lightboxOverlay" style="z-index:110;background:rgba(10,20,18,.85);cursor:zoom-out;">
+  <img id="lightboxImg" src="" style="max-width:92vw;max-height:92vh;border-radius:8px;box-shadow:0 8px 30px rgba(0,0,0,.4);">
+</div>
+
 <div class="overlay show" id="loginOverlay" style="z-index:100;">
   <div class="modal" style="max-width:380px;text-align:center;">
     <div style="font-size:28px;margin-bottom:6px;">🔬</div>
@@ -500,7 +515,7 @@
     </div>
     <div class="field">
       <label>照片(藥品瓶身 / 存放位置)</label>
-      <div class="photo-drop" id="photoDrop">點擊上傳照片或拍照</div>
+      <div class="photo-btn-row"><button type="button" class="btn btn-ghost btn-sm" id="photoDropCam">📷 拍照</button><button type="button" class="btn btn-ghost btn-sm" id="photoDropGal">🖼️ 選擇照片</button></div>
       <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none;">
       <img id="photoPreview" class="photo-preview" style="display:none;">
     </div>
@@ -595,7 +610,7 @@
     </div>
     <div class="field">
       <label>照片</label>
-      <div class="photo-drop" id="m_photoDrop">點擊上傳照片或拍照</div>
+      <div class="photo-btn-row"><button type="button" class="btn btn-ghost btn-sm" id="m_photoDropCam">📷 拍照</button><button type="button" class="btn btn-ghost btn-sm" id="m_photoDropGal">🖼️ 選擇照片</button></div>
       <input type="file" id="m_photoInput" accept="image/*" capture="environment" style="display:none;">
       <img id="m_photoPreview" class="photo-preview" style="display:none;">
     </div>
@@ -615,6 +630,11 @@
     <button class="close" id="smpFormClose">✕</button>
     <h2 id="smpFormTitle">新增樣品</h2>
     <div id="smpCreatorBanner" style="display:none;font-size:12px;padding:8px 10px;border-radius:8px;margin-bottom:14px;"></div>
+    <div id="smpQrSection" style="display:none;text-align:center;margin-bottom:16px;padding:12px;background:#F5F8F6;border-radius:10px;">
+      <div id="smpQrTarget" style="display:inline-block;"></div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-top:6px;" id="smpQrIdLabel"></div>
+      <div style="margin-top:8px;"><button class="btn btn-ghost btn-sm" id="smpDownloadQrBtn" type="button">下載 QR code</button></div>
+    </div>
     <div class="field id-preview">
       <label>編號</label>
       <input type="text" id="s_id" readonly>
@@ -719,7 +739,7 @@
       </div>
       <div class="field">
         <label>含水量照片</label>
-        <div class="photo-drop" id="mc_photoDrop">點擊上傳照片或拍照</div>
+        <div class="photo-btn-row"><button type="button" class="btn btn-ghost btn-sm" id="mc_photoDropCam">📷 拍照</button><button type="button" class="btn btn-ghost btn-sm" id="mc_photoDropGal">🖼️ 選擇照片</button></div>
         <input type="file" id="mc_photoInput" accept="image/*" capture="environment" style="display:none;">
         <img id="mc_photoPreview" class="photo-preview" style="display:none;">
       </div>
@@ -734,13 +754,13 @@
     <div class="section-title">照片</div>
     <div class="field">
       <label>萃取材照片</label>
-      <div class="photo-drop" id="s_photoExtractDrop">點擊上傳照片或拍照</div>
+      <div class="photo-btn-row"><button type="button" class="btn btn-ghost btn-sm" id="s_photoExtractDropCam">📷 拍照</button><button type="button" class="btn btn-ghost btn-sm" id="s_photoExtractDropGal">🖼️ 選擇照片</button></div>
       <input type="file" id="s_photoExtractInput" accept="image/*" capture="environment" style="display:none;">
       <img id="s_photoExtractPreview" class="photo-preview" style="display:none;">
     </div>
     <div class="field">
       <label>樣品瓶照片</label>
-      <div class="photo-drop" id="s_photoBottleDrop">點擊上傳照片或拍照</div>
+      <div class="photo-btn-row"><button type="button" class="btn btn-ghost btn-sm" id="s_photoBottleDropCam">📷 拍照</button><button type="button" class="btn btn-ghost btn-sm" id="s_photoBottleDropGal">🖼️ 選擇照片</button></div>
       <input type="file" id="s_photoBottleInput" accept="image/*" capture="environment" style="display:none;">
       <img id="s_photoBottlePreview" class="photo-preview" style="display:none;">
     </div>
@@ -926,6 +946,34 @@ function storageLabel(value){
 }
 
 function ghsInfo(code){ return GHS.find(g=>g.code===code) || {label:code,color:'#7F8C8D'}; }
+function buildItemUrl(type, id){
+  return `${location.origin}${location.pathname}?item=${type}:${encodeURIComponent(id)}`;
+}
+let pendingDeepLinkRaw = new URLSearchParams(location.search).get('item');
+function tryDeepLink(){
+  if(!pendingDeepLinkRaw || !currentUser) return;
+  const idx = pendingDeepLinkRaw.indexOf(':');
+  if(idx<0) return;
+  const type = pendingDeepLinkRaw.slice(0, idx);
+  const id = decodeURIComponent(pendingDeepLinkRaw.slice(idx+1));
+  pendingDeepLinkRaw = null;
+  setTimeout(()=>{
+    if(type==='chem'){ switchPage('chemicals'); openDetail(id); }
+    else if(type==='smp'){ switchPage('samples'); openSmpForm(id); }
+    else if(type==='mat'){ switchPage('materials'); openMatForm(id); }
+  }, 60);
+}
+function openLightbox(src){
+  if(!src) return;
+  document.getElementById('lightboxImg').src = src;
+  document.getElementById('lightboxOverlay').classList.add('show');
+}
+function closeLightbox(){
+  document.getElementById('lightboxOverlay').classList.remove('show');
+  document.getElementById('lightboxImg').src = '';
+}
+document.getElementById('lightboxOverlay').addEventListener('click', closeLightbox);
+
 function escapeHtml(s){
   return String(s ?? '').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
@@ -992,8 +1040,12 @@ function compressPhoto(file, onDone){
   reader.readAsDataURL(file);
 }
 function bindPhotoUpload(dropId, inputId, previewId){
-  document.getElementById(dropId).addEventListener('click', ()=> document.getElementById(inputId).click());
-  document.getElementById(inputId).addEventListener('change', (e)=>{
+  const input = document.getElementById(inputId);
+  const camBtn = document.getElementById(dropId+'Cam');
+  const galBtn = document.getElementById(dropId+'Gal');
+  if(camBtn) camBtn.addEventListener('click', ()=>{ input.setAttribute('capture','environment'); input.click(); });
+  if(galBtn) galBtn.addEventListener('click', ()=>{ input.removeAttribute('capture'); input.click(); });
+  input.addEventListener('change', (e)=>{
     const file = e.target.files[0];
     if(!file) return;
     compressPhoto(file, (dataUrl)=>{
@@ -1130,6 +1182,7 @@ async function completeLogin(acc){
   renderUserBadge();
   renderAll(); renderMatAll(); renderSmpAll();
   if(currentUser.role==='admin') renderAdminTable();
+  tryDeepLink();
 }
 
 async function loadCurrentUser(){
@@ -1359,7 +1412,7 @@ function renderTable(){
     tr.className = 'row';
     const isLow = item.low_threshold !== '' && item.low_threshold != null && Number(item.quantity) <= Number(item.low_threshold);
     tr.innerHTML = `
-      <td class="cell-head" colspan="2">${item.photo ? `<img class="thumb" src="${item.photo}">` : ''}<div class="name-block"><div class="name-zh">${escapeHtml(item.name_zh)}</div><div class="name-en">${escapeHtml(item.name_en||'')}</div></div></td>
+      <td class="cell-head" colspan="2">${item.photo ? `<img class="thumb" src="${item.photo}" style="cursor:zoom-in;" onclick="event.stopPropagation();openLightbox('${item.photo}')">` : ''}<div class="name-block"><div class="name-zh">${escapeHtml(item.name_zh)}</div><div class="name-en">${escapeHtml(item.name_en||'')}</div></div></td>
       <td data-label="位置">${locTag(item.location)}</td>
       <td data-label="存量" class="${isLow?'qty-low':''}">${item.quantity ?? '-'} ${escapeHtml(item.unit||'')}</td>
       <td data-label="級別">${item.grade ? `<span class="plain-tag">${escapeHtml(item.grade)}</span>` : '-'}</td>
@@ -1496,12 +1549,16 @@ function openDetail(id){
   const creatorAcc = findAccount(item.created_by);
   document.getElementById('d_creator').textContent = item.created_by ? (creatorAcc ? (creatorAcc.name||creatorAcc.code) : item.created_by) : '未知';
   document.getElementById('editFromDetailBtn').style.display = canEdit(item) ? 'inline-block' : 'none';
-  document.getElementById('d_photoWrap').innerHTML = item.photo ? `<img src="${item.photo}" style="max-width:100%;max-height:140px;border-radius:8px;border:1px solid var(--line);">` : '';
+  document.getElementById('d_photoWrap').innerHTML = item.photo ? `<img src="${item.photo}" style="max-width:100%;max-height:140px;border-radius:8px;border:1px solid var(--line);cursor:zoom-in;" onclick="openLightbox('${item.photo}')">` : '';
   const topHaz = (item.hazards||[])[0];
   document.getElementById('detailStripe').style.background = topHaz ? ghsInfo(topHaz).color : '#B9C4BF';
   const qrTarget = document.getElementById('qrTarget');
   qrTarget.innerHTML = '';
-  new QRCode(qrTarget, { text: 'CHEM:' + item.id, width: 108, height: 108, colorDark: '#1B4B43', colorLight: '#ffffff' });
+  new QRCode(qrTarget, { text: buildItemUrl('chem', item.id), width: 200, height: 200, colorDark: '#1B4B43', colorLight: '#ffffff' });
+  setTimeout(()=>{
+    const el = qrTarget.querySelector('canvas') || qrTarget.querySelector('img');
+    if(el){ el.style.width = '84px'; el.style.height = '84px'; }
+  }, 30);
   document.getElementById('editFromDetailBtn').onclick = ()=>{ closeDetail(); openForm(item.id); };
   document.getElementById('downloadQrBtn').onclick = ()=>{
     setTimeout(()=>{
@@ -1625,7 +1682,7 @@ function renderMatTable(){
     tr.className = 'row';
     const dateLabel = item.acquired_unknown ? '未知' : (item.acquired_date || '-');
     tr.innerHTML = `
-      <td class="cell-head">${item.photo ? `<img class="thumb" src="${item.photo}">` : ''}<div class="name-block"><div class="name-zh">${escapeHtml(item.species)}</div></div></td>
+      <td class="cell-head">${item.photo ? `<img class="thumb" src="${item.photo}" style="cursor:zoom-in;" onclick="event.stopPropagation();openLightbox('${item.photo}')">` : ''}<div class="name-block"><div class="name-zh">${escapeHtml(item.species)}</div></div></td>
       <td data-label="編號"><span class="id-badge">${item.id}</span></td>
       <td data-label="物種">${escapeHtml(item.species)}</td>
       <td data-label="來源">${escapeHtml(item.source||'-')}</td>
@@ -2109,8 +2166,31 @@ async function openSmpForm(id){
     document.getElementById('smpSaveBtn').style.display = editable ? 'inline-block' : 'none';
     document.getElementById('clearSmpBtn').style.display = editable ? 'inline-block' : 'none';
     document.getElementById('smpDeleteBtn').style.display = isAdmin() ? 'inline-block' : 'none';
+
+    document.getElementById('smpQrSection').style.display = 'block';
+    document.getElementById('smpQrIdLabel').textContent = item.id;
+    const smpQrTarget = document.getElementById('smpQrTarget');
+    smpQrTarget.innerHTML = '';
+    new QRCode(smpQrTarget, { text: buildItemUrl('smp', item.id), width: 200, height: 200, colorDark: '#1B4B43', colorLight: '#ffffff' });
+    setTimeout(()=>{
+      const el = smpQrTarget.querySelector('canvas') || smpQrTarget.querySelector('img');
+      if(el){ el.style.width = '84px'; el.style.height = '84px'; }
+    }, 30);
+    document.getElementById('smpDownloadQrBtn').onclick = ()=>{
+      setTimeout(()=>{
+        const canvas = smpQrTarget.querySelector('canvas');
+        const imgEl = smpQrTarget.querySelector('img');
+        const src = canvas ? canvas.toDataURL('image/png') : (imgEl ? imgEl.src : null);
+        if(!src) return;
+        const a = document.createElement('a');
+        a.href = src;
+        a.download = `QR_${item.name_zh || item.species}_${item.id}.png`;
+        a.click();
+      }, 50);
+    };
   }else{
     document.getElementById('smpCreatorBanner').style.display = 'none';
+    document.getElementById('smpQrSection').style.display = 'none';
     SMP_FIELD_IDS.forEach(fid=> document.getElementById(fid).disabled = false);
     document.getElementById('smpSaveBtn').style.display = 'inline-block';
     document.getElementById('clearSmpBtn').style.display = 'inline-block';
@@ -2349,10 +2429,21 @@ document.getElementById('smpImportJsonInput').addEventListener('change', (e)=>{
   e.target.value = '';
 });
 
+['photoPreview','m_photoPreview','mc_photoPreview','s_photoExtractPreview','s_photoBottlePreview'].forEach(id=>{
+  const el = document.getElementById(id);
+  if(el){
+    el.style.cursor = 'zoom-in';
+    el.addEventListener('click', ()=>{ if(el.src) openLightbox(el.src); });
+  }
+});
+
 (async function init(){
   await loadCurrentUser();
   await loadItems();
   await loadMatItems();
   await loadSmpItems();
+  tryDeepLink();
 })();
 </script>
+</body>
+</html>
