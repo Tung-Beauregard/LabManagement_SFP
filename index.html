@@ -454,7 +454,7 @@
 <div class="overlay show" id="loginOverlay" style="z-index:100;">
   <div class="modal" style="max-width:380px;text-align:center;">
     <div style="font-size:28px;margin-bottom:6px;">🔬</div>
-    <h2 style="margin-bottom:4px;">歡迎使用 SFPLAB 管理系統</h2>
+    <h2 style="margin-bottom:4px;">歡迎使用SFPLab實驗室管理系統</h2>
     <div style="font-size:12px;color:var(--ink-soft);margin-bottom:18px;">請使用實驗室帳號登入</div>
     <div id="authStatus" style="display:none;font-size:12px;background:#F4E6D6;color:#8A4B12;border-radius:8px;padding:9px 10px;margin-bottom:12px;text-align:left;"></div>
 
@@ -465,7 +465,7 @@
       </div>
       <div class="field" style="text-align:left;">
         <label>密碼</label>
-        <input type="password" id="login_password" autocomplete="current-password" placeholder="Firebase 密碼">
+        <input type="password" id="login_password" autocomplete="current-password" placeholder="密碼為8位數以上之英文數字及符號">
       </div>
       <button class="btn btn-primary" id="loginSubmitBtn" type="submit" style="width:100%;margin-top:6px;">登入</button>
       <div class="login-divider">或</div>
@@ -480,8 +480,8 @@
     <form id="googleRegPane" style="display:none;">
       <div style="font-size:12.5px;color:var(--ink);margin-bottom:14px;text-align:left;">Google 登入成功!第一次使用需要填一下實驗室資料:<div style="font-family:var(--mono);font-size:11.5px;color:var(--pine);margin-top:4px;" id="greg_email"></div></div>
       <div class="field" style="text-align:left;">
-        <label>實驗室代號 *</label>
-        <input type="text" id="greg_code" placeholder="例如 W">
+        <label>姓名 *</label>
+        <input type="text" id="greg_code" placeholder="例如 王小明">
       </div>
       <div class="field" style="text-align:left;">
         <label>使用者名稱縮寫</label>
@@ -498,8 +498,8 @@
         <input type="email" id="reg_email" autocomplete="username" placeholder="name@example.com">
       </div>
       <div class="field" style="text-align:left;">
-        <label>實驗室代號 *</label>
-        <input type="text" id="reg_code" placeholder="例如 W">
+        <label>姓名 *</label>
+        <input type="text" id="reg_code" placeholder="例如 王小明">
       </div>
       <div class="field" style="text-align:left;">
         <label>使用者名稱縮寫</label>
@@ -507,7 +507,7 @@
       </div>
       <div class="field" style="text-align:left;">
         <label>設定密碼 *</label>
-        <input type="password" id="reg_password" autocomplete="new-password" placeholder="至少8個字元">
+        <input type="password" id="reg_password" autocomplete="new-password" placeholder="密碼為8位數以上之英文數字及符號">
       </div>
       <div class="field" style="text-align:left;">
         <label>再輸入一次密碼 *</label>
@@ -534,7 +534,7 @@
     <div class="user-badge" id="userBadge">
       <div class="ub-name" id="ub_name">-</div>
       <div class="ub-code" id="ub_code">-</div>
-      <button class="ub-switch" id="editNameBtn" type="button">✎ 編輯使用者名稱</button>
+      <button class="ub-switch" id="editNameBtn" type="button">✎ 編輯姓名／縮寫</button>
       <button class="ub-switch" id="switchUserBtn" type="button">登出 / 切換帳號</button>
     </div>
     <nav>
@@ -737,7 +737,7 @@
       <div class="tablewrap">
         <table>
           <thead>
-            <tr><th>實驗室代號</th><th>名稱縮寫</th><th>狀態</th><th>角色</th><th>建立時間</th><th>UID</th></tr>
+            <tr><th>姓名</th><th>名稱縮寫</th><th>狀態</th><th>角色</th><th>建立時間</th><th>UID</th></tr>
           </thead>
           <tbody id="adminTbody"></tbody>
         </table>
@@ -1327,7 +1327,11 @@
 <div class="overlay" id="editNameOverlay">
   <div class="modal" style="max-width:360px;">
     <button class="close" id="editNameClose">✕</button>
-    <h2>編輯使用者名稱</h2>
+    <h2>編輯個人資料</h2>
+    <div class="field" style="text-align:left;">
+      <label>姓名</label>
+      <input type="text" id="editCode_input" placeholder="例如 王小明">
+    </div>
     <div class="field" style="text-align:left;">
       <label>使用者名稱縮寫</label>
       <input type="text" id="editName_input" placeholder="提示1~4個字">
@@ -2329,8 +2333,12 @@ function showLoginPane(name){
   setAuthStatus('');
 }
 function renderUserBadge(){
-  document.getElementById('ub_name').textContent = (currentUser && currentUser.name) ? currentUser.name : '(未命名)';
-  document.getElementById('ub_code').textContent = (currentUser && currentUser.code) ? currentUser.code + (currentUser.role==='super_admin' ? ' · 總管理員' : currentUser.role==='admin' ? ' · 管理員' : '') : '-';
+  document.getElementById('ub_name').textContent = (currentUser && currentUser.code) ? currentUser.code : '(未命名)';
+  const roleSuffix = currentUser ? (currentUser.role==='super_admin' ? '總管理員' : currentUser.role==='admin' ? '管理員' : '') : '';
+  const badgeParts = [];
+  if(currentUser && currentUser.name) badgeParts.push(currentUser.name);
+  if(roleSuffix) badgeParts.push(roleSuffix);
+  document.getElementById('ub_code').textContent = badgeParts.length ? badgeParts.join(' · ') : '一般成員';
   document.getElementById('topbarAvatar').textContent = (currentUser && currentUser.code) ? currentUser.code.slice(0,2).toUpperCase() : '-';
   document.getElementById('navAdmin').style.display = isAdmin() ? 'flex' : 'none';
   document.querySelectorAll('.nav-item-superadmin').forEach(el=>{ el.style.display = isSuperAdmin() ? 'flex' : 'none'; });
@@ -2366,8 +2374,8 @@ document.getElementById('googleRegSubmitBtn').addEventListener('click', async ()
   if(!pendingGoogleUser){ showLoginPane('login'); return; }
   const code = document.getElementById('greg_code').value.trim();
   const name = document.getElementById('greg_name').value.trim();
-  if(!code){ setAuthStatus('請填寫實驗室代號。', 'error'); return; }
-  if(!/^[A-Za-z0-9_-]{1,20}$/.test(code)){ setAuthStatus('實驗室代號限 1–20 個英數字、底線或連字號。', 'error'); return; }
+  if(!code){ setAuthStatus('請填寫姓名。', 'error'); return; }
+  if(!/^[\u4e00-\u9fffA-Za-z0-9_-]{1,20}$/.test(code)){ setAuthStatus('姓名限 1–20 個字(中英文、數字、底線或連字號,不含空白)。', 'error'); return; }
   if(name.length > 20){ setAuthStatus('名稱縮寫最多20個字。', 'error'); return; }
   const btn = document.getElementById('googleRegSubmitBtn');
   btn.disabled = true;
@@ -2425,8 +2433,8 @@ document.getElementById('registerSubmitBtn').addEventListener('click', async ()=
   const code = document.getElementById('reg_code').value.trim();
   const password = document.getElementById('reg_password').value;
   const password2 = document.getElementById('reg_password2').value;
-  if(!email || !code){ setAuthStatus('請填寫 Email 與實驗室代號。', 'error'); return; }
-  if(!/^[A-Za-z0-9_-]{1,20}$/.test(code)){ setAuthStatus('實驗室代號限 1–20 個英數字、底線或連字號。', 'error'); return; }
+  if(!email || !code){ setAuthStatus('請填寫 Email 與姓名。', 'error'); return; }
+  if(!/^[\u4e00-\u9fffA-Za-z0-9_-]{1,20}$/.test(code)){ setAuthStatus('姓名限 1–20 個字(中英文、數字、底線或連字號,不含空白)。', 'error'); return; }
   if(name.length > 20){ setAuthStatus('名稱縮寫最多20個字。', 'error'); return; }
   if(password.length < 8){ setAuthStatus('密碼至少需8個字元。', 'error'); return; }
   if(password !== password2){ setAuthStatus('兩次輸入的密碼不一致。', 'error'); return; }
@@ -2456,23 +2464,30 @@ document.getElementById('switchUserBtn').addEventListener('click', async ()=>{
 });
 
 document.getElementById('editNameBtn').addEventListener('click', ()=>{
+  document.getElementById('editCode_input').value = (currentUser && currentUser.code) || '';
   document.getElementById('editName_input').value = (currentUser && currentUser.name) || '';
   document.getElementById('editNameOverlay').classList.add('show');
 });
 document.getElementById('editNameClose').addEventListener('click', ()=> document.getElementById('editNameOverlay').classList.remove('show'));
 document.getElementById('editNameCancelBtn').addEventListener('click', ()=> document.getElementById('editNameOverlay').classList.remove('show'));
 document.getElementById('editNameSaveBtn').addEventListener('click', async ()=>{
+  const newCode = document.getElementById('editCode_input').value.trim();
   const newName = document.getElementById('editName_input').value.trim();
+  if(!newCode){ alert('姓名不能空白。'); return; }
+  if(!/^[\u4e00-\u9fffA-Za-z0-9_-]{1,20}$/.test(newCode)){ alert('姓名限 1–20 個字(中英文、數字、底線或連字號,不含空白)。'); return; }
   if(newName.length > 20){ alert('名稱縮寫最多20個字。'); return; }
-  if(newName && isIdentifierTaken(newName, currentUser.uid)){ alert('這個名稱縮寫已經有人使用了,換一個試試。'); return; }
+  if(newCode !== currentUser.code && isIdentifierTaken(newCode, currentUser.uid)){ alert('這個姓名已經有人使用了,換一個試試。'); return; }
+  if(newName && newName !== currentUser.name && isIdentifierTaken(newName, currentUser.uid)){ alert('這個名稱縮寫已經有人使用了,換一個試試。'); return; }
   try{
-    await db.collection('users').doc(currentUser.uid).update({ name:newName, updated_at:new Date().toISOString() });
+    await db.collection('users').doc(currentUser.uid).update({ code:newCode, name:newName, updated_at:new Date().toISOString() });
+    currentUser.code = newCode;
     currentUser.name = newName;
-    const acc = findAccount(currentUser.uid); if(acc) acc.name = newName;
+    const acc = findAccount(currentUser.uid); if(acc){ acc.code = newCode; acc.name = newName; }
     renderUserBadge();
     if(isAdmin()) renderAdminTable();
     document.getElementById('editNameOverlay').classList.remove('show');
-  }catch(err){ alert('名稱儲存失敗：' + authErrorMessage(err)); }
+    showToast('✅ 個人資料已更新');
+  }catch(err){ alert('儲存失敗：' + authErrorMessage(err)); }
 });
 
 /* ---- 帳號管理(僅管理員可見) ---- */
@@ -5745,7 +5760,7 @@ const FULL_BACKUP_BLOBS = {
 };
 document.getElementById('migrateUidBtn').addEventListener('click', async ()=>{
   if(!isSuperAdmin()) return;
-  if(!confirm('這會依舊資料的帳號代號，對應目前 users 集合的 UID。執行前請確認新帳號的實驗室代號與舊版一致。')) return;
+  if(!confirm('這會依舊資料的帳號代號，對應目前 users 集合的 UID。執行前請確認新帳號的姓名與舊版一致。')) return;
   const btn = document.getElementById('migrateUidBtn');
   const status = document.getElementById('fullBackupStatus');
   btn.disabled = true;
