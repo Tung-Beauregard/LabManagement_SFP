@@ -1,9 +1,10 @@
 <!DOCTYPE html>
+<!-- GitHub Pages 入口檔：請保留檔名 index.html -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>SFPLAB 實驗室管理系統</title>
+<title>SFPLAB 實驗室管理系統 · Firebase Auth UID 版</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
@@ -117,7 +118,7 @@
   .modal .close{position:absolute;top:16px;right:18px;background:none;border:none;font-size:18px;cursor:pointer;color:var(--ink-soft);}
   .field{margin-bottom:14px;}
   .field label{display:block;font-size:12px;color:var(--ink-soft);margin-bottom:5px;font-weight:600;}
-  .field input[type=text], .field input[type=date], .field input[type=number], .field textarea, .field select{
+  .field input[type=text], .field input[type=email], .field input[type=password], .field input[type=date], .field input[type=time], .field input[type=number], .field textarea, .field select{
     width:100%;border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-size:13px;font-family:var(--sans);background:#FCFDFC;
   }
   .field input[readonly]{background:#F2F4F3;color:var(--ink-soft);}
@@ -396,24 +397,30 @@
   <div class="modal" style="max-width:380px;text-align:center;">
     <div style="font-size:28px;margin-bottom:6px;">🔬</div>
     <h2 style="margin-bottom:4px;">歡迎使用 SFPLAB</h2>
-    <div style="font-size:12px;color:var(--ink-soft);margin-bottom:18px;">請輸入使用者帳號或名稱縮寫與4位數Pin碼登入</div>
+    <div style="font-size:12px;color:var(--ink-soft);margin-bottom:18px;">使用 Firebase Authentication 的 Email 與密碼登入</div>
+    <div id="authStatus" style="display:none;font-size:12px;background:#F4E6D6;color:#8A4B12;border-radius:8px;padding:9px 10px;margin-bottom:12px;text-align:left;"></div>
 
     <div id="loginPane">
       <div class="field" style="text-align:left;">
-        <label>使用者帳號或名稱縮寫</label>
-        <input type="text" id="login_code" placeholder="例如 W 或 WCT">
+        <label>Email</label>
+        <input type="email" id="login_email" autocomplete="username" placeholder="name@example.com">
       </div>
       <div class="field" style="text-align:left;">
-        <label>4位數Pin碼</label>
-        <input type="password" id="login_pin" maxlength="4" inputmode="numeric" placeholder="●●●●">
+        <label>密碼</label>
+        <input type="password" id="login_password" autocomplete="current-password" placeholder="Firebase 密碼">
       </div>
       <button class="btn btn-primary" id="loginSubmitBtn" style="width:100%;margin-top:6px;">登入</button>
+      <button class="btn btn-ghost" id="forgotPasswordBtn" type="button" style="width:100%;margin-top:8px;">忘記密碼／寄送重設信</button>
       <button class="btn btn-ghost" id="showRegisterBtn" type="button" style="width:100%;margin-top:8px;">還沒有帳號?註冊新帳號</button>
     </div>
 
     <div id="registerPane" style="display:none;">
       <div class="field" style="text-align:left;">
-        <label>使用者帳號 *</label>
+        <label>Email *</label>
+        <input type="email" id="reg_email" autocomplete="username" placeholder="name@example.com">
+      </div>
+      <div class="field" style="text-align:left;">
+        <label>實驗室代號 *</label>
         <input type="text" id="reg_code" placeholder="例如 W">
       </div>
       <div class="field" style="text-align:left;">
@@ -421,30 +428,16 @@
         <input type="text" id="reg_name" placeholder="提示1~4個字">
       </div>
       <div class="field" style="text-align:left;">
-        <label>設定 4位數Pin碼 *</label>
-        <input type="password" id="reg_pin" maxlength="4" inputmode="numeric" placeholder="●●●●">
+        <label>設定密碼 *</label>
+        <input type="password" id="reg_password" autocomplete="new-password" placeholder="至少8個字元">
       </div>
       <div class="field" style="text-align:left;">
-        <label>再輸入一次Pin碼 *</label>
-        <input type="password" id="reg_pin2" maxlength="4" inputmode="numeric" placeholder="●●●●">
+        <label>再輸入一次密碼 *</label>
+        <input type="password" id="reg_password2" autocomplete="new-password" placeholder="再輸入一次">
       </div>
-      <div style="font-size:11px;color:var(--amber);margin-bottom:10px;text-align:left;">⚠️ 管理員看得到所有人的Pin碼,請不要使用你自己其他地方常用的密碼。</div>
-      <button class="btn btn-primary" id="registerSubmitBtn" style="width:100%;">建立帳號並登入</button>
+      <div style="font-size:11px;color:var(--amber);margin-bottom:10px;text-align:left;">註冊後需由管理員啟用帳號才能進入系統。密碼由 Firebase Authentication 保管，管理員無法查看。</div>
+      <button class="btn btn-primary" id="registerSubmitBtn" style="width:100%;">建立帳號</button>
       <button class="btn btn-ghost" id="showLoginBtn" type="button" style="width:100%;margin-top:8px;">已經有帳號?返回登入</button>
-    </div>
-
-    <div id="setupPinPane" style="display:none;">
-      <div style="font-size:12px;color:var(--ink-soft);margin-bottom:14px;">這是你第一次登入,請設定屬於你自己的4位數Pin碼</div>
-      <div class="field" style="text-align:left;">
-        <label>設定 4位數Pin碼 *</label>
-        <input type="password" id="setup_pin" maxlength="4" inputmode="numeric" placeholder="●●●●">
-      </div>
-      <div class="field" style="text-align:left;">
-        <label>再輸入一次Pin碼 *</label>
-        <input type="password" id="setup_pin2" maxlength="4" inputmode="numeric" placeholder="●●●●">
-      </div>
-      <div style="font-size:11px;color:var(--amber);margin-bottom:10px;text-align:left;">⚠️ 管理員看得到所有人的Pin碼,請不要使用你自己其他地方常用的密碼。</div>
-      <button class="btn btn-primary" id="setupPinSubmitBtn" style="width:100%;">完成設定並登入</button>
     </div>
   </div>
 </div>
@@ -666,18 +659,19 @@
       <div class="tablewrap">
         <table>
           <thead>
-            <tr><th>帳號</th><th>名稱縮寫</th><th>Pin碼</th><th>角色</th><th>建立時間</th><th></th></tr>
+            <tr><th>實驗室代號</th><th>名稱縮寫</th><th>狀態</th><th>角色</th><th>建立時間</th><th>UID</th></tr>
           </thead>
           <tbody id="adminTbody"></tbody>
         </table>
       </div>
-      <div style="font-size:11px;color:var(--ink-soft);margin-top:10px;">說明:管理員看得到所有人的Pin碼,請提醒大家不要使用自己在別處常用的密碼。忘記Pin碼的人,也可以由管理員直接在下方查看,或幫他「重設Pin碼」讓對方重新設定。</div>
+      <div style="font-size:11px;color:var(--ink-soft);margin-top:10px;">新註冊帳號預設為「待啟用」。密碼僅由 Firebase Authentication 處理，這裡不會顯示或儲存密碼。忘記密碼時，請在 Firebase Console 的 Authentication 頁面重設。</div>
 
       <div class="section-title" id="fullBackupSectionTitle" style="display:none;">全部資料備份(僅總管理員)</div>
       <div class="today-card" id="fullBackupCard" style="display:none;">
-        <div style="font-size:12px;color:var(--ink-soft);margin-bottom:10px;">匯出會把藥品/試材/樣品/帳號/購買/比價/儀器使用步驟/值週生/待辦事項等所有資料打包成一個JSON檔案下載;匯入會用檔案內容整個覆蓋現有資料,請謹慎使用。</div>
+        <div style="font-size:12px;color:var(--ink-soft);margin-bottom:10px;">匯出會把藥品/試材/樣品/購買/比價/儀器使用步驟/值週生/待辦事項等資料打包成 JSON。Firebase Authentication 帳號與密碼不包含在內，需由 Firebase Console 管理。</div>
         <button class="btn btn-primary btn-sm" id="fullExportBtn">⬇️ 匯出全部資料</button>
         <button class="btn btn-ghost btn-sm" id="fullImportBtn">⬆️ 匯入全部資料</button>
+        <button class="btn btn-ghost btn-sm" id="migrateUidBtn">將舊資料建立者對應到 UID</button>
         <input type="file" id="fullImportInput" accept=".json" class="visually-hidden-file">
         <div id="fullBackupStatus" style="margin-top:8px;font-size:11.5px;color:var(--ink-soft);"></div>
       </div>
@@ -1314,14 +1308,14 @@
     <div class="field row2">
       <div><label>存量</label>
         <div style="display:flex;gap:6px;">
-          <input type="number" id="f_quantity" step="any" style="flex:1;">
+          <input type="number" id="f_quantity" step="any" min="0" style="flex:1;">
           <input type="text" id="f_unit" placeholder="單位(mL/g/瓶)" style="width:110px;">
         </div>
       </div>
       <div><label>購買日期</label><input type="date" id="f_purchase_date"></div>
     </div>
     <div class="field row2">
-      <div><label>低庫存警戒值(選填)</label><input type="number" id="f_low_threshold" step="any" placeholder="低於此值標紅"></div>
+      <div><label>低庫存警戒值(選填)</label><input type="number" id="f_low_threshold" step="any" min="0" placeholder="低於此值標紅"></div>
       <div><label>SDS 頁數</label><input type="text" id="f_sds" placeholder="例如 8 或 p.3-8"></div>
     </div>
     <div class="field">
@@ -1611,13 +1605,13 @@
       </div>
     </div>
     <div class="field row2">
-      <div><label>試材鮮重(g)</label><input type="number" id="s_material_fresh_weight" step="any" placeholder="萃取投入的試材總鮮重"></div>
-      <div><label>萃取物重量(g)</label><input type="number" id="s_sample_weight" step="any"></div>
+      <div><label>試材鮮重(g)</label><input type="number" id="s_material_fresh_weight" step="any" min="0" placeholder="萃取投入的試材總鮮重"></div>
+      <div><label>萃取物重量(g)</label><input type="number" id="s_sample_weight" step="any" min="0"></div>
     </div>
     <div class="field">
       <label>絕乾重(g)</label>
       <div style="display:flex;gap:8px;">
-        <input type="number" id="s_dry_weight" step="any" placeholder="可手動輸入,或用下方按鈕帶入" style="flex:1;">
+        <input type="number" id="s_dry_weight" step="any" min="0" placeholder="可手動輸入,或用下方按鈕帶入" style="flex:1;">
         <button class="btn btn-ghost btn-sm" id="calcDryFromMoistureBtn" type="button">由含水量換算</button>
       </div>
       <div class="unknown-row" style="margin-top:8px;">若試材已為絕乾狀態,可直接在此欄位輸入乾重,不需使用下方含水量測定區。</div>
@@ -1631,12 +1625,12 @@
     <div class="calc-box">
       <div class="calc-title">🧮 取樣含水量測定(用於換算絕乾重)</div>
       <div class="field row2">
-        <div><label>取樣鮮重(含容器,g)</label><input type="number" id="mc_fresh_gross" step="any"></div>
-        <div><label>取樣乾重(含容器,g)</label><input type="number" id="mc_dry_gross" step="any"></div>
+        <div><label>取樣鮮重(含容器,g)</label><input type="number" id="mc_fresh_gross" step="any" min="0"></div>
+        <div><label>取樣乾重(含容器,g)</label><input type="number" id="mc_dry_gross" step="any" min="0"></div>
       </div>
       <div class="field">
         <label>容器重(g)</label>
-        <input type="number" id="mc_container" step="any" style="max-width:200px;">
+        <input type="number" id="mc_container" step="any" min="0" style="max-width:200px;">
       </div>
       <div class="field">
         <label>含水量照片</label>
@@ -1649,7 +1643,7 @@
         <div class="item"><div class="v" id="mc_moisture_dry">-</div><div class="l">乾基含水率</div></div>
         <div class="item"><div class="v" id="mc_dry_net">-</div><div class="l">取樣乾重(g)</div></div>
       </div>
-      <button class="btn btn-primary" id="mc_importBtn" type="button">匯入此乾重至上方「絕乾重」</button>
+      <div class="unknown-row" style="margin-top:10px;">下方是含水量「取樣」的乾重，不能直接當成整批試材絕乾重。請使用上方「由含水量換算」。</div>
     </div>
 
     <div class="section-title">照片</div>
@@ -1681,7 +1675,9 @@
      共用資料(shared=true)存在 Firestore,個人/裝置資料(shared=false)存在瀏覽器 localStorage
 ====================================================== -->
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-storage-compat.js"></script>
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyAlhm9oAPZMsUcj1pmGFoUiqJIoHHCZXKc",
@@ -1692,7 +1688,9 @@ const firebaseConfig = {
   appId: "1:549177150333:web:a14dc141f2ab75b90bda14"
 };
 firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
 const db = firebase.firestore();
+const fileStorage = firebase.storage();
 const FS_COLLECTION = 'lab-data';
 
 window.storage = {
@@ -1702,7 +1700,7 @@ window.storage = {
         const doc = await db.collection(FS_COLLECTION).doc(key).get();
         if(!doc.exists) return null;
         return { key, value: doc.data().value, shared: true };
-      }catch(e){ console.error('storage.get(shared) failed:', e); return null; }
+      }catch(e){ console.error('storage.get(shared) failed:', e); throw e; }
     }else{
       try{
         const raw = localStorage.getItem('local:'+key);
@@ -1714,9 +1712,10 @@ window.storage = {
   async set(key, value, shared){
     if(shared){
       try{
+        if(new TextEncoder().encode(String(value)).length > 900*1024) throw new Error('資料超過 900 KB，請移除 Base64 照片或拆分資料後再儲存。');
         await db.collection(FS_COLLECTION).doc(key).set({ value: value, updated_at: Date.now() });
         return { key, value, shared: true };
-      }catch(e){ console.error('storage.set(shared) failed:', e); return null; }
+      }catch(e){ console.error('storage.set(shared) failed:', e); throw e; }
     }else{
       try{
         localStorage.setItem('local:'+key, value);
@@ -1729,7 +1728,7 @@ window.storage = {
       try{
         await db.collection(FS_COLLECTION).doc(key).delete();
         return { key, deleted: true, shared: true };
-      }catch(e){ console.error('storage.delete(shared) failed:', e); return null; }
+      }catch(e){ console.error('storage.delete(shared) failed:', e); throw e; }
     }else{
       try{
         localStorage.removeItem('local:'+key);
@@ -1743,18 +1742,44 @@ window.storage = {
 async function fsGetAll(collectionName){
   try{
     const snap = await db.collection(collectionName).get();
-    return snap.docs.map(d => d.data());
-  }catch(e){ console.error('fsGetAll failed:', e); return []; }
+    return snap.docs.map(d => ({ ...d.data(), _doc_id:d.id }));
+  }catch(e){
+    console.error('fsGetAll failed:', e);
+    throw new Error(`無法讀取 ${collectionName}`);
+  }
+}
+async function fsGetWhere(collectionName, field, op, value){
+  try{
+    const snap = await db.collection(collectionName).where(field, op, value).get();
+    return snap.docs.map(d => ({ ...d.data(), _doc_id:d.id }));
+  }catch(e){
+    console.error('fsGetWhere failed:', e);
+    throw new Error(`無法讀取 ${collectionName}`);
+  }
 }
 async function fsSetItem(collectionName, item){
   try{
-    await db.collection(collectionName).doc(String(item.id)).set(item);
+    if(new TextEncoder().encode(JSON.stringify(item)).length > 900*1024) throw new Error('單筆資料超過 900 KB，請先移除 Base64 照片。');
+    const docId = item._doc_id || db.collection(collectionName).doc().id;
+    item._doc_id = docId;
+    await db.collection(collectionName).doc(docId).set(item);
     return true;
   }catch(e){ console.error('fsSetItem failed:', e); return false; }
 }
-async function fsDeleteItem(collectionName, id){
+async function fsDeleteItem(collectionName, id, docId){
   try{
-    await db.collection(collectionName).doc(String(id)).delete();
+    if(docId){
+      await db.collection(collectionName).doc(String(docId)).delete();
+      return true;
+    }
+    const directRef = db.collection(collectionName).doc(String(id));
+    const direct = await directRef.get();
+    if(direct.exists){ await directRef.delete(); return true; }
+    const matches = await db.collection(collectionName).where('id','==',id).get();
+    if(matches.empty) return true;
+    const batch = db.batch();
+    matches.docs.forEach(d=>batch.delete(d.ref));
+    await batch.commit();
     return true;
   }catch(e){ console.error('fsDeleteItem failed:', e); return false; }
 }
@@ -1762,6 +1787,17 @@ async function fsReplaceAll(collectionName, itemsArray){
   try{
     const snap = await db.collection(collectionName).get();
     const existingIds = snap.docs.map(d=>d.id);
+    if(existingIds.length + itemsArray.length <= 450){
+      const batch = db.batch();
+      existingIds.forEach(id=>batch.delete(db.collection(collectionName).doc(id)));
+      itemsArray.forEach(item=>{
+        const docId = item._doc_id || db.collection(collectionName).doc().id;
+        item._doc_id = docId;
+        batch.set(db.collection(collectionName).doc(docId), item);
+      });
+      await batch.commit();
+      return true;
+    }
     for(let i=0;i<existingIds.length;i+=400){
       const batch = db.batch();
       existingIds.slice(i,i+400).forEach(id => batch.delete(db.collection(collectionName).doc(id)));
@@ -1769,7 +1805,11 @@ async function fsReplaceAll(collectionName, itemsArray){
     }
     for(let i=0;i<itemsArray.length;i+=400){
       const batch = db.batch();
-      itemsArray.slice(i,i+400).forEach(item => batch.set(db.collection(collectionName).doc(String(item.id)), item));
+      itemsArray.slice(i,i+400).forEach(item =>{
+        const docId = item._doc_id || db.collection(collectionName).doc().id;
+        item._doc_id = docId;
+        batch.set(db.collection(collectionName).doc(docId), item);
+      });
       await batch.commit();
     }
     return true;
@@ -1883,6 +1923,10 @@ document.getElementById('lightboxOverlay').addEventListener('click', closeLightb
 function escapeHtml(s){
   return String(s ?? '').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
+function localDateISO(date){
+  const d = date || new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
 function truncate6(s){
   const str = String(s ?? '');
   if(str.length <= 6) return escapeHtml(str);
@@ -1950,6 +1994,36 @@ function compressPhoto(file, onDone){
   };
   reader.readAsDataURL(file);
 }
+function storageSafeSegment(value){
+  return encodeURIComponent(String(value||'unknown')).replace(/%/g,'_');
+}
+async function uploadPhotoSource(src, folder, recordId, slot, existingPath){
+  if(!src) return { url:null, path:null, uploaded:false };
+  if(!String(src).startsWith('data:')) return { url:src, path:existingPath||null, uploaded:false };
+  if(!currentUser || !currentUser.uid) throw new Error('尚未登入，無法上傳照片。');
+  const response = await fetch(src);
+  const blob = await response.blob();
+  if(blob.size > 300*1024) throw new Error('照片壓縮後仍超過 300 KB，請改用較小的照片。');
+  const random = (crypto && crypto.getRandomValues)
+    ? [...crypto.getRandomValues(new Uint8Array(6))].map(n=>n.toString(16).padStart(2,'0')).join('')
+    : Math.random().toString(36).slice(2,14);
+  const ext = blob.type==='image/png' ? 'png' : blob.type==='image/webp' ? 'webp' : 'jpg';
+  const path = `lab-photos/${storageSafeSegment(folder)}/${storageSafeSegment(currentUser.uid)}/${storageSafeSegment(recordId)}/${Date.now()}_${random}_${storageSafeSegment(slot)}.${ext}`;
+  const ref = fileStorage.ref(path);
+  await ref.put(blob, { contentType:blob.type||'image/jpeg', customMetadata:{ ownerUid:currentUser.uid, recordId:String(recordId||'') } });
+  const url = await ref.getDownloadURL();
+  return { url, path, uploaded:true };
+}
+async function uploadPreviewPhoto(previewId, folder, recordId, slot, existingPath){
+  const preview = document.getElementById(previewId);
+  const src = preview && preview.style.display!=='none' ? preview.src : null;
+  return uploadPhotoSource(src, folder, recordId, slot, existingPath);
+}
+async function deleteStoredPhoto(path){
+  if(!path) return;
+  try{ await fileStorage.ref(path).delete(); }
+  catch(err){ if(err && err.code!=='storage/object-not-found') console.warn('photo cleanup failed:',err); }
+}
 function bindPhotoUpload(dropId, inputId, previewId){
   const input = document.getElementById(inputId);
   const camBtn = document.getElementById(dropId+'Cam');
@@ -2014,86 +2088,113 @@ function debounce(fn, delay){
 }
 
 /* ======================================================
-   使用者帳號系統(代號 + 4位數Pin碼)
+   使用者帳號系統(Firebase Authentication + users/{uid})
 ====================================================== */
-const ACCOUNTS_KEY = 'lab-accounts';   // 共用:所有人看到同一份帳號清單
-const SESSION_KEY = 'current-session'; // 個人:只記錄自己登入的帳號代號,不存Pin碼
-const ROLE_MIGRATION_KEY = 'role-migration-v2-done'; // 共用:標記「admin→super_admin」一次性遷移是否已執行
-const WEAK_PINS = ['0000','1111','2222','3333','4444','5555','6666','7777','8888','9999','1234','4321','1212','2121','1122','2211','0123','1230','2580','9876','6789','1004'];
-function isWeakPin(pin){ return WEAK_PINS.includes(pin); }
-function isValidPinFormat(pin){ return /^\d{4}$/.test(pin); }
-
 let accounts = [];
-let currentUser = null; // {code, name, role}
+let currentUser = null; // {uid, code, name, role, active}
+let appDataLoaded = false;
 
 function findAccount(identifier){
-  const key = String(identifier||'').toLowerCase();
+  const key = String(identifier||'').trim().toLowerCase();
   if(!key) return null;
-  return accounts.find(a=> a.code.toLowerCase()===key || (a.name && a.name.toLowerCase()===key));
+  return accounts.find(a=>
+    String(a.uid||'').toLowerCase()===key ||
+    String(a.code||'').toLowerCase()===key ||
+    (a.name && String(a.name).toLowerCase()===key)
+  );
 }
-function isIdentifierTaken(value, excludeCode){
+function isIdentifierTaken(value, excludeUid){
   const key = String(value||'').trim().toLowerCase();
   if(!key) return false;
   return accounts.some(a=>{
-    if(excludeCode && a.code.toLowerCase()===String(excludeCode).toLowerCase()) return false;
-    return a.code.toLowerCase()===key || (a.name && a.name.toLowerCase()===key);
+    if(excludeUid && a.uid===excludeUid) return false;
+    return String(a.code||'').toLowerCase()===key || (a.name && String(a.name).toLowerCase()===key);
   });
 }
-function ownerLabel(code){
-  if(!code) return '-';
-  const acc = findAccount(code);
-  return acc ? (acc.name || acc.code) : code;
+function ownerLabel(codeOrUid){
+  if(!codeOrUid) return '-';
+  const acc = findAccount(codeOrUid);
+  return acc ? (acc.name || acc.code) : codeOrUid;
 }
 function roleLabel(role){
   if(role==='super_admin') return '總管理員';
   if(role==='admin') return '管理員';
   return '一般成員';
 }
-async function ensureBuiltinAccounts(){
-  const builtins = [
-    { code: 'phantasy199302', name: '總管理員' },
-    { code: 'SFPLab', name: '總管理員' }
-  ];
-  let changed = false;
-  builtins.forEach(b=>{
-    if(!findAccount(b.code)){
-      accounts.push({ code: b.code, name: b.name, pin: null, role: 'super_admin', mustChangePin: true, created_at: new Date().toISOString() });
-      changed = true;
-    }
-  });
-  return changed;
+function authErrorMessage(err){
+  const code = err && err.code;
+  const map = {
+    'auth/invalid-email':'Email 格式不正確。',
+    'auth/invalid-credential':'Email 或密碼不正確。',
+    'auth/user-not-found':'找不到這個帳號。',
+    'auth/wrong-password':'Email 或密碼不正確。',
+    'auth/email-already-in-use':'這個 Email 已經註冊過了。',
+    'auth/weak-password':'密碼強度不足，請至少使用8個字元。',
+    'auth/too-many-requests':'嘗試次數過多，請稍後再試。',
+    'auth/network-request-failed':'無法連線到 Firebase，請檢查網路。'
+  };
+  return map[code] || ((err && err.message) ? `Firebase 錯誤：${err.message}` : '發生不明錯誤。');
 }
-async function migrateLegacyAdminRole(){
-  // 舊版只有 member/admin 兩階,原本的 admin 等同現在的「總管理員」。
-  // 用一個一次性旗標避免之後新指派的「管理員」被誤升級。
-  try{
-    const flag = await window.storage.get(ROLE_MIGRATION_KEY, true);
-    if(flag && flag.value) return false;
-  }catch(e){}
-  let changed = false;
-  accounts.forEach(a=>{
-    if(a.role==='admin'){ a.role = 'super_admin'; changed = true; }
-  });
-  try{ await window.storage.set(ROLE_MIGRATION_KEY, '1', true); }catch(e){}
-  return changed;
+function setAuthStatus(message, kind){
+  const el = document.getElementById('authStatus');
+  if(!message){ el.style.display='none'; el.textContent=''; return; }
+  el.textContent = message;
+  el.style.display = 'block';
+  el.style.background = kind==='error' ? '#FCEBEB' : kind==='ok' ? '#E4F3E7' : '#F4E6D6';
+  el.style.color = kind==='error' ? '#791F1F' : kind==='ok' ? '#1E6B38' : '#8A4B12';
 }
 async function loadAccounts(){
+  const snap = await db.collection('users').get();
+  accounts = snap.docs.map(d=>({ uid:d.id, ...d.data() }));
+}
+function waitForInitialAuth(){
+  return new Promise((resolve, reject)=>{
+    const unsubscribe = auth.onAuthStateChanged(user=>{ unsubscribe(); resolve(user); }, reject);
+  });
+}
+async function establishCurrentUser(firebaseUser){
+  if(!firebaseUser) return false;
+  const snap = await db.collection('users').doc(firebaseUser.uid).get();
+  if(!snap.exists){
+    setAuthStatus('這個 Authentication 帳號尚未建立 Firestore users/UID 資料。如果你是第一位管理員，請依設定教學在 Firebase Console 建立。', 'error');
+    await auth.signOut();
+    return false;
+  }
+  const profile = snap.data();
+  if(profile.active !== true){
+    setAuthStatus('帳號已建立，但還在等待管理員啟用。', 'info');
+    await auth.signOut();
+    return false;
+  }
+  currentUser = {
+    uid: firebaseUser.uid,
+    code: profile.code || firebaseUser.uid.slice(0,8),
+    name: profile.name || '',
+    role: profile.role || 'member',
+    active: true
+  };
+  await loadAccounts();
+  document.getElementById('loginOverlay').classList.remove('show');
+  setAuthStatus('');
+  renderUserBadge();
+  return true;
+}
+
+async function loadCurrentUser(){
   try{
-    const res = await window.storage.get(ACCOUNTS_KEY, true);
-    accounts = res && res.value ? JSON.parse(res.value) : [];
-  }catch(e){ accounts = []; }
-  let changed = await ensureBuiltinAccounts();
-  if(await migrateLegacyAdminRole()) changed = true;
-  if(changed) await saveAccounts();
-}
-async function saveAccounts(){
-  try{ await window.storage.set(ACCOUNTS_KEY, JSON.stringify(accounts), true); }catch(e){}
-}
-async function saveSession(code){
-  try{ await window.storage.set(SESSION_KEY, JSON.stringify({code}), false); }catch(e){}
-}
-async function clearSession(){
-  try{ await window.storage.delete(SESSION_KEY, false); }catch(e){}
+    await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+    const firebaseUser = await waitForInitialAuth();
+    if(!firebaseUser){
+      showLoginPane('login');
+      document.getElementById('loginOverlay').classList.add('show');
+      return false;
+    }
+    return await establishCurrentUser(firebaseUser);
+  }catch(err){
+    setAuthStatus(authErrorMessage(err), 'error');
+    document.getElementById('loginOverlay').classList.add('show');
+    return false;
+  }
 }
 function isAdmin(){
   return !!(currentUser && (currentUser.role==='admin' || currentUser.role==='super_admin'));
@@ -2102,9 +2203,8 @@ function isSuperAdmin(){
   return !!(currentUser && currentUser.role==='super_admin');
 }
 function canEdit(item){
-  // 建立者本人或管理員/總管理員可以編輯
   if(isAdmin()) return true;
-  return !!(item && currentUser && item.created_by === currentUser.code);
+  return !!(item && currentUser && item.created_by_uid === currentUser.uid);
 }
 function canDelete(item){
   // 管理員與總管理員都能刪除
@@ -2114,7 +2214,7 @@ function canDelete(item){
 function showLoginPane(name){
   document.getElementById('loginPane').style.display = name==='login' ? 'block':'none';
   document.getElementById('registerPane').style.display = name==='register' ? 'block':'none';
-  document.getElementById('setupPinPane').style.display = name==='setup' ? 'block':'none';
+  setAuthStatus('');
 }
 function renderUserBadge(){
   document.getElementById('ub_name').textContent = (currentUser && currentUser.name) ? currentUser.name : '(未命名)';
@@ -2128,92 +2228,69 @@ function renderUserBadge(){
     document.getElementById(id).style.display = isAdmin() ? 'inline-block' : 'none';
   });
 }
-async function completeLogin(acc){
-  currentUser = { code: acc.code, name: acc.name, role: acc.role };
-  await saveSession(acc.code);
-  document.getElementById('loginOverlay').classList.remove('show');
-  document.getElementById('login_code').value = '';
-  document.getElementById('login_pin').value = '';
-  renderUserBadge();
-  renderAll(); renderMatAll(); renderSmpAll();
-  if(isAdmin()) renderAdminTable();
-  renderDashboard();
-  tryDeepLink();
-}
-
-async function loadCurrentUser(){
-  await loadAccounts();
-  let session = null;
-  try{
-    const res = await window.storage.get(SESSION_KEY, false);
-    session = res && res.value ? JSON.parse(res.value) : null;
-  }catch(e){ session = null; }
-  const acc = session && session.code ? findAccount(session.code) : null;
-  if(acc && !acc.mustChangePin){
-    currentUser = { code: acc.code, name: acc.name, role: acc.role };
-    document.getElementById('loginOverlay').classList.remove('show');
-    renderUserBadge();
-  }else{
-    showLoginPane('login');
-    document.getElementById('loginOverlay').classList.add('show');
-  }
-}
-
-let pendingSetupCode = null;
-
 document.getElementById('showRegisterBtn').addEventListener('click', ()=> showLoginPane('register'));
 document.getElementById('showLoginBtn').addEventListener('click', ()=> showLoginPane('login'));
+document.getElementById('forgotPasswordBtn').addEventListener('click', async ()=>{
+  const email = document.getElementById('login_email').value.trim();
+  if(!email){ setAuthStatus('請先在 Email 欄位輸入你的信箱。', 'error'); return; }
+  try{
+    await auth.sendPasswordResetEmail(email);
+    setAuthStatus('重設密碼信已寄出，請檢查收件匣與垃圾郵件。', 'ok');
+  }catch(err){ setAuthStatus(authErrorMessage(err), 'error'); }
+});
 
 document.getElementById('loginSubmitBtn').addEventListener('click', async ()=>{
-  const code = document.getElementById('login_code').value.trim();
-  const pin = document.getElementById('login_pin').value.trim();
-  if(!code || !pin){ alert('請輸入使用者帳號或名稱縮寫,以及4位數Pin碼'); return; }
-  const acc = findAccount(code);
-  if(!acc){ alert('找不到這個帳號或名稱縮寫,請確認,或點下方註冊新帳號。'); return; }
-  if(acc.mustChangePin || acc.pin===null){
-    pendingSetupCode = acc.code;
-    showLoginPane('setup');
-    return;
-  }
-  if(acc.pin !== pin){ alert('Pin碼不正確,請再試一次。'); return; }
-  await completeLogin(acc);
+  const email = document.getElementById('login_email').value.trim();
+  const password = document.getElementById('login_password').value;
+  if(!email || !password){ setAuthStatus('請輸入 Email 與密碼。', 'error'); return; }
+  const btn = document.getElementById('loginSubmitBtn');
+  btn.disabled = true;
+  try{
+    const cred = await auth.signInWithEmailAndPassword(email, password);
+    const ok = await establishCurrentUser(cred.user);
+    if(ok){
+      document.getElementById('login_password').value = '';
+      await loadAllAppData();
+    }
+  }catch(err){
+    setAuthStatus(authErrorMessage(err), 'error');
+  }finally{ btn.disabled = false; }
 });
 
 document.getElementById('registerSubmitBtn').addEventListener('click', async ()=>{
+  const email = document.getElementById('reg_email').value.trim();
   const name = document.getElementById('reg_name').value.trim();
   const code = document.getElementById('reg_code').value.trim();
-  const pin = document.getElementById('reg_pin').value.trim();
-  const pin2 = document.getElementById('reg_pin2').value.trim();
-  if(!code){ alert('請填寫使用者帳號'); return; }
-  if(isIdentifierTaken(code)){ alert('這個帳號已經有人使用了,換一個試試。'); return; }
-  if(name && isIdentifierTaken(name)){ alert('這個名稱縮寫已經有人使用了,換一個試試。'); return; }
-  if(!isValidPinFormat(pin)){ alert('Pin碼需為4位數字'); return; }
-  if(pin !== pin2){ alert('兩次輸入的Pin碼不一致'); return; }
-  const acc = { code, name, pin, role: 'member', mustChangePin: false, created_at: new Date().toISOString() };
-  accounts.push(acc);
-  await saveAccounts();
-  await completeLogin(acc);
-});
-
-document.getElementById('setupPinSubmitBtn').addEventListener('click', async ()=>{
-  const pin = document.getElementById('setup_pin').value.trim();
-  const pin2 = document.getElementById('setup_pin2').value.trim();
-  if(!isValidPinFormat(pin)){ alert('Pin碼需為4位數字'); return; }
-  if(pin !== pin2){ alert('兩次輸入的Pin碼不一致'); return; }
-  const acc = findAccount(pendingSetupCode);
-  if(!acc){ alert('發生錯誤,請重新登入。'); showLoginPane('login'); return; }
-  acc.pin = pin;
-  acc.mustChangePin = false;
-  await saveAccounts();
-  pendingSetupCode = null;
-  await completeLogin(acc);
+  const password = document.getElementById('reg_password').value;
+  const password2 = document.getElementById('reg_password2').value;
+  if(!email || !code){ setAuthStatus('請填寫 Email 與實驗室代號。', 'error'); return; }
+  if(!/^[A-Za-z0-9_-]{1,20}$/.test(code)){ setAuthStatus('實驗室代號限 1–20 個英數字、底線或連字號。', 'error'); return; }
+  if(name.length > 20){ setAuthStatus('名稱縮寫最多20個字。', 'error'); return; }
+  if(password.length < 8){ setAuthStatus('密碼至少需8個字元。', 'error'); return; }
+  if(password !== password2){ setAuthStatus('兩次輸入的密碼不一致。', 'error'); return; }
+  const btn = document.getElementById('registerSubmitBtn');
+  btn.disabled = true;
+  let createdUser = null;
+  try{
+    const cred = await auth.createUserWithEmailAndPassword(email, password);
+    createdUser = cred.user;
+    await db.collection('users').doc(createdUser.uid).set({
+      code, name, role:'member', active:false,
+      created_at:new Date().toISOString(), updated_at:new Date().toISOString()
+    });
+    await auth.signOut();
+    showLoginPane('login');
+    setAuthStatus('帳號已建立。請通知管理員在「帳號管理」啟用後再登入。', 'ok');
+  }catch(err){
+    if(createdUser){ try{ await createdUser.delete(); }catch(_e){} }
+    setAuthStatus(authErrorMessage(err), 'error');
+  }finally{ btn.disabled = false; }
 });
 
 document.getElementById('switchUserBtn').addEventListener('click', async ()=>{
-  await clearSession();
+  await auth.signOut();
   currentUser = null;
-  showLoginPane('login');
-  document.getElementById('loginOverlay').classList.add('show');
+  location.reload();
 });
 
 document.getElementById('editNameBtn').addEventListener('click', ()=>{
@@ -2224,15 +2301,16 @@ document.getElementById('editNameClose').addEventListener('click', ()=> document
 document.getElementById('editNameCancelBtn').addEventListener('click', ()=> document.getElementById('editNameOverlay').classList.remove('show'));
 document.getElementById('editNameSaveBtn').addEventListener('click', async ()=>{
   const newName = document.getElementById('editName_input').value.trim();
-  if(newName && isIdentifierTaken(newName, currentUser.code)){ alert('這個名稱縮寫已經有人使用了,換一個試試。'); return; }
-  const acc = findAccount(currentUser.code);
-  if(!acc){ alert('發生錯誤,請重新登入。'); return; }
-  acc.name = newName;
-  currentUser.name = newName;
-  await saveAccounts();
-  renderUserBadge();
-  if(isAdmin()) renderAdminTable();
-  document.getElementById('editNameOverlay').classList.remove('show');
+  if(newName.length > 20){ alert('名稱縮寫最多20個字。'); return; }
+  if(newName && isIdentifierTaken(newName, currentUser.uid)){ alert('這個名稱縮寫已經有人使用了,換一個試試。'); return; }
+  try{
+    await db.collection('users').doc(currentUser.uid).update({ name:newName, updated_at:new Date().toISOString() });
+    currentUser.name = newName;
+    const acc = findAccount(currentUser.uid); if(acc) acc.name = newName;
+    renderUserBadge();
+    if(isAdmin()) renderAdminTable();
+    document.getElementById('editNameOverlay').classList.remove('show');
+  }catch(err){ alert('名稱儲存失敗：' + authErrorMessage(err)); }
 });
 
 /* ---- 帳號管理(僅管理員可見) ---- */
@@ -2241,32 +2319,32 @@ function renderAdminTable(){
   const tbody = document.getElementById('adminTbody');
   tbody.innerHTML = '';
   accounts.slice().sort((a,b)=>(a.code||'').localeCompare(b.code||'')).forEach(acc=>{
-    const isSelf = acc.code===currentUser.code;
+    const isSelf = acc.uid===currentUser.uid;
     const canManageRole = !isSelf && (isSuperAdmin() || (currentUser.role==='admin' && acc.role==='member'));
-    const canResetPin = !isSelf && (isSuperAdmin() || (currentUser.role==='admin' && acc.role==='member'));
     let roleCell;
     if(canManageRole){
       const options = isSuperAdmin()
         ? ['member','admin','super_admin']
         : ['member','admin'];
-      roleCell = `<select data-code="${escapeHtml(acc.code)}" data-action="role-select" class="role-select">${options.map(r=>`<option value="${r}" ${acc.role===r?'selected':''}>${roleLabel(r)}</option>`).join('')}</select>`;
+      roleCell = `<select data-uid="${escapeHtml(acc.uid)}" data-action="role-select" class="role-select">${options.map(r=>`<option value="${r}" ${acc.role===r?'selected':''}>${roleLabel(r)}</option>`).join('')}</select>`;
     }else{
       roleCell = acc.role==='super_admin' ? '<span class="plain-tag">總管理員</span>' : acc.role==='admin' ? '<span class="plain-tag">管理員</span>' : '一般成員';
     }
-    const canEditName = isSuperAdmin();
+    const canEditName = isSuperAdmin() && !isSelf;
     const nameCell = canEditName
-      ? `<input type="text" class="name-edit-input" data-code="${escapeHtml(acc.code)}" value="${escapeHtml(acc.name||'')}" placeholder="提示1~4個字">`
+      ? `<input type="text" class="name-edit-input" data-uid="${escapeHtml(acc.uid)}" value="${escapeHtml(acc.name||'')}" placeholder="名稱縮寫">`
       : escapeHtml(acc.name||'-');
+    const statusCell = canManageRole
+      ? `<select data-uid="${escapeHtml(acc.uid)}" data-action="status-select" class="role-select"><option value="active" ${acc.active===true?'selected':''}>已啟用</option><option value="inactive" ${acc.active!==true?'selected':''}>待啟用/已停用</option></select>`
+      : (acc.active===true ? '<span class="plain-tag" style="background:#E4F3E7;color:#1E6B38;">已啟用</span>' : '<span class="plain-tag" style="background:#F4E6D6;color:#8A4B12;">待啟用</span>');
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td data-label="帳號"><span class="id-badge">${escapeHtml(acc.code)}</span></td>
       <td data-label="名稱縮寫">${nameCell}</td>
-      <td data-label="Pin碼"><span class="id-badge">${acc.pin ? escapeHtml(acc.pin) : '(尚未設定)'}</span></td>
+      <td data-label="狀態">${statusCell}</td>
       <td data-label="角色">${roleCell}</td>
       <td data-label="建立時間">${escapeHtml((acc.created_at||'').slice(0,10))}</td>
-      <td class="cell-actions">
-        ${canResetPin ? `<button class="btn btn-ghost btn-sm" data-code="${escapeHtml(acc.code)}" data-action="reset">重設Pin碼</button>` : ''}
-      </td>
+      <td data-label="UID"><span class="id-badge" title="${escapeHtml(acc.uid)}">${escapeHtml((acc.uid||'').slice(0,8))}…</span></td>
     `;
     tbody.appendChild(tr);
   });
@@ -2275,45 +2353,48 @@ document.getElementById('adminTbody').addEventListener('change', async (e)=>{
   const nameInput = e.target.closest('input.name-edit-input');
   if(nameInput){
     if(!isSuperAdmin()){ renderAdminTable(); return; }
-    const code = nameInput.dataset.code;
-    const acc = findAccount(code);
+    const uid = nameInput.dataset.uid;
+    const acc = findAccount(uid);
     if(!acc) return;
     const newName = nameInput.value.trim();
-    if(newName && isIdentifierTaken(newName, code)){ alert('這個名稱縮寫已經有人使用了,換一個試試。'); renderAdminTable(); return; }
-    acc.name = newName;
-    if(code===currentUser.code) currentUser.name = newName;
-    await saveAccounts();
-    renderUserBadge();
-    renderAdminTable();
+    if(newName.length>20){ alert('名稱縮寫最多20個字。'); renderAdminTable(); return; }
+    if(newName && isIdentifierTaken(newName, uid)){ alert('這個名稱縮寫已經有人使用了,換一個試試。'); renderAdminTable(); return; }
+    try{
+      await db.collection('users').doc(uid).update({ name:newName, updated_at:new Date().toISOString() });
+      acc.name = newName;
+      renderAdminTable();
+    }catch(err){ alert('儲存失敗，請檢查權限與網路。'); renderAdminTable(); }
+    return;
+  }
+  const statusSel = e.target.closest('select[data-action="status-select"]');
+  if(statusSel){
+    const acc = findAccount(statusSel.dataset.uid);
+    if(!acc || acc.uid===currentUser.uid){ renderAdminTable(); return; }
+    const allowed = isSuperAdmin() || (currentUser.role==='admin' && acc.role==='member');
+    if(!allowed){ alert('權限不足。'); renderAdminTable(); return; }
+    const active = statusSel.value==='active';
+    try{
+      await db.collection('users').doc(acc.uid).update({ active, updated_at:new Date().toISOString() });
+      acc.active = active;
+      renderAdminTable();
+    }catch(err){ alert('狀態儲存失敗，請檢查 Security Rules。'); renderAdminTable(); }
     return;
   }
   const sel = e.target.closest('select[data-action="role-select"]');
   if(!sel) return;
-  const code = sel.dataset.code;
-  const acc = findAccount(code);
+  const uid = sel.dataset.uid;
+  const acc = findAccount(uid);
   if(!acc) return;
-  if(code===currentUser.code){ alert('不能修改自己的角色。'); renderAdminTable(); return; }
+  if(uid===currentUser.uid){ alert('不能修改自己的角色。'); renderAdminTable(); return; }
   const canManageRole = isSuperAdmin() || (currentUser.role==='admin' && acc.role==='member');
   if(!canManageRole){ alert('權限不足,無法修改這個帳號的角色。'); renderAdminTable(); return; }
   const newRole = sel.value;
   if(!isSuperAdmin() && newRole==='super_admin'){ alert('只有總管理員能指派總管理員權限。'); renderAdminTable(); return; }
-  acc.role = newRole;
-  await saveAccounts();
-  renderAdminTable();
-});
-document.getElementById('adminTbody').addEventListener('click', async (e)=>{
-  const btn = e.target.closest('button[data-action="reset"]');
-  if(!btn) return;
-  const code = btn.dataset.code;
-  const acc = findAccount(code);
-  if(!acc) return;
-  const canResetPin = isSuperAdmin() || (currentUser.role==='admin' && acc.role==='member');
-  if(!canResetPin){ alert('權限不足,無法重設這個帳號的Pin碼。'); return; }
-  if(!confirm(`確定要重設 ${acc.name||acc.code} 的Pin碼嗎?對方下次登入時,系統會要求他重新設定一組新的Pin碼。`)) return;
-  acc.pin = null;
-  acc.mustChangePin = true;
-  await saveAccounts();
-  renderAdminTable();
+  try{
+    await db.collection('users').doc(uid).update({ role:newRole, updated_at:new Date().toISOString() });
+    acc.role = newRole;
+    renderAdminTable();
+  }catch(err){ alert('角色儲存失敗，請檢查 Security Rules。'); renderAdminTable(); }
 });
 
 /* ======================================================
@@ -2363,6 +2444,7 @@ async function loadItems(){
 async function saveItems(){
   const ok = await fsReplaceAll('chemicals', items);
   if(!ok) alert('儲存失敗,請檢查網路連線後再試一次。');
+  return ok;
 }
 function populateLocationSelect(){
   document.getElementById('f_location').innerHTML = '<option value="">請選擇位置</option>' + CHEM_LOCATIONS.map(l=>`<option value="${l}">${l}</option>`).join('');
@@ -2382,6 +2464,7 @@ function applyChemDraft(d){
   if(!d) return;
   restoreFormValues(CHEM_FIELD_IDS, d.fields);
   selectedHaz = new Set(d.hazards||[]);
+  if(selectedHaz.size>1) selectedHaz.delete('none');
   document.querySelectorAll('#hazPicker .haz-chip').forEach(chip=>{
     const code = chip.dataset.code;
     if(selectedHaz.has(code)){ const g=ghsInfo(code); chip.classList.add('on'); chip.style.background=g.color; chip.style.borderColor=g.color; }
@@ -2399,7 +2482,17 @@ function renderHazPicker(){
     chip.dataset.code = g.code;
     chip.addEventListener('click', ()=>{
       if(selectedHaz.has(g.code)){ selectedHaz.delete(g.code); chip.classList.remove('on'); chip.style.background=''; chip.style.borderColor=''; }
-      else{ selectedHaz.add(g.code); chip.classList.add('on'); chip.style.background=g.color; chip.style.borderColor=g.color; }
+      else{
+        if(g.code==='none'){
+          selectedHaz.clear();
+          document.querySelectorAll('#hazPicker .haz-chip').forEach(c=>{ c.classList.remove('on'); c.style.background=''; c.style.borderColor=''; });
+        }else if(selectedHaz.has('none')){
+          selectedHaz.delete('none');
+          const noneChip=document.querySelector('#hazPicker .haz-chip[data-code="none"]');
+          if(noneChip){ noneChip.classList.remove('on'); noneChip.style.background=''; noneChip.style.borderColor=''; }
+        }
+        selectedHaz.add(g.code); chip.classList.add('on'); chip.style.background=g.color; chip.style.borderColor=g.color;
+      }
       saveChemDraftDebounced();
     });
     el.appendChild(chip);
@@ -2519,11 +2612,20 @@ document.querySelectorAll('input[name="f_state"]').forEach(r=>{
 });
 
 async function handleSave(){
+  const existingItem = editingId ? items.find(i=>i.id===editingId) : null;
+  if(editingId){
+    if(!canEdit(existingItem)){ alert('只有建立者本人或管理員能編輯這筆資料。'); return; }
+  }
   const name_zh = document.getElementById('f_name_zh').value.trim();
   const location = document.getElementById('f_location').value;
   if(!name_zh || !location){ alert('請至少填寫「中文名稱」與「存放位置」'); return; }
+  const recordId = editingId || genId(items, 'CHEM');
+  let photoInfo;
+  try{ photoInfo = await uploadPreviewPhoto('photoPreview','chemicals',recordId,'bottle',existingItem&&existingItem.photo_path); }
+  catch(err){ alert(err.message || '照片上傳失敗。'); return; }
   const data = {
-    id: editingId || genId(items, 'CHEM'),
+    id: recordId,
+    _doc_id: existingItem ? existingItem._doc_id : null,
     name_zh,
     name_en: document.getElementById('f_name_en').value.trim(),
     iupac: document.getElementById('f_iupac').value.trim(),
@@ -2538,15 +2640,19 @@ async function handleSave(){
     sds_pages: document.getElementById('f_sds').value.trim(),
     note: document.getElementById('f_note').value.trim(),
     hazards: [...selectedHaz],
-    photo: document.getElementById('photoPreview').style.display !== 'none' ? document.getElementById('photoPreview').src : null,
+    photo: photoInfo.url,
+    photo_path: photoInfo.path,
     updated_at: new Date().toISOString(),
+    updated_by_uid: (currentUser && currentUser.uid) || null,
+    created_by_uid: editingId ? (items.find(i=>i.id===editingId)?.created_by_uid || null) : ((currentUser && currentUser.uid) || null),
     created_by: editingId ? (items.find(i=>i.id===editingId)?.created_by || (currentUser && currentUser.code) || null) : ((currentUser && currentUser.code) || null),
     created_at: editingId ? (items.find(i=>i.id===editingId)?.created_at || new Date().toISOString()) : new Date().toISOString()
   };
+  const ok = await fsSetItem('chemicals', data);
+  if(!ok){ if(photoInfo.uploaded) await deleteStoredPhoto(photoInfo.path); alert('儲存失敗,請檢查網路連線後再試一次。'); return; }
   if(editingId){ items[items.findIndex(i=>i.id===editingId)] = data; }
   else{ items.push(data); }
-  const ok = await fsSetItem('chemicals', data);
-  if(!ok){ alert('儲存失敗,請檢查網路連線後再試一次。'); return; }
+  if(existingItem && existingItem.photo_path && existingItem.photo_path!==photoInfo.path) await deleteStoredPhoto(existingItem.photo_path);
   if(!editingId) await clearDraft(CHEM_DRAFT_KEY);
   const cpIdToRemove = (!editingId && typeof cpActionId !== 'undefined') ? cpActionId : null;
   closeForm();
@@ -2557,9 +2663,11 @@ async function handleDelete(){
   if(!editingId || !isAdmin()) return;
   if(!confirm('確定要刪除此品項嗎?此動作無法復原。')) return;
   const idToDelete = editingId;
+  const deletedItem = items.find(i=>i.id===idToDelete);
+  const ok = await fsDeleteItem('chemicals', idToDelete, deletedItem&&deletedItem._doc_id);
+  if(!ok){ alert('刪除失敗,請檢查網路連線後再試一次。'); return; }
+  if(deletedItem&&deletedItem.photo_path) await deleteStoredPhoto(deletedItem.photo_path);
   items = items.filter(i=>i.id!==idToDelete);
-  const ok = await fsDeleteItem('chemicals', idToDelete);
-  if(!ok){ alert('刪除失敗,請檢查網路連線後再試一次。'); }
   closeForm();
   renderAll();
 }
@@ -2569,9 +2677,11 @@ async function quickDeleteChem(id, ev){
   if(ev) ev.stopPropagation();
   if(!isAdmin()) return;
   if(!confirm('確定要刪除此品項嗎?此動作無法復原。')) return;
+  const deletedItem = items.find(i=>i.id===id);
+  const ok = await fsDeleteItem('chemicals', id, deletedItem&&deletedItem._doc_id);
+  if(!ok){ alert('刪除失敗,請檢查網路連線後再試一次。'); return; }
+  if(deletedItem&&deletedItem.photo_path) await deleteStoredPhoto(deletedItem.photo_path);
   items = items.filter(i=>i.id!==id);
-  const ok = await fsDeleteItem('chemicals', id);
-  if(!ok){ alert('刪除失敗,請檢查網路連線後再試一次。'); }
   renderAll();
 }
 
@@ -2632,7 +2742,7 @@ function exportCsv(){
     i.id, i.name_zh, i.name_en, i.iupac, i.cas, i.location, i.quantity, i.unit, i.purchase_date,
     (i.hazards||[]).map(c=>ghsInfo(c).label).join('/'), i.sds_pages, i.note
   ]);
-  downloadCsv(`藥品清單_${new Date().toISOString().slice(0,10)}.csv`, headers, rows);
+  downloadCsv(`藥品清單_${localDateISO()}.csv`, headers, rows);
 }
 
 document.getElementById('addBtn').addEventListener('click', ()=>openForm(null));
@@ -2664,6 +2774,7 @@ async function loadMatItems(){
 async function saveMatItems(){
   const ok = await fsReplaceAll('materials', matItems);
   if(!ok) alert('儲存失敗,請檢查網路連線後再試一次。');
+  return ok;
 }
 function populateMatSelects(){
   document.getElementById('m_part').innerHTML = '<option value="">請選擇部位</option>' + PART_OPTIONS.map(p=>`<option value="${p}">${p}</option>`).join('');
@@ -2842,12 +2953,19 @@ document.getElementById('m_acquired_unknown').addEventListener('change', (e)=>{
 });
 
 async function handleMatSave(){
+  const existingItem = editingMatId ? matItems.find(i=>i.id===editingMatId) : null;
+  if(editingMatId && !canEdit(existingItem)){ alert('只有建立者本人或管理員能編輯這筆資料。'); return; }
   const species = document.getElementById('m_species').value.trim();
   const part = document.getElementById('m_part').value;
   const storage_location = document.getElementById('m_storage').value;
   if(!species || !part || !storage_location){ alert('請至少填寫「物種」「部位」與「存放位置」'); return; }
+  const recordId = editingMatId || pendingMatId || genId(matItems, 'MAT');
+  let photoInfo;
+  try{ photoInfo = await uploadPreviewPhoto('m_photoPreview','materials',recordId,'material',existingItem&&existingItem.photo_path); }
+  catch(err){ alert(err.message || '照片上傳失敗。'); return; }
   const data = {
-    id: editingMatId || pendingMatId || genId(matItems, 'MAT'),
+    id: recordId,
+    _doc_id: existingItem ? existingItem._doc_id : null,
     species,
     source: document.getElementById('m_source').value.trim(),
     acquired_unknown: document.getElementById('m_acquired_unknown').checked,
@@ -2856,15 +2974,19 @@ async function handleMatSave(){
     storage_location,
     intended_use: document.getElementById('m_use').value,
     note: document.getElementById('m_note').value.trim(),
-    photo: document.getElementById('m_photoPreview').style.display !== 'none' ? document.getElementById('m_photoPreview').src : null,
+    photo: photoInfo.url,
+    photo_path: photoInfo.path,
     updated_at: new Date().toISOString(),
+    updated_by_uid: (currentUser && currentUser.uid) || null,
+    created_by_uid: editingMatId ? (matItems.find(i=>i.id===editingMatId)?.created_by_uid || null) : ((currentUser && currentUser.uid) || null),
     created_by: editingMatId ? (matItems.find(i=>i.id===editingMatId)?.created_by || (currentUser && currentUser.code) || null) : ((currentUser && currentUser.code) || null),
     created_at: editingMatId ? (matItems.find(i=>i.id===editingMatId)?.created_at || new Date().toISOString()) : new Date().toISOString()
   };
+  const ok = await fsSetItem('materials', data);
+  if(!ok){ if(photoInfo.uploaded) await deleteStoredPhoto(photoInfo.path); alert('儲存失敗,請檢查網路連線後再試一次。'); return; }
   if(editingMatId){ matItems[matItems.findIndex(i=>i.id===editingMatId)] = data; }
   else{ matItems.push(data); }
-  const ok = await fsSetItem('materials', data);
-  if(!ok){ alert('儲存失敗,請檢查網路連線後再試一次。'); return; }
+  if(existingItem && existingItem.photo_path && existingItem.photo_path!==photoInfo.path) await deleteStoredPhoto(existingItem.photo_path);
   if(!editingMatId) await clearDraft(MAT_DRAFT_KEY);
   closeMatForm();
   renderMatAll();
@@ -2873,9 +2995,11 @@ async function handleMatDelete(){
   if(!editingMatId || !isAdmin()) return;
   if(!confirm('確定要刪除此品項嗎?此動作無法復原。')) return;
   const idToDelete = editingMatId;
+  const deletedItem = matItems.find(i=>i.id===idToDelete);
+  const ok = await fsDeleteItem('materials', idToDelete, deletedItem&&deletedItem._doc_id);
+  if(!ok){ alert('刪除失敗,請檢查網路連線後再試一次。'); return; }
+  if(deletedItem&&deletedItem.photo_path) await deleteStoredPhoto(deletedItem.photo_path);
   matItems = matItems.filter(i=>i.id!==idToDelete);
-  const ok = await fsDeleteItem('materials', idToDelete);
-  if(!ok){ alert('刪除失敗,請檢查網路連線後再試一次。'); }
   closeMatForm();
   renderMatAll();
 }
@@ -2887,7 +3011,7 @@ function exportMatCsv(){
   const rows = matItems.map(i=>[
     i.id, i.species, i.source, i.acquired_unknown ? '未知' : i.acquired_date, i.part, storageLabel(i.storage_location), i.intended_use, i.note
   ]);
-  downloadCsv(`試材清單_${new Date().toISOString().slice(0,10)}.csv`, headers, rows);
+  downloadCsv(`試材清單_${localDateISO()}.csv`, headers, rows);
 }
 
 document.getElementById('matAddBtn').addEventListener('click', ()=>openMatForm(null));
@@ -2899,9 +3023,11 @@ async function quickDeleteMat(id, ev){
   if(ev) ev.stopPropagation();
   if(!isAdmin()) return;
   if(!confirm('確定要刪除此品項嗎?此動作無法復原。')) return;
+  const deletedItem = matItems.find(i=>i.id===id);
+  const ok = await fsDeleteItem('materials', id, deletedItem&&deletedItem._doc_id);
+  if(!ok){ alert('刪除失敗,請檢查網路連線後再試一次。'); return; }
+  if(deletedItem&&deletedItem.photo_path) await deleteStoredPhoto(deletedItem.photo_path);
   matItems = matItems.filter(i=>i.id!==id);
-  const ok = await fsDeleteItem('materials', id);
-  if(!ok){ alert('刪除失敗,請檢查網路連線後再試一次。'); }
   renderMatAll();
 }
 document.getElementById('matSearch').addEventListener('input', renderMatTable);
@@ -2926,6 +3052,7 @@ async function loadSmpItems(){
 async function saveSmpItems(){
   const ok = await fsReplaceAll('samples', smpItems);
   if(!ok) alert('儲存失敗,請檢查網路連線後再試一次。');
+  return ok;
 }
 const SMP_FIELD_IDS = [
   's_import_material','s_name_zh','s_species','s_source','s_acquired_date','s_acquired_unknown','s_part',
@@ -3034,7 +3161,7 @@ function getMoistureRates(){
   if(isNaN(fresh) || isNaN(dry) || isNaN(container)) return null;
   const freshNet = fresh - container;
   const dryNet = dry - container;
-  if(freshNet <= 0 || dryNet < 0 || dryNet > freshNet) return 'error';
+  if(freshNet <= 0 || dryNet <= 0 || dryNet > freshNet) return 'error';
   const wet = ((freshNet - dryNet) / freshNet) * 100;   // 濕基含水率
   const dryBasis = ((freshNet - dryNet) / dryNet) * 100; // 乾基含水率
   return { wet, dry: dryBasis, dryNet };
@@ -3053,16 +3180,6 @@ function updateMoistureCalc(){
 });
 bindPhotoUpload('mc_photoDrop','mc_photoInput','mc_photoPreview');
 
-document.getElementById('mc_importBtn').addEventListener('click', ()=>{
-  const netEl = document.getElementById('mc_dry_net');
-  if(netEl.textContent === '-' || netEl.textContent === '數值有誤'){
-    alert('請先完整填寫含水量測定區的三個重量欄位');
-    return;
-  }
-  document.getElementById('s_dry_weight').value = netEl.textContent;
-  updateExtractionRate();
-});
-
 document.getElementById('calcDryFromMoistureBtn').addEventListener('click', ()=>{
   const freshMaterial = parseFloat(document.getElementById('s_material_fresh_weight').value);
   const rates = getMoistureRates();
@@ -3077,7 +3194,7 @@ function updateExtractionRate(){
   const dry = parseFloat(document.getElementById('s_dry_weight').value);
   const extractWeight = parseFloat(document.getElementById('s_sample_weight').value);
   const rateEl = document.getElementById('s_extraction_rate');
-  if(isNaN(dry) || dry <= 0 || isNaN(extractWeight)){ rateEl.value = ''; return; }
+  if(isNaN(dry) || dry <= 0 || isNaN(extractWeight) || extractWeight < 0){ rateEl.value = ''; return; }
   rateEl.value = ((extractWeight / dry) * 100).toFixed(2) + '%';
 }
 ['s_dry_weight','s_sample_weight'].forEach(id=>{
@@ -3360,13 +3477,36 @@ async function openSmpForm(id){
 function closeSmpForm(){ document.getElementById('smpFormOverlay').classList.remove('show'); editingSmpId = null; }
 
 async function handleSmpSave(){
+  const existingItem = editingSmpId ? smpItems.find(i=>i.id===editingSmpId) : null;
+  if(editingSmpId && !canEdit(existingItem)){ alert('只有建立者本人或管理員能編輯這筆資料。'); return; }
   const species = document.getElementById('s_species').value.trim();
-  if(!species){ alert('請至少填寫「物種」(可從上方選擇匯入試材,或手動輸入)'); return; }
+  const nameZh = document.getElementById('s_name_zh').value.trim();
+  if(!species || !nameZh){ alert('請填寫「物種」與「中文名稱」'); return; }
+  const nonNegativeIds = ['s_material_fresh_weight','s_sample_weight','s_dry_weight','mc_fresh_gross','mc_dry_gross','mc_container'];
+  if(nonNegativeIds.some(fid=>document.getElementById(fid).value!=='' && Number(document.getElementById(fid).value)<0)){
+    alert('重量不能是負數。'); return;
+  }
+  const moistureHasAny = ['mc_fresh_gross','mc_dry_gross','mc_container'].some(fid=>document.getElementById(fid).value!=='');
+  const moistureRates = getMoistureRates();
+  if(moistureHasAny && (!moistureRates || moistureRates==='error')){
+    alert('含水量三個重量欄位需完整填寫，且符合取樣鮮重 > 取樣乾重 > 容器重。'); return;
+  }
   const finalId = editingSmpId || computeSamplePrefix() + '_' + String(nextSeqForPrefix(computeSamplePrefix(), null)).padStart(2,'0');
+  const uploadedNow=[];
+  let extractPhoto, bottlePhoto, moisturePhoto;
+  try{
+    extractPhoto = await uploadPreviewPhoto('s_photoExtractPreview','samples',finalId,'extract',existingItem&&existingItem.photo_extract_path); if(extractPhoto.uploaded) uploadedNow.push(extractPhoto.path);
+    bottlePhoto = await uploadPreviewPhoto('s_photoBottlePreview','samples',finalId,'bottle',existingItem&&existingItem.photo_bottle_path); if(bottlePhoto.uploaded) uploadedNow.push(bottlePhoto.path);
+    moisturePhoto = await uploadPreviewPhoto('mc_photoPreview','samples',finalId,'moisture',existingItem&&existingItem.moisture&&existingItem.moisture.photo_path); if(moisturePhoto.uploaded) uploadedNow.push(moisturePhoto.path);
+  }catch(err){
+    await Promise.all(uploadedNow.map(deleteStoredPhoto));
+    alert(err.message || '照片上傳失敗。'); return;
+  }
   const data = {
     id: finalId,
+    _doc_id: existingItem ? existingItem._doc_id : null,
     material_id: document.getElementById('s_import_material').value || null,
-    name_zh: document.getElementById('s_name_zh').value.trim(),
+    name_zh: nameZh,
     species,
     source: document.getElementById('s_source').value.trim(),
     acquired_unknown: document.getElementById('s_acquired_unknown').checked,
@@ -3384,22 +3524,32 @@ async function handleSmpSave(){
     sample_weight: document.getElementById('s_sample_weight').value === '' ? null : Number(document.getElementById('s_sample_weight').value),
     dry_weight: document.getElementById('s_dry_weight').value === '' ? null : Number(document.getElementById('s_dry_weight').value),
     extraction_rate: document.getElementById('s_extraction_rate').value,
-    photo_extract: document.getElementById('s_photoExtractPreview').style.display !== 'none' ? document.getElementById('s_photoExtractPreview').src : null,
-    photo_bottle: document.getElementById('s_photoBottlePreview').style.display !== 'none' ? document.getElementById('s_photoBottlePreview').src : null,
+    photo_extract: extractPhoto.url,
+    photo_extract_path: extractPhoto.path,
+    photo_bottle: bottlePhoto.url,
+    photo_bottle_path: bottlePhoto.path,
     moisture: {
       fresh_gross: document.getElementById('mc_fresh_gross').value === '' ? null : Number(document.getElementById('mc_fresh_gross').value),
       dry_gross: document.getElementById('mc_dry_gross').value === '' ? null : Number(document.getElementById('mc_dry_gross').value),
       container: document.getElementById('mc_container').value === '' ? null : Number(document.getElementById('mc_container').value),
-      photo: document.getElementById('mc_photoPreview').style.display !== 'none' ? document.getElementById('mc_photoPreview').src : null
+      photo: moisturePhoto.url,
+      photo_path: moisturePhoto.path
     },
     updated_at: new Date().toISOString(),
+    updated_by_uid: (currentUser && currentUser.uid) || null,
+    created_by_uid: editingSmpId ? (smpItems.find(i=>i.id===editingSmpId)?.created_by_uid || null) : ((currentUser && currentUser.uid) || null),
     created_by: editingSmpId ? (smpItems.find(i=>i.id===editingSmpId)?.created_by || (currentUser && currentUser.code) || null) : ((currentUser && currentUser.code) || null),
     created_at: editingSmpId ? (smpItems.find(i=>i.id===editingSmpId)?.created_at || new Date().toISOString()) : new Date().toISOString()
   };
+  const ok = await fsSetItem('samples', data);
+  if(!ok){ await Promise.all(uploadedNow.map(deleteStoredPhoto)); alert('儲存失敗,請檢查網路連線後再試一次。'); return; }
   if(editingSmpId){ smpItems[smpItems.findIndex(i=>i.id===editingSmpId)] = data; }
   else{ smpItems.push(data); }
-  const ok = await fsSetItem('samples', data);
-  if(!ok){ alert('儲存失敗,請檢查網路連線後再試一次。'); return; }
+  if(existingItem){
+    const oldPaths=[existingItem.photo_extract_path,existingItem.photo_bottle_path,existingItem.moisture&&existingItem.moisture.photo_path];
+    const newPaths=[extractPhoto.path,bottlePhoto.path,moisturePhoto.path];
+    await Promise.all(oldPaths.filter((p,idx)=>p&&p!==newPaths[idx]).map(deleteStoredPhoto));
+  }
   if(!editingSmpId) await clearDraft(SMP_DRAFT_KEY);
   closeSmpForm();
   renderSmpAll();
@@ -3408,9 +3558,11 @@ async function handleSmpDelete(){
   if(!editingSmpId || !isAdmin()) return;
   if(!confirm('確定要刪除此品項嗎?此動作無法復原。')) return;
   const idToDelete = editingSmpId;
+  const deletedItem = smpItems.find(i=>i.id===idToDelete);
+  const ok = await fsDeleteItem('samples', idToDelete, deletedItem&&deletedItem._doc_id);
+  if(!ok){ alert('刪除失敗,請檢查網路連線後再試一次。'); return; }
+  if(deletedItem) await Promise.all([deletedItem.photo_extract_path,deletedItem.photo_bottle_path,deletedItem.moisture&&deletedItem.moisture.photo_path].filter(Boolean).map(deleteStoredPhoto));
   smpItems = smpItems.filter(i=>i.id!==idToDelete);
-  const ok = await fsDeleteItem('samples', idToDelete);
-  if(!ok){ alert('刪除失敗,請檢查網路連線後再試一次。'); }
   closeSmpForm();
   renderSmpAll();
 }
@@ -3459,9 +3611,11 @@ async function quickDeleteSmp(id, ev){
   if(ev) ev.stopPropagation();
   if(!isAdmin()) return;
   if(!confirm('確定要刪除此品項嗎?此動作無法復原。')) return;
+  const deletedItem = smpItems.find(i=>i.id===id);
+  const ok = await fsDeleteItem('samples', id, deletedItem&&deletedItem._doc_id);
+  if(!ok){ alert('刪除失敗,請檢查網路連線後再試一次。'); return; }
+  if(deletedItem) await Promise.all([deletedItem.photo_extract_path,deletedItem.photo_bottle_path,deletedItem.moisture&&deletedItem.moisture.photo_path].filter(Boolean).map(deleteStoredPhoto));
   smpItems = smpItems.filter(i=>i.id!==id);
-  const ok = await fsDeleteItem('samples', id);
-  if(!ok){ alert('刪除失敗,請檢查網路連線後再試一次。'); }
   renderSmpAll();
 }
 document.getElementById('smpSearch').addEventListener('input', renderSmpTable);
@@ -3482,17 +3636,29 @@ function exportJsonFile(dataArr, filenamePrefix){
   const blob = new Blob([dataStr], {type:'application/json'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `${filenamePrefix}_${new Date().toISOString().slice(0,10)}.json`;
+  a.download = `${filenamePrefix}_${localDateISO()}.json`;
   a.click();
 }
 
 function handleImportFile(file, cfg){
+  if(file.size > 30*1024*1024){ alert('備份檔超過 30 MB，為避免瀏覽器無回應，請拆分後再匯入。'); return; }
   const reader = new FileReader();
   reader.onload = (e)=>{
     let parsed;
     try{ parsed = JSON.parse(e.target.result); }
     catch(err){ alert('檔案格式錯誤,無法解析,請確認是本系統匯出的備份檔(.json)。'); return; }
     if(!Array.isArray(parsed)){ alert('檔案格式不正確,需為本系統匯出的清單陣列。'); return; }
+    if(parsed.length>10000){ alert('單次最多匯入 10,000 筆。'); return; }
+    const safeId = /^[\p{L}\p{N}_.-]{1,160}$/u;
+    const safePhoto = v=> v==null || (typeof v==='string' && (/^data:image\/(jpeg|png|webp);base64,/i.test(v) || /^https:\/\//i.test(v)));
+    const invalidIndex = parsed.findIndex(item=>{
+      if(!item || typeof item!=='object' || Array.isArray(item) || typeof item.id!=='string' || !safeId.test(item.id)) return true;
+      if(item._doc_id && !/^[A-Za-z0-9_-]{1,160}$/.test(item._doc_id)) return true;
+      if(!safePhoto(item.photo) || !safePhoto(item.photo_extract) || !safePhoto(item.photo_bottle)) return true;
+      if(item.moisture && !safePhoto(item.moisture.photo)) return true;
+      return false;
+    });
+    if(invalidIndex>=0){ alert(`第 ${invalidIndex+1} 筆資料的 ID、照片或格式不符合規則，已取消匯入。`); return; }
     pendingImport = { data: parsed, cfg };
     document.getElementById('importModeDesc').textContent =
       `這個備份檔案裡有 ${parsed.length} 筆資料。「新增」會加進目前清單(編號重複的會自動略過);「覆蓋全部」會先自動下載目前資料的備份檔,再整個取代成這個檔案的內容。`;
@@ -3514,20 +3680,33 @@ document.getElementById('importModeAddBtn').addEventListener('click', async ()=>
   const { data, cfg } = pendingImport;
   const current = cfg.getItems();
   const existingIds = new Set(current.map(i=>i.id));
-  let added = 0, skipped = 0;
+  let skipped = 0;
+  const toAdd = [];
   data.forEach(item=>{
     if(item && item.id && !existingIds.has(item.id)){
-      current.push(item);
-      existingIds.add(item.id);
-      added++;
+      const copy = { ...item };
+      delete copy._doc_id;
+      toAdd.push(copy);
+      existingIds.add(copy.id);
     }else{
       skipped++;
     }
   });
-  await cfg.persist();
-  cfg.render();
-  closeImportModeDialog();
-  alert(`匯入完成:新增 ${added} 筆,略過 ${skipped} 筆編號重複的資料。`);
+  let added=0;
+  try{
+    for(let i=0;i<toAdd.length;i+=400){
+      const batch=db.batch(), chunk=toAdd.slice(i,i+400);
+      chunk.forEach(item=>{ const ref=db.collection(cfg.collectionName).doc(); item._doc_id=ref.id; batch.set(ref,item); });
+      await batch.commit();
+      current.push(...chunk); added+=chunk.length;
+    }
+    cfg.render();
+    closeImportModeDialog();
+    alert(`匯入完成:新增 ${added} 筆,略過 ${skipped} 筆編號重複的資料。`);
+  }catch(err){
+    console.error('import add failed:',err);
+    alert(`匯入中斷：已完成 ${added} 筆，其餘未匯入。請檢查網路後再試。`);
+  }
 });
 
 document.getElementById('importModeReplaceBtn').addEventListener('click', async ()=>{
@@ -3535,8 +3714,10 @@ document.getElementById('importModeReplaceBtn').addEventListener('click', async 
   if(!confirm('覆蓋全部會取代目前清單裡所有的資料。系統會先自動幫你下載目前資料的備份檔,確定要繼續嗎?')) return;
   const { data, cfg } = pendingImport;
   exportJsonFile(cfg.getItems(), cfg.filenamePrefix + '_覆蓋前備份');
+  const oldData = cfg.getItems().slice();
   cfg.setItems(data);
-  await cfg.persist();
+  const ok = await cfg.persist();
+  if(!ok){ cfg.setItems(oldData); cfg.render(); alert('覆蓋失敗，本機畫面已恢復原資料。請檢查網路與 Firestore 後再試。'); return; }
   cfg.render();
   closeImportModeDialog();
   alert(`已覆蓋全部資料,共 ${data.length} 筆。`);
@@ -3551,6 +3732,7 @@ document.getElementById('chemImportJsonInput').addEventListener('change', (e)=>{
     setItems: (arr)=>{ items = arr; },
     persist: saveItems,
     render: renderAll,
+    collectionName: 'chemicals',
     filenamePrefix: '藥品清單'
   });
   e.target.value = '';
@@ -3565,6 +3747,7 @@ document.getElementById('matImportJsonInput').addEventListener('change', (e)=>{
     setItems: (arr)=>{ matItems = arr; },
     persist: saveMatItems,
     render: renderMatAll,
+    collectionName: 'materials',
     filenamePrefix: '試材清單'
   });
   e.target.value = '';
@@ -3579,6 +3762,7 @@ document.getElementById('smpImportJsonInput').addEventListener('change', (e)=>{
     setItems: (arr)=>{ smpItems = arr; },
     persist: saveSmpItems,
     render: renderSmpAll,
+    collectionName: 'samples',
     filenamePrefix: '樣品清單'
   });
   e.target.value = '';
@@ -3596,7 +3780,11 @@ document.getElementById('smpImportJsonInput').addEventListener('change', (e)=>{
    藥品使用登記(與藥品庫存連動)
 ====================================================== */
 let culItems = [];
-async function loadCulItems(){ culItems = await fsGetAll('chem-usage-logs'); }
+async function loadCulItems(){
+  culItems = isAdmin()
+    ? await fsGetAll('chem-usage-logs')
+    : await fsGetWhere('chem-usage-logs','user_uid','==',currentUser.uid);
+}
 function populateCulChemSelect(){
   const sel = document.getElementById('cul_chem');
   sel.innerHTML = '<option value="">請選擇藥品</option>' + items.slice().sort((a,b)=>(a.name_zh||'').localeCompare(b.name_zh||'','zh-Hant')).map(i=>`<option value="${i.id}">${escapeHtml(i.name_zh)}(現有 ${i.quantity ?? '-'} ${escapeHtml(i.unit||'')})</option>`).join('');
@@ -3608,7 +3796,7 @@ function openCulForm(){
   document.getElementById('cul_stockHint').textContent = '';
   document.getElementById('cul_hazWarning').style.display = 'none';
   document.getElementById('cul_purpose').value = '做實驗';
-  document.getElementById('cul_date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('cul_date').value = localDateISO();
   document.getElementById('cul_note').value = '';
   document.getElementById('culFormOverlay').classList.add('show');
 }
@@ -3634,7 +3822,7 @@ document.getElementById('culSaveBtn').addEventListener('click', async ()=>{
   const amount = Number(document.getElementById('cul_amount').value);
   if(!chem){ alert('請選擇藥品'); return; }
   if(!amount || amount<=0){ alert('請輸入正確的使用量'); return; }
-  const date = document.getElementById('cul_date').value || new Date().toISOString().slice(0,10);
+  const date = document.getElementById('cul_date').value || localDateISO();
   const log = {
     id: genId(culItems, 'CUL'),
     chem_id: chem.id,
@@ -3645,28 +3833,47 @@ document.getElementById('culSaveBtn').addEventListener('click', async ()=>{
     purpose: document.getElementById('cul_purpose').value,
     note: document.getElementById('cul_note').value.trim(),
     date,
+    user_uid: (currentUser && currentUser.uid) || null,
     user_code: (currentUser && currentUser.code) || null,
     created_at: new Date().toISOString()
   };
-  const newQty = (Number(chem.quantity)||0) - amount;
-  chem.quantity = newQty < 0 ? 0 : Math.round(newQty*1000)/1000;
-  const ok1 = await fsSetItem('chemicals', chem);
-  const ok2 = await fsSetItem('chem-usage-logs', log);
-  if(!ok1 || !ok2){ alert('儲存失敗,請檢查網路連線後再試一次。'); return; }
-  culItems.push(log);
-  closeCulForm();
-  renderAll();
-  renderCulAll();
+  try{
+    const chemRef = db.collection('chemicals').doc(chem._doc_id);
+    const logRef = db.collection('chem-usage-logs').doc();
+    log._doc_id = logRef.id;
+    let committedQty = null;
+    await db.runTransaction(async tx=>{
+      const chemSnap = await tx.get(chemRef);
+      if(!chemSnap.exists) throw new Error('藥品資料已不存在，請重新整理頁面。');
+      const latest = chemSnap.data();
+      if(latest.quantity===null || latest.quantity===undefined || latest.quantity==='') throw new Error('這項藥品尚未設定庫存量，請先在藥品清單填寫。');
+      const currentQty = Number(latest.quantity);
+      if(!Number.isFinite(currentQty) || amount > currentQty) throw new Error(`庫存不足，目前只有 ${latest.quantity} ${latest.unit||''}。`);
+      committedQty = Math.round((currentQty-amount)*1000)/1000;
+      tx.update(chemRef, { quantity:committedQty, updated_at:new Date().toISOString(), updated_by_uid:currentUser.uid });
+      tx.set(logRef, log);
+    });
+    chem.quantity = committedQty;
+    culItems.push(log);
+    closeCulForm();
+    renderAll();
+    renderCulAll();
+  }catch(err){
+    console.error('chemical usage transaction failed:', err);
+    alert(err.message || '儲存失敗，請檢查網路後再試一次。');
+  }
 });
 async function quickDeleteCul(id){
   if(!isAdmin()) return;
   if(!confirm('確定要刪除這筆使用登記嗎?此動作不會自動恢復庫存,如需要請手動調整藥品存量。')) return;
+  const item = culItems.find(i=>i.id===id);
+  const ok = await fsDeleteItem('chem-usage-logs', id, item&&item._doc_id);
+  if(!ok){ alert('刪除失敗。'); return; }
   culItems = culItems.filter(i=>i.id!==id);
-  await fsDeleteItem('chem-usage-logs', id);
   renderCulAll();
 }
 function renderCulAll(){
-  const visible = isAdmin() ? culItems : culItems.filter(i=>i.user_code===(currentUser&&currentUser.code));
+  const visible = isAdmin() ? culItems : culItems.filter(i=>i.user_uid===(currentUser&&currentUser.uid));
   document.getElementById('culStatTotal').textContent = visible.length;
   const search = document.getElementById('culSearch').value.trim().toLowerCase();
   const fPurpose = document.getElementById('culFilterPurpose').value;
@@ -3735,10 +3942,8 @@ const INSTRUMENTS_BUILTIN = [
 const CUSTOM_INSTRUMENTS_KEY = 'custom-instruments-data';
 let customInstruments = [];
 async function loadCustomInstruments(){
-  try{
-    const res = await window.storage.get(CUSTOM_INSTRUMENTS_KEY, true);
-    customInstruments = res && res.value ? JSON.parse(res.value) : [];
-  }catch(e){ customInstruments = []; }
+  const res = await window.storage.get(CUSTOM_INSTRUMENTS_KEY, true);
+  customInstruments = res && res.value ? JSON.parse(res.value) : [];
 }
 async function saveCustomInstruments(){
   try{ await window.storage.set(CUSTOM_INSTRUMENTS_KEY, JSON.stringify(customInstruments), true); return true; }
@@ -3765,7 +3970,7 @@ function renderIulExistingForSelection(){
 });
 function openIulForm(){
   populateIulInstrumentSelect();
-  document.getElementById('iul_date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('iul_date').value = localDateISO();
   document.getElementById('iul_start').value = '';
   document.getElementById('iul_end').value = '';
   document.getElementById('iul_purpose').value = '';
@@ -3796,6 +4001,7 @@ document.getElementById('iulSaveBtn').addEventListener('click', async ()=>{
     id: genId(iulItems, 'RES'),
     instrument, room, date, start_time: start, end_time: end,
     purpose: document.getElementById('iul_purpose').value.trim(),
+    user_uid: (currentUser && currentUser.uid) || null,
     user_code: (currentUser && currentUser.code) || null,
     created_at: new Date().toISOString()
   };
@@ -3808,17 +4014,18 @@ document.getElementById('iulSaveBtn').addEventListener('click', async ()=>{
 async function quickDeleteIul(id){
   const rec = iulItems.find(i=>i.id===id);
   if(!rec) return;
-  const canCancel = isAdmin() || (currentUser && rec.user_code===currentUser.code);
+  const canCancel = isAdmin() || (currentUser && rec.user_uid===currentUser.uid);
   if(!canCancel){ alert('只有本人或管理員能取消這筆預約。'); return; }
   if(!confirm('確定要取消這筆預約嗎?')) return;
+  const ok = await fsDeleteItem('instrument-reservations', id, rec._doc_id);
+  if(!ok){ alert('取消失敗。'); return; }
   iulItems = iulItems.filter(i=>i.id!==id);
-  await fsDeleteItem('instrument-reservations', id);
   renderIulAll();
 }
 function renderIulAll(){
   const search = document.getElementById('iulSearch').value.trim().toLowerCase();
   const fRoom = document.getElementById('iulFilterRoom').value;
-  const today = new Date().toISOString().slice(0,10);
+  const today = localDateISO();
   let filtered = iulItems.filter(r=>{
     if(fRoom && r.room!==fRoom) return false;
     if(search && !(r.instrument||'').toLowerCase().includes(search)) return false;
@@ -3840,7 +4047,7 @@ function renderIulAll(){
       <td data-label="實驗室"><span class="plain-tag">${roomLabel(r.room)}</span></td>
       <td data-label="用途">${escapeHtml(r.purpose||'-')}</td>
       <td data-label="預約人">${escapeHtml(r.user_code||'-')}</td>
-      <td class="cell-actions">${(isAdmin()||(currentUser&&r.user_code===currentUser.code)) ? `<button class="btn btn-ghost btn-sm btn-row-delete" onclick="quickDeleteIul('${r.id}')" title="取消預約">✕</button>` : ''}</td>
+      <td class="cell-actions">${(isAdmin()||(currentUser&&r.user_uid===currentUser.uid)) ? `<button class="btn btn-ghost btn-sm btn-row-delete" onclick="quickDeleteIul('${r.id}')" title="取消預約">✕</button>` : ''}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -3856,7 +4063,7 @@ function roomLabel(room){ return /^\d+$/.test(room||'') ? room+'室' : (room||'-
 function todayISO(offset){
   const d = new Date();
   d.setDate(d.getDate()+(offset||0));
-  return d.toISOString().slice(0,10);
+  return localDateISO(d);
 }
 function renderIulTodayTomorrow(){
   const fRoom = document.getElementById('iulFilterRoom').value;
@@ -3926,10 +4133,8 @@ function drWeeklyTasks(weekKey){
   ];
 }
 async function loadDrData(){
-  try{
-    const res = await window.storage.get(DR_KEY, true);
-    drData = res && res.value ? JSON.parse(res.value) : {};
-  }catch(e){ drData = {}; }
+  const res = await window.storage.get(DR_KEY, true);
+  drData = res && res.value ? JSON.parse(res.value) : {};
 }
 async function saveDrData(){
   try{ await window.storage.set(DR_KEY, JSON.stringify(drData), true); }catch(e){}
@@ -4019,6 +4224,7 @@ document.getElementById('drDailyTbody').addEventListener('change', async (e)=>{
   const cell = wk.daily[cb.dataset.day][Number(cb.dataset.ti)];
   cell.checked = cb.checked;
   cell.by = cb.checked ? ((currentUser&&currentUser.code)||null) : null;
+  cell.by_uid = cb.checked ? ((currentUser&&currentUser.uid)||null) : null;
   cell.at = cb.checked ? new Date().toISOString() : null;
   await saveDrData();
   renderDrAll();
@@ -4031,6 +4237,7 @@ document.getElementById('drWeeklyTbody').addEventListener('change', async (e)=>{
   const cell = wk.weekly[Number(cb.dataset.wi)];
   cell.checked = cb.checked;
   cell.by = cb.checked ? ((currentUser&&currentUser.code)||null) : null;
+  cell.by_uid = cb.checked ? ((currentUser&&currentUser.uid)||null) : null;
   cell.at = cb.checked ? new Date().toISOString() : null;
   await saveDrData();
   renderDrAll();
@@ -4045,18 +4252,20 @@ const SB_ROOM = {LCMS:'602',GCMS:'602',FTIR:'602',TGA:'602',DSC:'602','UV-Vis':'
 const SB_KEY = 'software-backup-data';
 let sbData = {};
 async function loadSbData(){
-  try{
-    const res = await window.storage.get(SB_KEY, true);
-    sbData = res && res.value ? JSON.parse(res.value) : {};
-  }catch(e){ sbData = {}; }
+  const res = await window.storage.get(SB_KEY, true);
+  sbData = res && res.value ? JSON.parse(res.value) : {};
 }
 async function saveSbData(){
   try{ await window.storage.set(SB_KEY, JSON.stringify(sbData), true); }catch(e){}
 }
 function addMonths(dateStr, months){
   const d = new Date(dateStr+'T00:00:00');
+  const originalDay = d.getDate();
+  d.setDate(1);
   d.setMonth(d.getMonth()+months);
-  return d.toISOString().slice(0,10);
+  const lastDay = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
+  d.setDate(Math.min(originalDay, lastDay));
+  return localDateISO(d);
 }
 function sbEnsureEntry(instrument){
   if(!sbData[instrument]) sbData[instrument] = { last_backup:null, logs:[] };
@@ -4075,7 +4284,7 @@ function markBackedUp(instrument){
   document.getElementById('sbFormTitle').textContent = `標記已備份 · ${instrument}`;
   document.getElementById('sb_filename').value = '';
   document.querySelectorAll('.sb_include').forEach(cb=>cb.checked=false);
-  document.getElementById('sb_date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('sb_date').value = localDateISO();
   document.getElementById('sbFormOverlay').classList.add('show');
 }
 document.getElementById('sbFormClose').addEventListener('click', ()=> document.getElementById('sbFormOverlay').classList.remove('show'));
@@ -4086,7 +4295,7 @@ document.getElementById('sbFormSaveBtn').addEventListener('click', async ()=>{
   const includes = [...document.querySelectorAll('.sb_include:checked')].map(cb=>cb.value);
   if(!includes.length){ alert('請至少勾選一項備份內容(Ghost/VM/資料)'); return; }
   const entry = sbEnsureEntry(sbFormInstrument);
-  entry.logs.push({ id: genId(entry.logs,'SBL'), date, filename: document.getElementById('sb_filename').value.trim(), includes, by:(currentUser&&currentUser.code)||null });
+  entry.logs.push({ id: genId(entry.logs,'SBL'), date, filename: document.getElementById('sb_filename').value.trim(), includes, by:(currentUser&&currentUser.code)||null, by_uid:(currentUser&&currentUser.uid)||null });
   sbRecalcLast(sbFormInstrument);
   await saveSbData();
   document.getElementById('sbFormOverlay').classList.remove('show');
@@ -4128,7 +4337,7 @@ function renderSbTable(){
   const rows = [...SB_CYCLE_6MO.map(n=>({name:n,cycle:6})), ...SB_CYCLE_12MO.map(n=>({name:n,cycle:12}))]
     .filter(r=> !fRoom || SB_ROOM[r.name]===fRoom.replace('室',''))
     .sort((a,b)=>a.name.localeCompare(b.name));
-  const today = new Date().toISOString().slice(0,10);
+  const today = localDateISO();
   let overdue=0, soon=0;
   const tbody = document.getElementById('sbTbody');
   tbody.innerHTML = '';
@@ -4164,13 +4373,26 @@ document.getElementById('sbFilterRoom').addEventListener('change', renderSbTable
    待辦事項
 ====================================================== */
 let todoItems = [];
-async function loadTodoItems(){ todoItems = await fsGetAll('todo-items'); }
+async function loadTodoItems(){
+  if(isAdmin()){
+    todoItems = await fsGetAll('todo-items');
+    return;
+  }
+  const groups = await Promise.all([
+    fsGetWhere('todo-items','visibility','==','shared'),
+    fsGetWhere('todo-items','created_by_uid','==',currentUser.uid),
+    fsGetWhere('todo-items','assignee_uid','==',currentUser.uid)
+  ]);
+  const merged = new Map();
+  groups.flat().forEach(item=>merged.set(item._doc_id, item));
+  todoItems = [...merged.values()];
+}
 function openTodoForm(){
   document.getElementById('todo_title').value = '';
   document.getElementById('todo_date').value = '';
   document.getElementById('todo_visibility').value = 'shared';
   document.getElementById('todo_assignee_wrap').style.display = 'none';
-  document.getElementById('todo_assignee').innerHTML = accounts.slice().sort((a,b)=>a.code.localeCompare(b.code)).map(a=>`<option value="${escapeHtml(a.code)}">${escapeHtml(a.name||a.code)}(${escapeHtml(a.code)})</option>`).join('');
+  document.getElementById('todo_assignee').innerHTML = accounts.filter(a=>a.active===true).sort((a,b)=>a.code.localeCompare(b.code)).map(a=>`<option value="${escapeHtml(a.uid)}">${escapeHtml(a.name||a.code)}(${escapeHtml(a.code)})</option>`).join('');
   document.getElementById('todoFormOverlay').classList.add('show');
 }
 function closeTodoForm(){ document.getElementById('todoFormOverlay').classList.remove('show'); }
@@ -4184,13 +4406,17 @@ document.getElementById('todoSaveBtn').addEventListener('click', async ()=>{
   const title = document.getElementById('todo_title').value.trim();
   if(!title){ alert('請輸入工作內容'); return; }
   const visibility = document.getElementById('todo_visibility').value;
+  const assigneeUid = visibility==='assigned' ? document.getElementById('todo_assignee').value : null;
+  const assigneeAcc = assigneeUid ? findAccount(assigneeUid) : null;
   const item = {
     id: genId(todoItems, 'TODO'),
     title,
     due_date: document.getElementById('todo_date').value || null,
     visibility,
-    assignee: visibility==='assigned' ? document.getElementById('todo_assignee').value : null,
+    assignee_uid: assigneeUid,
+    assignee: assigneeAcc ? assigneeAcc.code : null,
     done: false,
+    created_by_uid: (currentUser && currentUser.uid) || null,
     created_by: (currentUser && currentUser.code) || null,
     created_at: new Date().toISOString(),
     done_at: null
@@ -4204,22 +4430,30 @@ document.getElementById('todoSaveBtn').addEventListener('click', async ()=>{
 async function toggleTodoDone(id, done){
   const item = todoItems.find(i=>i.id===id);
   if(!item) return;
+  const canToggle = isAdmin() || item.visibility==='shared' || item.created_by_uid===(currentUser&&currentUser.uid) || item.assignee_uid===(currentUser&&currentUser.uid);
+  if(!canToggle){ alert('你沒有權限更新這項待辦。'); renderTodoAll(); return; }
+  const oldDone = item.done, oldDoneAt = item.done_at;
   item.done = done;
   item.done_at = done ? new Date().toISOString() : null;
-  await fsSetItem('todo-items', item);
+  const ok = await fsSetItem('todo-items', item);
+  if(!ok){ item.done=oldDone; item.done_at=oldDoneAt; alert('更新失敗。'); }
   renderTodoAll();
 }
 async function quickDeleteTodo(id){
+  const item = todoItems.find(i=>i.id===id);
+  if(!item) return;
+  if(!isAdmin() && item.created_by_uid!==(currentUser&&currentUser.uid)){ alert('只有建立者或管理員能刪除這項待辦。'); return; }
   if(!confirm('確定要刪除這項工作嗎?')) return;
+  const ok = await fsDeleteItem('todo-items', id, item._doc_id);
+  if(!ok){ alert('刪除失敗。'); return; }
   todoItems = todoItems.filter(i=>i.id!==id);
-  await fsDeleteItem('todo-items', id);
   renderTodoAll();
 }
 function todoVisibleToMe(item){
   if(isAdmin()) return true;
   if(!item.visibility || item.visibility==='shared') return true;
-  if(item.visibility==='private') return item.created_by===(currentUser&&currentUser.code);
-  if(item.visibility==='assigned') return item.assignee===(currentUser&&currentUser.code) || item.created_by===(currentUser&&currentUser.code);
+  if(item.visibility==='private') return item.created_by_uid===(currentUser&&currentUser.uid);
+  if(item.visibility==='assigned') return item.assignee_uid===(currentUser&&currentUser.uid) || item.created_by_uid===(currentUser&&currentUser.uid);
   return true;
 }
 function todoVisibilityBadge(item){
@@ -4232,6 +4466,7 @@ function todoRowHtml(item){
   const overdue = item.due_date && !item.done && item.due_date < todayStr;
   const isToday = item.due_date === todayStr;
   const rowClass = item.done ? 'done' : overdue ? 'overdue-row' : isToday ? 'today-row' : '';
+  const canRemove = isAdmin() || item.created_by_uid===(currentUser&&currentUser.uid);
   return `<div class="todo-row ${rowClass}">
     <input type="checkbox" ${item.done?'checked':''} onchange="toggleTodoDone('${item.id}', this.checked)">
     <span class="todo-title">${escapeHtml(item.title)}${todoVisibilityBadge(item)}</span>
@@ -4239,7 +4474,7 @@ function todoRowHtml(item){
     <div class="todo-actions">
       <button class="btn-icon" onclick="addTodoToGCal('${item.id}')" title="加入 Google 日曆">📅</button>
       <button class="btn-icon" onclick="downloadTodoIcs('${item.id}')" title="下載 .ics(可設定提醒)">⬇️</button>
-      <button class="btn-icon btn-row-delete" onclick="quickDeleteTodo('${item.id}')" title="刪除">✕</button>
+      ${canRemove ? `<button class="btn-icon btn-row-delete" onclick="quickDeleteTodo('${item.id}')" title="刪除">✕</button>` : ''}
     </div>
   </div>`;
 }
@@ -4249,7 +4484,7 @@ function addTodoToGCal(id){
   const startDate = item.due_date || todayISO(0);
   const d = new Date(startDate+'T00:00:00');
   d.setDate(d.getDate()+1);
-  const endStr = d.toISOString().slice(0,10).replace(/-/g,'');
+  const endStr = localDateISO(d).replace(/-/g,'');
   const startStr = startDate.replace(/-/g,'');
   const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(item.title)}&dates=${startStr}/${endStr}&details=${encodeURIComponent('來自 SFPLAB 待辦事項')}`;
   window.open(url, '_blank');
@@ -4341,10 +4576,8 @@ const IM_KEY = 'instrument-manual-data';
 let imData = {};
 let imCurrentName = null;
 async function loadImData(){
-  try{
-    const res = await window.storage.get(IM_KEY, true);
-    imData = res && res.value ? JSON.parse(res.value) : {};
-  }catch(e){ imData = {}; }
+  const res = await window.storage.get(IM_KEY, true);
+  imData = res && res.value ? JSON.parse(res.value) : {};
 }
 async function saveImData(){
   try{ await window.storage.set(IM_KEY, JSON.stringify(imData), true); return true; }
@@ -4353,6 +4586,7 @@ async function saveImData(){
 function ensureImEntry(name){
   if(!imData[name]) imData[name] = { notes:'', photos:[], maintenance:[] };
   if(!imData[name].photos) imData[name].photos = [];
+  if(!imData[name].photo_paths) imData[name].photo_paths = [];
   if(!imData[name].maintenance) imData[name].maintenance = [];
   return imData[name];
 }
@@ -4433,15 +4667,31 @@ document.getElementById('imManualPhotoInput').addEventListener('change', (e)=>{
   e.target.value = '';
 });
 async function removeImPhoto(idx){
-  ensureImEntry(imCurrentName).photos.splice(idx,1);
-  await saveImData();
+  const entry=ensureImEntry(imCurrentName);
+  const oldPhoto=entry.photos[idx];
+  const oldPath=entry.photo_paths[idx]||null;
+  entry.photos.splice(idx,1);
+  entry.photo_paths.splice(idx,1);
+  const ok=await saveImData();
+  if(!ok){ entry.photos.splice(idx,0,oldPhoto); entry.photo_paths.splice(idx,0,oldPath); alert('儲存失敗，請重新整理後再試。'); return; }
+  if(oldPath) await deleteStoredPhoto(oldPath);
   renderImPhotoGallery();
   renderImGrid();
 }
 document.getElementById('imSaveNotesBtn').addEventListener('click', async ()=>{
-  ensureImEntry(imCurrentName).notes = document.getElementById('im_notes').value;
+  const entry=ensureImEntry(imCurrentName);
+  const nextPhotos=[], nextPaths=[], uploadedNow=[];
+  try{
+    for(let i=0;i<entry.photos.length;i++){
+      const info=await uploadPhotoSource(entry.photos[i],'instrument-manuals',imCurrentName,`manual-${i}`,entry.photo_paths[i]);
+      nextPhotos.push(info.url); nextPaths.push(info.path); if(info.uploaded) uploadedNow.push(info.path);
+    }
+  }catch(err){ await Promise.all(uploadedNow.map(deleteStoredPhoto)); alert(err.message||'照片上傳失敗。'); return; }
+  entry.notes = document.getElementById('im_notes').value;
+  entry.photos = nextPhotos;
+  entry.photo_paths = nextPaths;
   const ok = await saveImData();
-  if(!ok){ alert('儲存失敗,請檢查網路連線後再試一次。'); return; }
+  if(!ok){ await Promise.all(uploadedNow.map(deleteStoredPhoto)); alert('儲存失敗,請檢查網路連線後再試一次。'); return; }
   renderImGrid();
   alert('已儲存說明書');
 });
@@ -4474,11 +4724,11 @@ document.getElementById('imAddMaintBtn').addEventListener('click', async ()=>{
   if(!date || !desc){ alert('請填寫日期與說明'); return; }
   const file = document.getElementById('im_maint_photo').files[0];
   const entry = ensureImEntry(imCurrentName);
-  const rec = { id: genId(entry.maintenance,'M'), date, desc, by:(currentUser&&currentUser.code)||null, photo:null };
+  const rec = { id: genId(entry.maintenance,'M'), date, desc, by:(currentUser&&currentUser.code)||null, by_uid:(currentUser&&currentUser.uid)||null, photo:null, photo_path:null };
   const finish = async ()=>{
     entry.maintenance.push(rec);
     const ok = await saveImData();
-    if(!ok){ alert('儲存失敗,請檢查網路連線後再試一次。'); }
+    if(!ok){ entry.maintenance=entry.maintenance.filter(m=>m!==rec); if(rec.photo_path) await deleteStoredPhoto(rec.photo_path); alert('儲存失敗,請檢查網路連線後再試一次。'); return; }
     document.getElementById('im_maint_date').value = '';
     document.getElementById('im_maint_desc').value = '';
     document.getElementById('im_maint_photo').value = '';
@@ -4486,13 +4736,22 @@ document.getElementById('imAddMaintBtn').addEventListener('click', async ()=>{
     renderImMaintList();
     renderImGrid();
   };
-  if(file){ compressPhoto(file, (dataUrl)=>{ rec.photo = dataUrl; finish(); }); }
+  if(file){ compressPhoto(file, async (dataUrl)=>{
+    try{
+      const info=await uploadPhotoSource(dataUrl,'instrument-maintenance',imCurrentName,rec.id,null);
+      rec.photo=info.url; rec.photo_path=info.path;
+      await finish();
+    }catch(err){ alert(err.message||'照片上傳失敗。'); }
+  }); }
   else{ await finish(); }
 });
 async function removeImMaint(id){
   const entry = ensureImEntry(imCurrentName);
+  const removed=entry.maintenance.find(m=>m.id===id);
   entry.maintenance = entry.maintenance.filter(m=>m.id!==id);
-  await saveImData();
+  const ok=await saveImData();
+  if(!ok){ if(removed) entry.maintenance.push(removed); alert('刪除失敗。'); return; }
+  if(removed&&removed.photo_path) await deleteStoredPhoto(removed.photo_path);
   renderImMaintList();
   renderImGrid();
 }
@@ -4620,6 +4879,7 @@ document.getElementById('cpSaveBtn').addEventListener('click', async ()=>{
 
   const item = {
     id: editingCpId || genId(cpItems, 'CP'),
+    _doc_id: existing ? existing._doc_id : null,
     type, name_zh, name_en, cas,
     package_sizes, purity, pack: existing ? existing.pack||pack : pack,
     note,
@@ -4631,8 +4891,11 @@ document.getElementById('cpSaveBtn').addEventListener('click', async ()=>{
     received_date: existing ? existing.received_date : null,
     ready_date: existing ? existing.ready_date : null,
     sds_date: existing ? existing.sds_date : null,
+    created_by_uid: existing ? (existing.created_by_uid||null) : ((currentUser&&currentUser.uid)||null),
     created_by: existing ? existing.created_by : ((currentUser&&currentUser.code)||null),
-    created_at: existing ? existing.created_at : new Date().toISOString()
+    created_at: existing ? existing.created_at : new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    updated_by_uid: (currentUser&&currentUser.uid)||null
   };
   const ok = await fsSetItem('chem-purchases', item);
   if(!ok){ alert('儲存失敗,請檢查網路連線後再試一次。'); return; }
@@ -4645,16 +4908,20 @@ document.getElementById('cpDeleteBtn').addEventListener('click', async ()=>{
   if(!editingCpId || !isAdmin()) return;
   if(!confirm('確定要刪除這筆待購買項目嗎?此動作無法復原。')) return;
   const id = editingCpId;
+  const item = cpItems.find(i=>i.id===id);
+  const ok = await fsDeleteItem('chem-purchases', id, item&&item._doc_id);
+  if(!ok){ alert('刪除失敗。'); return; }
   cpItems = cpItems.filter(i=>i.id!==id);
-  await fsDeleteItem('chem-purchases', id);
   closeCpForm();
   renderCpKanban();
 });
 async function quickDeleteCp(id){
   if(!isAdmin()) return;
   if(!confirm('確定要刪除這筆待購買項目嗎?此動作無法復原。')) return;
+  const item = cpItems.find(i=>i.id===id);
+  const ok = await fsDeleteItem('chem-purchases', id, item&&item._doc_id);
+  if(!ok){ alert('刪除失敗。'); return; }
   cpItems = cpItems.filter(i=>i.id!==id);
-  await fsDeleteItem('chem-purchases', id);
   closeCpDetail();
   renderCpKanban();
 }
@@ -4685,7 +4952,7 @@ function openCpDetail(id){
   if(item.note) metaParts.push(`備註 ${escapeHtml(item.note)}`);
   document.getElementById('cpd_meta').innerHTML = metaParts.map(t=>`<span>${t}</span>`).join('');
 
-  const canAct = isAdmin() || item.created_by===(currentUser&&currentUser.code);
+  const canAct = isAdmin() || item.created_by_uid===(currentUser&&currentUser.uid);
   const actions = [];
   if(canAct && item.status==='pending'){
     actions.push(`<button class="btn btn-ghost btn-sm" onclick="cpStartComparison('${id}')">🧮 新增比價資料</button>`);
@@ -4765,7 +5032,7 @@ function openCpOrder(id){
   document.getElementById('cpo_vendor_other').value = '';
   document.getElementById('cpo_price').value = (item&&item.price!=null) ? item.price : '';
   document.getElementById('cpo_pack').value = (item&&item.pack) || '';
-  document.getElementById('cpo_date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('cpo_date').value = localDateISO();
   document.getElementById('cpOrderOverlay').classList.add('show');
 }
 document.getElementById('cpOrderClose').addEventListener('click', ()=> document.getElementById('cpOrderOverlay').classList.remove('show'));
@@ -4792,7 +5059,7 @@ document.getElementById('cpOrderSaveBtn').addEventListener('click', async ()=>{
 /* ---- 標記已到貨 / 確認可入庫 ---- */
 function openCpReceive(id){
   cpActionId = id;
-  document.getElementById('cpr_date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('cpr_date').value = localDateISO();
   document.getElementById('cpr_sds_date').value = '';
   document.getElementById('cpReceiveOverlay').classList.add('show');
 }
@@ -4813,7 +5080,7 @@ document.getElementById('cpReceiveSaveBtn').addEventListener('click', async ()=>
 async function cpMarkReady(id){
   const item = cpItems.find(i=>i.id===id);
   if(!item) return;
-  item.ready_date = new Date().toISOString().slice(0,10);
+  item.ready_date = localDateISO();
   item.status = 'ready';
   await fsSetItem('chem-purchases', item);
   closeCpDetail();
@@ -4842,16 +5109,20 @@ async function cpLogMaintenance(id){
   if(!item) return;
   if(!confirm(`確定要把這筆登記成「${item.name_zh}」的維修紀錄嗎?完成後會從購買清單移除。`)) return;
   const entry = ensureImEntry(item.name_zh);
-  entry.maintenance.push({
+  const maintenanceRecord = {
     id: genId(entry.maintenance, 'M'),
-    date: new Date().toISOString().slice(0,10),
+    date: localDateISO(),
     desc: item.note || '(無說明)',
     by: (currentUser&&currentUser.code)||null,
+    by_uid: (currentUser&&currentUser.uid)||null,
     photo: null
-  });
-  await saveImData();
+  };
+  entry.maintenance.push(maintenanceRecord);
+  const manualSaved = await saveImData();
+  if(!manualSaved){ entry.maintenance=entry.maintenance.filter(m=>m!==maintenanceRecord); alert('維修紀錄儲存失敗。'); return; }
+  const deleted = await fsDeleteItem('chem-purchases', id, item._doc_id);
+  if(!deleted){ entry.maintenance=entry.maintenance.filter(m=>m!==maintenanceRecord); await saveImData(); alert('購買項目移除失敗，已撤回維修紀錄。'); return; }
   cpItems = cpItems.filter(i=>i.id!==id);
-  await fsDeleteItem('chem-purchases', id);
   closeCpDetail();
   renderCpKanban();
   renderImGrid();
@@ -4859,15 +5130,19 @@ async function cpLogMaintenance(id){
 }
 async function cpArchiveConsumable(id){
   if(!confirm('確定這筆耗材已經入庫完成了嗎?這會把它從清單移除。')) return;
+  const item = cpItems.find(i=>i.id===id);
+  const ok = await fsDeleteItem('chem-purchases', id, item&&item._doc_id);
+  if(!ok){ alert('移除失敗。'); return; }
   cpItems = cpItems.filter(i=>i.id!==id);
-  await fsDeleteItem('chem-purchases', id);
   closeCpDetail();
   renderCpKanban();
 }
 async function removeCpAfterAdd(id){
   if(!id) return;
+  const item = cpItems.find(i=>i.id===id);
+  const ok = await fsDeleteItem('chem-purchases', id, item&&item._doc_id);
+  if(!ok){ alert('藥品已新增，但原待購買項目未能自動移除，請稍後重試。'); return; }
   cpItems = cpItems.filter(i=>i.id!==id);
-  await fsDeleteItem('chem-purchases', id);
   renderCpKanban();
 }
 
@@ -5075,14 +5350,18 @@ document.getElementById('cmpDetailSaveBtn').addEventListener('click', async ()=>
   const existing = cmpCurrentId ? cmpItems.find(c=>c.id===cmpCurrentId) : null;
   const record = {
     id: cmpCurrentId || genId(cmpItems, 'CMP'),
+    _doc_id: existing ? existing._doc_id : null,
     item_name, vendors,
     decided_vendor: existing ? existing.decided_vendor : null,
     decided_vendor_key: existing ? existing.decided_vendor_key : null,
     decided_entry_idx: existing ? existing.decided_entry_idx : null,
     addedToList: existing ? existing.addedToList : false,
     linked_cp_id: existing ? existing.linked_cp_id||null : null,
+    created_by_uid: existing ? (existing.created_by_uid||null) : ((currentUser&&currentUser.uid)||null),
     created_by: existing ? existing.created_by : ((currentUser&&currentUser.code)||null),
-    created_at: existing ? existing.created_at : new Date().toISOString()
+    created_at: existing ? existing.created_at : new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    updated_by_uid: (currentUser&&currentUser.uid)||null
   };
   if(cmpCurrentId){ cmpItems = cmpItems.map(c=>c.id===cmpCurrentId?record:c); }
   else{ cmpItems.push(record); cmpCurrentId = record.id; }
@@ -5179,6 +5458,7 @@ document.getElementById('cmpSubmitDecisionBtn').addEventListener('click', async 
       status: 'reviewed', vendor: vendorLabel, price: entry.price, pack: packStr,
       order_sent_date: null, received_date: null, ready_date: null, sds_date: null,
       comparison_id: record.id,
+      created_by_uid: (currentUser&&currentUser.uid)||null,
       created_by: (currentUser&&currentUser.code)||null, created_at: new Date().toISOString()
     };
     cpItems.push(newItem);
@@ -5212,6 +5492,7 @@ async function cpStartComparison(id){
     id: genId(cmpItems, 'CMP'),
     item_name: item.name_zh,
     vendors: {}, decided_vendor:null, decided_vendor_key:null, decided_entry_idx:null, addedToList:false, linked_cp_id: item.id,
+    created_by_uid: (currentUser&&currentUser.uid)||null,
     created_by: (currentUser&&currentUser.code)||null, created_at: new Date().toISOString()
   };
   cmpItems.push(record);
@@ -5281,9 +5562,54 @@ const FULL_BACKUP_COLLECTIONS = {
   'todo-items': ()=>todoItems, 'chem-purchases': ()=>cpItems, 'price-comparisons': ()=>cmpItems
 };
 const FULL_BACKUP_BLOBS = {
-  [ACCOUNTS_KEY]: ()=>accounts, [DR_KEY]: ()=>drData, [IM_KEY]: ()=>imData,
+  [DR_KEY]: ()=>drData, [IM_KEY]: ()=>imData,
   [CUSTOM_INSTRUMENTS_KEY]: ()=>customInstruments, [SB_KEY]: ()=>sbData
 };
+document.getElementById('migrateUidBtn').addEventListener('click', async ()=>{
+  if(!isSuperAdmin()) return;
+  if(!confirm('這會依舊資料的帳號代號，對應目前 users 集合的 UID。執行前請確認新帳號的實驗室代號與舊版一致。')) return;
+  const btn = document.getElementById('migrateUidBtn');
+  const status = document.getElementById('fullBackupStatus');
+  btn.disabled = true;
+  status.textContent = 'UID 對應中...';
+  const specs = [
+    ['chemicals','created_by','created_by_uid'], ['materials','created_by','created_by_uid'],
+    ['samples','created_by','created_by_uid'], ['chem-purchases','created_by','created_by_uid'],
+    ['price-comparisons','created_by','created_by_uid'], ['chem-usage-logs','user_code','user_uid'],
+    ['instrument-reservations','user_code','user_uid']
+  ];
+  let updated=0, skipped=0;
+  try{
+    for(const [collectionName, oldField, uidField] of specs){
+      const snap = await db.collection(collectionName).get();
+      let batch = db.batch(), batchCount=0;
+      for(const doc of snap.docs){
+        const data = doc.data();
+        if(data[uidField]) continue;
+        const acc = findAccount(data[oldField]);
+        if(!acc){ skipped++; continue; }
+        batch.update(doc.ref, { [uidField]:acc.uid, uid_migrated_at:new Date().toISOString() });
+        batchCount++; updated++;
+        if(batchCount===400){ await batch.commit(); batch=db.batch(); batchCount=0; }
+      }
+      if(batchCount) await batch.commit();
+    }
+    const todoSnap = await db.collection('todo-items').get();
+    let todoBatch=db.batch(), todoCount=0;
+    for(const doc of todoSnap.docs){
+      const data=doc.data(), patch={};
+      if(!data.created_by_uid){ const a=findAccount(data.created_by); if(a) patch.created_by_uid=a.uid; else if(data.created_by) skipped++; }
+      if(data.visibility==='assigned' && !data.assignee_uid){ const a=findAccount(data.assignee); if(a) patch.assignee_uid=a.uid; else if(data.assignee) skipped++; }
+      if(Object.keys(patch).length){ patch.uid_migrated_at=new Date().toISOString(); todoBatch.update(doc.ref,patch); todoCount++; updated++; }
+      if(todoCount===400){ await todoBatch.commit(); todoBatch=db.batch(); todoCount=0; }
+    }
+    if(todoCount) await todoBatch.commit();
+    status.textContent = `UID 對應完成：更新 ${updated} 筆，無法對應 ${skipped} 筆。無法對應的資料需手動確認建立者。`;
+  }catch(err){
+    console.error('UID migration failed:',err);
+    status.textContent = 'UID 對應失敗，請檢查 Security Rules 與網路。可在問題排除後重新執行。';
+  }finally{ btn.disabled=false; }
+});
 document.getElementById('fullExportBtn').addEventListener('click', ()=>{
   const payload = { version:1, exported_at: new Date().toISOString(), collections:{}, blobs:{} };
   Object.keys(FULL_BACKUP_COLLECTIONS).forEach(k=> payload.collections[k] = FULL_BACKUP_COLLECTIONS[k]());
@@ -5291,7 +5617,7 @@ document.getElementById('fullExportBtn').addEventListener('click', ()=>{
   const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `SFPLAB全部資料備份_${new Date().toISOString().slice(0,10)}.json`;
+  a.download = `SFPLAB全部資料備份_${localDateISO()}.json`;
   a.click();
   URL.revokeObjectURL(a.href);
 });
@@ -5310,7 +5636,11 @@ document.getElementById('fullImportInput').addEventListener('change', (e)=>{
     status.textContent = '匯入中,請稍候...';
     try{
       for(const key of Object.keys(FULL_BACKUP_COLLECTIONS)){
-        if(payload.collections[key]) await fsReplaceAll(key, payload.collections[key]);
+        if(payload.collections[key]){
+          if(!Array.isArray(payload.collections[key])) throw new Error(`${key} 不是陣列`);
+          const ok = await fsReplaceAll(key, payload.collections[key]);
+          if(!ok) throw new Error(`${key} 覆蓋失敗`);
+        }
       }
       for(const key of Object.keys(FULL_BACKUP_BLOBS)){
         if(payload.blobs[key] !== undefined) await window.storage.set(key, JSON.stringify(payload.blobs[key]), true);
@@ -5427,20 +5757,88 @@ function renderDashboard(){
 }
 document.getElementById('navDashboard').addEventListener('click', renderDashboard);
 
-(async function init(){
-  await loadCurrentUser();
-  await loadItems();
-  await loadMatItems();
-  await loadSmpItems();
-  await loadCulItems();
-  await loadIulItems();
-  await loadSbData();
-  await loadDrData();
-  await loadTodoItems();
-  await loadCustomInstruments();
-  await loadImData();
-  await loadCpItems();
-  await loadCmpItems();
+let realtimeUnsubscribers = [];
+function snapshotItems(snap){ return snap.docs.map(d=>({ ...d.data(), _doc_id:d.id })); }
+function stopRealtimeSync(){
+  realtimeUnsubscribers.forEach(fn=>{ try{ fn(); }catch(_e){} });
+  realtimeUnsubscribers = [];
+}
+function watchCollection(query, onData, label){
+  const unsubscribe = query.onSnapshot(snap=>onData(snapshotItems(snap)), err=>{
+    console.error(`realtime ${label} failed:`, err);
+  });
+  realtimeUnsubscribers.push(unsubscribe);
+}
+function watchBlob(key, onData, label){
+  const unsubscribe = db.collection(FS_COLLECTION).doc(key).onSnapshot(snap=>{
+    if(!snap.exists){ onData(null); return; }
+    try{ onData(JSON.parse(snap.data().value)); }
+    catch(err){ console.error(`realtime ${label} parse failed:`, err); }
+  }, err=>console.error(`realtime ${label} failed:`, err));
+  realtimeUnsubscribers.push(unsubscribe);
+}
+function startRealtimeSync(){
+  stopRealtimeSync();
+  watchCollection(db.collection('users'), rows=>{
+    accounts = rows.map(r=>({ ...r, uid:r._doc_id }));
+    const me = accounts.find(a=>a.uid===currentUser.uid);
+    if(!me || me.active!==true){
+      auth.signOut().finally(()=>location.reload());
+      return;
+    }
+    const nextRole = me.role || 'member';
+    const roleChanged = currentUser.role !== nextRole;
+    currentUser.code = me.code || currentUser.code;
+    currentUser.name = me.name || '';
+    currentUser.role = nextRole;
+    if(roleChanged){ location.reload(); return; }
+    renderUserBadge();
+    if(isAdmin()) renderAdminTable();
+  }, 'users');
+  watchCollection(db.collection('chemicals'), rows=>{ items=rows; renderAll(); renderDashboard(); }, 'chemicals');
+  watchCollection(db.collection('materials'), rows=>{ matItems=rows; renderMatAll(); }, 'materials');
+  watchCollection(db.collection('samples'), rows=>{ smpItems=rows; renderSmpAll(); }, 'samples');
+  const usageQuery = isAdmin() ? db.collection('chem-usage-logs') : db.collection('chem-usage-logs').where('user_uid','==',currentUser.uid);
+  watchCollection(usageQuery, rows=>{ culItems=rows; renderCulAll(); }, 'chem-usage-logs');
+  watchCollection(db.collection('instrument-reservations'), rows=>{ iulItems=rows; renderIulAll(); renderDashboard(); }, 'instrument-reservations');
+  watchCollection(db.collection('chem-purchases'), rows=>{ cpItems=rows; renderCpKanban(); renderDashboard(); }, 'chem-purchases');
+  watchCollection(db.collection('price-comparisons'), rows=>{ cmpItems=rows; renderCmpCardGrid(); renderCpKanban(); }, 'price-comparisons');
+
+  if(isAdmin()){
+    watchCollection(db.collection('todo-items'), rows=>{ todoItems=rows; renderTodoAll(); renderDashboard(); }, 'todo-items');
+  }else{
+    const todoGroups = {shared:[], own:[], assigned:[]};
+    const updateTodos = ()=>{
+      const merged = new Map();
+      Object.values(todoGroups).flat().forEach(item=>merged.set(item._doc_id,item));
+      todoItems=[...merged.values()]; renderTodoAll(); renderDashboard();
+    };
+    watchCollection(db.collection('todo-items').where('visibility','==','shared'), rows=>{todoGroups.shared=rows;updateTodos();}, 'todo-shared');
+    watchCollection(db.collection('todo-items').where('created_by_uid','==',currentUser.uid), rows=>{todoGroups.own=rows;updateTodos();}, 'todo-own');
+    watchCollection(db.collection('todo-items').where('assignee_uid','==',currentUser.uid), rows=>{todoGroups.assigned=rows;updateTodos();}, 'todo-assigned');
+  }
+
+  watchBlob(DR_KEY, data=>{ drData=data||{}; renderDrAll(); renderDashboard(); }, 'duty-roster');
+  watchBlob(SB_KEY, data=>{ sbData=data||{}; renderSbTable(); renderDashboard(); }, 'software-backup');
+  watchBlob(IM_KEY, data=>{ imData=data||{}; renderImGrid(); }, 'instrument-manual');
+  watchBlob(CUSTOM_INSTRUMENTS_KEY, data=>{ customInstruments=data||[]; renderImGrid(); }, 'custom-instruments');
+}
+
+async function loadAllAppData(){
+  if(!currentUser || appDataLoaded) return;
+  try{
+    await Promise.all([
+      loadItems(), loadMatItems(), loadSmpItems(), loadCulItems(), loadIulItems(),
+      loadSbData(), loadDrData(), loadTodoItems(), loadCustomInstruments(),
+      loadImData(), loadCpItems(), loadCmpItems()
+    ]);
+    appDataLoaded = true;
+    startRealtimeSync();
+  }catch(err){
+    console.error('loadAllAppData failed:', err);
+    alert('部分資料讀取失敗。系統不會把它當成空清單，請檢查網路與 Firestore Security Rules 後重新整理。');
+    return;
+  }
   renderCulAll();
   renderIulAll();
   renderSbTable();
@@ -5450,6 +5848,11 @@ document.getElementById('navDashboard').addEventListener('click', renderDashboar
   renderCpKanban();
   renderDashboard();
   tryDeepLink();
+}
+
+(async function init(){
+  const authenticated = await loadCurrentUser();
+  if(authenticated) await loadAllAppData();
 })();
 </script>
 </body>
