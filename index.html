@@ -22,6 +22,10 @@
     --amber-bg:#F4E6D6;
     --danger:#B23A2E;
     --radius:10px;
+    --radius-sm:6px;
+    --radius-lg:14px;
+    --shadow-sm:0 1px 3px rgba(20,40,36,.08);
+    --shadow-md:0 6px 18px rgba(20,40,36,.14);
     --mono: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
     --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang TC", "Microsoft JhengHei", sans-serif;
   }
@@ -29,6 +33,59 @@
   body{margin:0;font-family:var(--sans);background:var(--bg);color:var(--ink);}
   .topbar-mobile{display:none;} /* 桌機隱藏,680px 以下由 media query 改回 flex */
   :focus-visible{outline:2px solid var(--pine);outline-offset:2px;border-radius:4px;}
+  input[type=checkbox]{accent-color:var(--pine);}
+
+  /* ---- Google 登入 ---- */
+  .login-divider{display:flex;align-items:center;gap:10px;margin:14px 0;font-size:11px;color:var(--ink-soft);}
+  .login-divider::before,.login-divider::after{content:'';flex:1;height:1px;background:var(--line);}
+  .btn-google{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px 14px;font-size:13.5px;font-weight:600;color:var(--ink);cursor:pointer;transition:background .15s;}
+  .btn-google:hover{background:#F7FAF9;}
+  .btn-google svg{flex-shrink:0;}
+
+  /* ---- toast 通知 ---- */
+  #toastWrap{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:200;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;}
+  .toast{background:var(--pine-deep);color:#fff;padding:10px 18px;border-radius:24px;font-size:13px;box-shadow:var(--shadow-md);opacity:0;transform:translateY(8px);transition:opacity .25s ease, transform .25s ease;max-width:86vw;text-align:center;}
+  .toast.show{opacity:1;transform:translateY(0);}
+  .toast.error{background:var(--danger);}
+
+  /* ---- 載入骨架屏 ---- */
+  .skeleton-row{height:46px;border-radius:var(--radius);background:linear-gradient(90deg,#E5EBE8 25%,#F4F7F5 50%,#E5EBE8 75%);background-size:200% 100%;animation:shimmer 1.2s linear infinite;margin-bottom:8px;}
+  .skeleton-row.sk-sm{height:30px;width:60%;}
+  @keyframes shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+
+  /* ---- 值週生 v2 ---- */
+  .dr-week-nav{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+  .dr-nav-btn{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--panel);cursor:pointer;font-size:16px;color:var(--pine-deep);display:flex;align-items:center;justify-content:center;transition:background .15s;flex-shrink:0;}
+  .dr-nav-btn:hover{background:#EAF3F0;}
+  .dr-week-label{font-weight:700;font-size:14px;text-align:center;min-width:190px;}
+  .dr-thisweek-btn{border:none;background:#EAF3F0;color:var(--pine-deep);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;}
+  .dr-progress-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-lg);padding:14px 18px;margin-bottom:16px;}
+  .dr-progress-top{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;color:var(--ink-soft);}
+  .dr-progress-top b{font-size:16px;color:var(--pine-deep);font-family:var(--mono);}
+  .dr-legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px;font-size:11.5px;color:var(--ink-soft);align-items:center;}
+  .dr-legend .dot{display:inline-block;width:11px;height:11px;border-radius:4px;margin-right:5px;vertical-align:-1px;}
+  .dr-check-cell input[type=checkbox]{width:19px;height:19px;cursor:pointer;}
+  .dr-check-cell.done{background:#DFF0E4;}
+  .dr-check-cell.pending{background:#FBF3E3;}
+  th.dr-today-col{background:var(--pine) !important;color:#fff !important;border-radius:6px 6px 0 0;}
+  th.dr-day-th{text-align:center;}
+  th.dr-day-th .dr-th-date{display:block;font-size:10.5px;font-weight:400;opacity:.75;letter-spacing:0;text-transform:none;}
+  .dr-weekly-item{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-radius:var(--radius);margin-bottom:8px;font-size:13px;background:var(--panel);border:1px solid var(--line);border-left:4px solid #E4B96A;cursor:pointer;transition:background .15s;}
+  .dr-weekly-item:hover{background:#F7FAF9;}
+  .dr-weekly-item.done{border-left-color:#1E8449;background:#F4FAF5;}
+  .dr-weekly-item.done .dr-w-name{text-decoration:line-through;color:var(--ink-soft);}
+  .dr-weekly-item input[type=checkbox]{width:19px;height:19px;flex-shrink:0;cursor:pointer;margin-top:1px;}
+  .dr-weekly-item .dr-w-body{flex:1;min-width:0;}
+  .dr-weekly-item .dr-w-name{font-weight:600;}
+  .dr-weekly-item .dr-w-detail{font-size:11.5px;color:var(--ink-soft);margin-top:3px;line-height:1.5;}
+  .dr-by-tag{flex-shrink:0;font-family:var(--mono);font-size:11px;color:var(--pine);background:#EAF3F0;padding:3px 9px;border-radius:20px;align-self:center;}
+
+  /* ---- 儀器使用步驟卡片:桌機加大 ---- */
+  #imGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;}
+  .im-card{min-height:92px;padding:14px 10px;}
+  .im-card-name{font-size:13.5px;}
+  .im-card-room{font-size:11px;margin-top:4px;}
+  .im-card-badges{font-size:11px;margin-top:5px;}
 
   /* ---- layout / sidebar ---- */
   .layout{display:flex;gap:24px;max-width:1280px;margin:0 auto;padding:28px 20px 80px;align-items:flex-start;}
@@ -41,14 +98,6 @@
   .nav-item .ic{font-size:15px;}
   .nav-item:hover{background:#F2F6F4;}
   .nav-item.active{background:var(--pine);color:#fff;}
-  .nav-item.nav-wip{background:#EAF3EA;}
-  .nav-item.nav-wip.active{background:var(--pine);}
-  .nav-item.nav-todo{background:#F1F1EF;color:var(--ink-soft);}
-  .nav-item.nav-todo.active{background:var(--pine);color:#fff;}
-  .nav-badge{margin-left:auto;font-size:10px;padding:2px 7px;border-radius:20px;font-weight:700;flex-shrink:0;}
-  .nav-wip .nav-badge{background:#1E8449;color:#fff;}
-  .nav-todo .nav-badge{background:#B9C4BF;color:#3A433F;}
-  .nav-item.active .nav-badge{background:rgba(255,255,255,.25);color:#fff;}
   .hamburger-btn{display:none;}
   .visually-hidden-file{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
   .drawer-backdrop{display:none;}
@@ -97,8 +146,8 @@
   .name-zh{font-weight:600;}
   .name-en{color:var(--ink-soft);font-size:12px;}
   .haz-row{display:flex;gap:4px;flex-wrap:wrap;}
-  .haz-tag{font-size:10px;padding:2px 7px;border-radius:20px;color:#fff;white-space:nowrap;font-weight:600;}
-  .plain-tag{font-size:10px;padding:2px 7px;border-radius:20px;background:#E3EAE6;color:var(--pine-deep);white-space:nowrap;font-weight:600;}
+  .haz-tag{font-size:10.5px;padding:2px 7px;border-radius:20px;color:#fff;white-space:nowrap;font-weight:600;}
+  .plain-tag{font-size:10.5px;padding:2px 7px;border-radius:20px;background:#E3EAE6;color:var(--pine-deep);white-space:nowrap;font-weight:600;}
   .loc-tag{font-size:11px;padding:3px 9px;border-radius:20px;font-weight:700;white-space:nowrap;display:inline-block;}
   .loc-chem{background:#1C2624;color:#fff;}
   .loc-solvent{background:#fff;color:#1C2624;border:1.5px solid #1C2624;}
@@ -117,7 +166,7 @@
   /* modal */
   .overlay{position:fixed;inset:0;background:rgba(18,52,48,.45);display:none;align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto;z-index:50;}
   .overlay.show{display:flex;}
-  .modal{background:var(--panel);border-radius:14px;max-width:560px;width:100%;padding:26px;position:relative;}
+  .modal{background:var(--panel);border-radius:var(--radius-lg);max-width:560px;width:100%;padding:26px;position:relative;}
   .modal h2{margin:0 0 18px;font-size:17px;}
   .modal .close{position:absolute;top:16px;right:18px;background:none;border:none;font-size:18px;cursor:pointer;color:var(--ink-soft);}
   .field{margin-bottom:14px;}
@@ -178,11 +227,11 @@
   .im-card{border-radius:10px;padding:8px 6px;text-align:center;cursor:pointer;min-height:56px;display:flex;flex-direction:column;justify-content:center;transition:transform .12s;}
   .im-card:active{transform:scale(.96);}
   .im-card-name{font-size:11.5px;font-weight:700;color:var(--ink);line-height:1.25;word-break:break-word;}
-  .im-card-room{font-size:9.5px;color:var(--ink-soft);margin-top:2px;}
-  .im-card-badges{font-size:10px;margin-top:3px;}
+  .im-card-room{font-size:10.5px;color:var(--ink-soft);margin-top:2px;}
+  .im-card-badges{font-size:10.5px;margin-top:3px;}
 
   .dash-alert-row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:22px;}
-  .dash-alert-pill{flex:1;min-width:150px;background:var(--panel);border-radius:14px;padding:16px 18px;cursor:pointer;border:1px solid var(--line);transition:transform .15s ease, box-shadow .15s ease;}
+  .dash-alert-pill{flex:1;min-width:150px;background:var(--panel);border-radius:var(--radius-lg);padding:16px 18px;cursor:pointer;border:1px solid var(--line);transition:transform .15s ease, box-shadow .15s ease;}
   .dash-alert-pill:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(20,40,36,.08);}
   .dash-alert-pill .dash-alert-num{font-size:28px;font-weight:800;line-height:1;color:var(--pine-deep);}
   .dash-alert-pill .dash-alert-label{font-size:11.5px;color:var(--ink-soft);margin-top:6px;font-weight:600;}
@@ -196,7 +245,7 @@
   .dash-alert-pill.ok .dash-alert-num{color:#1E8449;}
 
   .dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start;}
-  .dash-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin-bottom:18px;}
+  .dash-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-lg);padding:18px 20px;margin-bottom:18px;}
   .dash-card-title{font-size:13px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:6px;color:var(--ink);}
   .dash-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line);font-size:12.5px;cursor:pointer;}
   .dash-row:first-child{border-top:none;}
@@ -217,14 +266,7 @@
   .dr-task-name summary::before{content:'ⓘ ';color:var(--ink-soft);font-size:11px;}
   .dr-task-name .dr-detail{margin-top:4px;font-size:11px;color:var(--ink-soft);font-weight:400;line-height:1.5;}
   .dr-check-cell{text-align:center;border-radius:6px;transition:background .15s;}
-  .dr-check-cell.done{background:#C9EBD1;}
-  .dr-check-cell.pending{background:#FCDFC0;}
-  .dr-check-cell .dr-by{display:block;font-size:9.5px;color:var(--ink-soft);margin-top:2px;}
-  .dr-check-cell input[type=checkbox]{width:16px;height:16px;}
-  .dr-weekly-row.done{background:#C9EBD1;}
-  .dr-weekly-row.pending{background:#FCDFC0;}
-  .dr-weekly-status{display:flex;align-items:center;gap:6px;justify-content:center;}
-  .dr-weekly-status .dr-by{font-size:10.5px;color:var(--ink-soft);}
+  .dr-check-cell .dr-by{display:block;font-size:10.5px;color:var(--ink-soft);margin-top:2px;}
   .section-title.first{margin-top:0;padding-top:0;border-top:none;}
   .id-preview{margin-bottom:14px;}
 
@@ -262,12 +304,24 @@
   .label-primary-row .k{color:var(--ink-soft);margin-right:4px;}
   .label-note-sm{padding-left:10px;margin-top:8px;font-size:12.5px;color:var(--ink-soft);}
   .label-secondary-row{display:flex;flex-wrap:wrap;gap:6px 14px;padding-left:10px;margin-top:10px;padding-top:8px;border-top:1px solid var(--line);font-size:11px;color:var(--ink-soft);}
-  .qr-id-sm{font-family:var(--mono);font-size:10px;color:var(--ink-soft);text-align:center;margin-top:6px;}
+  .qr-id-sm{font-family:var(--mono);font-size:10.5px;color:var(--ink-soft);text-align:center;margin-top:6px;}
   #smpQrTarget canvas, #smpQrTarget img{width:72px !important;height:72px !important;}
 
   /* ---- responsive: phones & narrow screens ---- */
   @media (max-width: 680px){
     .cp-kanban{grid-template-columns:1fr;}
+    /* 儀器卡片:手機縮小 */
+    #imGrid{grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px;}
+    .im-card{min-height:58px;padding:8px 6px;}
+    .im-card-name{font-size:11.5px;}
+    .im-card-room{font-size:10.5px;margin-top:2px;}
+    .im-card-badges{font-size:10.5px;margin-top:3px;}
+    /* 值週生:手機讓每日表格保留表格型態(勾選矩陣不適合堆疊) */
+    #page-dutyRoster table, #page-dutyRoster thead, #page-dutyRoster tbody, #page-dutyRoster tr, #page-dutyRoster td, #page-dutyRoster th{display:revert;width:auto;}
+    #page-dutyRoster .tablewrap{border:1px solid var(--line);background:var(--panel);border-radius:var(--radius);overflow-x:auto;}
+    #page-dutyRoster tr.row{border:none;border-radius:0;margin:0;padding:0;}
+    #page-dutyRoster td{border-bottom:1px solid var(--line);padding:8px 6px;font-size:12px;}
+    .dr-week-label{min-width:0;flex:1;font-size:13px;}
     .layout{flex-direction:column;padding:10px 10px 80px;gap:10px;}
 
     /* 精簡頂欄:漢堡按鈕 + 品牌 + 使用者頭像,取代原本橫向捲動的分頁列 */
@@ -293,14 +347,14 @@
 
     .hdr{flex-direction:column;align-items:flex-start;gap:8px;}
     .hdr h1{font-size:16px;margin:0 0 2px;}
-    .hdr .sub{font-size:10px;}
+    .hdr .sub{font-size:10.5px;}
 
     /* 統計卡合併為單一橫列小卡 */
     .stats{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:6px 2px;gap:0;}
     .stat{flex:1;min-width:0;text-align:center;background:none;border:none;border-right:1px solid var(--line);border-radius:0;padding:4px 6px;}
     .stat:last-child{border-right:none;}
     .stat .n{font-size:15px;}
-    .stat .l{font-size:9px;}
+    .stat .l{font-size:10.5px;}
 
     /* 工具列縮小,篩選/匯出按鈕改成同一列小按鈕 */
     .toolbar{gap:6px;margin-bottom:12px;}
@@ -414,8 +468,28 @@
         <input type="password" id="login_password" autocomplete="current-password" placeholder="Firebase 密碼">
       </div>
       <button class="btn btn-primary" id="loginSubmitBtn" type="submit" style="width:100%;margin-top:6px;">登入</button>
+      <div class="login-divider">或</div>
+      <button class="btn-google" id="googleLoginBtn" type="button">
+        <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+        使用 Google 登入
+      </button>
       <button class="btn btn-ghost" id="forgotPasswordBtn" type="button" style="width:100%;margin-top:8px;">忘記密碼／寄送重設信</button>
       <button class="btn btn-ghost" id="showRegisterBtn" type="button" style="width:100%;margin-top:8px;">還沒有帳號?註冊新帳號</button>
+    </form>
+
+    <form id="googleRegPane" style="display:none;">
+      <div style="font-size:12.5px;color:var(--ink);margin-bottom:14px;text-align:left;">Google 登入成功!第一次使用需要填一下實驗室資料:<div style="font-family:var(--mono);font-size:11.5px;color:var(--pine);margin-top:4px;" id="greg_email"></div></div>
+      <div class="field" style="text-align:left;">
+        <label>實驗室代號 *</label>
+        <input type="text" id="greg_code" placeholder="例如 W">
+      </div>
+      <div class="field" style="text-align:left;">
+        <label>使用者名稱縮寫</label>
+        <input type="text" id="greg_name" placeholder="提示1~4個字">
+      </div>
+      <div style="font-size:11px;color:var(--amber);margin-bottom:10px;text-align:left;">送出後需由管理員啟用帳號,啟用後再用 Google 登入即可進入系統。</div>
+      <button class="btn btn-primary" id="googleRegSubmitBtn" type="submit" style="width:100%;">完成註冊</button>
+      <button class="btn btn-ghost" id="googleRegCancelBtn" type="button" style="width:100%;margin-top:8px;">取消</button>
     </form>
 
     <form id="registerPane" style="display:none;">
@@ -468,14 +542,14 @@
       <button class="nav-item" id="navChem" data-page="chemicals"><span class="ic">🧪</span> 藥品清單</button>
       <button class="nav-item" id="navMat" data-page="materials"><span class="ic">🌿</span> 試材清單</button>
       <button class="nav-item" id="navSample" data-page="samples"><span class="ic">📦</span> 樣品清單</button>
-      <button class="nav-item nav-wip" data-page="chemUsageLog"><span class="ic">📝</span> 藥品使用登記<span class="nav-badge">開發中</span></button>
-      <button class="nav-item nav-wip" data-page="instrumentUsageLog"><span class="ic">🔧</span> 儀器使用登記<span class="nav-badge">開發中</span></button>
-      <button class="nav-item nav-wip" data-page="dutyRoster"><span class="ic">🧹</span> 值週生<span class="nav-badge">開發中</span></button>
-      <button class="nav-item nav-wip" data-page="todoList"><span class="ic">✅</span> 待辦事項<span class="nav-badge">開發中</span></button>
-      <button class="nav-item nav-wip" data-page="instrumentManual"><span class="ic">📖</span> 儀器使用步驟<span class="nav-badge">開發中</span></button>
-      <button class="nav-item nav-wip" data-page="chemPurchase"><span class="ic">🛒</span> 購買<span class="nav-badge">開發中</span></button>
+      <button class="nav-item" data-page="chemUsageLog"><span class="ic">📝</span> 藥品使用登記</button>
+      <button class="nav-item" data-page="instrumentUsageLog"><span class="ic">🔧</span> 儀器使用登記</button>
+      <button class="nav-item" data-page="dutyRoster"><span class="ic">🧹</span> 值週生</button>
+      <button class="nav-item" data-page="todoList"><span class="ic">✅</span> 待辦事項</button>
+      <button class="nav-item" data-page="instrumentManual"><span class="ic">📖</span> 儀器使用步驟</button>
+      <button class="nav-item" data-page="chemPurchase"><span class="ic">🛒</span> 購買</button>
       <div style="flex:1;"></div>
-      <button class="nav-item nav-wip" data-page="softwareBackup"><span class="ic">💾</span> 軟體備份<span class="nav-badge">開發中</span></button>
+      <button class="nav-item" data-page="softwareBackup"><span class="ic">💾</span> 軟體備份</button>
       <button class="nav-item nav-item-admin-pinned" id="navAdmin" data-page="admin" style="display:none;"><span class="ic">👤</span> 帳號管理</button>
     </nav>
   </aside>
@@ -565,7 +639,7 @@
           點選右上角「＋ 新增藥品」開始建立清單
         </div>
       </div>
-      <div class="save-notice" id="loadingNotice">載入中...</div>
+      <div id="loadingNotice" style="margin-top:10px;"><div class="skeleton-row"></div><div class="skeleton-row"></div><div class="skeleton-row sk-sm"></div></div>
     </section>
 
     <!-- ================= PAGE: 試材清單 ================= -->
@@ -583,7 +657,7 @@
 
       <div class="toolbar">
         <input type="text" id="matSearch" placeholder="搜尋物種 / 來源 / 編號...">
-        <select id="matFilterPart"><option value="">所有部位</option></select>
+        <select id="matFilterStorage"><option value="">所有存放位置</option></select>
         <select id="matFilterUse"><option value="">所有用途</option></select>
         <button class="btn btn-ghost" id="matExportBtn">匯出 CSV</button>
         <button class="btn btn-ghost" id="matExportJsonBtn">匯出備份</button>
@@ -606,7 +680,7 @@
           點選右上角「＋ 新增試材」開始建立清單
         </div>
       </div>
-      <div class="save-notice" id="matLoadingNotice">載入中...</div>
+      <div id="matLoadingNotice" style="margin-top:10px;"><div class="skeleton-row"></div><div class="skeleton-row"></div><div class="skeleton-row sk-sm"></div></div>
     </section>
 
     <!-- ================= PAGE: 樣品清單 ================= -->
@@ -646,7 +720,7 @@
           點選右上角「＋ 新增樣品」開始建立清單
         </div>
       </div>
-      <div class="save-notice" id="smpLoadingNotice">載入中...</div>
+      <div id="smpLoadingNotice" style="margin-top:10px;"><div class="skeleton-row"></div><div class="skeleton-row"></div><div class="skeleton-row sk-sm"></div></div>
     </section>
 
     <!-- ================= PAGE: 帳號管理(僅管理員) ================= -->
@@ -766,7 +840,7 @@
         <select id="imFilterRoom"><option value="">所有實驗室</option><option value="602">602室</option><option value="603">603室</option><option value="經德">經德</option><option value="林場">林場</option></select>
         <button class="btn btn-primary" id="imAddInstrumentBtn">＋ 新增儀器</button>
       </div>
-      <div id="imGrid" class="mini-calendar" style="grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px;"></div>
+      <div id="imGrid"></div>
     </section>
 
     <!-- 新增儀器 -->
@@ -907,28 +981,35 @@
         </div>
       </div>
 
-      <div class="toolbar" style="align-items:center;">
-        <button class="btn btn-ghost" id="drPrevWeekBtn">‹ 上週</button>
-        <div id="drWeekLabel" style="font-weight:700;font-size:13px;padding:0 6px;"></div>
-        <button class="btn btn-ghost" id="drNextWeekBtn">下週 ›</button>
+      <div class="dr-week-nav">
+        <button class="dr-nav-btn" id="drPrevWeekBtn" title="上一週">‹</button>
+        <div class="dr-week-label" id="drWeekLabel"></div>
+        <button class="dr-nav-btn" id="drNextWeekBtn" title="下一週">›</button>
+        <button class="dr-thisweek-btn" id="drThisWeekBtn" style="display:none;">回到本週</button>
       </div>
-      <div style="font-size:11.5px;color:var(--ink-soft);margin-bottom:14px;">完成項目打勾即可,會自動記錄是誰完成的。淺綠底色代表已完成,淺橙底色代表還沒做。</div>
+
+      <div class="dr-progress-card">
+        <div class="dr-progress-top"><span>本週完成進度</span><span><b id="drProgressNum">0 / 0</b></span></div>
+        <div class="dash-progress-bar"><div class="dash-progress-fill" id="drProgressFill" style="width:0%;"></div></div>
+      </div>
+
+      <div class="dr-legend">
+        <span><span class="dot" style="background:#DFF0E4;"></span>已完成</span>
+        <span><span class="dot" style="background:#FBF3E3;"></span>還沒做</span>
+        <span><span class="dot" style="background:repeating-linear-gradient(45deg,#f3f3f0,#f3f3f0 3px,#fff 3px,#fff 6px);border:1px solid var(--line);"></span>當天不需執行</span>
+        <span style="margin-left:auto;">打勾會自動記錄完成者</span>
+      </div>
 
       <div class="section-title" style="margin-top:6px;padding-top:0;border-top:none;">每日工作</div>
       <div class="tablewrap">
         <table>
-          <thead><tr><th style="width:30%;">工作項目</th><th>一</th><th>二</th><th>三</th><th>四</th><th>五</th></tr></thead>
+          <thead><tr id="drDailyHeadRow"><th style="width:30%;">工作項目</th><th>一</th><th>二</th><th>三</th><th>四</th><th>五</th></tr></thead>
           <tbody id="drDailyTbody"></tbody>
         </table>
       </div>
 
       <div class="section-title">每週工作(週一~週日間完成一次即可)</div>
-      <div class="tablewrap">
-        <table>
-          <thead><tr><th>工作項目</th><th style="width:110px;">狀態</th></tr></thead>
-          <tbody id="drWeeklyTbody"></tbody>
-        </table>
-      </div>
+      <div id="drWeeklyList"></div>
     </section>
     <section class="page" id="page-chemPurchase">
       <div class="hdr">
@@ -1927,6 +2008,17 @@ document.getElementById('lightboxOverlay').addEventListener('click', closeLightb
 function escapeHtml(s){
   return String(s ?? '').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
+/* ---- toast 輕量通知(成功/一般回饋用,錯誤仍用 alert)---- */
+function showToast(msg, kind, ms){
+  let wrap = document.getElementById('toastWrap');
+  if(!wrap){ wrap = document.createElement('div'); wrap.id = 'toastWrap'; document.body.appendChild(wrap); }
+  const t = document.createElement('div');
+  t.className = 'toast' + (kind==='error' ? ' error' : '');
+  t.textContent = msg;
+  wrap.appendChild(t);
+  requestAnimationFrame(()=> t.classList.add('show'));
+  setTimeout(()=>{ t.classList.remove('show'); setTimeout(()=> t.remove(), 300); }, ms || 2200);
+}
 function localDateISO(date){
   const d = date || new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -2135,7 +2227,11 @@ function authErrorMessage(err){
     'auth/email-already-in-use':'這個 Email 已經註冊過了。',
     'auth/weak-password':'密碼強度不足，請至少使用8個字元。',
     'auth/too-many-requests':'嘗試次數過多，請稍後再試。',
-    'auth/network-request-failed':'無法連線到 Firebase，請檢查網路。'
+    'auth/network-request-failed':'無法連線到 Firebase，請檢查網路。',
+    'auth/popup-blocked':'瀏覽器擋下了登入視窗，請允許彈出視窗後再試一次。',
+    'auth/unauthorized-domain':'這個網域尚未加入 Firebase 授權清單，請通知管理員到 Authentication → Settings → Authorized domains 新增。',
+    'auth/account-exists-with-different-credential':'這個 Email 已用其他方式註冊過，請改用原本的登入方式。',
+    'auth/operation-not-allowed':'Google 登入尚未在 Firebase Console 啟用，請通知管理員。'
   };
   return map[code] || ((err && err.message) ? `Firebase 錯誤：${err.message}` : '發生不明錯誤。');
 }
@@ -2156,10 +2252,21 @@ function waitForInitialAuth(){
     const unsubscribe = auth.onAuthStateChanged(user=>{ unsubscribe(); resolve(user); }, reject);
   });
 }
+let pendingGoogleUser = null;
 async function establishCurrentUser(firebaseUser){
   if(!firebaseUser) return false;
   const snap = await db.collection('users').doc(firebaseUser.uid).get();
   if(!snap.exists){
+    // Google 首次登入:還沒有 users 資料 → 導向完成註冊,而不是顯示管理員設定錯誤
+    const isGoogle = (firebaseUser.providerData||[]).some(p=>p && p.providerId==='google.com');
+    if(isGoogle){
+      pendingGoogleUser = firebaseUser;
+      document.getElementById('greg_email').textContent = firebaseUser.email || '';
+      if(firebaseUser.displayName) document.getElementById('greg_name').value = firebaseUser.displayName.slice(0,4);
+      document.getElementById('loginOverlay').classList.add('show');
+      showLoginPane('googleReg');
+      return false;
+    }
     setAuthStatus('這個 Authentication 帳號尚未建立 Firestore users/UID 資料。如果你是第一位管理員，請依設定教學在 Firebase Console 建立。', 'error');
     await auth.signOut();
     return false;
@@ -2218,6 +2325,7 @@ function canDelete(item){
 function showLoginPane(name){
   document.getElementById('loginPane').style.display = name==='login' ? 'block':'none';
   document.getElementById('registerPane').style.display = name==='register' ? 'block':'none';
+  document.getElementById('googleRegPane').style.display = name==='googleReg' ? 'block':'none';
   setAuthStatus('');
 }
 function renderUserBadge(){
@@ -2235,6 +2343,53 @@ function renderUserBadge(){
 // 表單改用 <form> 讓 Enter 鍵可直接送出(瀏覽器會自動觸發 submit 按鈕的 click),這裡只需擋掉預設的頁面重整
 document.getElementById('loginPane').addEventListener('submit', e=> e.preventDefault());
 document.getElementById('registerPane').addEventListener('submit', e=> e.preventDefault());
+document.getElementById('googleRegPane').addEventListener('submit', e=> e.preventDefault());
+
+/* ---- Google 快速登入 ---- */
+document.getElementById('googleLoginBtn').addEventListener('click', async ()=>{
+  const btn = document.getElementById('googleLoginBtn');
+  btn.disabled = true;
+  try{
+    const provider = new firebase.auth.GoogleAuthProvider();
+    const cred = await auth.signInWithPopup(provider);
+    const ok = await establishCurrentUser(cred.user); // 帳號已存在→進系統;首次登入→自動導向完成註冊面板
+    if(ok) await loadAllAppData();
+  }catch(err){
+    if(err && (err.code==='auth/popup-closed-by-user' || err.code==='auth/cancelled-popup-request')){
+      /* 使用者自己關掉視窗,不需顯示錯誤 */
+    }else{
+      setAuthStatus(authErrorMessage(err), 'error');
+    }
+  }finally{ btn.disabled = false; }
+});
+document.getElementById('googleRegSubmitBtn').addEventListener('click', async ()=>{
+  if(!pendingGoogleUser){ showLoginPane('login'); return; }
+  const code = document.getElementById('greg_code').value.trim();
+  const name = document.getElementById('greg_name').value.trim();
+  if(!code){ setAuthStatus('請填寫實驗室代號。', 'error'); return; }
+  if(!/^[A-Za-z0-9_-]{1,20}$/.test(code)){ setAuthStatus('實驗室代號限 1–20 個英數字、底線或連字號。', 'error'); return; }
+  if(name.length > 20){ setAuthStatus('名稱縮寫最多20個字。', 'error'); return; }
+  const btn = document.getElementById('googleRegSubmitBtn');
+  btn.disabled = true;
+  try{
+    await db.collection('users').doc(pendingGoogleUser.uid).set({
+      code, name, role:'member', active:false,
+      auth_provider:'google', email:pendingGoogleUser.email||'',
+      created_at:new Date().toISOString(), updated_at:new Date().toISOString()
+    });
+    await auth.signOut();
+    pendingGoogleUser = null;
+    showLoginPane('login');
+    setAuthStatus('帳號已建立。請通知管理員在「帳號管理」啟用後,再按「使用 Google 登入」即可進入系統。', 'ok');
+  }catch(err){
+    setAuthStatus('資料儲存失敗:' + authErrorMessage(err), 'error');
+  }finally{ btn.disabled = false; }
+});
+document.getElementById('googleRegCancelBtn').addEventListener('click', async ()=>{
+  try{ await auth.signOut(); }catch(_e){}
+  pendingGoogleUser = null;
+  showLoginPane('login');
+});
 document.getElementById('showRegisterBtn').addEventListener('click', ()=> showLoginPane('register'));
 document.getElementById('showLoginBtn').addEventListener('click', ()=> showLoginPane('login'));
 document.getElementById('forgotPasswordBtn').addEventListener('click', async ()=>{
@@ -2804,10 +2959,11 @@ function applyMatDraft(d){
   if(d.photo){ document.getElementById('m_photoPreview').src = d.photo; document.getElementById('m_photoPreview').style.display='block'; }
 }
 function populateMatFilters(){
-  const partSel = document.getElementById('matFilterPart');
-  const curPart = partSel.value;
-  partSel.innerHTML = '<option value="">所有部位</option>' + PART_OPTIONS.map(p=>`<option value="${p}">${p}</option>`).join('');
-  partSel.value = curPart;
+  const stSel = document.getElementById('matFilterStorage');
+  const curSt = stSel.value;
+  const usedLocs = [...new Set(matItems.map(i=>i.storage_location).filter(Boolean))].sort();
+  stSel.innerHTML = '<option value="">所有存放位置</option>' + usedLocs.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(storageLabel(v))}</option>`).join('');
+  stSel.value = curSt;
   const useSel = document.getElementById('matFilterUse');
   const curUse = useSel.value;
   useSel.innerHTML = '<option value="">所有用途</option>' + USE_OPTIONS.map(u=>`<option value="${u}">${u}</option>`).join('');
@@ -2819,10 +2975,10 @@ function renderMatStats(){
 }
 function renderMatTable(){
   const search = document.getElementById('matSearch').value.trim().toLowerCase();
-  const fPart = document.getElementById('matFilterPart').value;
+  const fStorage = document.getElementById('matFilterStorage').value;
   const fUse = document.getElementById('matFilterUse').value;
   let filtered = matItems.filter(i=>{
-    if(fPart && i.part !== fPart) return false;
+    if(fStorage && i.storage_location !== fStorage) return false;
     if(fUse && i.intended_use !== fUse) return false;
     if(search){
       const hay = [i.species, i.source, i.id].join(' ').toLowerCase();
@@ -3038,7 +3194,7 @@ async function quickDeleteMat(id, ev){
   renderMatAll();
 }
 document.getElementById('matSearch').addEventListener('input', renderMatTable);
-document.getElementById('matFilterPart').addEventListener('change', renderMatTable);
+document.getElementById('matFilterStorage').addEventListener('change', renderMatTable);
 document.getElementById('matFilterUse').addEventListener('change', renderMatTable);
 document.getElementById('matExportBtn').addEventListener('click', exportMatCsv);
 document.getElementById('matFormOverlay').addEventListener('click', (e)=>{ if(e.target.id==='matFormOverlay') closeMatForm(); });
@@ -3727,7 +3883,7 @@ document.getElementById('importModeReplaceBtn').addEventListener('click', async 
   if(!ok){ cfg.setItems(oldData); cfg.render(); alert('覆蓋失敗，本機畫面已恢復原資料。請檢查網路與 Firestore 後再試。'); return; }
   cfg.render();
   closeImportModeDialog();
-  alert(`已覆蓋全部資料,共 ${data.length} 筆。`);
+  showToast(`✅ 已覆蓋全部資料,共 ${data.length} 筆`, null, 3000);
 });
 
 document.getElementById('chemExportJsonBtn').addEventListener('click', ()=> exportJsonFile(items, '藥品清單備份'));
@@ -4184,6 +4340,16 @@ function renderDrAll(){
   const info = getISOWeekInfo(drWeekOffset);
   const wk = ensureDrWeek(info.weekKey);
   document.getElementById('drWeekLabel').textContent = info.label;
+  document.getElementById('drThisWeekBtn').style.display = drWeekOffset===0 ? 'none' : 'inline-block';
+
+  // 表頭:帶上每天日期,本週的「今天」欄位高亮
+  const todayIdx = drWeekOffset===0 ? (new Date().getDay()+6)%7 : -1; // 0=Mon
+  const headRow = document.getElementById('drDailyHeadRow');
+  headRow.innerHTML = `<th style="width:30%;">工作項目</th>` + DR_ALL_DAYS.map((d,di)=>{
+    const date = new Date(info.monday); date.setDate(date.getDate()+di);
+    const isToday = di===todayIdx;
+    return `<th class="dr-day-th ${isToday?'dr-today-col':''}">${DR_DAY_LABELS[d]}<span class="dr-th-date">${date.getMonth()+1}/${date.getDate()}</span></th>`;
+  }).join('');
 
   const dailyTbody = document.getElementById('drDailyTbody');
   dailyTbody.innerHTML = DR_DAILY_TASKS.map((task,ti)=>{
@@ -4203,26 +4369,31 @@ function renderDrAll(){
   }).join('');
 
   const weeklyTasks = drWeeklyTasks(info.weekKey);
-  const weeklyTbody = document.getElementById('drWeeklyTbody');
-  weeklyTbody.innerHTML = weeklyTasks.map((task,wi)=>{
+  const weeklyList = document.getElementById('drWeeklyList');
+  weeklyList.innerHTML = weeklyTasks.map((task,wi)=>{
     const cell = wk.weekly[wi];
     const by = drByLabel(cell);
-    const nameCell = task.detail
-      ? `<td><details class="dr-task-name"><summary>${escapeHtml(task.name)}</summary><div class="dr-detail">${escapeHtml(task.detail)}</div></details></td>`
-      : `<td class="dr-task-name" style="padding-left:18px;">${escapeHtml(task.name)}</td>`;
-    return `<tr class="row dr-weekly-row ${cell.checked?'done':'pending'}">
-      ${nameCell}
-      <td>
-        <div class="dr-weekly-status">
-          <input type="checkbox" data-wi="${wi}" class="dr-weekly-check" ${cell.checked?'checked':''}>
-          ${by ? `<span class="dr-by">${escapeHtml(by)}</span>` : ''}
-        </div>
-      </td>
-    </tr>`;
+    return `<label class="dr-weekly-item ${cell.checked?'done':''}">
+      <input type="checkbox" data-wi="${wi}" class="dr-weekly-check" ${cell.checked?'checked':''}>
+      <div class="dr-w-body">
+        <div class="dr-w-name">${escapeHtml(task.name)}</div>
+        ${task.detail ? `<div class="dr-w-detail">${escapeHtml(task.detail)}</div>` : ''}
+      </div>
+      ${by ? `<span class="dr-by-tag">${escapeHtml(by)}</span>` : ''}
+    </label>`;
   }).join('');
+
+  // 進度統計(每日 + 每週)
+  let done=0, total=0;
+  DR_ALL_DAYS.forEach((d)=>{ DR_DAILY_TASKS.forEach((task,ti)=>{ if(!task.days.includes(d)) return; total++; if(wk.daily[d][ti].checked) done++; }); });
+  wk.weekly.slice(0, weeklyTasks.length).forEach(c=>{ total++; if(c.checked) done++; });
+  const pct = total ? Math.round(done/total*100) : 0;
+  document.getElementById('drProgressNum').textContent = `${done} / ${total}`;
+  document.getElementById('drProgressFill').style.width = pct + '%';
 }
 document.getElementById('drPrevWeekBtn').addEventListener('click', ()=>{ drWeekOffset--; renderDrAll(); });
 document.getElementById('drNextWeekBtn').addEventListener('click', ()=>{ drWeekOffset++; renderDrAll(); });
+document.getElementById('drThisWeekBtn').addEventListener('click', ()=>{ drWeekOffset=0; renderDrAll(); });
 document.getElementById('drDailyTbody').addEventListener('change', async (e)=>{
   const cb = e.target.closest('.dr-daily-check');
   if(!cb) return;
@@ -4236,7 +4407,7 @@ document.getElementById('drDailyTbody').addEventListener('change', async (e)=>{
   await saveDrData();
   renderDrAll();
 });
-document.getElementById('drWeeklyTbody').addEventListener('change', async (e)=>{
+document.getElementById('drWeeklyList').addEventListener('change', async (e)=>{
   const cb = e.target.closest('.dr-weekly-check');
   if(!cb) return;
   const info = getISOWeekInfo(drWeekOffset);
@@ -4657,7 +4828,7 @@ function renderImPhotoGallery(){
   document.getElementById('im_photoGallery').innerHTML = entry.photos.map((src,idx)=>`
     <div style="position:relative;">
       <img src="${src}" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--line);cursor:zoom-in;" onclick="openLightbox(this.src)">
-      ${isAdmin() ? `<button onclick="removeImPhoto(${idx})" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:#B23A2E;color:#fff;border:none;font-size:10px;cursor:pointer;">✕</button>` : ''}
+      ${isAdmin() ? `<button onclick="removeImPhoto(${idx})" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:#B23A2E;color:#fff;border:none;font-size:10.5px;cursor:pointer;">✕</button>` : ''}
     </div>
   `).join('');
 }
@@ -4700,7 +4871,7 @@ document.getElementById('imSaveNotesBtn').addEventListener('click', async ()=>{
   const ok = await saveImData();
   if(!ok){ await Promise.all(uploadedNow.map(deleteStoredPhoto)); alert('儲存失敗,請檢查網路連線後再試一次。'); return; }
   renderImGrid();
-  alert('已儲存說明書');
+  showToast('✅ 已儲存說明書');
 });
 function renderImMaintList(){
   const entry = ensureImEntry(imCurrentName);
@@ -5133,7 +5304,7 @@ async function cpLogMaintenance(id){
   closeCpDetail();
   renderCpKanban();
   renderImGrid();
-  alert('已登記維修紀錄。');
+  showToast('✅ 已登記維修紀錄');
 }
 async function cpArchiveConsumable(id){
   if(!confirm('確定這筆耗材已經入庫完成了嗎?這會把它從清單移除。')) return;
@@ -5376,7 +5547,7 @@ document.getElementById('cmpDetailSaveBtn').addEventListener('click', async ()=>
   if(!ok){ alert('儲存失敗,請檢查網路連線後再試一次。'); }
   renderCmpCardGrid();
   if(cmpAllEntries(record).length){ cmpSwitchToResult(record); }
-  else{ alert('已儲存,但目前還沒有任何規格價格。'); }
+  else{ showToast('已儲存(尚未填任何規格價格)', null, 3000); }
 });
 
 /* ---- 比價結果:廠商分區表格 + 勾選送出 ---- */
@@ -5553,7 +5724,7 @@ document.getElementById('cmpImportInput').addEventListener('change', (e)=>{
       container.insertAdjacentHTML('beforeend', cmpEntryRowHtml(vendorKey, entry, container.children.length));
       imported++;
     });
-    alert(`已匯入 ${imported} 筆規格,別忘了按「儲存比價資料」才會存檔。`);
+    showToast(`📥 已匯入 ${imported} 筆規格,記得按「儲存比價資料」`, null, 3500);
   };
   reader.readAsArrayBuffer(file);
   e.target.value = '';
