@@ -1,3 +1,9 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>SFPLAB 實驗室管理系統</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
@@ -120,6 +126,8 @@
   .haz-chip{border:1px solid var(--line);border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer;user-select:none;background:#fff;}
   .haz-chip.on{color:#fff;border-color:transparent;}
   .photo-drop{border:1.5px dashed var(--line);border-radius:10px;padding:14px;text-align:center;font-size:12px;color:var(--ink-soft);cursor:pointer;}
+  .photo-btn-row{display:flex;gap:8px;}
+  .photo-btn-row .btn{flex:1;}
   .photo-preview{width:100%;max-height:160px;object-fit:contain;border-radius:8px;margin-top:8px;}
   .modal-actions{display:flex;justify-content:space-between;margin-top:20px;}
   .unknown-row{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px;color:var(--ink-soft);}
@@ -136,7 +144,7 @@
   .cal-cell .cal-date{font-size:11px;color:var(--ink-soft);}
   .cal-cell .cal-count{margin-top:4px;font-size:13px;font-weight:700;color:var(--pine-deep);}
   .cal-cell .cal-count.zero{color:var(--line);font-weight:400;}
-  .cal-cell.selected{background:#E4EEEA;border-color:var(--pine);}
+  .cal-cell.selected{background:var(--bg-accent, #E4EEEA);border-color:var(--pine);}
   #iulCalendarDayDetail, #todoCalendarDayDetail{margin-top:12px;}
   .todo-row{display:flex;align-items:center;gap:10px;padding:10px 10px;border-radius:8px;margin-bottom:6px;font-size:13px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--line);transition:background .15s;}
   .todo-row:hover{background:#F5F8F6;}
@@ -366,10 +374,13 @@
     .modal-actions{padding-bottom:calc(12px + env(safe-area-inset-bottom));}
   }
 </style>
+</head>
+<body>
 
 <datalist id="speciesList"></datalist>
 
 <!-- Login Overlay -->
+<!-- Photo Lightbox -->
 <div class="overlay" id="lightboxOverlay" style="z-index:110;background:rgba(10,20,18,.85);cursor:zoom-out;">
   <img id="lightboxImg" src="" style="max-width:92vw;max-height:92vh;border-radius:8px;box-shadow:0 8px 30px rgba(0,0,0,.4);">
 </div>
@@ -739,7 +750,6 @@
         </div>
       </div>
     </div>
-
     <section class="page" id="page-instrumentManual">
       <div class="hdr">
         <div>
@@ -1136,22 +1146,6 @@
 
 <!-- Import Mode Overlay -->
 <!-- 編輯個人名稱縮寫 -->
-<div class="overlay" id="editNameOverlay">
-  <div class="modal" style="max-width:360px;">
-    <button class="close" id="editNameClose">✕</button>
-    <h2>編輯使用者名稱</h2>
-    <div class="field" style="text-align:left;">
-      <label>使用者名稱縮寫</label>
-      <input type="text" id="editName_input" placeholder="提示1~4個字">
-    </div>
-    <div class="modal-actions">
-      <div style="flex:1;"></div>
-      <button class="btn btn-ghost" id="editNameCancelBtn">取消</button>
-      <button class="btn btn-primary" id="editNameSaveBtn" style="margin-left:8px;">儲存</button>
-    </div>
-  </div>
-</div>
-
 <!-- Add Modal: 藥品使用登記 -->
 <div class="overlay" id="culFormOverlay">
   <div class="modal">
@@ -1213,6 +1207,22 @@
       <div style="flex:1;"></div>
       <button class="btn btn-ghost" id="iulCancelBtn">取消</button>
       <button class="btn btn-primary" id="iulSaveBtn" style="margin-left:8px;">確認預約</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="editNameOverlay">
+  <div class="modal" style="max-width:360px;">
+    <button class="close" id="editNameClose">✕</button>
+    <h2>編輯使用者名稱</h2>
+    <div class="field" style="text-align:left;">
+      <label>使用者名稱縮寫</label>
+      <input type="text" id="editName_input" placeholder="提示1~4個字">
+    </div>
+    <div class="modal-actions">
+      <div style="flex:1;"></div>
+      <button class="btn btn-ghost" id="editNameCancelBtn">取消</button>
+      <button class="btn btn-primary" id="editNameSaveBtn" style="margin-left:8px;">儲存</button>
     </div>
   </div>
 </div>
@@ -1290,7 +1300,7 @@
     </div>
     <div class="field">
       <label>照片(藥品瓶身 / 存放位置)</label>
-      <div class="photo-drop" id="photoDrop">點擊上傳照片或拍照</div>
+      <div class="photo-btn-row"><button type="button" class="btn btn-ghost btn-sm" id="photoDropCam">📷 拍照</button><button type="button" class="btn btn-ghost btn-sm" id="photoDropGal">🖼️ 選擇照片</button></div>
       <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none;">
       <img id="photoPreview" class="photo-preview" style="display:none;">
     </div>
@@ -1423,7 +1433,7 @@
     </div>
     <div class="field">
       <label>照片</label>
-      <div class="photo-drop" id="m_photoDrop">點擊上傳照片或拍照</div>
+      <div class="photo-btn-row"><button type="button" class="btn btn-ghost btn-sm" id="m_photoDropCam">📷 拍照</button><button type="button" class="btn btn-ghost btn-sm" id="m_photoDropGal">🖼️ 選擇照片</button></div>
       <input type="file" id="m_photoInput" accept="image/*" capture="environment" style="display:none;">
       <img id="m_photoPreview" class="photo-preview" style="display:none;">
     </div>
@@ -1484,6 +1494,11 @@
     <button class="close" id="smpFormClose">✕</button>
     <h2 id="smpFormTitle">新增樣品</h2>
     <div id="smpCreatorBanner" style="display:none;font-size:12px;padding:8px 10px;border-radius:8px;margin-bottom:14px;"></div>
+    <div id="smpQrSection" style="display:none;text-align:center;margin-bottom:16px;padding:12px;background:#F5F8F6;border-radius:10px;">
+      <div id="smpQrTarget" style="display:inline-block;"></div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-top:6px;" id="smpQrIdLabel"></div>
+      <div style="margin-top:8px;"><button class="btn btn-ghost btn-sm" id="smpDownloadQrBtn" type="button">下載 QR code</button></div>
+    </div>
     <div class="field id-preview">
       <label>編號</label>
       <input type="text" id="s_id" readonly>
@@ -1591,7 +1606,7 @@
       </div>
       <div class="field">
         <label>含水量照片</label>
-        <div class="photo-drop" id="mc_photoDrop">點擊上傳照片或拍照</div>
+        <div class="photo-btn-row"><button type="button" class="btn btn-ghost btn-sm" id="mc_photoDropCam">📷 拍照</button><button type="button" class="btn btn-ghost btn-sm" id="mc_photoDropGal">🖼️ 選擇照片</button></div>
         <input type="file" id="mc_photoInput" accept="image/*" capture="environment" style="display:none;">
         <img id="mc_photoPreview" class="photo-preview" style="display:none;">
       </div>
@@ -1606,13 +1621,13 @@
     <div class="section-title">照片</div>
     <div class="field">
       <label>萃取材照片</label>
-      <div class="photo-drop" id="s_photoExtractDrop">點擊上傳照片或拍照</div>
+      <div class="photo-btn-row"><button type="button" class="btn btn-ghost btn-sm" id="s_photoExtractDropCam">📷 拍照</button><button type="button" class="btn btn-ghost btn-sm" id="s_photoExtractDropGal">🖼️ 選擇照片</button></div>
       <input type="file" id="s_photoExtractInput" accept="image/*" capture="environment" style="display:none;">
       <img id="s_photoExtractPreview" class="photo-preview" style="display:none;">
     </div>
     <div class="field">
       <label>樣品瓶照片</label>
-      <div class="photo-drop" id="s_photoBottleDrop">點擊上傳照片或拍照</div>
+      <div class="photo-btn-row"><button type="button" class="btn btn-ghost btn-sm" id="s_photoBottleDropCam">📷 拍照</button><button type="button" class="btn btn-ghost btn-sm" id="s_photoBottleDropGal">🖼️ 選擇照片</button></div>
       <input type="file" id="s_photoBottleInput" accept="image/*" capture="environment" style="display:none;">
       <img id="s_photoBottlePreview" class="photo-preview" style="display:none;">
     </div>
@@ -1626,6 +1641,107 @@
     </div>
   </div>
 </div>
+
+<!-- ======================================================
+     Firebase 設定(取代 Claude 專屬的 window.storage)
+     共用資料(shared=true)存在 Firestore,個人/裝置資料(shared=false)存在瀏覽器 localStorage
+====================================================== -->
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyAlhm9oAPZMsUcj1pmGFoUiqJIoHHCZXKc",
+  authDomain: "labmanagementapp-d5b03.firebaseapp.com",
+  projectId: "labmanagementapp-d5b03",
+  storageBucket: "labmanagementapp-d5b03.firebasestorage.app",
+  messagingSenderId: "549177150333",
+  appId: "1:549177150333:web:a14dc141f2ab75b90bda14"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const FS_COLLECTION = 'lab-data';
+
+window.storage = {
+  async get(key, shared){
+    if(shared){
+      try{
+        const doc = await db.collection(FS_COLLECTION).doc(key).get();
+        if(!doc.exists) return null;
+        return { key, value: doc.data().value, shared: true };
+      }catch(e){ console.error('storage.get(shared) failed:', e); return null; }
+    }else{
+      try{
+        const raw = localStorage.getItem('local:'+key);
+        if(raw===null) return null;
+        return { key, value: raw, shared: false };
+      }catch(e){ console.error('storage.get(local) failed:', e); return null; }
+    }
+  },
+  async set(key, value, shared){
+    if(shared){
+      try{
+        await db.collection(FS_COLLECTION).doc(key).set({ value: value, updated_at: Date.now() });
+        return { key, value, shared: true };
+      }catch(e){ console.error('storage.set(shared) failed:', e); return null; }
+    }else{
+      try{
+        localStorage.setItem('local:'+key, value);
+        return { key, value, shared: false };
+      }catch(e){ console.error('storage.set(local) failed:', e); return null; }
+    }
+  },
+  async delete(key, shared){
+    if(shared){
+      try{
+        await db.collection(FS_COLLECTION).doc(key).delete();
+        return { key, deleted: true, shared: true };
+      }catch(e){ console.error('storage.delete(shared) failed:', e); return null; }
+    }else{
+      try{
+        localStorage.removeItem('local:'+key);
+        return { key, deleted: true, shared: false };
+      }catch(e){ console.error('storage.delete(local) failed:', e); return null; }
+    }
+  }
+};
+
+/* ---- 逐筆文件儲存(藥品/試材/樣品清單專用,避免整份清單擠在同一份1MB文件裡) ---- */
+async function fsGetAll(collectionName){
+  try{
+    const snap = await db.collection(collectionName).get();
+    return snap.docs.map(d => d.data());
+  }catch(e){ console.error('fsGetAll failed:', e); return []; }
+}
+async function fsSetItem(collectionName, item){
+  try{
+    await db.collection(collectionName).doc(String(item.id)).set(item);
+    return true;
+  }catch(e){ console.error('fsSetItem failed:', e); return false; }
+}
+async function fsDeleteItem(collectionName, id){
+  try{
+    await db.collection(collectionName).doc(String(id)).delete();
+    return true;
+  }catch(e){ console.error('fsDeleteItem failed:', e); return false; }
+}
+async function fsReplaceAll(collectionName, itemsArray){
+  try{
+    const snap = await db.collection(collectionName).get();
+    const existingIds = snap.docs.map(d=>d.id);
+    for(let i=0;i<existingIds.length;i+=400){
+      const batch = db.batch();
+      existingIds.slice(i,i+400).forEach(id => batch.delete(db.collection(collectionName).doc(id)));
+      await batch.commit();
+    }
+    for(let i=0;i<itemsArray.length;i+=400){
+      const batch = db.batch();
+      itemsArray.slice(i,i+400).forEach(item => batch.set(db.collection(collectionName).doc(String(item.id)), item));
+      await batch.commit();
+    }
+    return true;
+  }catch(e){ console.error('fsReplaceAll failed:', e); return false; }
+}
+</script>
 
 <script>
 /* ======================================================
@@ -1701,6 +1817,24 @@ function storageLabel(value){
 }
 
 function ghsInfo(code){ return GHS.find(g=>g.code===code) || {label:code,color:'#7F8C8D'}; }
+function buildItemUrl(type, id){
+  return `${location.origin}${location.pathname}?item=${type}:${encodeURIComponent(id)}`;
+}
+let pendingDeepLinkRaw = new URLSearchParams(location.search).get('item');
+function tryDeepLink(){
+  if(!pendingDeepLinkRaw || !currentUser) return;
+  const idx = pendingDeepLinkRaw.indexOf(':');
+  if(idx<0) return;
+  const type = pendingDeepLinkRaw.slice(0, idx);
+  const id = decodeURIComponent(pendingDeepLinkRaw.slice(idx+1));
+  pendingDeepLinkRaw = null;
+  setTimeout(()=>{
+    if(type==='chem'){ switchPage('chemicals'); openDetail(id); }
+    else if(type==='smp'){ switchPage('samples'); openSmpDetail(id); }
+    else if(type==='mat'){ switchPage('materials'); openMatDetail(id); }
+    else if(type==='instr'){ switchPage('instrumentManual'); openImDetail(id); }
+  }, 60);
+}
 function openLightbox(src){
   if(!src) return;
   document.getElementById('lightboxImg').src = src;
@@ -1783,8 +1917,12 @@ function compressPhoto(file, onDone){
   reader.readAsDataURL(file);
 }
 function bindPhotoUpload(dropId, inputId, previewId){
-  document.getElementById(dropId).addEventListener('click', ()=> document.getElementById(inputId).click());
-  document.getElementById(inputId).addEventListener('change', (e)=>{
+  const input = document.getElementById(inputId);
+  const camBtn = document.getElementById(dropId+'Cam');
+  const galBtn = document.getElementById(dropId+'Gal');
+  if(camBtn) camBtn.addEventListener('click', ()=>{ input.setAttribute('capture','environment'); input.click(); });
+  if(galBtn) galBtn.addEventListener('click', ()=>{ input.removeAttribute('capture'); input.click(); });
+  input.addEventListener('change', (e)=>{
     const file = e.target.files[0];
     if(!file) return;
     compressPhoto(file, (dataUrl)=>{
@@ -1892,6 +2030,8 @@ async function ensureBuiltinAccounts(){
   return changed;
 }
 async function migrateLegacyAdminRole(){
+  // 舊版只有 member/admin 兩階,原本的 admin 等同現在的「總管理員」。
+  // 用一個一次性旗標避免之後新指派的「管理員」被誤升級。
   try{
     const flag = await window.storage.get(ROLE_MIGRATION_KEY, true);
     if(flag && flag.value) return false;
@@ -1964,6 +2104,7 @@ async function completeLogin(acc){
   renderAll(); renderMatAll(); renderSmpAll();
   if(isAdmin()) renderAdminTable();
   renderDashboard();
+  tryDeepLink();
 }
 
 async function loadCurrentUser(){
@@ -2181,16 +2322,13 @@ let editingId = null;
 let selectedHaz = new Set();
 
 async function loadItems(){
-  try{
-    const res = await window.storage.get(STORAGE_KEY, true);
-    items = res && res.value ? JSON.parse(res.value) : [];
-  }catch(e){ items = []; }
+  items = await fsGetAll('chemicals');
   document.getElementById('loadingNotice').style.display = 'none';
   renderAll();
 }
 async function saveItems(){
-  try{ await window.storage.set(STORAGE_KEY, JSON.stringify(items), true); }
-  catch(e){ alert('儲存失敗,請檢查網路連線後再試一次。'); }
+  const ok = await fsReplaceAll('chemicals', items);
+  if(!ok) alert('儲存失敗,請檢查網路連線後再試一次。');
 }
 function populateLocationSelect(){
   document.getElementById('f_location').innerHTML = '<option value="">請選擇位置</option>' + CHEM_LOCATIONS.map(l=>`<option value="${l}">${l}</option>`).join('');
@@ -2373,7 +2511,8 @@ async function handleSave(){
   };
   if(editingId){ items[items.findIndex(i=>i.id===editingId)] = data; }
   else{ items.push(data); }
-  await saveItems();
+  const ok = await fsSetItem('chemicals', data);
+  if(!ok){ alert('儲存失敗,請檢查網路連線後再試一次。'); return; }
   if(!editingId) await clearDraft(CHEM_DRAFT_KEY);
   const cpIdToRemove = (!editingId && typeof cpActionId !== 'undefined') ? cpActionId : null;
   closeForm();
@@ -2383,8 +2522,10 @@ async function handleSave(){
 async function handleDelete(){
   if(!editingId || !isAdmin()) return;
   if(!confirm('確定要刪除此品項嗎?此動作無法復原。')) return;
-  items = items.filter(i=>i.id!==editingId);
-  await saveItems();
+  const idToDelete = editingId;
+  items = items.filter(i=>i.id!==idToDelete);
+  const ok = await fsDeleteItem('chemicals', idToDelete);
+  if(!ok){ alert('刪除失敗,請檢查網路連線後再試一次。'); }
   closeForm();
   renderAll();
 }
@@ -2395,7 +2536,8 @@ async function quickDeleteChem(id, ev){
   if(!isAdmin()) return;
   if(!confirm('確定要刪除此品項嗎?此動作無法復原。')) return;
   items = items.filter(i=>i.id!==id);
-  await saveItems();
+  const ok = await fsDeleteItem('chemicals', id);
+  if(!ok){ alert('刪除失敗,請檢查網路連線後再試一次。'); }
   renderAll();
 }
 
@@ -2421,7 +2563,7 @@ function openDetail(id){
   document.getElementById('detailStripe').style.background = topHaz ? ghsInfo(topHaz).color : '#B9C4BF';
   const qrTarget = document.getElementById('qrTarget');
   qrTarget.innerHTML = '';
-  new QRCode(qrTarget, { text: 'CHEM:' + item.id, width: 108, height: 108, colorDark: '#1B4B43', colorLight: '#ffffff' });
+  new QRCode(qrTarget, { text: buildItemUrl('chem', item.id), width: 200, height: 200, colorDark: '#1B4B43', colorLight: '#ffffff' });
   document.getElementById('editFromDetailBtn').onclick = ()=>{ closeDetail(); openForm(item.id); };
   document.getElementById('downloadQrBtn').onclick = ()=>{
     setTimeout(()=>{
@@ -2481,16 +2623,13 @@ let editingMatId = null;
 let pendingMatId = null;
 
 async function loadMatItems(){
-  try{
-    const res = await window.storage.get(MAT_STORAGE_KEY, true);
-    matItems = res && res.value ? JSON.parse(res.value) : [];
-  }catch(e){ matItems = []; }
+  matItems = await fsGetAll('materials');
   document.getElementById('matLoadingNotice').style.display = 'none';
   renderMatAll();
 }
 async function saveMatItems(){
-  try{ await window.storage.set(MAT_STORAGE_KEY, JSON.stringify(matItems), true); }
-  catch(e){ alert('儲存失敗,請檢查網路連線後再試一次。'); }
+  const ok = await fsReplaceAll('materials', matItems);
+  if(!ok) alert('儲存失敗,請檢查網路連線後再試一次。');
 }
 function populateMatSelects(){
   document.getElementById('m_part').innerHTML = '<option value="">請選擇部位</option>' + PART_OPTIONS.map(p=>`<option value="${p}">${p}</option>`).join('');
@@ -2690,7 +2829,8 @@ async function handleMatSave(){
   };
   if(editingMatId){ matItems[matItems.findIndex(i=>i.id===editingMatId)] = data; }
   else{ matItems.push(data); }
-  await saveMatItems();
+  const ok = await fsSetItem('materials', data);
+  if(!ok){ alert('儲存失敗,請檢查網路連線後再試一次。'); return; }
   if(!editingMatId) await clearDraft(MAT_DRAFT_KEY);
   closeMatForm();
   renderMatAll();
@@ -2698,8 +2838,10 @@ async function handleMatSave(){
 async function handleMatDelete(){
   if(!editingMatId || !isAdmin()) return;
   if(!confirm('確定要刪除此品項嗎?此動作無法復原。')) return;
-  matItems = matItems.filter(i=>i.id!==editingMatId);
-  await saveMatItems();
+  const idToDelete = editingMatId;
+  matItems = matItems.filter(i=>i.id!==idToDelete);
+  const ok = await fsDeleteItem('materials', idToDelete);
+  if(!ok){ alert('刪除失敗,請檢查網路連線後再試一次。'); }
   closeMatForm();
   renderMatAll();
 }
@@ -2724,7 +2866,8 @@ async function quickDeleteMat(id, ev){
   if(!isAdmin()) return;
   if(!confirm('確定要刪除此品項嗎?此動作無法復原。')) return;
   matItems = matItems.filter(i=>i.id!==id);
-  await saveMatItems();
+  const ok = await fsDeleteItem('materials', id);
+  if(!ok){ alert('刪除失敗,請檢查網路連線後再試一次。'); }
   renderMatAll();
 }
 document.getElementById('matSearch').addEventListener('input', renderMatTable);
@@ -2742,16 +2885,13 @@ let editingSmpId = null;
 let pendingSmpId = null;
 
 async function loadSmpItems(){
-  try{
-    const res = await window.storage.get(SMP_STORAGE_KEY, true);
-    smpItems = res && res.value ? JSON.parse(res.value) : [];
-  }catch(e){ smpItems = []; }
+  smpItems = await fsGetAll('samples');
   document.getElementById('smpLoadingNotice').style.display = 'none';
   renderSmpAll();
 }
 async function saveSmpItems(){
-  try{ await window.storage.set(SMP_STORAGE_KEY, JSON.stringify(smpItems), true); }
-  catch(e){ alert('儲存失敗,請檢查網路連線後再試一次。'); }
+  const ok = await fsReplaceAll('samples', smpItems);
+  if(!ok) alert('儲存失敗,請檢查網路連線後再試一次。');
 }
 const SMP_FIELD_IDS = [
   's_import_material','s_name_zh','s_species','s_source','s_acquired_date','s_acquired_unknown','s_part',
@@ -3020,7 +3160,7 @@ function openSmpDetail(id){
   document.getElementById('sd_photoWrap').innerHTML = photos.map(src=>`<img src="${src}" style="max-width:120px;max-height:120px;border-radius:8px;border:1px solid var(--line);cursor:zoom-in;object-fit:cover;" onclick="openLightbox('${src}')">`).join('');
   const qrTarget = document.getElementById('sdQrTarget');
   qrTarget.innerHTML = '';
-  new QRCode(qrTarget, { text: 'SMP:' + item.id, width: 108, height: 108, colorDark: '#1B4B43', colorLight: '#ffffff' });
+  new QRCode(qrTarget, { text: buildItemUrl('smp', item.id), width: 200, height: 200, colorDark: '#1B4B43', colorLight: '#ffffff' });
   document.getElementById('smpEditFromDetailBtn').onclick = ()=>{ closeSmpDetail(); openSmpForm(item.id); };
   document.getElementById('smpDuplicateBtn').onclick = ()=> duplicateSmpItem(item.id);
   document.getElementById('smpDownloadQrFromDetailBtn').onclick = ()=>{
@@ -3068,6 +3208,7 @@ async function duplicateSmpItem(id){
   document.getElementById('mc_container').value = src.moisture?.container ?? '';
   updateMoistureCalc();
   updateSampleId();
+  saveSmpDraftDebounced();
   alert('已複製這筆樣品的資料到新增表單,萃取物重量/絕乾重/萃取率留空讓你重新填,記得確認分離部等欄位後再儲存。');
 }
 async function openSmpForm(id){
@@ -3136,8 +3277,31 @@ async function openSmpForm(id){
     document.getElementById('smpSaveBtn').style.display = editable ? 'inline-block' : 'none';
     document.getElementById('clearSmpBtn').style.display = editable ? 'inline-block' : 'none';
     document.getElementById('smpDeleteBtn').style.display = isAdmin() ? 'inline-block' : 'none';
+
+    document.getElementById('smpQrSection').style.display = 'block';
+    document.getElementById('smpQrIdLabel').textContent = item.id;
+    const smpQrTarget = document.getElementById('smpQrTarget');
+    smpQrTarget.innerHTML = '';
+    new QRCode(smpQrTarget, { text: buildItemUrl('smp', item.id), width: 200, height: 200, colorDark: '#1B4B43', colorLight: '#ffffff' });
+    setTimeout(()=>{
+      const el = smpQrTarget.querySelector('canvas') || smpQrTarget.querySelector('img');
+      if(el){ el.style.width = '84px'; el.style.height = '84px'; }
+    }, 30);
+    document.getElementById('smpDownloadQrBtn').onclick = ()=>{
+      setTimeout(()=>{
+        const canvas = smpQrTarget.querySelector('canvas');
+        const imgEl = smpQrTarget.querySelector('img');
+        const src = canvas ? canvas.toDataURL('image/png') : (imgEl ? imgEl.src : null);
+        if(!src) return;
+        const a = document.createElement('a');
+        a.href = src;
+        a.download = `QR_${item.name_zh || item.species}_${item.id}.png`;
+        a.click();
+      }, 50);
+    };
   }else{
     document.getElementById('smpCreatorBanner').style.display = 'none';
+    document.getElementById('smpQrSection').style.display = 'none';
     SMP_FIELD_IDS.forEach(fid=> document.getElementById(fid).disabled = false);
     document.getElementById('smpSaveBtn').style.display = 'inline-block';
     document.getElementById('clearSmpBtn').style.display = 'inline-block';
@@ -3200,7 +3364,8 @@ async function handleSmpSave(){
   };
   if(editingSmpId){ smpItems[smpItems.findIndex(i=>i.id===editingSmpId)] = data; }
   else{ smpItems.push(data); }
-  await saveSmpItems();
+  const ok = await fsSetItem('samples', data);
+  if(!ok){ alert('儲存失敗,請檢查網路連線後再試一次。'); return; }
   if(!editingSmpId) await clearDraft(SMP_DRAFT_KEY);
   closeSmpForm();
   renderSmpAll();
@@ -3208,8 +3373,10 @@ async function handleSmpSave(){
 async function handleSmpDelete(){
   if(!editingSmpId || !isAdmin()) return;
   if(!confirm('確定要刪除此品項嗎?此動作無法復原。')) return;
-  smpItems = smpItems.filter(i=>i.id!==editingSmpId);
-  await saveSmpItems();
+  const idToDelete = editingSmpId;
+  smpItems = smpItems.filter(i=>i.id!==idToDelete);
+  const ok = await fsDeleteItem('samples', idToDelete);
+  if(!ok){ alert('刪除失敗,請檢查網路連線後再試一次。'); }
   closeSmpForm();
   renderSmpAll();
 }
@@ -3259,7 +3426,8 @@ async function quickDeleteSmp(id, ev){
   if(!isAdmin()) return;
   if(!confirm('確定要刪除此品項嗎?此動作無法復原。')) return;
   smpItems = smpItems.filter(i=>i.id!==id);
-  await saveSmpItems();
+  const ok = await fsDeleteItem('samples', id);
+  if(!ok){ alert('刪除失敗,請檢查網路連線後再試一次。'); }
   renderSmpAll();
 }
 document.getElementById('smpSearch').addEventListener('input', renderSmpTable);
@@ -3382,21 +3550,19 @@ document.getElementById('smpImportJsonInput').addEventListener('change', (e)=>{
   e.target.value = '';
 });
 
+['photoPreview','m_photoPreview','mc_photoPreview','s_photoExtractPreview','s_photoBottlePreview'].forEach(id=>{
+  const el = document.getElementById(id);
+  if(el){
+    el.style.cursor = 'zoom-in';
+    el.addEventListener('click', ()=>{ if(el.src) openLightbox(el.src); });
+  }
+});
+
 /* ======================================================
    藥品使用登記(與藥品庫存連動)
 ====================================================== */
-const CUL_KEY = 'chem-usage-logs-data';
 let culItems = [];
-async function loadCulItems(){
-  try{
-    const res = await window.storage.get(CUL_KEY, true);
-    culItems = res && res.value ? JSON.parse(res.value) : [];
-  }catch(e){ culItems = []; }
-}
-async function saveCulItems(){
-  try{ await window.storage.set(CUL_KEY, JSON.stringify(culItems), true); return true; }
-  catch(e){ return false; }
-}
+async function loadCulItems(){ culItems = await fsGetAll('chem-usage-logs'); }
 function populateCulChemSelect(){
   const sel = document.getElementById('cul_chem');
   sel.innerHTML = '<option value="">請選擇藥品</option>' + items.slice().sort((a,b)=>(a.name_zh||'').localeCompare(b.name_zh||'','zh-Hant')).map(i=>`<option value="${i.id}">${escapeHtml(i.name_zh)}(現有 ${i.quantity ?? '-'} ${escapeHtml(i.unit||'')})</option>`).join('');
@@ -3450,10 +3616,10 @@ document.getElementById('culSaveBtn').addEventListener('click', async ()=>{
   };
   const newQty = (Number(chem.quantity)||0) - amount;
   chem.quantity = newQty < 0 ? 0 : Math.round(newQty*1000)/1000;
+  const ok1 = await fsSetItem('chemicals', chem);
+  const ok2 = await fsSetItem('chem-usage-logs', log);
+  if(!ok1 || !ok2){ alert('儲存失敗,請檢查網路連線後再試一次。'); return; }
   culItems.push(log);
-  const ok1 = await saveItems();
-  const ok2 = await saveCulItems();
-  if(ok2===false){ alert('儲存失敗,請檢查網路連線後再試一次。'); }
   closeCulForm();
   renderAll();
   renderCulAll();
@@ -3462,7 +3628,7 @@ async function quickDeleteCul(id){
   if(!isAdmin()) return;
   if(!confirm('確定要刪除這筆使用登記嗎?此動作不會自動恢復庫存,如需要請手動調整藥品存量。')) return;
   culItems = culItems.filter(i=>i.id!==id);
-  await saveCulItems();
+  await fsDeleteItem('chem-usage-logs', id);
   renderCulAll();
 }
 function renderCulAll(){
@@ -3545,18 +3711,8 @@ async function saveCustomInstruments(){
   catch(e){ return false; }
 }
 function INSTRUMENTS_ALL(){ return INSTRUMENTS_BUILTIN.concat(customInstruments); }
-const IUL_KEY = 'instrument-reservations-data';
 let iulItems = [];
-async function loadIulItems(){
-  try{
-    const res = await window.storage.get(IUL_KEY, true);
-    iulItems = res && res.value ? JSON.parse(res.value) : [];
-  }catch(e){ iulItems = []; }
-}
-async function saveIulItems(){
-  try{ await window.storage.set(IUL_KEY, JSON.stringify(iulItems), true); return true; }
-  catch(e){ return false; }
-}
+async function loadIulItems(){ iulItems = await fsGetAll('instrument-reservations'); }
 function populateIulInstrumentSelect(){
   const sel = document.getElementById('iul_instrument');
   const rooms = ['602','603'];
@@ -3609,9 +3765,9 @@ document.getElementById('iulSaveBtn').addEventListener('click', async ()=>{
     user_code: (currentUser && currentUser.code) || null,
     created_at: new Date().toISOString()
   };
+  const ok = await fsSetItem('instrument-reservations', rec);
+  if(!ok){ alert('儲存失敗,請檢查網路連線後再試一次。'); return; }
   iulItems.push(rec);
-  const ok = await saveIulItems();
-  if(!ok){ alert('儲存失敗,請檢查網路連線後再試一次。'); }
   closeIulForm();
   renderIulAll();
 });
@@ -3622,7 +3778,7 @@ async function quickDeleteIul(id){
   if(!canCancel){ alert('只有本人或管理員能取消這筆預約。'); return; }
   if(!confirm('確定要取消這筆預約嗎?')) return;
   iulItems = iulItems.filter(i=>i.id!==id);
-  await saveIulItems();
+  await fsDeleteItem('instrument-reservations', id);
   renderIulAll();
 }
 function renderIulAll(){
@@ -3706,131 +3862,6 @@ function showIulCalendarDay(date){
   document.getElementById('iulCalendarDayDetail').innerHTML = `<div class="today-card"><div class="day-label">${date}</div>${rows}</div>`;
 }
 
-
-
-/* ======================================================
-   軟體備份提醒
-====================================================== */
-const SB_CYCLE_6MO = ['LCMS','GCMS','FTIR','TGA','DSC','UV-Vis','冷光光譜儀','ELISA-Reader'];
-const SB_CYCLE_12MO = ['LC-4250','LC-IR','LC-半製備級_1','LC-半製備級_2','螢光光譜儀'];
-const SB_ROOM = {LCMS:'602',GCMS:'602',FTIR:'602',TGA:'602',DSC:'602','UV-Vis':'602','螢光光譜儀':'602','LC-4250':'603','LC-IR':'603','LC-半製備級_1':'603','LC-半製備級_2':'603','冷光光譜儀':'603','ELISA-Reader':'603'};
-const SB_KEY = 'software-backup-data';
-let sbData = {};
-async function loadSbData(){
-  try{
-    const res = await window.storage.get(SB_KEY, true);
-    sbData = res && res.value ? JSON.parse(res.value) : {};
-  }catch(e){ sbData = {}; }
-}
-async function saveSbData(){
-  try{ await window.storage.set(SB_KEY, JSON.stringify(sbData), true); }catch(e){}
-}
-function addMonths(dateStr, months){
-  const d = new Date(dateStr+'T00:00:00');
-  d.setMonth(d.getMonth()+months);
-  return d.toISOString().slice(0,10);
-}
-function sbEnsureEntry(instrument){
-  if(!sbData[instrument]) sbData[instrument] = { last_backup:null, logs:[] };
-  if(!sbData[instrument].logs) sbData[instrument].logs = [];
-  return sbData[instrument];
-}
-function sbRecalcLast(instrument){
-  const entry = sbEnsureEntry(instrument);
-  const dates = entry.logs.map(l=>l.date).filter(Boolean).sort();
-  entry.last_backup = dates.length ? dates[dates.length-1] : null;
-}
-let sbFormInstrument = null;
-function markBackedUp(instrument){
-  if(!isAdmin()) return;
-  sbFormInstrument = instrument;
-  document.getElementById('sbFormTitle').textContent = `標記已備份 · ${instrument}`;
-  document.getElementById('sb_filename').value = '';
-  document.querySelectorAll('.sb_include').forEach(cb=>cb.checked=false);
-  document.getElementById('sb_date').value = new Date().toISOString().slice(0,10);
-  document.getElementById('sbFormOverlay').classList.add('show');
-}
-document.getElementById('sbFormClose').addEventListener('click', ()=> document.getElementById('sbFormOverlay').classList.remove('show'));
-document.getElementById('sbFormCancelBtn').addEventListener('click', ()=> document.getElementById('sbFormOverlay').classList.remove('show'));
-document.getElementById('sbFormSaveBtn').addEventListener('click', async ()=>{
-  const date = document.getElementById('sb_date').value;
-  if(!date){ alert('請填寫備份日期'); return; }
-  const includes = [...document.querySelectorAll('.sb_include:checked')].map(cb=>cb.value);
-  if(!includes.length){ alert('請至少勾選一項備份內容(Ghost/VM/資料)'); return; }
-  const entry = sbEnsureEntry(sbFormInstrument);
-  entry.logs.push({ id: genId(entry.logs,'SBL'), date, filename: document.getElementById('sb_filename').value.trim(), includes, by:(currentUser&&currentUser.code)||null });
-  sbRecalcLast(sbFormInstrument);
-  await saveSbData();
-  document.getElementById('sbFormOverlay').classList.remove('show');
-  renderSbTable();
-});
-async function undoBackupLog(instrument, logId){
-  if(!isAdmin()) return;
-  if(!confirm('確定要刪除這筆備份紀錄嗎?')) return;
-  const entry = sbEnsureEntry(instrument);
-  entry.logs = entry.logs.filter(l=>l.id!==logId);
-  sbRecalcLast(instrument);
-  await saveSbData();
-  renderSbTable();
-}
-function renderSbLogTable(){
-  const tbody = document.getElementById('sbLogTbody');
-  const rows = [];
-  Object.keys(sbData).forEach(name=>{
-    (sbData[name].logs||[]).forEach(log=> rows.push({ name, ...log }));
-  });
-  rows.sort((a,b)=> b.date.localeCompare(a.date));
-  tbody.innerHTML = '';
-  document.getElementById('sbLogEmptyState').style.display = rows.length ? 'none' : 'block';
-  rows.forEach(r=>{
-    const tr = document.createElement('tr');
-    tr.className = 'row';
-    tr.innerHTML = `
-      <td data-label="儀器"><b>${escapeHtml(r.name)}</b></td>
-      <td data-label="日期">${escapeHtml(r.date)}</td>
-      <td data-label="檔名">${escapeHtml(r.filename||'-')}</td>
-      <td data-label="內容">${(r.includes||[]).map(i=>`<span class="plain-tag">${escapeHtml(i)}</span>`).join(' ')}</td>
-      <td class="cell-actions">${isAdmin() ? `<button class="btn btn-ghost btn-sm btn-row-delete" onclick="undoBackupLog('${escapeHtml(r.name)}','${r.id}')">刪除</button>` : ''}</td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
-function renderSbTable(){
-  const fRoom = document.getElementById('sbFilterRoom').value;
-  const rows = [...SB_CYCLE_6MO.map(n=>({name:n,cycle:6})), ...SB_CYCLE_12MO.map(n=>({name:n,cycle:12}))]
-    .filter(r=> !fRoom || SB_ROOM[r.name]===fRoom.replace('室',''))
-    .sort((a,b)=>a.name.localeCompare(b.name));
-  const today = new Date().toISOString().slice(0,10);
-  let overdue=0, soon=0;
-  const tbody = document.getElementById('sbTbody');
-  tbody.innerHTML = '';
-  rows.forEach(r=>{
-    const rec = sbData[r.name];
-    const last = rec && rec.last_backup ? rec.last_backup : null;
-    const next = last ? addMonths(last, r.cycle) : null;
-    let statusHtml, statusRank = 2;
-    if(!last){ statusHtml = '<span class="plain-tag">尚無紀錄</span>'; statusRank=1; }
-    else if(next < today){ statusHtml = '<span class="haz-tag" style="background:#B23A2E;">已逾期</span>'; statusRank=0; overdue++; }
-    else if(addMonths(today,-1) > addMonths(next,-2)){ statusHtml = '<span class="haz-tag" style="background:#A9631C;">即將到期</span>'; statusRank=1; soon++; }
-    else{ statusHtml = '<span class="haz-tag" style="background:#1E8449;">正常</span>'; statusRank=2; }
-    const tr = document.createElement('tr');
-    tr.className = 'row';
-    tr.innerHTML = `
-      <td data-label="儀器"><b>${escapeHtml(r.name)}</b></td>
-      <td data-label="實驗室"><span class="plain-tag">${escapeHtml(SB_ROOM[r.name])}室</span></td>
-      <td data-label="備份週期">${r.cycle}個月一次</td>
-      <td data-label="上次備份">${escapeHtml(last||'-')}</td>
-      <td data-label="下次到期">${escapeHtml(next||'-')}</td>
-      <td data-label="狀態">${statusHtml}</td>
-      <td class="cell-actions">${isAdmin() ? `<button class="btn btn-ghost btn-sm" onclick="markBackedUp('${escapeHtml(r.name)}')">新增備份紀錄</button>` : ''}</td>
-    `;
-    tbody.appendChild(tr);
-  });
-  document.getElementById('sbStatOverdue').textContent = overdue;
-  document.getElementById('sbStatSoon').textContent = soon;
-  renderSbLogTable();
-}
-document.getElementById('sbFilterRoom').addEventListener('change', renderSbTable);
 
 /* ======================================================
    值週生工作日程
@@ -3971,20 +4002,134 @@ document.getElementById('drWeeklyTbody').addEventListener('change', async (e)=>{
 });
 
 /* ======================================================
+   軟體備份提醒
+====================================================== */
+const SB_CYCLE_6MO = ['LCMS','GCMS','FTIR','TGA','DSC','UV-Vis','冷光光譜儀','ELISA-Reader'];
+const SB_CYCLE_12MO = ['LC-4250','LC-IR','LC-半製備級_1','LC-半製備級_2','螢光光譜儀'];
+const SB_ROOM = {LCMS:'602',GCMS:'602',FTIR:'602',TGA:'602',DSC:'602','UV-Vis':'602','螢光光譜儀':'602','LC-4250':'603','LC-IR':'603','LC-半製備級_1':'603','LC-半製備級_2':'603','冷光光譜儀':'603','ELISA-Reader':'603'};
+const SB_KEY = 'software-backup-data';
+let sbData = {};
+async function loadSbData(){
+  try{
+    const res = await window.storage.get(SB_KEY, true);
+    sbData = res && res.value ? JSON.parse(res.value) : {};
+  }catch(e){ sbData = {}; }
+}
+async function saveSbData(){
+  try{ await window.storage.set(SB_KEY, JSON.stringify(sbData), true); }catch(e){}
+}
+function addMonths(dateStr, months){
+  const d = new Date(dateStr+'T00:00:00');
+  d.setMonth(d.getMonth()+months);
+  return d.toISOString().slice(0,10);
+}
+function sbEnsureEntry(instrument){
+  if(!sbData[instrument]) sbData[instrument] = { last_backup:null, logs:[] };
+  if(!sbData[instrument].logs) sbData[instrument].logs = [];
+  return sbData[instrument];
+}
+function sbRecalcLast(instrument){
+  const entry = sbEnsureEntry(instrument);
+  const dates = entry.logs.map(l=>l.date).filter(Boolean).sort();
+  entry.last_backup = dates.length ? dates[dates.length-1] : null;
+}
+let sbFormInstrument = null;
+function markBackedUp(instrument){
+  if(!isAdmin()) return;
+  sbFormInstrument = instrument;
+  document.getElementById('sbFormTitle').textContent = `標記已備份 · ${instrument}`;
+  document.getElementById('sb_filename').value = '';
+  document.querySelectorAll('.sb_include').forEach(cb=>cb.checked=false);
+  document.getElementById('sb_date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('sbFormOverlay').classList.add('show');
+}
+document.getElementById('sbFormClose').addEventListener('click', ()=> document.getElementById('sbFormOverlay').classList.remove('show'));
+document.getElementById('sbFormCancelBtn').addEventListener('click', ()=> document.getElementById('sbFormOverlay').classList.remove('show'));
+document.getElementById('sbFormSaveBtn').addEventListener('click', async ()=>{
+  const date = document.getElementById('sb_date').value;
+  if(!date){ alert('請填寫備份日期'); return; }
+  const includes = [...document.querySelectorAll('.sb_include:checked')].map(cb=>cb.value);
+  if(!includes.length){ alert('請至少勾選一項備份內容(Ghost/VM/資料)'); return; }
+  const entry = sbEnsureEntry(sbFormInstrument);
+  entry.logs.push({ id: genId(entry.logs,'SBL'), date, filename: document.getElementById('sb_filename').value.trim(), includes, by:(currentUser&&currentUser.code)||null });
+  sbRecalcLast(sbFormInstrument);
+  await saveSbData();
+  document.getElementById('sbFormOverlay').classList.remove('show');
+  renderSbTable();
+});
+async function undoBackupLog(instrument, logId){
+  if(!isAdmin()) return;
+  if(!confirm('確定要刪除這筆備份紀錄嗎?')) return;
+  const entry = sbEnsureEntry(instrument);
+  entry.logs = entry.logs.filter(l=>l.id!==logId);
+  sbRecalcLast(instrument);
+  await saveSbData();
+  renderSbTable();
+}
+function renderSbLogTable(){
+  const tbody = document.getElementById('sbLogTbody');
+  const rows = [];
+  Object.keys(sbData).forEach(name=>{
+    (sbData[name].logs||[]).forEach(log=> rows.push({ name, ...log }));
+  });
+  rows.sort((a,b)=> b.date.localeCompare(a.date));
+  tbody.innerHTML = '';
+  document.getElementById('sbLogEmptyState').style.display = rows.length ? 'none' : 'block';
+  rows.forEach(r=>{
+    const tr = document.createElement('tr');
+    tr.className = 'row';
+    tr.innerHTML = `
+      <td data-label="儀器"><b>${escapeHtml(r.name)}</b></td>
+      <td data-label="日期">${escapeHtml(r.date)}</td>
+      <td data-label="檔名">${escapeHtml(r.filename||'-')}</td>
+      <td data-label="內容">${(r.includes||[]).map(i=>`<span class="plain-tag">${escapeHtml(i)}</span>`).join(' ')}</td>
+      <td class="cell-actions">${isAdmin() ? `<button class="btn btn-ghost btn-sm btn-row-delete" onclick="undoBackupLog('${escapeHtml(r.name)}','${r.id}')">刪除</button>` : ''}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+function renderSbTable(){
+  const fRoom = document.getElementById('sbFilterRoom').value;
+  const rows = [...SB_CYCLE_6MO.map(n=>({name:n,cycle:6})), ...SB_CYCLE_12MO.map(n=>({name:n,cycle:12}))]
+    .filter(r=> !fRoom || SB_ROOM[r.name]===fRoom.replace('室',''))
+    .sort((a,b)=>a.name.localeCompare(b.name));
+  const today = new Date().toISOString().slice(0,10);
+  let overdue=0, soon=0;
+  const tbody = document.getElementById('sbTbody');
+  tbody.innerHTML = '';
+  rows.forEach(r=>{
+    const rec = sbData[r.name];
+    const last = rec && rec.last_backup ? rec.last_backup : null;
+    const next = last ? addMonths(last, r.cycle) : null;
+    let statusHtml, statusRank = 2;
+    if(!last){ statusHtml = '<span class="plain-tag">尚無紀錄</span>'; statusRank=1; }
+    else if(next < today){ statusHtml = '<span class="haz-tag" style="background:#B23A2E;">已逾期</span>'; statusRank=0; overdue++; }
+    else if(addMonths(today,-1) > addMonths(next,-2)){ statusHtml = '<span class="haz-tag" style="background:#A9631C;">即將到期</span>'; statusRank=1; soon++; }
+    else{ statusHtml = '<span class="haz-tag" style="background:#1E8449;">正常</span>'; statusRank=2; }
+    const tr = document.createElement('tr');
+    tr.className = 'row';
+    tr.innerHTML = `
+      <td data-label="儀器"><b>${escapeHtml(r.name)}</b></td>
+      <td data-label="實驗室"><span class="plain-tag">${escapeHtml(SB_ROOM[r.name])}室</span></td>
+      <td data-label="備份週期">${r.cycle}個月一次</td>
+      <td data-label="上次備份">${escapeHtml(last||'-')}</td>
+      <td data-label="下次到期">${escapeHtml(next||'-')}</td>
+      <td data-label="狀態">${statusHtml}</td>
+      <td class="cell-actions">${isAdmin() ? `<button class="btn btn-ghost btn-sm" onclick="markBackedUp('${escapeHtml(r.name)}')">新增備份紀錄</button>` : ''}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+  document.getElementById('sbStatOverdue').textContent = overdue;
+  document.getElementById('sbStatSoon').textContent = soon;
+  renderSbLogTable();
+}
+document.getElementById('sbFilterRoom').addEventListener('change', renderSbTable);
+
+/* ======================================================
    待辦事項
 ====================================================== */
-const TODO_KEY = 'todo-items-data';
 let todoItems = [];
-async function loadTodoItems(){
-  try{
-    const res = await window.storage.get(TODO_KEY, true);
-    todoItems = res && res.value ? JSON.parse(res.value) : [];
-  }catch(e){ todoItems = []; }
-}
-async function saveTodoItems(){
-  try{ await window.storage.set(TODO_KEY, JSON.stringify(todoItems), true); return true; }
-  catch(e){ return false; }
-}
+async function loadTodoItems(){ todoItems = await fsGetAll('todo-items'); }
 function openTodoForm(){
   document.getElementById('todo_title').value = '';
   document.getElementById('todo_date').value = '';
@@ -4015,9 +4160,9 @@ document.getElementById('todoSaveBtn').addEventListener('click', async ()=>{
     created_at: new Date().toISOString(),
     done_at: null
   };
+  const ok = await fsSetItem('todo-items', item);
+  if(!ok){ alert('儲存失敗,請檢查網路連線後再試一次。'); return; }
   todoItems.push(item);
-  const ok = await saveTodoItems();
-  if(!ok){ alert('儲存失敗,請檢查網路連線後再試一次。'); }
   closeTodoForm();
   renderTodoAll();
 });
@@ -4026,13 +4171,13 @@ async function toggleTodoDone(id, done){
   if(!item) return;
   item.done = done;
   item.done_at = done ? new Date().toISOString() : null;
-  await saveTodoItems();
+  await fsSetItem('todo-items', item);
   renderTodoAll();
 }
 async function quickDeleteTodo(id){
   if(!confirm('確定要刪除這項工作嗎?')) return;
   todoItems = todoItems.filter(i=>i.id!==id);
-  await saveTodoItems();
+  await fsDeleteItem('todo-items', id);
   renderTodoAll();
 }
 function todoVisibleToMe(item){
@@ -4154,7 +4299,6 @@ document.getElementById('todoViewAllBtn').addEventListener('click', ()=>{ render
 document.getElementById('todoListClose').addEventListener('click', ()=> document.getElementById('todoListOverlay').classList.remove('show'));
 document.getElementById('todoFilterStatus').addEventListener('change', renderTodoFullList);
 
-
 /* ======================================================
    儀器說明書(標籤卡+說明書+維修紀錄)
 ====================================================== */
@@ -4209,7 +4353,7 @@ function openImDetail(name){
     ? `<button class="btn btn-ghost btn-sm btn-row-delete" onclick="deleteCustomInstrument('${escapeHtml(name)}')">刪除這台儀器</button>` : '';
   const qrTarget = document.getElementById('imQrTarget');
   qrTarget.innerHTML = '';
-  new QRCode(qrTarget, { text: 'INSTR:' + name, width: 200, height: 200, colorDark: '#1B4B43', colorLight: '#ffffff' });
+  new QRCode(qrTarget, { text: buildItemUrl('instr', name), width: 200, height: 200, colorDark: '#1B4B43', colorLight: '#ffffff' });
   document.getElementById('imDetailOverlay').classList.add('show');
 }
 document.getElementById('imDetailClose').addEventListener('click', ()=> document.getElementById('imDetailOverlay').classList.remove('show'));
@@ -4336,21 +4480,11 @@ const CP_STAGE_ORDER = ['pending','quoted','reviewed','ordered','delivered','rea
 const CP_STAGE_LABEL = { pending:'待購買', quoted:'已詢價待審核', reviewed:'已審核待訂購', ordered:'已訂購', delivered:'已到貨', ready:'等待入庫', cancelled:'都不買' };
 const CP_STAGE_CLASS = { pending:'cp-col-pending', quoted:'cp-col-quoted', reviewed:'cp-col-reviewed', ordered:'cp-col-ordered', delivered:'cp-col-delivered', ready:'cp-col-ready' };
 const CP_STAGE_BADGE = { pending:'#6B6B63', quoted:'#A9631C', reviewed:'#6B4FA0', ordered:'#1B4B8A', delivered:'#1E7A8A', ready:'#1E8449', cancelled:'#8A2E2E' };
-const CP_KEY = 'chem-purchases-data';
 let cpItems = [];
 let editingCpId = null;
 let cpActionId = null; // 目前正在標記訂購/到貨的項目
 let cpDetailId = null;
-async function loadCpItems(){
-  try{
-    const res = await window.storage.get(CP_KEY, true);
-    cpItems = res && res.value ? JSON.parse(res.value) : [];
-  }catch(e){ cpItems = []; }
-}
-async function saveCpItems(){
-  try{ await window.storage.set(CP_KEY, JSON.stringify(cpItems), true); return true; }
-  catch(e){ return false; }
-}
+async function loadCpItems(){ cpItems = await fsGetAll('chem-purchases'); }
 
 function cpCardLabel(item){
   const sizePart = item.pack || (item.package_sizes||[]).join('/');
@@ -4399,10 +4533,10 @@ document.getElementById('cpSaveBtn').addEventListener('click', async ()=>{
     created_by: existing ? existing.created_by : ((currentUser&&currentUser.code)||null),
     created_at: existing ? existing.created_at : new Date().toISOString()
   };
+  const ok = await fsSetItem('chem-purchases', item);
+  if(!ok){ alert('儲存失敗,請檢查網路連線後再試一次。'); return; }
   if(editingCpId){ cpItems = cpItems.map(i=>i.id===editingCpId?item:i); }
   else{ cpItems.push(item); }
-  const ok = await saveCpItems();
-  if(!ok){ alert('儲存失敗,請檢查網路連線後再試一次。'); }
   closeCpForm();
   renderCpKanban();
 });
@@ -4411,7 +4545,7 @@ document.getElementById('cpDeleteBtn').addEventListener('click', async ()=>{
   if(!confirm('確定要刪除這筆待購買項目嗎?此動作無法復原。')) return;
   const id = editingCpId;
   cpItems = cpItems.filter(i=>i.id!==id);
-  await saveCpItems();
+  await fsDeleteItem('chem-purchases', id);
   closeCpForm();
   renderCpKanban();
 });
@@ -4419,7 +4553,7 @@ async function quickDeleteCp(id){
   if(!isAdmin()) return;
   if(!confirm('確定要刪除這筆待購買項目嗎?此動作無法復原。')) return;
   cpItems = cpItems.filter(i=>i.id!==id);
-  await saveCpItems();
+  await fsDeleteItem('chem-purchases', id);
   closeCpDetail();
   renderCpKanban();
 }
@@ -4491,7 +4625,7 @@ async function cpStepBack(id){
   const idx = CP_STAGE_ORDER.indexOf(item.status);
   if(idx<=0) return;
   item.status = CP_STAGE_ORDER[idx-1];
-  await saveCpItems();
+  await fsSetItem('chem-purchases', item);
   closeCpDetail();
   renderCpKanban();
 }
@@ -4502,7 +4636,7 @@ async function cpCancelItem(id){
   if(!item) return;
   item.prev_status = item.status;
   item.status = 'cancelled';
-  await saveCpItems();
+  await fsSetItem('chem-purchases', item);
   closeCpDetail();
   renderCpKanban();
 }
@@ -4511,7 +4645,7 @@ async function cpRestoreItem(id){
   const item = cpItems.find(i=>i.id===id);
   if(!item) return;
   item.status = item.prev_status || 'pending';
-  await saveCpItems();
+  await fsSetItem('chem-purchases', item);
   renderCpKanban();
 }
 
@@ -4542,7 +4676,7 @@ document.getElementById('cpOrderSaveBtn').addEventListener('click', async ()=>{
   item.pack = document.getElementById('cpo_pack').value.trim();
   item.order_sent_date = date;
   item.status = 'ordered';
-  const ok = await saveCpItems();
+  const ok = await fsSetItem('chem-purchases', item);
   if(!ok){ alert('儲存失敗,請檢查網路連線後再試一次。'); }
   document.getElementById('cpOrderOverlay').classList.remove('show');
   renderCpKanban();
@@ -4564,7 +4698,7 @@ document.getElementById('cpReceiveSaveBtn').addEventListener('click', async ()=>
   item.received_date = date;
   item.sds_date = document.getElementById('cpr_sds_date').value || null;
   item.status = 'delivered';
-  const ok = await saveCpItems();
+  const ok = await fsSetItem('chem-purchases', item);
   if(!ok){ alert('儲存失敗,請檢查網路連線後再試一次。'); }
   document.getElementById('cpReceiveOverlay').classList.remove('show');
   renderCpKanban();
@@ -4574,7 +4708,7 @@ async function cpMarkReady(id){
   if(!item) return;
   item.ready_date = new Date().toISOString().slice(0,10);
   item.status = 'ready';
-  await saveCpItems();
+  await fsSetItem('chem-purchases', item);
   closeCpDetail();
   renderCpKanban();
 }
@@ -4599,7 +4733,7 @@ function quickAddCpToChem(id){
 async function removeCpAfterAdd(id){
   if(!id) return;
   cpItems = cpItems.filter(i=>i.id!==id);
-  await saveCpItems();
+  await fsDeleteItem('chem-purchases', id);
   renderCpKanban();
 }
 
@@ -4653,20 +4787,10 @@ function renderCpCancelledList(){
 /* ======================================================
    比價工具(卡片式主視覺 + 多規格 + Excel匯入 + 廠商分區結果表)
 ====================================================== */
-const CMP_KEY = 'price-comparisons-data';
 let cmpItems = [];
 let cmpCurrentId = null;
 const CMP_UNIT_OPTIONS = ['mL','L','g','kg'];
-async function loadCmpItems(){
-  try{
-    const res = await window.storage.get(CMP_KEY, true);
-    cmpItems = res && res.value ? JSON.parse(res.value) : [];
-  }catch(e){ cmpItems = []; }
-}
-async function saveCmpItems(){
-  try{ await window.storage.set(CMP_KEY, JSON.stringify(cmpItems), true); return true; }
-  catch(e){ return false; }
-}
+async function loadCmpItems(){ cmpItems = await fsGetAll('price-comparisons'); }
 
 function cmpEntryUnitPrice(entry){
   if(!entry) return null;
@@ -4828,7 +4952,7 @@ document.getElementById('cmpDetailSaveBtn').addEventListener('click', async ()=>
   };
   if(cmpCurrentId){ cmpItems = cmpItems.map(c=>c.id===cmpCurrentId?record:c); }
   else{ cmpItems.push(record); cmpCurrentId = record.id; }
-  const ok = await saveCmpItems();
+  const ok = await fsSetItem('price-comparisons', record);
   if(!ok){ alert('儲存失敗,請檢查網路連線後再試一次。'); }
   renderCmpCardGrid();
   if(cmpAllEntries(record).length){ cmpSwitchToResult(record); }
@@ -4900,7 +5024,7 @@ document.getElementById('cmpSubmitDecisionBtn').addEventListener('click', async 
   record.decided_vendor_key = vendorKey;
   record.decided_entry_idx = idx;
   record.addedToList = true;
-  await saveCmpItems();
+  await fsSetItem('price-comparisons', record);
 
   if(record.linked_cp_id){
     const item = cpItems.find(i=>i.id===record.linked_cp_id);
@@ -4910,7 +5034,7 @@ document.getElementById('cmpSubmitDecisionBtn').addEventListener('click', async 
       item.pack = packStr;
       if(entry.purity) item.purity = entry.purity;
       item.status = 'reviewed';
-      await saveCpItems();
+      await fsSetItem('chem-purchases', item);
     }
   }else{
     const newItem = {
@@ -4924,7 +5048,7 @@ document.getElementById('cmpSubmitDecisionBtn').addEventListener('click', async 
       created_by: (currentUser&&currentUser.code)||null, created_at: new Date().toISOString()
     };
     cpItems.push(newItem);
-    await saveCpItems();
+    await fsSetItem('chem-purchases', newItem);
   }
   document.getElementById('cmp_addedNote').textContent = `✅ 已送出審核:${record.decided_vendor},請到「已審核待訂購」欄位確認後標記已訂購。`;
   renderCmpResultTable(record);
@@ -4936,10 +5060,10 @@ document.getElementById('cmpCancelDecisionBtn').addEventListener('click', async 
   if(!confirm('確定這項不買了嗎?')) return;
   record.decided_vendor = '都不買';
   record.addedToList = true;
-  await saveCmpItems();
+  await fsSetItem('price-comparisons', record);
   if(record.linked_cp_id){
     const item = cpItems.find(i=>i.id===record.linked_cp_id);
-    if(item){ item.prev_status = item.status; item.status = 'cancelled'; await saveCpItems(); }
+    if(item){ item.prev_status = item.status; item.status = 'cancelled'; await fsSetItem('chem-purchases', item); }
   }
   document.getElementById('cmp_addedNote').textContent = '已標記為都不買。';
   renderCpKanban(); renderCmpCardGrid();
@@ -4957,10 +5081,10 @@ async function cpStartComparison(id){
     created_by: (currentUser&&currentUser.code)||null, created_at: new Date().toISOString()
   };
   cmpItems.push(record);
-  await saveCmpItems();
+  await fsSetItem('price-comparisons', record);
   item.status = 'quoted';
   item.comparison_id = record.id;
-  await saveCpItems();
+  await fsSetItem('chem-purchases', item);
   renderCpKanban();
   renderCmpCardGrid();
   openCmpDetail(record.id);
@@ -5013,26 +5137,22 @@ document.getElementById('cmpImportInput').addEventListener('change', (e)=>{
   e.target.value = '';
 });
 
+
 /* ======================================================
    帳號管理:全部資料匯出/匯入
 ====================================================== */
+const FULL_BACKUP_COLLECTIONS = {
+  chemicals: ()=>items, materials: ()=>matItems, samples: ()=>smpItems,
+  'chem-usage-logs': ()=>culItems, 'instrument-reservations': ()=>iulItems,
+  'todo-items': ()=>todoItems, 'chem-purchases': ()=>cpItems, 'price-comparisons': ()=>cmpItems
+};
 const FULL_BACKUP_BLOBS = {
-  [STORAGE_KEY]: ()=>items,
-  [MAT_STORAGE_KEY]: ()=>matItems,
-  [SMP_STORAGE_KEY]: ()=>smpItems,
-  [CUL_KEY]: ()=>culItems,
-  [IUL_KEY]: ()=>iulItems,
-  [TODO_KEY]: ()=>todoItems,
-  [CP_KEY]: ()=>cpItems,
-  [CMP_KEY]: ()=>cmpItems,
-  [ACCOUNTS_KEY]: ()=>accounts,
-  [DR_KEY]: ()=>drData,
-  [IM_KEY]: ()=>imData,
-  [CUSTOM_INSTRUMENTS_KEY]: ()=>customInstruments,
-  [SB_KEY]: ()=>sbData
+  [ACCOUNTS_KEY]: ()=>accounts, [DR_KEY]: ()=>drData, [IM_KEY]: ()=>imData,
+  [CUSTOM_INSTRUMENTS_KEY]: ()=>customInstruments, [SB_KEY]: ()=>sbData
 };
 document.getElementById('fullExportBtn').addEventListener('click', ()=>{
-  const payload = { version:1, exported_at: new Date().toISOString(), blobs:{} };
+  const payload = { version:1, exported_at: new Date().toISOString(), collections:{}, blobs:{} };
+  Object.keys(FULL_BACKUP_COLLECTIONS).forEach(k=> payload.collections[k] = FULL_BACKUP_COLLECTIONS[k]());
   Object.keys(FULL_BACKUP_BLOBS).forEach(k=> payload.blobs[k] = FULL_BACKUP_BLOBS[k]());
   const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
   const a = document.createElement('a');
@@ -5050,11 +5170,14 @@ document.getElementById('fullImportInput').addEventListener('change', (e)=>{
     let payload;
     try{ payload = JSON.parse(ev.target.result); }
     catch(err){ alert('檔案格式錯誤,無法解析JSON。'); return; }
-    if(!payload.blobs){ alert('這個檔案看起來不是全部資料備份檔。'); return; }
+    if(!payload.collections || !payload.blobs){ alert('這個檔案看起來不是全部資料備份檔。'); return; }
     if(!confirm('確定要匯入嗎?這會完全覆蓋目前所有的藥品/試材/樣品/帳號等資料,此動作無法復原,建議先自己另外備份一份現有資料再匯入。')) return;
     const status = document.getElementById('fullBackupStatus');
     status.textContent = '匯入中,請稍候...';
     try{
+      for(const key of Object.keys(FULL_BACKUP_COLLECTIONS)){
+        if(payload.collections[key]) await fsReplaceAll(key, payload.collections[key]);
+      }
       for(const key of Object.keys(FULL_BACKUP_BLOBS)){
         if(payload.blobs[key] !== undefined) await window.storage.set(key, JSON.stringify(payload.blobs[key]), true);
       }
@@ -5170,7 +5293,6 @@ function renderDashboard(){
 }
 document.getElementById('navDashboard').addEventListener('click', renderDashboard);
 
-
 (async function init(){
   await loadCurrentUser();
   await loadItems();
@@ -5193,5 +5315,8 @@ document.getElementById('navDashboard').addEventListener('click', renderDashboar
   renderImGrid();
   renderCpKanban();
   renderDashboard();
+  tryDeepLink();
 })();
 </script>
+</body>
+</html>
