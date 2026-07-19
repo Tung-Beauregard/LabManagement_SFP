@@ -3,8 +3,10 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>SFPLAB 實驗室管理系統 · Firebase Auth UID 版</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1B4B43">
+<title>SFPLAB 實驗室管理系統</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
@@ -25,6 +27,8 @@
   }
   *{box-sizing:border-box;}
   body{margin:0;font-family:var(--sans);background:var(--bg);color:var(--ink);}
+  .topbar-mobile{display:none;} /* 桌機隱藏,680px 以下由 media query 改回 flex */
+  :focus-visible{outline:2px solid var(--pine);outline-offset:2px;border-radius:4px;}
 
   /* ---- layout / sidebar ---- */
   .layout{display:flex;gap:24px;max-width:1280px;margin:0 auto;padding:28px 20px 80px;align-items:flex-start;}
@@ -397,10 +401,10 @@
   <div class="modal" style="max-width:380px;text-align:center;">
     <div style="font-size:28px;margin-bottom:6px;">🔬</div>
     <h2 style="margin-bottom:4px;">歡迎使用 SFPLAB</h2>
-    <div style="font-size:12px;color:var(--ink-soft);margin-bottom:18px;">使用 Firebase Authentication 的 Email 與密碼登入</div>
+    <div style="font-size:12px;color:var(--ink-soft);margin-bottom:18px;">請使用實驗室帳號登入</div>
     <div id="authStatus" style="display:none;font-size:12px;background:#F4E6D6;color:#8A4B12;border-radius:8px;padding:9px 10px;margin-bottom:12px;text-align:left;"></div>
 
-    <div id="loginPane">
+    <form id="loginPane">
       <div class="field" style="text-align:left;">
         <label>Email</label>
         <input type="email" id="login_email" autocomplete="username" placeholder="name@example.com">
@@ -409,12 +413,12 @@
         <label>密碼</label>
         <input type="password" id="login_password" autocomplete="current-password" placeholder="Firebase 密碼">
       </div>
-      <button class="btn btn-primary" id="loginSubmitBtn" style="width:100%;margin-top:6px;">登入</button>
+      <button class="btn btn-primary" id="loginSubmitBtn" type="submit" style="width:100%;margin-top:6px;">登入</button>
       <button class="btn btn-ghost" id="forgotPasswordBtn" type="button" style="width:100%;margin-top:8px;">忘記密碼／寄送重設信</button>
       <button class="btn btn-ghost" id="showRegisterBtn" type="button" style="width:100%;margin-top:8px;">還沒有帳號?註冊新帳號</button>
-    </div>
+    </form>
 
-    <div id="registerPane" style="display:none;">
+    <form id="registerPane" style="display:none;">
       <div class="field" style="text-align:left;">
         <label>Email *</label>
         <input type="email" id="reg_email" autocomplete="username" placeholder="name@example.com">
@@ -436,9 +440,9 @@
         <input type="password" id="reg_password2" autocomplete="new-password" placeholder="再輸入一次">
       </div>
       <div style="font-size:11px;color:var(--amber);margin-bottom:10px;text-align:left;">註冊後需由管理員啟用帳號才能進入系統。密碼由 Firebase Authentication 保管，管理員無法查看。</div>
-      <button class="btn btn-primary" id="registerSubmitBtn" style="width:100%;">建立帳號</button>
+      <button class="btn btn-primary" id="registerSubmitBtn" type="submit" style="width:100%;">建立帳號</button>
       <button class="btn btn-ghost" id="showLoginBtn" type="button" style="width:100%;margin-top:8px;">已經有帳號?返回登入</button>
-    </div>
+    </form>
   </div>
 </div>
 
@@ -2228,6 +2232,9 @@ function renderUserBadge(){
     document.getElementById(id).style.display = isAdmin() ? 'inline-block' : 'none';
   });
 }
+// 表單改用 <form> 讓 Enter 鍵可直接送出(瀏覽器會自動觸發 submit 按鈕的 click),這裡只需擋掉預設的頁面重整
+document.getElementById('loginPane').addEventListener('submit', e=> e.preventDefault());
+document.getElementById('registerPane').addEventListener('submit', e=> e.preventDefault());
 document.getElementById('showRegisterBtn').addEventListener('click', ()=> showLoginPane('register'));
 document.getElementById('showLoginBtn').addEventListener('click', ()=> showLoginPane('login'));
 document.getElementById('forgotPasswordBtn').addEventListener('click', async ()=>{
@@ -2536,7 +2543,7 @@ function renderTable(){
     tr.className = 'row';
     const isLow = item.low_threshold !== '' && item.low_threshold != null && Number(item.quantity) <= Number(item.low_threshold);
     tr.innerHTML = `
-      <td class="cell-thumb">${item.photo ? `<img class="thumb" src="${item.photo}" style="cursor:zoom-in;" onclick="event.stopPropagation();openLightbox('${item.photo}')">` : ''}</td>
+      <td class="cell-thumb">${item.photo ? `<img class="thumb" src="${item.photo}" style="cursor:zoom-in;" onclick="event.stopPropagation();openLightbox(this.src)">` : ''}</td>
       <td class="cell-name"><div class="name-block"><div class="name-zh">${escapeHtml(item.name_zh)}</div><div class="name-en">${escapeHtml(item.name_en||'')}</div></div></td>
       <td data-label="位置">${locTag(item.location)}</td>
       <td data-label="存量" class="${isLow?'qty-low':''}">${item.quantity ?? '-'} ${escapeHtml(item.unit||'')}</td>
@@ -2702,7 +2709,7 @@ function openDetail(id){
   const creatorAcc = findAccount(item.created_by);
   document.getElementById('d_creator').textContent = item.created_by ? (creatorAcc ? (creatorAcc.name||creatorAcc.code) : item.created_by) : '未知';
   document.getElementById('editFromDetailBtn').style.display = canEdit(item) ? 'inline-block' : 'none';
-  document.getElementById('d_photoWrap').innerHTML = item.photo ? `<img src="${item.photo}" style="max-width:100%;max-height:140px;border-radius:8px;border:1px solid var(--line);cursor:zoom-in;" onclick="openLightbox('${item.photo}')">` : '';
+  document.getElementById('d_photoWrap').innerHTML = item.photo ? `<img src="${item.photo}" style="max-width:100%;max-height:140px;border-radius:8px;border:1px solid var(--line);cursor:zoom-in;" onclick="openLightbox(this.src)">` : '';
   const topHaz = (item.hazards||[])[0];
   document.getElementById('detailStripe').style.background = topHaz ? ghsInfo(topHaz).color : '#B9C4BF';
   const qrTarget = document.getElementById('qrTarget');
@@ -2832,7 +2839,7 @@ function renderMatTable(){
     tr.className = 'row';
     const dateLabel = item.acquired_unknown ? '未知' : (item.acquired_date || '-');
     tr.innerHTML = `
-      <td class="cell-head">${item.photo ? `<img class="thumb" src="${item.photo}" style="cursor:zoom-in;" onclick="event.stopPropagation();openLightbox('${item.photo}')">` : ''}<div class="name-block"><div class="name-zh">${escapeHtml(item.species)}</div></div></td>
+      <td class="cell-head">${item.photo ? `<img class="thumb" src="${item.photo}" style="cursor:zoom-in;" onclick="event.stopPropagation();openLightbox(this.src)">` : ''}<div class="name-block"><div class="name-zh">${escapeHtml(item.species)}</div></div></td>
       <td data-label="編號"><span class="id-badge">${item.id}</span></td>
       <td data-label="物種">${escapeHtml(item.species)}</td>
       <td data-label="來源">${escapeHtml(item.source||'-')}</td>
@@ -2864,7 +2871,7 @@ function openMatDetail(id){
   document.getElementById('md_source').textContent = item.source || '-';
   document.getElementById('md_date').textContent = item.acquired_unknown ? '未知' : (item.acquired_date || '-');
   document.getElementById('md_note').textContent = item.note || '';
-  document.getElementById('md_photoWrap').innerHTML = item.photo ? `<img src="${item.photo}" style="max-width:100%;max-height:140px;border-radius:8px;border:1px solid var(--line);cursor:zoom-in;" onclick="openLightbox('${item.photo}')">` : '';
+  document.getElementById('md_photoWrap').innerHTML = item.photo ? `<img src="${item.photo}" style="max-width:100%;max-height:140px;border-radius:8px;border:1px solid var(--line);cursor:zoom-in;" onclick="openLightbox(this.src)">` : '';
   document.getElementById('md_use').textContent = item.intended_use || '-';
   const creatorAcc = findAccount(item.created_by);
   document.getElementById('md_creator').textContent = item.created_by ? (creatorAcc ? (creatorAcc.name||creatorAcc.code) : item.created_by) : '未知';
@@ -3308,7 +3315,7 @@ function openSmpDetail(id){
   document.getElementById('sd_owner').textContent = item.created_by || '-';
   document.getElementById('sd_acquired').textContent = item.acquired_unknown ? '未知' : (item.acquired_date || '-');
   const photos = [item.photo_extract, item.photo_bottle].filter(Boolean);
-  document.getElementById('sd_photoWrap').innerHTML = photos.map(src=>`<img src="${src}" style="max-width:120px;max-height:120px;border-radius:8px;border:1px solid var(--line);cursor:zoom-in;object-fit:cover;" onclick="openLightbox('${src}')">`).join('');
+  document.getElementById('sd_photoWrap').innerHTML = photos.map(src=>`<img src="${src}" style="max-width:120px;max-height:120px;border-radius:8px;border:1px solid var(--line);cursor:zoom-in;object-fit:cover;" onclick="openLightbox(this.src)">`).join('');
   const qrTarget = document.getElementById('sdQrTarget');
   qrTarget.innerHTML = '';
   new QRCode(qrTarget, { text: buildItemUrl('smp', item.id), width: 200, height: 200, colorDark: '#1B4B43', colorLight: '#ffffff' });
@@ -4649,7 +4656,7 @@ function renderImPhotoGallery(){
   const entry = ensureImEntry(imCurrentName);
   document.getElementById('im_photoGallery').innerHTML = entry.photos.map((src,idx)=>`
     <div style="position:relative;">
-      <img src="${src}" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--line);cursor:zoom-in;" onclick="openLightbox('${src}')">
+      <img src="${src}" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--line);cursor:zoom-in;" onclick="openLightbox(this.src)">
       ${isAdmin() ? `<button onclick="removeImPhoto(${idx})" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:#B23A2E;color:#fff;border:none;font-size:10px;cursor:pointer;">✕</button>` : ''}
     </div>
   `).join('');
@@ -4702,7 +4709,7 @@ function renderImMaintList(){
     <div class="today-card">
       <div class="day-label">${escapeHtml(m.date||'-')} · ${escapeHtml(m.by||'-')}</div>
       <div style="font-size:12.5px;margin-bottom:6px;">${escapeHtml(m.desc||'')}</div>
-      ${m.photo ? `<img src="${m.photo}" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--line);cursor:zoom-in;" onclick="openLightbox('${m.photo}')">` : ''}
+      ${m.photo ? `<img src="${m.photo}" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--line);cursor:zoom-in;" onclick="openLightbox(this.src)">` : ''}
       ${isAdmin() ? `<div style="margin-top:6px;"><button class="btn btn-ghost btn-sm btn-row-delete" onclick="removeImMaint('${m.id}')">刪除這筆</button></div>` : ''}
     </div>
   `).join('') : `<div class="slot-empty">還沒有維修紀錄</div>`;
