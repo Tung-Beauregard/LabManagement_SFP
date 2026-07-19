@@ -45,6 +45,7 @@
   .nav-todo .nav-badge{background:#B9C4BF;color:#3A433F;}
   .nav-item.active .nav-badge{background:rgba(255,255,255,.25);color:#fff;}
   .hamburger-btn{display:none;}
+  .visually-hidden-file{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
   .drawer-backdrop{display:none;}
   .drawer-close{display:none;}
   .user-badge{border-bottom:1px solid var(--line);padding:0 10px 12px;margin-bottom:8px;}
@@ -169,6 +170,11 @@
   .cp-card:hover{box-shadow:0 2px 6px rgba(0,0,0,.14);}
   .cp-col-empty{font-size:11px;color:var(--ink-soft);text-align:center;padding:10px 0;}
   @media (max-width: 900px){ .cp-kanban{grid-template-columns:1fr 1fr;} }
+  .im-card{border-radius:10px;padding:8px 6px;text-align:center;cursor:pointer;min-height:56px;display:flex;flex-direction:column;justify-content:center;transition:transform .12s;}
+  .im-card:active{transform:scale(.96);}
+  .im-card-name{font-size:11.5px;font-weight:700;color:var(--ink);line-height:1.25;word-break:break-word;}
+  .im-card-room{font-size:9.5px;color:var(--ink-soft);margin-top:2px;}
+  .im-card-badges{font-size:10px;margin-top:3px;}
 
   .dash-alert-row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:22px;}
   .dash-alert-pill{flex:1;min-width:150px;background:var(--panel);border-radius:14px;padding:16px 18px;cursor:pointer;border:1px solid var(--line);transition:transform .15s ease, box-shadow .15s ease;}
@@ -260,8 +266,9 @@
     .layout{flex-direction:column;padding:10px 10px 80px;gap:10px;}
 
     /* 精簡頂欄:漢堡按鈕 + 品牌 + 使用者頭像,取代原本橫向捲動的分頁列 */
-    .hamburger-btn{display:flex;align-items:center;justify-content:center;width:34px;height:34px;flex-shrink:0;border:1px solid var(--line);background:var(--panel);border-radius:8px;font-size:17px;color:var(--pine);cursor:pointer;}
-    .topbar-mobile{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:6px 10px;}
+    .hamburger-btn{display:flex;align-items:center;justify-content:center;width:46px;height:46px;flex-shrink:0;border:none;background:var(--pine);box-shadow:0 3px 10px rgba(27,75,67,.45);border-radius:12px;font-size:23px;color:#fff;cursor:pointer;}
+    .hamburger-btn:active{transform:scale(.94);}
+    .topbar-mobile{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:6px 10px;position:sticky;top:8px;z-index:60;box-shadow:0 2px 10px rgba(20,40,36,.08);}
     .topbar-mobile .brand-m{font-family:var(--mono);font-size:11.5px;letter-spacing:1px;color:var(--ink-soft);flex:1;}
     .topbar-mobile .avatar-m{width:28px;height:28px;border-radius:50%;background:var(--pine);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;cursor:pointer;}
 
@@ -468,8 +475,8 @@
       <button class="nav-item nav-wip" data-page="instrumentUsageLog"><span class="ic">🔧</span> 儀器使用登記<span class="nav-badge">開發中</span></button>
       <button class="nav-item nav-wip" data-page="dutyRoster"><span class="ic">🧹</span> 值週生<span class="nav-badge">開發中</span></button>
       <button class="nav-item nav-wip" data-page="todoList"><span class="ic">✅</span> 待辦事項<span class="nav-badge">開發中</span></button>
-      <button class="nav-item nav-wip" data-page="instrumentManual"><span class="ic">📖</span> 儀器說明書<span class="nav-badge">開發中</span></button>
-      <button class="nav-item nav-wip" data-page="chemPurchase"><span class="ic">🛒</span> 藥品購買<span class="nav-badge">開發中</span></button>
+      <button class="nav-item nav-wip" data-page="instrumentManual"><span class="ic">📖</span> 儀器使用步驟<span class="nav-badge">開發中</span></button>
+      <button class="nav-item nav-wip" data-page="chemPurchase"><span class="ic">🛒</span> 購買<span class="nav-badge">開發中</span></button>
       <div style="flex:1;"></div>
       <button class="nav-item nav-wip" data-page="softwareBackup"><span class="ic">💾</span> 軟體備份<span class="nav-badge">開發中</span></button>
       <button class="nav-item nav-item-admin-pinned" id="navAdmin" data-page="admin" style="display:none;"><span class="ic">👤</span> 帳號管理</button>
@@ -540,7 +547,7 @@
         <button class="btn btn-ghost" id="exportBtn">匯出 CSV</button>
         <button class="btn btn-ghost" id="chemExportJsonBtn">匯出備份</button>
         <button class="btn btn-ghost" id="chemImportJsonBtn">匯入備份</button>
-        <input type="file" id="chemImportJsonInput" accept="application/json" style="display:none;">
+        <input type="file" id="chemImportJsonInput" accept="application/json" class="visually-hidden-file">
         <button class="btn btn-primary" id="addBtn">＋ 新增藥品</button>
       </div>
 
@@ -584,7 +591,7 @@
         <button class="btn btn-ghost" id="matExportBtn">匯出 CSV</button>
         <button class="btn btn-ghost" id="matExportJsonBtn">匯出備份</button>
         <button class="btn btn-ghost" id="matImportJsonBtn">匯入備份</button>
-        <input type="file" id="matImportJsonInput" accept="application/json" style="display:none;">
+        <input type="file" id="matImportJsonInput" accept="application/json" class="visually-hidden-file">
         <button class="btn btn-primary" id="matAddBtn">＋ 新增試材</button>
       </div>
 
@@ -624,7 +631,7 @@
         <select id="smpFilterOwner"><option value="">所有持有人</option></select>
         <button class="btn btn-ghost" id="smpExportJsonBtn">匯出備份</button>
         <button class="btn btn-ghost" id="smpImportJsonBtn">匯入備份</button>
-        <input type="file" id="smpImportJsonInput" accept="application/json" style="display:none;">
+        <input type="file" id="smpImportJsonInput" accept="application/json" class="visually-hidden-file">
         <button class="btn btn-primary" id="smpAddBtn">＋ 新增樣品</button>
       </div>
 
@@ -668,10 +675,10 @@
 
       <div class="section-title" id="fullBackupSectionTitle" style="display:none;">全部資料備份(僅總管理員)</div>
       <div class="today-card" id="fullBackupCard" style="display:none;">
-        <div style="font-size:12px;color:var(--ink-soft);margin-bottom:10px;">匯出會把藥品/試材/樣品/帳號/待購買/比價/儀器說明書/值週生/待辦事項等所有資料打包成一個JSON檔案下載;匯入會用檔案內容整個覆蓋現有資料,請謹慎使用。</div>
+        <div style="font-size:12px;color:var(--ink-soft);margin-bottom:10px;">匯出會把藥品/試材/樣品/帳號/購買/比價/儀器使用步驟/值週生/待辦事項等所有資料打包成一個JSON檔案下載;匯入會用檔案內容整個覆蓋現有資料,請謹慎使用。</div>
         <button class="btn btn-primary btn-sm" id="fullExportBtn">⬇️ 匯出全部資料</button>
         <button class="btn btn-ghost btn-sm" id="fullImportBtn">⬆️ 匯入全部資料</button>
-        <input type="file" id="fullImportInput" accept=".json" style="display:none;">
+        <input type="file" id="fullImportInput" accept=".json" class="visually-hidden-file">
         <div id="fullBackupStatus" style="margin-top:8px;font-size:11.5px;color:var(--ink-soft);"></div>
       </div>
     </section>
@@ -720,7 +727,7 @@
         </div>
       </div>
       <div class="toolbar">
-        <select id="iulFilterRoom"><option value="">所有實驗室</option><option value="602">602室</option><option value="603">603室</option></select>
+        <select id="iulFilterRoom"><option value="">所有實驗室</option><option value="602">602室</option><option value="603">603室</option><option value="經德">經德</option><option value="林場">林場</option></select>
         <button class="btn btn-ghost" id="iulViewAllBtn">📋 查看所有預約</button>
         <button class="btn btn-primary" id="iulAddBtn">＋ 新增預約</button>
       </div>
@@ -753,15 +760,15 @@
     <section class="page" id="page-instrumentManual">
       <div class="hdr">
         <div>
-          <h1>儀器說明書</h1>
-          <div class="sub">SFPLAB · INSTRUMENT MANUALS</div>
+          <h1>儀器使用步驟</h1>
+          <div class="sub">SFPLAB · INSTRUMENT PROCEDURES</div>
         </div>
       </div>
       <div class="toolbar">
-        <select id="imFilterRoom"><option value="">所有實驗室</option><option value="602">602室</option><option value="603">603室</option></select>
+        <select id="imFilterRoom"><option value="">所有實驗室</option><option value="602">602室</option><option value="603">603室</option><option value="經德">經德</option><option value="林場">林場</option></select>
         <button class="btn btn-primary" id="imAddInstrumentBtn">＋ 新增儀器</button>
       </div>
-      <div id="imGrid" class="mini-calendar" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr));"></div>
+      <div id="imGrid" class="mini-calendar" style="grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px;"></div>
     </section>
 
     <!-- 新增儀器 -->
@@ -775,7 +782,7 @@
         </div>
         <div class="field">
           <label>實驗室 *</label>
-          <select id="im_new_room"><option value="602">602室</option><option value="603">603室</option></select>
+          <select id="im_new_room"><option value="602">602室</option><option value="603">603室</option><option value="經德">經德</option><option value="林場">林場</option></select>
         </div>
         <div style="font-size:11px;color:var(--ink-soft);margin-bottom:14px;">新增後會同步出現在「儀器使用登記」的可預約清單中。</div>
         <div class="modal-actions">
@@ -812,9 +819,9 @@
           <textarea id="im_notes" rows="4" placeholder="操作重點、SOP連結、注意事項等,自由填寫"></textarea>
         </div>
         <div id="im_photoGallery" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;"></div>
-        <div class="photo-drop" id="imManualPhotoDrop" style="margin-bottom:10px;">
-          <input type="file" id="imManualPhotoInput" accept="image/*" multiple style="display:none;">
-          <button class="btn btn-ghost btn-sm" type="button" onclick="document.getElementById('imManualPhotoInput').click()">📎 上傳說明書照片</button>
+        <div class="field">
+          <div class="photo-btn-row"><button type="button" class="btn btn-ghost btn-sm" id="imManualPhotoCam">📷 拍照</button><button type="button" class="btn btn-ghost btn-sm" id="imManualPhotoGal">🖼️ 選擇照片</button></div>
+          <input type="file" id="imManualPhotoInput" accept="image/*" capture="environment" multiple class="visually-hidden-file">
         </div>
         <button class="btn btn-primary btn-sm" id="imSaveNotesBtn">儲存說明書</button>
 
@@ -824,7 +831,11 @@
           <div><label style="font-size:12px;">日期</label><input type="date" id="im_maint_date"></div>
           <div><label style="font-size:12px;">說明</label><input type="text" id="im_maint_desc" placeholder="例如 更換幫浦"></div>
         </div>
-        <input type="file" id="im_maint_photo" accept="image/*" style="margin-bottom:10px;">
+        <div class="field">
+          <div class="photo-btn-row"><button type="button" class="btn btn-ghost btn-sm" id="imMaintPhotoCam">📷 拍照</button><button type="button" class="btn btn-ghost btn-sm" id="imMaintPhotoGal">🖼️ 選擇照片</button></div>
+          <input type="file" id="im_maint_photo" accept="image/*" capture="environment" class="visually-hidden-file">
+          <img id="im_maint_photoPreview" class="photo-preview" style="display:none;">
+        </div>
         <button class="btn btn-ghost btn-sm" id="imAddMaintBtn">＋ 新增維修紀錄</button>
       </div>
     </div>
@@ -924,12 +935,13 @@
     <section class="page" id="page-chemPurchase">
       <div class="hdr">
         <div>
-          <h1>藥品購買</h1>
+          <h1>購買</h1>
           <div class="sub">SFPLAB · PURCHASE PIPELINE</div>
         </div>
       </div>
       <div class="toolbar">
-        <button class="btn btn-primary" id="cpAddBtn">＋ 新增待購買項目</button>
+        <button class="btn btn-primary" id="cpAddChemBtn">🧪 藥品購買</button>
+        <button class="btn btn-primary" id="cpAddOtherBtn">🔧 耗材購買與儀器維護</button>
       </div>
       <div class="cp-kanban" id="cpKanban"></div>
 
@@ -967,29 +979,51 @@
       <div class="modal">
         <button class="close" id="cpFormClose">✕</button>
         <h2 id="cpFormTitle">新增待購買項目</h2>
-        <div class="field row2">
-          <div><label>藥品中文名稱 *</label><input type="text" id="cp_name_zh"></div>
-          <div><label>藥品英文名稱</label><input type="text" id="cp_name_en"></div>
-        </div>
-        <div class="field">
-          <label>CAS No.(選填)</label><input type="text" id="cp_cas" placeholder="例如 67-64-1">
-        </div>
-        <div class="field">
-          <label>需要的包裝(可複選)</label>
-          <div style="display:flex;flex-wrap:wrap;gap:10px;">
-            <label style="font-size:12.5px;"><input type="checkbox" value="100g以下" class="cp_pkg"> 100g以下</label>
-            <label style="font-size:12.5px;"><input type="checkbox" value="100~1000g" class="cp_pkg"> 100~1000g</label>
-            <label style="font-size:12.5px;"><input type="checkbox" value="1KG~5KG" class="cp_pkg"> 1KG~5KG</label>
-            <label style="font-size:12.5px;"><input type="checkbox" value="5~20KG" class="cp_pkg"> 5~20KG</label>
-          </div>
-        </div>
-        <div class="field">
-          <label>純度</label>
-          <select id="cp_purity">
-            <option value="工業級">工業級</option><option value="試藥級">試藥級</option>
-            <option value="LC級">LC級</option><option value="電子級">電子級</option><option value="其他">其他</option>
+        <div class="field" id="cp_type_wrap">
+          <label>類型</label>
+          <select id="cp_type">
+            <option value="chemical">藥品</option>
+            <option value="consumable">耗材</option>
+            <option value="instrument_maintenance">儀器維護</option>
           </select>
         </div>
+
+        <div id="cp_chemFields">
+          <div class="field row2">
+            <div><label>藥品中文名稱 *</label><input type="text" id="cp_name_zh"></div>
+            <div><label>藥品英文名稱</label><input type="text" id="cp_name_en"></div>
+          </div>
+          <div class="field">
+            <label>CAS No.(選填)</label><input type="text" id="cp_cas" placeholder="例如 67-64-1">
+          </div>
+          <div class="field">
+            <label>需要的包裝(可複選)</label>
+            <div style="display:flex;flex-wrap:wrap;gap:10px;">
+              <label style="font-size:12.5px;"><input type="checkbox" value="100g以下" class="cp_pkg"> 100g以下</label>
+              <label style="font-size:12.5px;"><input type="checkbox" value="100~1000g" class="cp_pkg"> 100~1000g</label>
+              <label style="font-size:12.5px;"><input type="checkbox" value="1KG~5KG" class="cp_pkg"> 1KG~5KG</label>
+              <label style="font-size:12.5px;"><input type="checkbox" value="5~20KG" class="cp_pkg"> 5~20KG</label>
+            </div>
+          </div>
+          <div class="field">
+            <label>純度</label>
+            <select id="cp_purity">
+              <option value="工業級">工業級</option><option value="試藥級">試藥級</option>
+              <option value="LC級">LC級</option><option value="電子級">電子級</option><option value="其他">其他</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="cp_consumableFields" style="display:none;">
+          <div class="field"><label>耗材名稱 *</label><input type="text" id="cp_consumable_name" placeholder="例如 GC進樣墊片"></div>
+          <div class="field"><label>規格/型號(選填)</label><input type="text" id="cp_consumable_spec" placeholder="例如 11mm藍蓋墊片"></div>
+        </div>
+
+        <div id="cp_instrumentFields" style="display:none;">
+          <div class="field"><label>儀器 *</label><select id="cp_instrument_select"></select></div>
+          <div class="field"><label>維護/維修需求說明</label><textarea id="cp_instrument_issue" rows="2" placeholder="例如 幫浦聲音異常,需要更換"></textarea></div>
+        </div>
+
         <div class="field">
           <label>備註</label>
           <textarea id="cp_note" rows="2"></textarea>
@@ -1045,7 +1079,7 @@
           <div class="toolbar" style="margin-bottom:10px;">
             <button class="btn btn-ghost btn-sm" id="cmpDownloadTemplateBtn">下載Excel範本</button>
             <button class="btn btn-ghost btn-sm" id="cmpImportBtn">📥 匯入Excel</button>
-            <input type="file" id="cmpImportInput" accept=".xlsx,.xls,.csv" style="display:none;">
+            <input type="file" id="cmpImportInput" accept=".xlsx,.xls,.csv" class="visually-hidden-file">
           </div>
           <div id="cmp_vendorBlocks"></div>
           <div style="font-size:11px;color:var(--ink-soft);margin:10px 0 14px;">同一家廠商可以有好幾種規格,點「＋新增規格」新增一列;純度、備註選填(例如分子篩的孔徑「3A, 1-2mm」可以寫在備註)。</div>
@@ -1301,7 +1335,7 @@
     <div class="field">
       <label>照片(藥品瓶身 / 存放位置)</label>
       <div class="photo-btn-row"><button type="button" class="btn btn-ghost btn-sm" id="photoDropCam">📷 拍照</button><button type="button" class="btn btn-ghost btn-sm" id="photoDropGal">🖼️ 選擇照片</button></div>
-      <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none;">
+      <input type="file" id="photoInput" accept="image/*" capture="environment" class="visually-hidden-file">
       <img id="photoPreview" class="photo-preview" style="display:none;">
     </div>
     <div class="modal-actions">
@@ -1434,7 +1468,7 @@
     <div class="field">
       <label>照片</label>
       <div class="photo-btn-row"><button type="button" class="btn btn-ghost btn-sm" id="m_photoDropCam">📷 拍照</button><button type="button" class="btn btn-ghost btn-sm" id="m_photoDropGal">🖼️ 選擇照片</button></div>
-      <input type="file" id="m_photoInput" accept="image/*" capture="environment" style="display:none;">
+      <input type="file" id="m_photoInput" accept="image/*" capture="environment" class="visually-hidden-file">
       <img id="m_photoPreview" class="photo-preview" style="display:none;">
     </div>
     <div class="modal-actions">
@@ -1607,7 +1641,7 @@
       <div class="field">
         <label>含水量照片</label>
         <div class="photo-btn-row"><button type="button" class="btn btn-ghost btn-sm" id="mc_photoDropCam">📷 拍照</button><button type="button" class="btn btn-ghost btn-sm" id="mc_photoDropGal">🖼️ 選擇照片</button></div>
-        <input type="file" id="mc_photoInput" accept="image/*" capture="environment" style="display:none;">
+        <input type="file" id="mc_photoInput" accept="image/*" capture="environment" class="visually-hidden-file">
         <img id="mc_photoPreview" class="photo-preview" style="display:none;">
       </div>
       <div class="calc-result">
@@ -1622,13 +1656,13 @@
     <div class="field">
       <label>萃取材照片</label>
       <div class="photo-btn-row"><button type="button" class="btn btn-ghost btn-sm" id="s_photoExtractDropCam">📷 拍照</button><button type="button" class="btn btn-ghost btn-sm" id="s_photoExtractDropGal">🖼️ 選擇照片</button></div>
-      <input type="file" id="s_photoExtractInput" accept="image/*" capture="environment" style="display:none;">
+      <input type="file" id="s_photoExtractInput" accept="image/*" capture="environment" class="visually-hidden-file">
       <img id="s_photoExtractPreview" class="photo-preview" style="display:none;">
     </div>
     <div class="field">
       <label>樣品瓶照片</label>
       <div class="photo-btn-row"><button type="button" class="btn btn-ghost btn-sm" id="s_photoBottleDropCam">📷 拍照</button><button type="button" class="btn btn-ghost btn-sm" id="s_photoBottleDropGal">🖼️ 選擇照片</button></div>
-      <input type="file" id="s_photoBottleInput" accept="image/*" capture="environment" style="display:none;">
+      <input type="file" id="s_photoBottleInput" accept="image/*" capture="environment" class="visually-hidden-file">
       <img id="s_photoBottlePreview" class="photo-preview" style="display:none;">
     </div>
 
@@ -3715,8 +3749,8 @@ let iulItems = [];
 async function loadIulItems(){ iulItems = await fsGetAll('instrument-reservations'); }
 function populateIulInstrumentSelect(){
   const sel = document.getElementById('iul_instrument');
-  const rooms = ['602','603'];
-  sel.innerHTML = rooms.map(r=>`<optgroup label="${r}室">${INSTRUMENTS_ALL().filter(i=>i.room===r).map(i=>`<option value="${escapeHtml(i.name)}">${escapeHtml(i.name)}</option>`).join('')}</optgroup>`).join('');
+  const rooms = [...new Set(INSTRUMENTS_ALL().map(i=>i.room))];
+  sel.innerHTML = rooms.map(r=>`<optgroup label="${/^\d+$/.test(r)?r+'室':r}">${INSTRUMENTS_ALL().filter(i=>i.room===r).map(i=>`<option value="${escapeHtml(i.name)}">${escapeHtml(i.name)}</option>`).join('')}</optgroup>`).join('');
 }
 function renderIulExistingForSelection(){
   const inst = document.getElementById('iul_instrument').value;
@@ -3803,7 +3837,7 @@ function renderIulAll(){
       <td data-label="日期">${escapeHtml(r.date)}</td>
       <td data-label="時段">${escapeHtml(r.start_time)}–${escapeHtml(r.end_time)}</td>
       <td data-label="儀器">${escapeHtml(r.instrument)}</td>
-      <td data-label="實驗室"><span class="plain-tag">${escapeHtml(r.room)}室</span></td>
+      <td data-label="實驗室"><span class="plain-tag">${roomLabel(r.room)}</span></td>
       <td data-label="用途">${escapeHtml(r.purpose||'-')}</td>
       <td data-label="預約人">${escapeHtml(r.user_code||'-')}</td>
       <td class="cell-actions">${(isAdmin()||(currentUser&&r.user_code===currentUser.code)) ? `<button class="btn btn-ghost btn-sm btn-row-delete" onclick="quickDeleteIul('${r.id}')" title="取消預約">✕</button>` : ''}</td>
@@ -3818,6 +3852,7 @@ document.getElementById('iulFilterRoom').addEventListener('change', renderIulAll
 document.getElementById('iulViewAllBtn').addEventListener('click', ()=> document.getElementById('iulListOverlay').classList.add('show'));
 document.getElementById('iulListClose').addEventListener('click', ()=> document.getElementById('iulListOverlay').classList.remove('show'));
 
+function roomLabel(room){ return /^\d+$/.test(room||'') ? room+'室' : (room||'-'); }
 function todayISO(offset){
   const d = new Date();
   d.setDate(d.getDate()+(offset||0));
@@ -3830,7 +3865,7 @@ function renderIulTodayTomorrow(){
   wrap.innerHTML = days.map(d=>{
     const list = iulItems.filter(r=> r.date===d.date && (!fRoom || r.room===fRoom)).sort((a,b)=>a.start_time.localeCompare(b.start_time));
     const rows = list.length
-      ? list.map(r=>`<div class="slot-row"><span>${escapeHtml(r.start_time)}–${escapeHtml(r.end_time)} · ${escapeHtml(r.instrument)}(${escapeHtml(r.room)}室)</span><span style="color:var(--ink-soft);">${escapeHtml(r.user_code||'-')}</span></div>`).join('')
+      ? list.map(r=>`<div class="slot-row"><span>${escapeHtml(r.start_time)}–${escapeHtml(r.end_time)} · ${escapeHtml(r.instrument)}(${roomLabel(r.room)})</span><span style="color:var(--ink-soft);">${escapeHtml(r.user_code||'-')}</span></div>`).join('')
       : `<div class="slot-empty">沒有預約</div>`;
     return `<div class="today-card"><div class="day-label">${d.label} · ${d.date}</div>${rows}</div>`;
   }).join('');
@@ -3857,7 +3892,7 @@ function showIulCalendarDay(date){
   const fRoom = document.getElementById('iulFilterRoom').value;
   const list = iulItems.filter(r=> r.date===date && (!fRoom || r.room===fRoom)).sort((a,b)=>a.start_time.localeCompare(b.start_time));
   const rows = list.length
-    ? list.map(r=>`<div class="slot-row"><span>${escapeHtml(r.start_time)}–${escapeHtml(r.end_time)} · ${escapeHtml(r.instrument)}(${escapeHtml(r.room)}室)</span><span style="color:var(--ink-soft);">${escapeHtml(r.user_code||'-')}</span></div>`).join('')
+    ? list.map(r=>`<div class="slot-row"><span>${escapeHtml(r.start_time)}–${escapeHtml(r.end_time)} · ${escapeHtml(r.instrument)}(${roomLabel(r.room)})</span><span style="color:var(--ink-soft);">${escapeHtml(r.user_code||'-')}</span></div>`).join('')
     : `<div class="slot-empty">這天沒有預約</div>`;
   document.getElementById('iulCalendarDayDetail').innerHTML = `<div class="today-card"><div class="day-label">${date}</div>${rows}</div>`;
 }
@@ -4321,6 +4356,8 @@ function ensureImEntry(name){
   if(!imData[name].maintenance) imData[name].maintenance = [];
   return imData[name];
 }
+const IM_ROOM_COLOR = { '602':'#DCEAF4', '603':'#E4F3E7', '經德':'#FBEFDB', '林場':'#EAE1F5' };
+function imRoomColor(room){ return IM_ROOM_COLOR[room] || '#F1F1EF'; }
 function renderImGrid(){
   const fRoom = document.getElementById('imFilterRoom').value;
   const list = INSTRUMENTS_ALL().filter(i=> !fRoom || i.room===fRoom).sort((a,b)=>a.room.localeCompare(b.room)||a.name.localeCompare(b.name));
@@ -4329,10 +4366,10 @@ function renderImGrid(){
     const entry = imData[inst.name];
     const hasNotes = entry && (entry.notes || (entry.photos&&entry.photos.length));
     const maintCount = entry && entry.maintenance ? entry.maintenance.length : 0;
-    return `<div class="cal-cell" style="min-height:76px;" onclick="openImDetail('${escapeHtml(inst.name)}')">
-      <div style="font-size:13px;font-weight:600;color:var(--ink);">${escapeHtml(inst.name)}</div>
-      <div class="cal-date" style="margin-top:2px;">${escapeHtml(inst.room)}室</div>
-      <div style="font-size:10px;color:var(--pine-deep);margin-top:4px;">${hasNotes?'📖 已建檔':''} ${maintCount?`🔧 ${maintCount}筆維修`:''}</div>
+    return `<div class="im-card" style="background:${imRoomColor(inst.room)};" onclick="openImDetail('${escapeHtml(inst.name)}')">
+      <div class="im-card-name">${escapeHtml(inst.name)}</div>
+      <div class="im-card-room">${roomLabel(inst.room)}</div>
+      ${(hasNotes||maintCount) ? `<div class="im-card-badges">${hasNotes?'📖':''}${maintCount?'🔧':''}</div>` : ''}
     </div>`;
   }).join('');
 }
@@ -4348,6 +4385,10 @@ function openImDetail(name){
   document.getElementById('im_notes').value = entry.notes || '';
   renderImPhotoGallery();
   renderImMaintList();
+  document.getElementById('im_maint_date').value = '';
+  document.getElementById('im_maint_desc').value = '';
+  document.getElementById('im_maint_photo').value = '';
+  document.getElementById('im_maint_photoPreview').style.display = 'none';
   const isCustom = customInstruments.some(i=>i.name===name);
   document.getElementById('imDeleteInstrumentWrap').innerHTML = (isCustom && isSuperAdmin())
     ? `<button class="btn btn-ghost btn-sm btn-row-delete" onclick="deleteCustomInstrument('${escapeHtml(name)}')">刪除這台儀器</button>` : '';
@@ -4379,6 +4420,8 @@ function renderImPhotoGallery(){
     </div>
   `).join('');
 }
+document.getElementById('imManualPhotoCam').addEventListener('click', ()=>{ const input = document.getElementById('imManualPhotoInput'); input.setAttribute('capture','environment'); input.click(); });
+document.getElementById('imManualPhotoGal').addEventListener('click', ()=>{ const input = document.getElementById('imManualPhotoInput'); input.removeAttribute('capture'); input.click(); });
 document.getElementById('imManualPhotoInput').addEventListener('change', (e)=>{
   const files = [...e.target.files];
   files.forEach(file=>{
@@ -4414,6 +4457,17 @@ function renderImMaintList(){
     </div>
   `).join('') : `<div class="slot-empty">還沒有維修紀錄</div>`;
 }
+document.getElementById('imMaintPhotoCam').addEventListener('click', ()=>{ const input = document.getElementById('im_maint_photo'); input.setAttribute('capture','environment'); input.click(); });
+document.getElementById('imMaintPhotoGal').addEventListener('click', ()=>{ const input = document.getElementById('im_maint_photo'); input.removeAttribute('capture'); input.click(); });
+document.getElementById('im_maint_photo').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  compressPhoto(file, (dataUrl)=>{
+    const preview = document.getElementById('im_maint_photoPreview');
+    preview.src = dataUrl;
+    preview.style.display = 'block';
+  });
+});
 document.getElementById('imAddMaintBtn').addEventListener('click', async ()=>{
   const date = document.getElementById('im_maint_date').value;
   const desc = document.getElementById('im_maint_desc').value.trim();
@@ -4428,6 +4482,7 @@ document.getElementById('imAddMaintBtn').addEventListener('click', async ()=>{
     document.getElementById('im_maint_date').value = '';
     document.getElementById('im_maint_desc').value = '';
     document.getElementById('im_maint_photo').value = '';
+    document.getElementById('im_maint_photoPreview').style.display = 'none';
     renderImMaintList();
     renderImGrid();
   };
@@ -4486,45 +4541,91 @@ let cpActionId = null; // 目前正在標記訂購/到貨的項目
 let cpDetailId = null;
 async function loadCpItems(){ cpItems = await fsGetAll('chem-purchases'); }
 
+const CP_TYPE_ICON = { chemical:'🧪', consumable:'📦', instrument_maintenance:'🔧' };
 function cpCardLabel(item){
+  const icon = CP_TYPE_ICON[item.type||'chemical'] || '';
+  if(item.type==='consumable'){
+    return `${icon}${item.name_zh}${item.pack?'-'+item.pack:''}`;
+  }
+  if(item.type==='instrument_maintenance'){
+    return `${icon}${item.name_zh}${item.note?'-'+item.note.slice(0,10):''}`;
+  }
   const sizePart = item.pack || (item.package_sizes||[]).join('/');
-  return `${item.purity||''}${item.name_zh}${sizePart?'-'+sizePart:''}`;
+  return `${icon}${item.purity||''}${item.name_zh}${sizePart?'-'+sizePart:''}`;
 }
 
 /* ---- 新增/編輯待購買項目 ---- */
-function openCpForm(id){
+function cpToggleTypeFields(type){
+  document.getElementById('cp_chemFields').style.display = type==='chemical' ? 'block' : 'none';
+  document.getElementById('cp_consumableFields').style.display = type==='consumable' ? 'block' : 'none';
+  document.getElementById('cp_instrumentFields').style.display = type==='instrument_maintenance' ? 'block' : 'none';
+}
+document.getElementById('cp_type').addEventListener('change', (e)=> cpToggleTypeFields(e.target.value));
+function openCpForm(id, defaultType){
   editingCpId = id || null;
   const item = id ? cpItems.find(i=>i.id===id) : null;
+  const type = item ? (item.type||'chemical') : (defaultType||'chemical');
   document.getElementById('cpFormTitle').textContent = item ? '編輯待購買項目' : '新增待購買項目';
-  document.getElementById('cp_name_zh').value = item ? item.name_zh||'' : '';
-  document.getElementById('cp_name_en').value = item ? item.name_en||'' : '';
-  document.getElementById('cp_cas').value = item ? item.cas||'' : '';
-  document.querySelectorAll('.cp_pkg').forEach(cb=>{ cb.checked = item ? (item.package_sizes||[]).includes(cb.value) : false; });
-  document.getElementById('cp_purity').value = item ? item.purity||'工業級' : '工業級';
-  document.getElementById('cp_note').value = item ? item.note||'' : '';
+  document.getElementById('cp_type').value = type;
+  document.getElementById('cp_type_wrap').style.display = item ? 'none' : 'block'; // 編輯時類型不給改,避免資料錯亂
+  cpToggleTypeFields(type);
+
+  document.getElementById('cp_name_zh').value = (item && type==='chemical') ? item.name_zh||'' : '';
+  document.getElementById('cp_name_en').value = (item && type==='chemical') ? item.name_en||'' : '';
+  document.getElementById('cp_cas').value = (item && type==='chemical') ? item.cas||'' : '';
+  document.querySelectorAll('.cp_pkg').forEach(cb=>{ cb.checked = (item && type==='chemical') ? (item.package_sizes||[]).includes(cb.value) : false; });
+  document.getElementById('cp_purity').value = (item && type==='chemical') ? item.purity||'工業級' : '工業級';
+
+  document.getElementById('cp_consumable_name').value = (item && type==='consumable') ? item.name_zh||'' : '';
+  document.getElementById('cp_consumable_spec').value = (item && type==='consumable') ? item.pack||'' : '';
+
+  const instSel = document.getElementById('cp_instrument_select');
+  instSel.innerHTML = INSTRUMENTS_ALL().map(i=>`<option value="${escapeHtml(i.name)}">${escapeHtml(i.name)}(${roomLabel(i.room)})</option>`).join('');
+  if(item && type==='instrument_maintenance') instSel.value = item.name_zh||'';
+  document.getElementById('cp_instrument_issue').value = (item && type==='instrument_maintenance') ? item.note||'' : '';
+
+  document.getElementById('cp_note').value = (item && type!=='instrument_maintenance') ? item.note||'' : '';
   document.getElementById('cpDeleteBtn').style.display = (item && isAdmin()) ? 'inline-block' : 'none';
   document.getElementById('cpDetailOverlay').classList.remove('show');
   document.getElementById('cpFormOverlay').classList.add('show');
 }
 function closeCpForm(){ document.getElementById('cpFormOverlay').classList.remove('show'); editingCpId = null; }
-document.getElementById('cpAddBtn').addEventListener('click', ()=> openCpForm(null));
+document.getElementById('cpAddChemBtn').addEventListener('click', ()=> openCpForm(null, 'chemical'));
+document.getElementById('cpAddOtherBtn').addEventListener('click', ()=> openCpForm(null, 'consumable'));
 document.getElementById('cpFormClose').addEventListener('click', closeCpForm);
 document.getElementById('cpCancelBtn').addEventListener('click', closeCpForm);
 document.getElementById('cpSaveBtn').addEventListener('click', async ()=>{
-  const name_zh = document.getElementById('cp_name_zh').value.trim();
-  if(!name_zh){ alert('請填寫藥品中文名稱'); return; }
-  const package_sizes = [...document.querySelectorAll('.cp_pkg:checked')].map(cb=>cb.value);
+  const type = document.getElementById('cp_type').value;
   const existing = editingCpId ? cpItems.find(i=>i.id===editingCpId) : null;
+  let name_zh, name_en='', cas='', package_sizes=[], purity='', pack='', note;
+
+  if(type==='chemical'){
+    name_zh = document.getElementById('cp_name_zh').value.trim();
+    if(!name_zh){ alert('請填寫藥品中文名稱'); return; }
+    name_en = document.getElementById('cp_name_en').value.trim();
+    cas = document.getElementById('cp_cas').value.trim();
+    package_sizes = [...document.querySelectorAll('.cp_pkg:checked')].map(cb=>cb.value);
+    purity = document.getElementById('cp_purity').value;
+    note = document.getElementById('cp_note').value.trim();
+  }else if(type==='consumable'){
+    name_zh = document.getElementById('cp_consumable_name').value.trim();
+    if(!name_zh){ alert('請填寫耗材名稱'); return; }
+    pack = document.getElementById('cp_consumable_spec').value.trim();
+    note = document.getElementById('cp_note').value.trim();
+  }else{
+    name_zh = document.getElementById('cp_instrument_select').value;
+    if(!name_zh){ alert('請選擇儀器'); return; }
+    note = document.getElementById('cp_instrument_issue').value.trim();
+  }
+
   const item = {
     id: editingCpId || genId(cpItems, 'CP'),
-    name_zh, name_en: document.getElementById('cp_name_en').value.trim(),
-    cas: document.getElementById('cp_cas').value.trim(),
-    package_sizes, purity: document.getElementById('cp_purity').value,
-    note: document.getElementById('cp_note').value.trim(),
+    type, name_zh, name_en, cas,
+    package_sizes, purity, pack: existing ? existing.pack||pack : pack,
+    note,
     status: existing ? existing.status : 'pending',
     vendor: existing ? existing.vendor : null,
     price: existing ? existing.price : null,
-    pack: existing ? existing.pack||'' : '',
     comparison_id: existing ? existing.comparison_id||null : null,
     order_sent_date: existing ? existing.order_sent_date : null,
     received_date: existing ? existing.received_date : null,
@@ -4607,7 +4708,13 @@ function openCpDetail(id){
     actions.push(`<button class="btn btn-primary btn-sm" onclick="cpMarkReady('${id}')">確認可入庫</button>`);
   }
   if(canAct && item.status==='ready'){
-    actions.push(`<button class="btn btn-primary btn-sm" onclick="quickAddCpToChem('${id}')">快速新增至藥品清單</button>`);
+    if(item.type==='instrument_maintenance'){
+      actions.push(`<button class="btn btn-primary btn-sm" onclick="cpLogMaintenance('${id}')">登記維修紀錄並完成</button>`);
+    }else if(item.type==='consumable'){
+      actions.push(`<button class="btn btn-primary btn-sm" onclick="cpArchiveConsumable('${id}')">確認入庫,完成</button>`);
+    }else{
+      actions.push(`<button class="btn btn-primary btn-sm" onclick="quickAddCpToChem('${id}')">快速新增至藥品清單</button>`);
+    }
   }
   if(isAdmin()){
     const idx = CP_STAGE_ORDER.indexOf(item.status);
@@ -4728,7 +4835,34 @@ function quickAddCpToChem(id){
     document.getElementById('f_grade').value = item.purity;
   }
   saveChemDraftDebounced();
-  alert('已將這筆待購買項目的資料帶入新增藥品表單,填完存量/位置等欄位後儲存即可。儲存成功後,這筆項目才會從「藥品購買」佇列移除,請記得回來確認。');
+  alert('已將這筆待購買項目的資料帶入新增藥品表單,填完存量/位置等欄位後儲存即可。儲存成功後,這筆項目才會從「購買」佇列移除,請記得回來確認。');
+}
+async function cpLogMaintenance(id){
+  const item = cpItems.find(i=>i.id===id);
+  if(!item) return;
+  if(!confirm(`確定要把這筆登記成「${item.name_zh}」的維修紀錄嗎?完成後會從購買清單移除。`)) return;
+  const entry = ensureImEntry(item.name_zh);
+  entry.maintenance.push({
+    id: genId(entry.maintenance, 'M'),
+    date: new Date().toISOString().slice(0,10),
+    desc: item.note || '(無說明)',
+    by: (currentUser&&currentUser.code)||null,
+    photo: null
+  });
+  await saveImData();
+  cpItems = cpItems.filter(i=>i.id!==id);
+  await fsDeleteItem('chem-purchases', id);
+  closeCpDetail();
+  renderCpKanban();
+  renderImGrid();
+  alert('已登記維修紀錄。');
+}
+async function cpArchiveConsumable(id){
+  if(!confirm('確定這筆耗材已經入庫完成了嗎?這會把它從清單移除。')) return;
+  cpItems = cpItems.filter(i=>i.id!==id);
+  await fsDeleteItem('chem-purchases', id);
+  closeCpDetail();
+  renderCpKanban();
 }
 async function removeCpAfterAdd(id){
   if(!id) return;
