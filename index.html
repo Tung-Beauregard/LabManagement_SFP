@@ -4191,7 +4191,7 @@ document.getElementById('culSaveBtn').addEventListener('click', async ()=>{
       tx.set(logRef, log);
     });
     chem.quantity = committedQty;
-    culItems.push(log);
+    if(!culItems.some(i=>i._doc_id===log._doc_id)) culItems.push(log);
     closeCulForm();
     renderAll();
     renderCulAll();
@@ -4353,7 +4353,7 @@ document.getElementById('iulSaveBtn').addEventListener('click', async ()=>{
   };
   const ok = await fsSetItem('instrument-reservations', rec);
   if(!ok){ alert('儲存失敗,請檢查網路連線後再試一次。'); return; }
-  iulItems.push(rec);
+  if(!iulItems.some(i=>i._doc_id===rec._doc_id)) iulItems.push(rec);
   closeIulForm();
   renderIulAll();
 });
@@ -4802,7 +4802,7 @@ document.getElementById('todoSaveBtn').addEventListener('click', async ()=>{
   };
   const ok = await fsSetItem('todo-items', item);
   if(!ok){ alert('儲存失敗,請檢查網路連線後再試一次。'); return; }
-  todoItems.push(item);
+  if(!todoItems.some(i=>i._doc_id===item._doc_id)) todoItems.push(item);
   closeTodoForm();
   renderTodoAll();
 });
