@@ -754,7 +754,7 @@
         <table>
           <thead>
             <tr>
-              <th></th><th>編號</th><th>物種</th><th>來源</th><th>部位</th><th>存放位置</th><th>取得日期</th><th>預計用途</th><th></th>
+              <th></th><th>中文名稱</th><th>物種</th><th>來源</th><th>部位</th><th>存放位置</th><th>取得日期</th><th>預計用途</th><th></th>
             </tr>
           </thead>
           <tbody id="matTbody"></tbody>
@@ -907,6 +907,11 @@
         <div><h1>總管理員功能</h1><div class="sub">SFPLAB · SUPER ADMIN SETTINGS</div></div>
       </div>
       <div class="management-grid">
+        <div class="management-card">
+          <h3>側邊欄頁籤排序</h3>
+          <div class="help">用「↑ ↓」調整左側頁籤的顯示順序,所有成員都會套用;軟體備份與管理員相關頁籤固定在底部,不參與排序。</div>
+          <div class="setting-list" id="saNavOrderList"></div>
+        </div>
         <div class="management-card">
           <h3>儀器清單</h3>
           <div class="help">新增或從系統清單移除儀器；歷史預約、維修與附件資料不會因移除而刪除。</div>
@@ -1793,7 +1798,10 @@
     </div>
     <div class="field row2">
       <div><label>物種 *</label><input type="text" id="m_species" list="speciesList" placeholder="例如 台灣土肉桂"><div style="font-size:11px;color:var(--ink-soft);margin-top:4px;">請填寫學名,例如 Acacia confusa;之前輸入過的物種會出現在下拉選單中</div></div>
-      <div><label>來源</label><input type="text" id="m_source" placeholder="例如 宜蘭 / 採集人"></div>
+      <div><label>中文名稱</label><input type="text" id="m_name_zh" placeholder="例如 相思樹"></div>
+    </div>
+    <div class="field">
+      <label>來源</label><input type="text" id="m_source" placeholder="例如 宜蘭 / 採集人">
     </div>
     <div class="field row2">
       <div>
@@ -2251,7 +2259,10 @@ function storageLabel(value){
 
 /* ---- 可由總管理員調整的系統清單 ---- */
 const SYSTEM_SETTINGS_KEY = 'system-settings-data';
-let systemSettings = { chem_locations:DEFAULT_CHEM_LOCATIONS.slice(), material_locations:DEFAULT_STORAGE_OPTIONS.map(o=>({...o})) };
+const DEFAULT_NAV_ORDER = [...document.querySelectorAll('.sidebar nav .nav-item[data-page]')]
+  .filter(b=>!b.classList.contains('nav-item-admin-pinned') && b.id!=='navSoftwareBackup')
+  .map(b=>b.dataset.page);
+let systemSettings = { chem_locations:DEFAULT_CHEM_LOCATIONS.slice(), material_locations:DEFAULT_STORAGE_OPTIONS.map(o=>({...o})), nav_order:[] };
 function normalizeSystemSettings(raw){
   const hasChem = !!(raw && Array.isArray(raw.chem_locations));
   const hasMat = !!(raw && Array.isArray(raw.material_locations));
@@ -2265,15 +2276,34 @@ function normalizeSystemSettings(raw){
     const label = String((o && typeof o==='object') ? (o.label||o.value||'') : (o||'')).trim();
     if(value && !seen.has(value)){ seen.add(value); cleanMat.push({value,label:label||value}); }
   });
+  const navRaw = (raw && Array.isArray(raw.nav_order)) ? raw.nav_order : [];
+  const cleanNav = [...new Set(navRaw.map(v=>String(v||'').trim()).filter(Boolean))];
   return {
     chem_locations: hasChem ? cleanChem : DEFAULT_CHEM_LOCATIONS.slice(),
-    material_locations: hasMat ? cleanMat : DEFAULT_STORAGE_OPTIONS.map(o=>({...o}))
+    material_locations: hasMat ? cleanMat : DEFAULT_STORAGE_OPTIONS.map(o=>({...o})),
+    nav_order: cleanNav
   };
+}
+function effectiveNavOrder(){
+  const saved = (systemSettings.nav_order||[]).filter(p=>DEFAULT_NAV_ORDER.includes(p));
+  const rest = DEFAULT_NAV_ORDER.filter(p=>!saved.includes(p));
+  return [...saved, ...rest];
+}
+function applyNavOrder(){
+  const nav = document.querySelector('.sidebar nav');
+  if(!nav) return;
+  const spacer = nav.querySelector(':scope > div');
+  if(!spacer) return;
+  effectiveNavOrder().forEach(page=>{
+    const btn = nav.querySelector(`.nav-item[data-page="${page}"]`);
+    if(btn) nav.insertBefore(btn, spacer);
+  });
 }
 function applySystemSettings(raw){
   systemSettings = normalizeSystemSettings(raw);
   CHEM_LOCATIONS = systemSettings.chem_locations.slice();
   STORAGE_OPTIONS = systemSettings.material_locations.map(o=>({...o}));
+  applyNavOrder();
 }
 async function loadSystemSettings(){
   const res = await window.storage.get(SYSTEM_SETTINGS_KEY, true);
@@ -3424,7 +3454,7 @@ function populateMatSelects(currentStorage){
   if(currentStorage && !options.some(o=>o.value===currentStorage)) options.push({value:currentStorage,label:`${currentStorage}（舊位置）`});
   document.getElementById('m_storage').innerHTML = '<option value="">請選擇位置</option>' + options.map(o=>`<option value="${escapeHtml(o.value)}">${escapeHtml(o.label)}</option>`).join('');
 }
-const MAT_FIELD_IDS = ['m_species','m_source','m_acquired_date','m_acquired_unknown','m_part','m_storage','m_use','m_note'];
+const MAT_FIELD_IDS = ['m_species','m_name_zh','m_source','m_acquired_date','m_acquired_unknown','m_part','m_storage','m_use','m_note'];
 const MAT_DRAFT_KEY = 'draft-material';
 const saveMatDraftDebounced = debounce(()=>{ if(!editingMatId) saveDraft(MAT_DRAFT_KEY, gatherMatDraft()); }, 700);
 function gatherMatDraft(){
@@ -3479,7 +3509,7 @@ function renderMatTable(){
       if(ownerKey!==fOwner) return false;
     }
     if(search){
-      const hay = [i.species, i.source, i.id].join(' ').toLowerCase();
+      const hay = [i.species, i.name_zh, i.source, i.id].join(' ').toLowerCase();
       if(!hay.includes(search)) return false;
     }
     return true;
@@ -3494,7 +3524,7 @@ function renderMatTable(){
     const dateLabel = item.acquired_unknown ? '未知' : (item.acquired_date || '-');
     tr.innerHTML = `
       <td class="cell-head">${item.photo ? `<img class="thumb" src="${item.photo}" style="cursor:zoom-in;" onclick="event.stopPropagation();openLightbox(this.src)">` : ''}<div class="name-block"><div class="name-zh">${escapeHtml(item.species)}</div></div></td>
-      <td data-label="編號"><span class="id-badge">${item.id}</span></td>
+      <td data-label="中文名稱">${escapeHtml(item.name_zh||'-')}</td>
       <td data-label="物種">${escapeHtml(item.species)}</td>
       <td data-label="來源">${escapeHtml(item.source||'-')}</td>
       <td data-label="部位">${item.part ? `<span class="plain-tag">${escapeHtml(item.part)}</span>` : '-'}</td>
@@ -3549,6 +3579,7 @@ async function openMatForm(id){
     const item = matItems.find(i=>i.id===id);
     document.getElementById('m_id').value = item.id;
     document.getElementById('m_species').value = item.species||'';
+    document.getElementById('m_name_zh').value = item.name_zh||'';
     document.getElementById('m_source').value = item.source||'';
     document.getElementById('m_acquired_date').value = item.acquired_date||'';
     document.getElementById('m_acquired_unknown').checked = !!item.acquired_unknown;
@@ -3584,7 +3615,7 @@ async function openMatForm(id){
     document.getElementById('clearMatBtn').style.display = 'inline-block';
     pendingMatId = genId(matItems, 'MAT');
     document.getElementById('m_id').value = pendingMatId;
-    ['m_species','m_source','m_acquired_date','m_part','m_storage','m_use','m_note'].forEach(id=>document.getElementById(id).value='');
+    ['m_species','m_name_zh','m_source','m_acquired_date','m_part','m_storage','m_use','m_note'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('m_acquired_unknown').checked = false;
     const draft = await loadDraft(MAT_DRAFT_KEY);
     applyMatDraft(draft);
@@ -3629,6 +3660,7 @@ async function handleMatSave(){
     id: recordId,
     _doc_id: existingItem ? existingItem._doc_id : null,
     species,
+    name_zh: document.getElementById('m_name_zh').value.trim(),
     source: document.getElementById('m_source').value.trim(),
     acquired_unknown: document.getElementById('m_acquired_unknown').checked,
     acquired_date: document.getElementById('m_acquired_unknown').checked ? '' : document.getElementById('m_acquired_date').value,
@@ -5597,13 +5629,32 @@ async function deleteInstrument(name){
 /* ====== 總管理員：儀器與位置清單 ====== */
 function renderSuperAdminTools(){
   if(!isSuperAdmin()) return;
+  const navOrder = effectiveNavOrder();
+  document.getElementById('saNavOrderList').innerHTML = navOrder.map((page,idx)=>{
+    const btn = document.querySelector(`.sidebar nav .nav-item[data-page="${page}"]`);
+    const label = btn ? btn.textContent.trim() : page;
+    return `<div class="setting-row"><span>${escapeHtml(label)}</span><div style="display:flex;gap:4px;"><button type="button" class="btn btn-ghost btn-sm" data-nav-move="up" data-nav-page="${escapeHtml(page)}" ${idx===0?'disabled':''}>↑</button><button type="button" class="btn btn-ghost btn-sm" data-nav-move="down" data-nav-page="${escapeHtml(page)}" ${idx===navOrder.length-1?'disabled':''}>↓</button></div></div>`;
+  }).join('');
   const instList = document.getElementById('saInstrumentList');
   instList.innerHTML = INSTRUMENTS_ALL().slice().sort((a,b)=>a.room.localeCompare(b.room)||a.name.localeCompare(b.name)).map(inst=>`
-    <div class="setting-row"><div><b>${escapeHtml(inst.name)}</b><div class="meta">${escapeHtml(roomLabel(inst.room))}${inst._custom?' · 自訂':' · 內建'}</div></div><button type="button" class="btn btn-ghost btn-sm btn-row-delete" data-delete-instrument="${escapeHtml(inst.name)}">刪除</button></div>`).join('') || '<div class="slot-empty">目前沒有儀器</div>';
-  document.getElementById('saChemLocationList').innerHTML = CHEM_LOCATIONS.map(loc=>`<div class="setting-row"><span>${escapeHtml(loc)}</span><button type="button" class="btn btn-ghost btn-sm btn-row-delete" data-delete-chem-location="${escapeHtml(loc)}">刪除</button></div>`).join('');
-  document.getElementById('saMatLocationList').innerHTML = STORAGE_OPTIONS.map(o=>`<div class="setting-row"><span>${escapeHtml(o.label)}</span><button type="button" class="btn btn-ghost btn-sm btn-row-delete" data-delete-mat-location="${escapeHtml(o.value)}">刪除</button></div>`).join('');
+    <div class="setting-row"><div><b>${escapeHtml(inst.name)}</b><div class="meta">${escapeHtml(roomLabel(inst.room))}${inst._custom?' · 自訂':' · 內建'}</div></div><div style="display:flex;gap:4px;"><button type="button" class="btn btn-ghost btn-sm" data-edit-instrument="${escapeHtml(inst.name)}">編輯</button><button type="button" class="btn btn-ghost btn-sm btn-row-delete" data-delete-instrument="${escapeHtml(inst.name)}">刪除</button></div></div>`).join('') || '<div class="slot-empty">目前沒有儀器</div>';
+  document.getElementById('saChemLocationList').innerHTML = CHEM_LOCATIONS.map(loc=>`<div class="setting-row"><span>${escapeHtml(loc)}</span><div style="display:flex;gap:4px;"><button type="button" class="btn btn-ghost btn-sm" data-edit-chem-location="${escapeHtml(loc)}">編輯</button><button type="button" class="btn btn-ghost btn-sm btn-row-delete" data-delete-chem-location="${escapeHtml(loc)}">刪除</button></div></div>`).join('');
+  document.getElementById('saMatLocationList').innerHTML = STORAGE_OPTIONS.map(o=>`<div class="setting-row"><span>${escapeHtml(o.label)}</span><div style="display:flex;gap:4px;"><button type="button" class="btn btn-ghost btn-sm" data-edit-mat-location="${escapeHtml(o.value)}">編輯</button><button type="button" class="btn btn-ghost btn-sm btn-row-delete" data-delete-mat-location="${escapeHtml(o.value)}">刪除</button></div></div>`).join('');
 }
+document.getElementById('saNavOrderList').addEventListener('click', async (e)=>{
+  const btn=e.target.closest('[data-nav-move]'); if(!btn||!isSuperAdmin()) return;
+  const page=btn.dataset.navPage, dir=btn.dataset.navMove;
+  const order=effectiveNavOrder();
+  const idx=order.indexOf(page); if(idx<0) return;
+  const swap = dir==='up' ? idx-1 : idx+1;
+  if(swap<0 || swap>=order.length) return;
+  [order[idx],order[swap]]=[order[swap],order[idx]];
+  systemSettings.nav_order=order;
+  await saveSystemSettings();
+});
 document.getElementById('saInstrumentList').addEventListener('click', (e)=>{
+  const editBtn=e.target.closest('[data-edit-instrument]');
+  if(editBtn){ imCurrentName=editBtn.dataset.editInstrument; openImEdit(); return; }
   const btn=e.target.closest('[data-delete-instrument]'); if(btn) deleteInstrument(btn.dataset.deleteInstrument);
 });
 document.getElementById('saChemLocationAdd').addEventListener('click', async ()=>{
@@ -5621,12 +5672,37 @@ document.getElementById('saMatLocationAdd').addEventListener('click', async ()=>
   systemSettings.material_locations.push({value,label:value}); input.value=''; await saveSystemSettings();
 });
 document.getElementById('saChemLocationList').addEventListener('click', async (e)=>{
+  const editBtn=e.target.closest('[data-edit-chem-location]');
+  if(editBtn && isSuperAdmin()){
+    const oldValue=editBtn.dataset.editChemLocation;
+    const input=prompt('修改位置名稱(只會更新選單名稱,既有藥品資料仍會顯示原本填寫的位置)', oldValue);
+    if(input===null) return;
+    const newValue=input.trim();
+    if(!newValue || newValue===oldValue) return;
+    if(CHEM_LOCATIONS.includes(newValue)){ alert('這個藥品位置已存在。'); return; }
+    systemSettings.chem_locations=systemSettings.chem_locations.map(v=>v===oldValue?newValue:v);
+    await saveSystemSettings();
+    return;
+  }
   const btn=e.target.closest('[data-delete-chem-location]'); if(!btn||!isSuperAdmin()) return;
   const value=btn.dataset.deleteChemLocation;
   if(!confirm(`確定從選單移除「${value}」嗎？既有藥品資料不會被修改。`)) return;
   systemSettings.chem_locations=systemSettings.chem_locations.filter(v=>v!==value); await saveSystemSettings();
 });
 document.getElementById('saMatLocationList').addEventListener('click', async (e)=>{
+  const editBtn=e.target.closest('[data-edit-mat-location]');
+  if(editBtn && isSuperAdmin()){
+    const value=editBtn.dataset.editMatLocation;
+    const input=prompt('修改位置名稱(既有試材會直接改用新名稱顯示)', storageLabel(value));
+    if(input===null) return;
+    const newLabel=input.trim();
+    if(!newLabel || newLabel===storageLabel(value)) return;
+    if(STORAGE_OPTIONS.some(o=>o.value!==value && o.label===newLabel)){ alert('這個試材位置名稱已存在。'); return; }
+    systemSettings.material_locations=systemSettings.material_locations.map(o=>o.value===value?{...o,label:newLabel}:o);
+    await saveSystemSettings();
+    renderMatAll();
+    return;
+  }
   const btn=e.target.closest('[data-delete-mat-location]'); if(!btn||!isSuperAdmin()) return;
   const value=btn.dataset.deleteMatLocation;
   if(!confirm(`確定從選單移除「${storageLabel(value)}」嗎？既有試材資料不會被修改。`)) return;
@@ -5710,7 +5786,8 @@ document.getElementById('imEditSaveBtn').addEventListener('click', async ()=>{
     imCurrentName = newName;
     document.getElementById('imEditOverlay').classList.remove('show');
     renderImGrid();
-    openImDetail(newName);
+    if(document.getElementById('imDetailOverlay').classList.contains('show')) openImDetail(newName);
+    if(isSuperAdmin()) renderSuperAdminTools();
     showToast('✅ 儀器已更新');
   }catch(err){
     alert('儲存失敗:' + (err && err.message ? err.message : err));
