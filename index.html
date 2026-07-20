@@ -1874,31 +1874,24 @@ async function fsDeleteItem(collectionName, id, docId){
 }
 async function fsReplaceAll(collectionName, itemsArray){
   try{
-    const snap = await db.collection(collectionName).get();
-    const existingIds = snap.docs.map(d=>d.id);
-    if(existingIds.length + itemsArray.length <= 450){
-      const batch = db.batch();
-      existingIds.forEach(id=>batch.delete(db.collection(collectionName).doc(id)));
-      itemsArray.forEach(item=>{
-        const docId = item._doc_id || db.collection(collectionName).doc().id;
-        item._doc_id = docId;
-        batch.set(db.collection(collectionName).doc(docId), item);
-      });
-      await batch.commit();
-      return true;
-    }
-    for(let i=0;i<existingIds.length;i+=400){
-      const batch = db.batch();
-      existingIds.slice(i,i+400).forEach(id => batch.delete(db.collection(collectionName).doc(id)));
-      await batch.commit();
-    }
+    // 階段1:先寫入(upsert)全部新資料。就算中途斷線,舊資料也還在,只是混著部分新資料,重跑匯入即可補齊。
+    const newIds = new Set();
     for(let i=0;i<itemsArray.length;i+=400){
       const batch = db.batch();
-      itemsArray.slice(i,i+400).forEach(item =>{
+      itemsArray.slice(i,i+400).forEach(item=>{
         const docId = item._doc_id || db.collection(collectionName).doc().id;
         item._doc_id = docId;
+        newIds.add(docId);
         batch.set(db.collection(collectionName).doc(docId), item);
       });
+      await batch.commit();
+    }
+    // 階段2:全部寫入成功後,才刪除不在新清單中的舊文件。
+    const snap = await db.collection(collectionName).get();
+    const staleIds = snap.docs.map(d=>d.id).filter(id=>!newIds.has(id));
+    for(let i=0;i<staleIds.length;i+=400){
+      const batch = db.batch();
+      staleIds.slice(i,i+400).forEach(id => batch.delete(db.collection(collectionName).doc(id)));
       await batch.commit();
     }
     return true;
@@ -4314,9 +4307,6 @@ async function loadDrData(){
   const res = await window.storage.get(DR_KEY, true);
   drData = res && res.value ? JSON.parse(res.value) : {};
 }
-async function saveDrData(){
-  try{ await window.storage.set(DR_KEY, JSON.stringify(drData), true); }catch(e){}
-}
 function getISOWeekInfo(offsetWeeks){
   const now = new Date();
   const monday = new Date(now);
@@ -4333,18 +4323,39 @@ function getISOWeekInfo(offsetWeeks){
   return { monday, sunday, weekKey, label: `${tmp.getFullYear()} 第${weekNo}週(${fmt(monday)}–${fmt(sunday)})` };
 }
 function drEmptyDailyCell(){ return { checked:false, by:null, at:null }; }
-function ensureDrWeek(weekKey){
-  if(!drData[weekKey]){
-    drData[weekKey] = {
+function ensureDrWeek(weekKey, data){
+  data = data || drData;
+  if(!data[weekKey]){
+    data[weekKey] = {
       daily: { Mon:DR_DAILY_TASKS.map(drEmptyDailyCell), Tue:DR_DAILY_TASKS.map(drEmptyDailyCell), Wed:DR_DAILY_TASKS.map(drEmptyDailyCell), Thu:DR_DAILY_TASKS.map(drEmptyDailyCell), Fri:DR_DAILY_TASKS.map(drEmptyDailyCell) },
       weekly: drWeeklyTasks(weekKey).map(drEmptyDailyCell)
     };
   }
   // 若舊資料筆數對不上新的工作項目數(改版後),自動補齊,避免陣列存取出錯
-  const wk = drData[weekKey];
+  const wk = data[weekKey];
   DR_ALL_DAYS.forEach(d=>{ while(wk.daily[d].length < DR_DAILY_TASKS.length) wk.daily[d].push(drEmptyDailyCell()); });
   while(wk.weekly.length < drWeeklyTasks(weekKey).length) wk.weekly.push(drEmptyDailyCell());
   return wk;
+}
+/* 用 transaction 讀取最新資料後再合併寫入,避免兩人同時打勾互相覆蓋 */
+async function drApplyChange(weekKey, mutate){
+  const ref = db.collection(FS_COLLECTION).doc(DR_KEY);
+  try{
+    await db.runTransaction(async (tx)=>{
+      const snap = await tx.get(ref);
+      let data = {};
+      if(snap.exists){ try{ data = JSON.parse(snap.data().value) || {}; }catch(_e){ data = {}; } }
+      const wk = ensureDrWeek(weekKey, data);
+      mutate(wk);
+      tx.set(ref, { value: JSON.stringify(data), updated_at: Date.now() });
+      drData = data;
+    });
+  }catch(e){
+    console.error('duty roster save failed:', e);
+    alert('勾選儲存失敗,請檢查網路後再試一次。');
+  }
+  renderDrAll();
+  renderDashboard();
 }
 function drByLabel(cell){
   if(!cell || !cell.checked || !cell.by) return '';
@@ -4377,7 +4388,7 @@ function renderDrAll(){
       const by = drByLabel(cell);
       return `<td class="dr-check-cell ${cell.checked?'done':'pending'}" data-day="${d}" data-label="${DR_DAY_LABELS[d]}">
         <input type="checkbox" data-day="${d}" data-ti="${ti}" class="dr-daily-check" ${cell.checked?'checked':''}>
-        ${by ? `<span class="dr-by">${escapeHtml(by)}</span>` : ''}
+        ${by ? `<span class="dr-by" title="完成於 ${cell.at?escapeHtml(cell.at.slice(0,16).replace('T',' ')):''}">${escapeHtml(by)}</span>` : ''}
       </td>`;
     }).join('');
     return `<tr class="row">${nameCell}${cells}</tr>`;
@@ -4394,7 +4405,7 @@ function renderDrAll(){
         <div class="dr-w-name">${escapeHtml(task.name)}</div>
         ${task.detail ? `<div class="dr-w-detail">${escapeHtml(task.detail)}</div>` : ''}
       </div>
-      ${by ? `<span class="dr-by-tag">${escapeHtml(by)}</span>` : ''}
+      ${by ? `<span class="dr-by-tag" title="完成於 ${cell.at?escapeHtml(cell.at.slice(0,16).replace('T',' ')):''}">${escapeHtml(by)}</span>` : ''}
     </label>`;
   }).join('');
 
@@ -4413,27 +4424,27 @@ document.getElementById('drDailyTbody').addEventListener('change', async (e)=>{
   const cb = e.target.closest('.dr-daily-check');
   if(!cb) return;
   const info = getISOWeekInfo(drWeekOffset);
-  const wk = ensureDrWeek(info.weekKey);
-  const cell = wk.daily[cb.dataset.day][Number(cb.dataset.ti)];
-  cell.checked = cb.checked;
-  cell.by = cb.checked ? ((currentUser&&currentUser.code)||null) : null;
-  cell.by_uid = cb.checked ? ((currentUser&&currentUser.uid)||null) : null;
-  cell.at = cb.checked ? new Date().toISOString() : null;
-  await saveDrData();
-  renderDrAll();
+  const day = cb.dataset.day, ti = Number(cb.dataset.ti), checked = cb.checked;
+  await drApplyChange(info.weekKey, wk=>{
+    const cell = wk.daily[day][ti];
+    cell.checked = checked;
+    cell.by = checked ? ((currentUser&&currentUser.code)||null) : null;
+    cell.by_uid = checked ? ((currentUser&&currentUser.uid)||null) : null;
+    cell.at = checked ? new Date().toISOString() : null;
+  });
 });
 document.getElementById('drWeeklyList').addEventListener('change', async (e)=>{
   const cb = e.target.closest('.dr-weekly-check');
   if(!cb) return;
   const info = getISOWeekInfo(drWeekOffset);
-  const wk = ensureDrWeek(info.weekKey);
-  const cell = wk.weekly[Number(cb.dataset.wi)];
-  cell.checked = cb.checked;
-  cell.by = cb.checked ? ((currentUser&&currentUser.code)||null) : null;
-  cell.by_uid = cb.checked ? ((currentUser&&currentUser.uid)||null) : null;
-  cell.at = cb.checked ? new Date().toISOString() : null;
-  await saveDrData();
-  renderDrAll();
+  const wi = Number(cb.dataset.wi), checked = cb.checked;
+  await drApplyChange(info.weekKey, wk=>{
+    const cell = wk.weekly[wi];
+    cell.checked = checked;
+    cell.by = checked ? ((currentUser&&currentUser.code)||null) : null;
+    cell.by_uid = checked ? ((currentUser&&currentUser.uid)||null) : null;
+    cell.at = checked ? new Date().toISOString() : null;
+  });
 });
 
 /* ======================================================
@@ -4623,12 +4634,22 @@ document.getElementById('todoSaveBtn').addEventListener('click', async ()=>{
 async function toggleTodoDone(id, done){
   const item = todoItems.find(i=>i.id===id);
   if(!item) return;
-  const canToggle = isAdmin() || item.visibility==='shared' || item.created_by_uid===(currentUser&&currentUser.uid) || item.assignee_uid===(currentUser&&currentUser.uid);
+  const isOwnerOrAdmin = isAdmin() || item.created_by_uid===(currentUser&&currentUser.uid);
+  const canToggle = isOwnerOrAdmin || item.visibility==='shared' || item.assignee_uid===(currentUser&&currentUser.uid);
   if(!canToggle){ alert('你沒有權限更新這項待辦。'); renderTodoAll(); return; }
   const oldDone = item.done, oldDoneAt = item.done_at;
   item.done = done;
   item.done_at = done ? new Date().toISOString() : null;
-  const ok = await fsSetItem('todo-items', item);
+  let ok;
+  if(isOwnerOrAdmin){
+    ok = await fsSetItem('todo-items', item);
+  }else{
+    // 共享/被指派的成員:Security Rules 只允許改 done 與 done_at,用欄位級更新
+    try{
+      await db.collection('todo-items').doc(String(item._doc_id)).update({ done:item.done, done_at:item.done_at });
+      ok = true;
+    }catch(e){ console.error('toggleTodoDone update failed:', e); ok = false; }
+  }
   if(!ok){ item.done=oldDone; item.done_at=oldDoneAt; alert('更新失敗。'); }
   renderTodoAll();
 }
@@ -5630,7 +5651,8 @@ document.getElementById('cmpSubmitDecisionBtn').addEventListener('click', async 
   record.decided_vendor_key = vendorKey;
   record.decided_entry_idx = idx;
   record.addedToList = true;
-  await fsSetItem('price-comparisons', record);
+  const okRec = await fsSetItem('price-comparisons', record);
+  if(!okRec){ alert('儲存比價決定失敗,請檢查網路與權限(只有建立者或管理員能修改這份比價)。'); return; }
 
   if(record.linked_cp_id){
     const item = cpItems.find(i=>i.id===record.linked_cp_id);
@@ -5640,7 +5662,8 @@ document.getElementById('cmpSubmitDecisionBtn').addEventListener('click', async 
       item.pack = packStr;
       if(entry.purity) item.purity = entry.purity;
       item.status = 'reviewed';
-      await fsSetItem('chem-purchases', item);
+      const okItem = await fsSetItem('chem-purchases', item);
+      if(!okItem){ alert('比價決定已儲存,但更新採購狀態失敗(可能只有建立者或管理員能更新這筆採購)。'); }
     }
   }else{
     const newItem = {
@@ -5689,10 +5712,16 @@ async function cpStartComparison(id){
     created_by: (currentUser&&currentUser.code)||null, created_at: new Date().toISOString()
   };
   cmpItems.push(record);
-  await fsSetItem('price-comparisons', record);
+  const okCmp = await fsSetItem('price-comparisons', record);
+  if(!okCmp){
+    cmpItems.pop();
+    alert('建立比價資料失敗,請檢查網路與權限後再試一次。');
+    return;
+  }
   item.status = 'quoted';
   item.comparison_id = record.id;
-  await fsSetItem('chem-purchases', item);
+  const okCp = await fsSetItem('chem-purchases', item);
+  if(!okCp){ alert('比價資料已建立,但更新採購狀態失敗(可能只有建立者或管理員能更新這筆採購)。'); }
   renderCpKanban();
   renderCmpCardGrid();
   openCmpDetail(record.id);
@@ -5859,7 +5888,7 @@ function dashSdsStatus(sdsDate){
 }
 function dashGreetingText(){
   const h = new Date().getHours();
-  const name = (currentUser && (currentUser.name||currentUser.code)) || '';
+  const name = (currentUser && (currentUser.code||currentUser.name)) || '';
   const timeGreet = h<5 ? '夜深了' : h<11 ? '早安' : h<14 ? '午安' : h<18 ? '下午好' : '晚安';
   return `${timeGreet},${escapeHtml(name)}`;
 }
