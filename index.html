@@ -1860,6 +1860,9 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 const fileStorage = firebase.storage();
+// Storage SDK 預設可能重試很久；照片另有 Firestore 備援，不讓表單長時間卡住。
+if(typeof fileStorage.setMaxUploadRetryTime === 'function') fileStorage.setMaxUploadRetryTime(15000);
+if(typeof fileStorage.setMaxOperationRetryTime === 'function') fileStorage.setMaxOperationRetryTime(10000);
 const FS_COLLECTION = 'lab-data';
 
 window.storage = {
@@ -2170,7 +2173,17 @@ function compressPhoto(file, onDone){
 function storageSafeSegment(value){
   return encodeURIComponent(String(value||'unknown')).replace(/%/g,'_');
 }
-async function uploadPhotoSource(src, folder, recordId, slot, existingPath){
+function friendlyStorageError(err){
+  const code = err && err.code;
+  if(code==='storage/retry-limit-exceeded') return '照片服務連線逾時，請稍後再試。';
+  if(code==='storage/quota-exceeded') return 'Firebase Storage 額度或方案無法使用，請管理員檢查用量與計費方案。';
+  if(code==='storage/bucket-not-found') return 'Firebase Storage 尚未建立或設定錯誤，請管理員檢查儲存空間設定。';
+  if(code==='storage/unauthenticated') return '登入狀態已失效，請重新登入後再試。';
+  if(code==='storage/unauthorized') return '沒有照片上傳權限，請管理員檢查 Firebase Storage Rules。';
+  if(code==='storage/canceled') return '照片上傳已取消。';
+  return (err && err.message) || '照片上傳失敗。';
+}
+async function uploadPhotoSource(src, folder, recordId, slot, existingPath, options){
   if(!src) return { url:null, path:null, uploaded:false };
   if(!String(src).startsWith('data:')) return { url:src, path:existingPath||null, uploaded:false };
   if(!currentUser || !currentUser.uid) throw new Error('尚未登入，無法上傳照片。');
@@ -2183,14 +2196,23 @@ async function uploadPhotoSource(src, folder, recordId, slot, existingPath){
   const ext = blob.type==='image/png' ? 'png' : blob.type==='image/webp' ? 'webp' : 'jpg';
   const path = `lab-photos/${storageSafeSegment(folder)}/${storageSafeSegment(currentUser.uid)}/${storageSafeSegment(recordId)}/${Date.now()}_${random}_${storageSafeSegment(slot)}.${ext}`;
   const ref = fileStorage.ref(path);
-  await ref.put(blob, { contentType:blob.type||'image/jpeg', customMetadata:{ ownerUid:currentUser.uid, recordId:String(recordId||'') } });
-  const url = await ref.getDownloadURL();
-  return { url, path, uploaded:true };
+  try{
+    await ref.put(blob, { contentType:blob.type||'image/jpeg', customMetadata:{ ownerUid:currentUser.uid, recordId:String(recordId||'') } });
+    const url = await ref.getDownloadURL();
+    return { url, path, uploaded:true };
+  }catch(err){
+    console.warn('Firebase Storage photo upload failed:', err);
+    if(options && options.allowInlineFallback){
+      showToast('照片服務暫時無回應，已改用備援方式儲存照片。', null, 3600);
+      return { url:src, path:null, uploaded:false, inlineFallback:true };
+    }
+    throw new Error(friendlyStorageError(err));
+  }
 }
-async function uploadPreviewPhoto(previewId, folder, recordId, slot, existingPath){
+async function uploadPreviewPhoto(previewId, folder, recordId, slot, existingPath, options){
   const preview = document.getElementById(previewId);
   const src = preview && preview.style.display!=='none' ? preview.src : null;
-  return uploadPhotoSource(src, folder, recordId, slot, existingPath);
+  return uploadPhotoSource(src, folder, recordId, slot, existingPath, options);
 }
 async function deleteStoredPhoto(path){
   if(!path) return;
@@ -2212,6 +2234,17 @@ function bindPhotoUpload(dropId, inputId, previewId){
       preview.style.display = 'block';
     });
   });
+}
+// 避免從輸入框拖曳反白到遮罩外放開時，誤判成點擊背景而關閉表單。
+function bindBackdropClose(overlayId, closeHandler){
+  const overlay = document.getElementById(overlayId);
+  let pressedOnBackdrop = false;
+  overlay.addEventListener('pointerdown', (e)=>{ pressedOnBackdrop = e.target===overlay; });
+  overlay.addEventListener('pointerup', (e)=>{
+    if(pressedOnBackdrop && e.target===overlay) closeHandler();
+    pressedOnBackdrop = false;
+  });
+  overlay.addEventListener('pointercancel', ()=>{ pressedOnBackdrop = false; });
 }
 function nextSeq(list){
   let max = 0;
@@ -2913,7 +2946,7 @@ async function handleSave(){
   if(!name_zh || !location){ alert('請至少填寫「中文名稱」與「存放位置」'); return; }
   const recordId = editingId || genId(items, 'CHEM');
   let photoInfo;
-  try{ photoInfo = await uploadPreviewPhoto('photoPreview','chemicals',recordId,'bottle',existingItem&&existingItem.photo_path); }
+  try{ photoInfo = await uploadPreviewPhoto('photoPreview','chemicals',recordId,'bottle',existingItem&&existingItem.photo_path,{allowInlineFallback:true}); }
   catch(err){ alert(err.message || '照片上傳失敗。'); return; }
   const data = {
     id: recordId,
@@ -3047,7 +3080,7 @@ document.getElementById('search').addEventListener('input', renderTable);
 document.getElementById('filterLoc').addEventListener('change', renderTable);
 document.getElementById('filterHaz').addEventListener('change', renderTable);
 document.getElementById('exportBtn').addEventListener('click', exportCsv);
-document.getElementById('formOverlay').addEventListener('click', (e)=>{ if(e.target.id==='formOverlay') closeForm(); });
+bindBackdropClose('formOverlay', closeForm);
 document.getElementById('detailOverlay').addEventListener('click', (e)=>{ if(e.target.id==='detailOverlay') closeDetail(); });
 
 /* ======================================================
@@ -3254,7 +3287,7 @@ async function handleMatSave(){
   if(!species || !part || !storage_location){ alert('請至少填寫「物種」「部位」與「存放位置」'); return; }
   const recordId = editingMatId || pendingMatId || genId(matItems, 'MAT');
   let photoInfo;
-  try{ photoInfo = await uploadPreviewPhoto('m_photoPreview','materials',recordId,'material',existingItem&&existingItem.photo_path); }
+  try{ photoInfo = await uploadPreviewPhoto('m_photoPreview','materials',recordId,'material',existingItem&&existingItem.photo_path,{allowInlineFallback:true}); }
   catch(err){ alert(err.message || '照片上傳失敗。'); return; }
   const data = {
     id: recordId,
@@ -3327,7 +3360,7 @@ document.getElementById('matSearch').addEventListener('input', renderMatTable);
 document.getElementById('matFilterStorage').addEventListener('change', renderMatTable);
 document.getElementById('matFilterUse').addEventListener('change', renderMatTable);
 document.getElementById('matExportBtn').addEventListener('click', exportMatCsv);
-document.getElementById('matFormOverlay').addEventListener('click', (e)=>{ if(e.target.id==='matFormOverlay') closeMatForm(); });
+bindBackdropClose('matFormOverlay', closeMatForm);
 
 /* ======================================================
    樣品清單
@@ -5493,9 +5526,6 @@ function openCpDetail(id){
   if(isAdmin()){
     const idx = CP_STAGE_ORDER.indexOf(item.status);
     if(idx>0) actions.push(`<button class="btn btn-ghost btn-sm" onclick="cpStepBack('${id}')">↩ 回上一步</button>`);
-    if(item.status==='pending' || item.status==='quoted'){
-      actions.push(`<button class="btn btn-ghost btn-sm btn-row-delete" onclick="cpCancelItem('${id}')">都不買</button>`);
-    }
     actions.push(`<button class="btn btn-ghost btn-sm btn-row-delete" onclick="quickDeleteCp('${id}')">刪除</button>`);
   }
   document.getElementById('cpDetailActions').innerHTML = actions.join('');
