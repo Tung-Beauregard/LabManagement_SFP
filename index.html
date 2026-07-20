@@ -323,8 +323,45 @@
   .qr-id-sm{font-family:var(--mono);font-size:10.5px;color:var(--ink-soft);text-align:center;margin-top:6px;}
   #smpQrTarget canvas, #smpQrTarget img{width:72px !important;height:72px !important;}
 
+  /* ---- 管理功能 / 圖書 / 列印 ---- */
+  .management-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:18px;}
+  .management-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-lg);padding:16px;min-width:0;}
+  .management-card h3{font-size:14px;margin:0 0 6px;color:var(--pine-deep);}
+  .management-card .help{font-size:11.5px;line-height:1.5;color:var(--ink-soft);margin-bottom:12px;}
+  .setting-list{display:flex;flex-direction:column;gap:6px;margin-top:10px;max-height:330px;overflow:auto;}
+  .setting-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#FCFDFC;font-size:12.5px;}
+  .setting-row .meta{font-size:10.5px;color:var(--ink-soft);margin-top:2px;}
+  .assignment-banner{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:#EAF3F0;border:1px solid #C8DDD5;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:12.5px;}
+  .assignment-banner b{color:var(--pine-deep);}
+  .history-row{padding:9px 0;border-bottom:1px solid var(--line);font-size:12px;line-height:1.5;}
+  .history-row:last-child{border-bottom:none;}
+  .toolbar input[type=week],.toolbar input[type=date]{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--ink);}
+  .book-title{font-weight:700;color:var(--ink);}
+  .book-meta{font-size:11px;color:var(--ink-soft);margin-top:3px;}
+  .status-available{background:#E4F3E7;color:#1E6B38;}
+  .status-borrowed{background:#FBEFDB;color:#8A4B12;}
+  .print-report{background:#fff;color:#000;font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif;padding:18px;}
+  .print-report h1{font-size:20px;text-align:center;margin:0 0 4px;}
+  .print-report .report-meta{text-align:center;font-size:11px;margin-bottom:14px;}
+  .print-report .report-item{page-break-inside:avoid;margin-bottom:18px;}
+  .print-report .report-item-title{font-size:14px;font-weight:700;border:1px solid #000;border-bottom:0;padding:7px 8px;}
+  .print-report table{table-layout:auto;border-collapse:collapse;width:100%;}
+  .print-report th,.print-report td{border:1px solid #000;background:#fff;color:#000;padding:5px 6px;font-size:10.5px;letter-spacing:0;text-transform:none;vertical-align:middle;}
+  .print-report .paper-box{display:inline-block;width:15px;height:15px;border:1.5px solid #000;vertical-align:middle;}
+  .print-report .signature-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:20px;page-break-inside:avoid;}
+  .print-report .signature-box{border-bottom:1px solid #000;min-height:55px;font-size:11px;padding-top:4px;}
+  @media print{
+    @page{size:A4 landscape;margin:10mm;}
+    body.printing-purchase-report *{visibility:hidden !important;}
+    body.printing-purchase-report #purchasePrintArea,
+    body.printing-purchase-report #purchasePrintArea *{visibility:visible !important;}
+    body.printing-purchase-report #purchasePrintArea{position:absolute;left:0;top:0;width:100%;padding:0;}
+  }
+
   /* ---- responsive: phones & narrow screens ---- */
   @media (max-width: 680px){
+    .management-grid{grid-template-columns:1fr;}
+    .print-report{padding:8px;min-width:920px;}
     .cp-kanban{grid-template-columns:1fr;}
     /* 儀器卡片:手機縮小 */
     #imGrid{grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px;}
@@ -577,6 +614,7 @@
       <button class="nav-item" id="navChem" data-page="chemicals"><span class="ic">🧪</span> 藥品清單</button>
       <button class="nav-item" id="navMat" data-page="materials"><span class="ic">🌿</span> 試材清單</button>
       <button class="nav-item" id="navSample" data-page="samples"><span class="ic">📦</span> 樣品清單</button>
+      <button class="nav-item" id="navLibrary" data-page="library"><span class="ic">📚</span> 圖書借閱</button>
       <button class="nav-item" data-page="chemUsageLog"><span class="ic">📝</span> 藥品使用登記</button>
       <button class="nav-item" data-page="instrumentUsageLog"><span class="ic">🔧</span> 儀器使用登記</button>
       <button class="nav-item" data-page="dutyRoster"><span class="ic">🧹</span> 值週生</button>
@@ -585,6 +623,8 @@
       <button class="nav-item" data-page="chemPurchase"><span class="ic">🛒</span> 採買及報修</button>
       <div style="flex:1;"></div>
       <button class="nav-item" id="navSoftwareBackup" data-page="softwareBackup" style="display:none;"><span class="ic">💾</span> 軟體備份</button>
+      <button class="nav-item nav-item-admin-pinned" id="navAdminTools" data-page="adminTools" style="display:none;"><span class="ic">🧰</span> 管理員功能</button>
+      <button class="nav-item nav-item-admin-pinned nav-item-superadmin" id="navSuperAdminTools" data-page="superAdminTools" style="display:none;"><span class="ic">🛡️</span> 總管理員功能</button>
       <button class="nav-item nav-item-admin-pinned" id="navAdmin" data-page="admin" style="display:none;"><span class="ic">👤</span> 帳號管理</button>
     </nav>
   </aside>
@@ -702,6 +742,7 @@
         <input type="text" id="matSearch" placeholder="搜尋物種 / 來源 / 編號...">
         <select id="matFilterStorage"><option value="">所有存放位置</option></select>
         <select id="matFilterUse"><option value="">所有用途</option></select>
+        <select id="matFilterOwner"><option value="">所有使用者的試材</option></select>
         <button class="btn btn-ghost" id="matExportBtn">匯出 CSV</button>
         <button class="btn btn-ghost" id="matExportJsonBtn">匯出備份</button>
         <button class="btn btn-ghost" id="matImportJsonBtn">匯入備份</button>
@@ -753,7 +794,7 @@
         <table>
           <thead>
             <tr>
-              <th>物種</th><th>編號</th><th>持有人</th><th>萃取日期</th><th>萃取物</th><th>分離部</th><th>萃取物重量</th><th>萃取率</th><th></th>
+              <th>中文名稱</th><th>編號</th><th>持有人</th><th>萃取日期</th><th>萃取物</th><th>分離部</th><th>萃取物重量</th><th>萃取率</th><th></th>
             </tr>
           </thead>
           <tbody id="smpTbody"></tbody>
@@ -766,6 +807,127 @@
       <div id="smpLoadingNotice" style="margin-top:10px;"><div class="skeleton-row"></div><div class="skeleton-row"></div><div class="skeleton-row sk-sm"></div></div>
     </section>
 
+    <!-- ================= PAGE: 圖書借閱 ================= -->
+    <section class="page" id="page-library">
+      <div class="hdr">
+        <div>
+          <h1>圖書借閱</h1>
+          <div class="sub">SFPLAB · LIBRARY</div>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="n" id="libStatTotal">0</div><div class="l">藏書</div></div>
+          <div class="stat"><div class="n" id="libStatAvailable">0</div><div class="l">可借</div></div>
+          <div class="stat"><div class="n" id="libStatMine">0</div><div class="l">我借閱中</div></div>
+        </div>
+      </div>
+      <div class="toolbar">
+        <input type="text" id="libSearch" placeholder="搜尋書名 / 作者 / ISBN / 編號...">
+        <select id="libFilterCategory"><option value="">所有分類</option></select>
+        <select id="libFilterStatus"><option value="">所有狀態</option><option value="available">可借閱</option><option value="borrowed">借閱中</option></select>
+        <button class="btn btn-primary" id="libAddBtn" style="display:none;">＋ 新增圖書</button>
+      </div>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>圖書</th><th>編號</th><th>分類</th><th>位置</th><th>狀態</th><th>借閱人 / 到期日</th><th></th></tr></thead>
+          <tbody id="libTbody"></tbody>
+        </table>
+        <div class="empty" id="libEmptyState" style="display:none;"><b>目前沒有符合的圖書</b>管理員可以先新增第一本館藏</div>
+      </div>
+      <div class="section-title">我的借閱紀錄</div>
+      <div id="libMyHistory"></div>
+    </section>
+
+    <div class="overlay" id="libBookOverlay">
+      <div class="modal" style="max-width:520px;">
+        <button class="close" id="libBookClose">✕</button>
+        <h2 id="libBookTitle">新增圖書</h2>
+        <div class="field row2">
+          <div><label>圖書編號 *</label><input type="text" id="lib_code" placeholder="自動產生，可自行修改"></div>
+          <div><label>ISBN</label><input type="text" id="lib_isbn"></div>
+        </div>
+        <div class="field"><label>書名 *</label><input type="text" id="lib_title"></div>
+        <div class="field row2">
+          <div><label>作者</label><input type="text" id="lib_author"></div>
+          <div><label>分類</label><input type="text" id="lib_category" placeholder="例如 天然物化學"></div>
+        </div>
+        <div class="field"><label>存放位置</label><input type="text" id="lib_location" placeholder="例如 602 書櫃 A2"></div>
+        <div class="field"><label>備註</label><textarea id="lib_note" rows="2"></textarea></div>
+        <div class="modal-actions">
+          <button class="btn btn-danger" id="libDeleteBtn" style="display:none;">刪除圖書</button>
+          <div style="flex:1;"></div>
+          <button class="btn btn-ghost" id="libBookCancel">取消</button>
+          <button class="btn btn-primary" id="libBookSave" style="margin-left:8px;">儲存</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="overlay" id="libBorrowOverlay">
+      <div class="modal" style="max-width:400px;">
+        <button class="close" id="libBorrowClose">✕</button>
+        <h2>借閱圖書</h2>
+        <div class="today-card" id="libBorrowBookLabel"></div>
+        <div class="field"><label>預計歸還日 *</label><input type="date" id="lib_due_date"></div>
+        <div class="field"><label>用途 / 備註</label><textarea id="lib_borrow_note" rows="2"></textarea></div>
+        <div class="modal-actions"><div style="flex:1;"></div><button class="btn btn-primary" id="libBorrowConfirm">確認借閱</button></div>
+      </div>
+    </div>
+
+    <!-- ================= PAGE: 管理員功能 ================= -->
+    <section class="page" id="page-adminTools">
+      <div class="hdr">
+        <div><h1>管理員功能</h1><div class="sub">SFPLAB · ADMIN TOOLS</div></div>
+      </div>
+      <div class="management-grid">
+        <div class="management-card">
+          <h3>值週生指派</h3>
+          <div class="help">可直接指定某一週的值週生；新指派會保留在紀錄中。</div>
+          <div class="field"><label>週次</label><input type="week" id="dutyAssignWeek"></div>
+          <div class="field"><label>指派使用者</label><select id="dutyAssignUser"></select></div>
+          <button class="btn btn-primary btn-sm" id="dutyAssignBtn">儲存指派</button>
+          <div id="dutyCurrentAssignment" style="margin-top:12px;"></div>
+        </div>
+        <div class="management-card">
+          <h3>加權抽籤</h3>
+          <div class="help">權重越大越容易被抽中；設為 0 代表暫不參加。抽籤結果會直接成為該週值週生。</div>
+          <button class="btn btn-primary btn-sm" id="dutyDrawBtn">🎲 抽出值週生</button>
+          <div id="dutyDrawResult" style="margin-top:12px;"></div>
+        </div>
+      </div>
+      <div class="section-title">抽籤權重</div>
+      <div class="tablewrap">
+        <table><thead><tr><th>使用者</th><th>角色</th><th>權重</th></tr></thead><tbody id="dutyWeightTbody"></tbody></table>
+      </div>
+      <div class="section-title">指派與抽籤紀錄</div>
+      <div class="today-card" id="dutyDrawHistory"></div>
+    </section>
+
+    <!-- ================= PAGE: 總管理員功能 ================= -->
+    <section class="page" id="page-superAdminTools">
+      <div class="hdr">
+        <div><h1>總管理員功能</h1><div class="sub">SFPLAB · SUPER ADMIN SETTINGS</div></div>
+      </div>
+      <div class="management-grid">
+        <div class="management-card">
+          <h3>儀器清單</h3>
+          <div class="help">新增或從系統清單移除儀器；歷史預約、維修與附件資料不會因移除而刪除。</div>
+          <button class="btn btn-primary btn-sm" id="saAddInstrumentBtn">＋ 新增儀器</button>
+          <div class="setting-list" id="saInstrumentList"></div>
+        </div>
+        <div class="management-card">
+          <h3>藥品存放位置</h3>
+          <div class="help">刪除後只會停止提供給新資料選擇，既有藥品的位置仍會保留顯示。</div>
+          <div class="toolbar" style="margin-bottom:0;"><input type="text" id="saChemLocationInput" placeholder="新增位置名稱"><button class="btn btn-primary btn-sm" id="saChemLocationAdd">新增</button></div>
+          <div class="setting-list" id="saChemLocationList"></div>
+        </div>
+        <div class="management-card">
+          <h3>試材存放位置</h3>
+          <div class="help">可使用原本的 A0～G3，也可以新增冰箱、櫃位或其他自訂位置。</div>
+          <div class="toolbar" style="margin-bottom:0;"><input type="text" id="saMatLocationInput" placeholder="新增位置名稱"><button class="btn btn-primary btn-sm" id="saMatLocationAdd">新增</button></div>
+          <div class="setting-list" id="saMatLocationList"></div>
+        </div>
+      </div>
+    </section>
+
     <!-- ================= PAGE: 帳號管理(僅管理員) ================= -->
     <section class="page" id="page-admin">
       <div class="hdr">
@@ -775,17 +937,26 @@
         </div>
         <div class="stats">
           <div class="stat"><div class="n" id="adminStatTotal">0</div><div class="l">帳號總數</div></div>
+          <div class="stat" id="adminDeletedStatWrap" style="display:none;"><div class="n" id="adminStatDeleted">0</div><div class="l">權限已刪除</div></div>
         </div>
       </div>
       <div class="tablewrap">
         <table>
           <thead>
-            <tr><th>姓名</th><th>名稱縮寫</th><th>狀態</th><th>角色</th></tr>
+            <tr><th>姓名</th><th>名稱縮寫</th><th>狀態</th><th>角色</th><th></th></tr>
           </thead>
           <tbody id="adminTbody"></tbody>
         </table>
       </div>
       <div style="font-size:11px;color:var(--ink-soft);margin-top:10px;">新註冊帳號預設為「待啟用」。密碼僅由 Firebase Authentication 處理，這裡不會顯示或儲存密碼。忘記密碼時，請在 Firebase Console 的 Authentication 頁面重設。</div>
+
+      <div class="section-title" id="deletedAccountsTitle" style="display:none;">權限已刪除的帳號</div>
+      <div class="tablewrap" id="deletedAccountsWrap" style="display:none;">
+        <table>
+          <thead><tr><th>姓名</th><th>名稱縮寫</th><th>刪除時間</th><th>原角色</th><th></th></tr></thead>
+          <tbody id="deletedAdminTbody"></tbody>
+        </table>
+      </div>
 
       <div class="section-title" id="fullBackupSectionTitle" style="display:none;">全部資料備份(僅總管理員)</div>
       <div class="today-card" id="fullBackupCard" style="display:none;">
@@ -1068,6 +1239,8 @@
         <button class="dr-thisweek-btn" id="drThisWeekBtn" style="display:none;">回到本週</button>
       </div>
 
+      <div class="assignment-banner" id="drAssignmentBanner"><span>本週值週生</span><b id="drAssignedUser">尚未指派</b></div>
+
       <div class="dr-progress-card">
         <div class="dr-progress-top"><span>本週完成進度</span><span><b id="drProgressNum">0 / 0</b></span></div>
         <div class="dash-progress-bar"><div class="dash-progress-fill" id="drProgressFill" style="width:0%;"></div></div>
@@ -1100,18 +1273,38 @@
       </div>
       <div class="toolbar">
         <button class="btn btn-primary" id="cpAddChemBtn">＋ 新增採買/報修</button>
+        <button class="btn btn-ghost" id="cmpHistoryBtn">🔎 比價紀錄</button>
+        <button class="btn btn-ghost" id="cpPrintReportBtn">🖨️ 產出待審核報表</button>
       </div>
       <div class="cp-kanban" id="cpKanban"></div>
 
       <div class="section-title">藥品待審核列表(已詢價,等待決定廠商)</div>
       <div id="cpReviewList"></div>
-
-      <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">
-        <span>比價表</span>
-        <button class="btn btn-primary btn-sm" id="cmpAddBtn">＋ 新增比價</button>
-      </div>
-      <div id="cmpCardGrid" class="mini-calendar" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr));"></div>
     </section>
+
+    <!-- 比價紀錄：從主畫面收進按鈕，支援中英文名稱查詢 -->
+    <div class="overlay" id="cmpHistoryOverlay">
+      <div class="modal" style="max-width:920px;">
+        <button class="close" id="cmpHistoryClose">✕</button>
+        <h2>比價紀錄</h2>
+        <div class="toolbar">
+          <input type="text" id="cmpHistorySearch" placeholder="搜尋中文名稱或英文名稱...">
+          <button class="btn btn-primary btn-sm" id="cmpAddBtn">＋ 新增比價</button>
+        </div>
+        <div id="cmpCardGrid" class="mini-calendar" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr));"></div>
+      </div>
+    </div>
+
+    <!-- 採買待審核黑白列印報表 -->
+    <div class="overlay" id="purchaseReportOverlay" style="z-index:80;">
+      <div class="modal" style="max-width:1050px;">
+        <button class="close" id="purchaseReportClose">✕</button>
+        <div class="toolbar" style="justify-content:flex-end;">
+          <button class="btn btn-primary" id="purchaseReportPrintBtn">列印</button>
+        </div>
+        <div id="purchasePrintArea" class="print-report"></div>
+      </div>
+    </div>
 
     <!-- 待購買項目詳情 -->
     <div class="overlay" id="cpDetailOverlay">
@@ -1229,8 +1422,9 @@
       <div class="modal" style="max-width:760px;">
         <button class="close" id="cmpDetailClose">✕</button>
         <h2 id="cmpDetailTitle">新增比價</h2>
-        <div class="field">
-          <label>藥品名稱 *</label><input type="text" id="cmp_item_name">
+        <div class="field row2">
+          <div><label>中文名稱 *</label><input type="text" id="cmp_item_name"></div>
+          <div><label>英文名稱</label><input type="text" id="cmp_item_name_en"></div>
         </div>
 
         <div id="cmp_editSection">
@@ -2012,7 +2206,7 @@ function ghsIconSvg(code, size){
   return `<svg width="${size}" height="${size}" viewBox="0 0 40 40" style="vertical-align:-5px;margin-right:4px;flex-shrink:0;">${p}</svg>`;
 }
 
-const CHEM_LOCATIONS = [
+const DEFAULT_CHEM_LOCATIONS = [
   '藥品櫃A-上','藥品櫃A-中','藥品櫃A-下',
   '藥品櫃B-上','藥品櫃B-中','藥品櫃B-下',
   '藥品櫃C-上','藥品櫃C-中','藥品櫃C-下',
@@ -2021,6 +2215,7 @@ const CHEM_LOCATIONS = [
   '溶劑櫃小A','溶劑櫃小B','溶劑櫃小C','溶劑櫃小D','溶劑櫃小E',
   'LC溶劑櫃','冷藏','冷凍'
 ];
+let CHEM_LOCATIONS = DEFAULT_CHEM_LOCATIONS.slice();
 function locCategory(loc){
   if(!loc) return 'other';
   if(loc==='冷凍') return 'freeze';
@@ -2047,10 +2242,60 @@ function buildStorageOptions(){
   SHELVES.forEach(s=>{ LAYERS.forEach(l=>{ opts.push({ value: s+l, label: s+l }); }); });
   return opts;
 }
-const STORAGE_OPTIONS = buildStorageOptions();
+const DEFAULT_STORAGE_OPTIONS = buildStorageOptions();
+let STORAGE_OPTIONS = DEFAULT_STORAGE_OPTIONS.map(o=>({...o}));
 function storageLabel(value){
   const found = STORAGE_OPTIONS.find(o=>o.value===value);
   return found ? found.label : (value || '-');
+}
+
+/* ---- 可由總管理員調整的系統清單 ---- */
+const SYSTEM_SETTINGS_KEY = 'system-settings-data';
+let systemSettings = { chem_locations:DEFAULT_CHEM_LOCATIONS.slice(), material_locations:DEFAULT_STORAGE_OPTIONS.map(o=>({...o})) };
+function normalizeSystemSettings(raw){
+  const hasChem = !!(raw && Array.isArray(raw.chem_locations));
+  const hasMat = !!(raw && Array.isArray(raw.material_locations));
+  const chem = hasChem ? raw.chem_locations : DEFAULT_CHEM_LOCATIONS;
+  const mat = hasMat ? raw.material_locations : DEFAULT_STORAGE_OPTIONS;
+  const cleanChem = [...new Set(chem.map(v=>String(v||'').trim()).filter(Boolean))];
+  const cleanMat = [];
+  const seen = new Set();
+  mat.forEach(o=>{
+    const value = String((o && typeof o==='object') ? (o.value||o.label||'') : (o||'')).trim();
+    const label = String((o && typeof o==='object') ? (o.label||o.value||'') : (o||'')).trim();
+    if(value && !seen.has(value)){ seen.add(value); cleanMat.push({value,label:label||value}); }
+  });
+  return {
+    chem_locations: hasChem ? cleanChem : DEFAULT_CHEM_LOCATIONS.slice(),
+    material_locations: hasMat ? cleanMat : DEFAULT_STORAGE_OPTIONS.map(o=>({...o}))
+  };
+}
+function applySystemSettings(raw){
+  systemSettings = normalizeSystemSettings(raw);
+  CHEM_LOCATIONS = systemSettings.chem_locations.slice();
+  STORAGE_OPTIONS = systemSettings.material_locations.map(o=>({...o}));
+}
+async function loadSystemSettings(){
+  const res = await window.storage.get(SYSTEM_SETTINGS_KEY, true);
+  let raw = null;
+  if(res && res.value){ try{ raw = JSON.parse(res.value); }catch(_e){} }
+  applySystemSettings(raw);
+}
+async function saveSystemSettings(){
+  if(!isSuperAdmin()) return false;
+  try{
+    await window.storage.set(SYSTEM_SETTINGS_KEY, JSON.stringify(systemSettings), true);
+    applySystemSettings(systemSettings);
+    renderSuperAdminTools();
+    populateLocationSelect();
+    populateFilters();
+    populateMatSelects();
+    populateMatFilters();
+    return true;
+  }catch(err){
+    alert('系統清單儲存失敗，請檢查網路與 Firestore 權限。');
+    return false;
+  }
 }
 
 function ghsInfo(code){ return GHS.find(g=>g.code===code) || {label:code,color:'#7F8C8D'}; }
@@ -2267,6 +2512,46 @@ function debounce(fn, delay){
 let accounts = [];
 let currentUser = null; // {uid, code, name, role, active}
 let appDataLoaded = false;
+const IDLE_LOGOUT_MS = 15 * 60 * 1000;
+const IDLE_LOGOUT_NOTICE_KEY = 'sfplab-idle-logout';
+let idleLogoutTimer = null;
+let lastUserActivityAt = Date.now();
+let lastActivityResetAt = 0;
+const IDLE_ACTIVITY_EVENTS = ['pointerdown','keydown','touchstart','wheel','scroll'];
+function scheduleIdleLogout(){
+  clearTimeout(idleLogoutTimer);
+  if(!currentUser) return;
+  const remaining = Math.max(0, IDLE_LOGOUT_MS - (Date.now()-lastUserActivityAt));
+  idleLogoutTimer = setTimeout(handleIdleLogout, remaining);
+}
+function noteUserActivity(){
+  const now = Date.now();
+  if(!currentUser || now-lastActivityResetAt<1000) return;
+  lastActivityResetAt = now;
+  lastUserActivityAt = now;
+  scheduleIdleLogout();
+}
+function startIdleLogoutTimer(){
+  stopIdleLogoutTimer();
+  lastUserActivityAt = Date.now();
+  IDLE_ACTIVITY_EVENTS.forEach(evt=>document.addEventListener(evt, noteUserActivity, {passive:true}));
+  scheduleIdleLogout();
+}
+function stopIdleLogoutTimer(){
+  clearTimeout(idleLogoutTimer);
+  idleLogoutTimer = null;
+  IDLE_ACTIVITY_EVENTS.forEach(evt=>document.removeEventListener(evt, noteUserActivity));
+}
+async function handleIdleLogout(){
+  if(!currentUser) return;
+  if(Date.now()-lastUserActivityAt < IDLE_LOGOUT_MS){ scheduleIdleLogout(); return; }
+  stopIdleLogoutTimer();
+  stopRealtimeSync();
+  localStorage.setItem(IDLE_LOGOUT_NOTICE_KEY, '1');
+  try{ await auth.signOut(); }catch(_e){}
+  currentUser = null;
+  location.reload();
+}
 
 function findAccount(identifier){
   const key = String(identifier||'').trim().toLowerCase();
@@ -2350,8 +2635,9 @@ async function establishCurrentUser(firebaseUser){
     return false;
   }
   const profile = snap.data();
-  if(profile.active !== true){
-    setAuthStatus('帳號已建立，但還在等待管理員啟用。', 'info');
+  if(profile.active !== true || profile.deleted===true){
+    if(profile.deleted===true) setAuthStatus('這個帳號的使用權限已被總管理員刪除。', 'error');
+    else setAuthStatus('帳號已建立，但還在等待管理員啟用。', 'info');
     await auth.signOut();
     return false;
   }
@@ -2366,6 +2652,7 @@ async function establishCurrentUser(firebaseUser){
   document.getElementById('loginOverlay').classList.remove('show');
   setAuthStatus('');
   renderUserBadge();
+  startIdleLogoutTimer();
   return true;
 }
 
@@ -2376,6 +2663,10 @@ async function loadCurrentUser(){
     if(!firebaseUser){
       showLoginPane('login');
       document.getElementById('loginOverlay').classList.add('show');
+      if(localStorage.getItem(IDLE_LOGOUT_NOTICE_KEY)==='1'){
+        localStorage.removeItem(IDLE_LOGOUT_NOTICE_KEY);
+        setAuthStatus('已超過 15 分鐘未使用，系統已自動登出。', 'info');
+      }
       return false;
     }
     return await establishCurrentUser(firebaseUser);
@@ -2415,13 +2706,20 @@ function renderUserBadge(){
   document.getElementById('ub_code').textContent = badgeParts.length ? badgeParts.join(' · ') : '一般成員';
   document.getElementById('topbarAvatar').textContent = (currentUser && currentUser.code) ? currentUser.code.slice(0,2).toUpperCase() : '-';
   document.getElementById('navAdmin').style.display = isAdmin() ? 'flex' : 'none';
+  document.getElementById('navAdminTools').style.display = isAdmin() ? 'flex' : 'none';
+  document.getElementById('navSuperAdminTools').style.display = isSuperAdmin() ? 'flex' : 'none';
   document.getElementById('navSoftwareBackup').style.display = isAdmin() ? 'flex' : 'none';
   document.querySelectorAll('.nav-item-superadmin').forEach(el=>{ el.style.display = isSuperAdmin() ? 'flex' : 'none'; });
   document.getElementById('fullBackupSectionTitle').style.display = isSuperAdmin() ? 'block' : 'none';
   document.getElementById('fullBackupCard').style.display = isSuperAdmin() ? 'block' : 'none';
-  ['chemExportJsonBtn','chemImportJsonBtn','matExportJsonBtn','matImportJsonBtn','smpExportJsonBtn','smpImportJsonBtn','imAddInstrumentBtn'].forEach(id=>{
+  document.getElementById('adminDeletedStatWrap').style.display = isSuperAdmin() ? 'block' : 'none';
+  document.getElementById('deletedAccountsTitle').style.display = isSuperAdmin() ? 'block' : 'none';
+  document.getElementById('deletedAccountsWrap').style.display = isSuperAdmin() ? 'block' : 'none';
+  document.getElementById('libAddBtn').style.display = isAdmin() ? 'inline-block' : 'none';
+  ['chemExportJsonBtn','chemImportJsonBtn','matExportJsonBtn','matImportJsonBtn','smpExportJsonBtn','smpImportJsonBtn'].forEach(id=>{
     document.getElementById(id).style.display = isAdmin() ? 'inline-block' : 'none';
   });
+  document.getElementById('imAddInstrumentBtn').style.display = isSuperAdmin() ? 'inline-block' : 'none';
 }
 // 表單改用 <form> 讓 Enter 鍵可直接送出(瀏覽器會自動觸發 submit 按鈕的 click),這裡只需擋掉預設的頁面重整
 document.getElementById('loginPane').addEventListener('submit', e=> e.preventDefault());
@@ -2492,7 +2790,7 @@ document.getElementById('googleRegSubmitBtn').addEventListener('click', async ()
   try{
     await db.collection('users').doc(pendingGoogleUser.uid).set({
       code, name, role:'member', active:false,
-      auth_provider:'google', email:pendingGoogleUser.email||'',
+      auth_provider:'google',
       created_at:new Date().toISOString(), updated_at:new Date().toISOString()
     });
     await auth.signOut();
@@ -2568,6 +2866,7 @@ document.getElementById('registerSubmitBtn').addEventListener('click', async ()=
 });
 
 document.getElementById('switchUserBtn').addEventListener('click', async ()=>{
+  stopIdleLogoutTimer();
   await auth.signOut();
   currentUser = null;
   location.reload();
@@ -2602,10 +2901,13 @@ document.getElementById('editNameSaveBtn').addEventListener('click', async ()=>{
 
 /* ---- 帳號管理(僅管理員可見) ---- */
 function renderAdminTable(){
-  document.getElementById('adminStatTotal').textContent = accounts.length;
+  const visibleAccounts = accounts.filter(a=>a.deleted!==true);
+  const deletedAccounts = accounts.filter(a=>a.deleted===true);
+  document.getElementById('adminStatTotal').textContent = visibleAccounts.length;
+  document.getElementById('adminStatDeleted').textContent = deletedAccounts.length;
   const tbody = document.getElementById('adminTbody');
   tbody.innerHTML = '';
-  accounts.slice().sort((a,b)=>(a.code||'').localeCompare(b.code||'')).forEach(acc=>{
+  visibleAccounts.slice().sort((a,b)=>(a.code||'').localeCompare(b.code||'')).forEach(acc=>{
     const isSelf = acc.uid===currentUser.uid;
     const canManageRole = !isSelf && (isSuperAdmin() || (currentUser.role==='admin' && acc.role==='member'));
     let roleCell;
@@ -2634,10 +2936,44 @@ function renderAdminTable(){
       <td data-label="名稱縮寫">${nameCell}</td>
       <td data-label="狀態">${statusCell}</td>
       <td data-label="角色">${roleCell}</td>
+      <td class="cell-actions">${isSuperAdmin()&&!isSelf?`<button type="button" class="btn btn-ghost btn-sm btn-row-delete" data-action="soft-delete" data-uid="${escapeHtml(acc.uid)}">刪除權限</button>`:''}</td>
     `;
     tbody.appendChild(tr);
   });
+  const deletedBody = document.getElementById('deletedAdminTbody');
+  deletedBody.innerHTML = deletedAccounts.length ? deletedAccounts.slice().sort((a,b)=>(b.deleted_at||'').localeCompare(a.deleted_at||'')).map(acc=>`
+    <tr>
+      <td data-label="姓名"><div class="name-zh">${escapeHtml(acc.code||'-')}</div><div class="name-en">UID ${escapeHtml((acc.uid||'').slice(0,8))}…</div></td>
+      <td data-label="名稱縮寫">${escapeHtml(acc.name||'-')}</td>
+      <td data-label="刪除時間">${escapeHtml((acc.deleted_at||'').slice(0,16).replace('T',' ')||'-')}</td>
+      <td data-label="原角色">${escapeHtml(roleLabel(acc.role))}</td>
+      <td class="cell-actions"><button type="button" class="btn btn-primary btn-sm" data-action="restore-account" data-uid="${escapeHtml(acc.uid)}">復原權限</button></td>
+    </tr>`).join('') : '<tr><td colspan="5" style="text-align:center;color:var(--ink-soft);">沒有已刪除權限的帳號</td></tr>';
 }
+document.getElementById('adminTbody').addEventListener('click', async (e)=>{
+  const btn = e.target.closest('button[data-action="soft-delete"]');
+  if(!btn || !isSuperAdmin()) return;
+  const acc = findAccount(btn.dataset.uid);
+  if(!acc || acc.uid===currentUser.uid) return;
+  if(!confirm(`確定要刪除「${acc.code}」的系統使用權限嗎？帳號資料與歷史紀錄會保留，之後可復原。`)) return;
+  try{
+    await db.collection('users').doc(acc.uid).update({ deleted:true, active:false, deleted_at:new Date().toISOString(), deleted_by_uid:currentUser.uid, updated_at:new Date().toISOString() });
+    acc.deleted = true; acc.active = false; acc.deleted_at = new Date().toISOString();
+    renderAdminTable();
+  }catch(err){ alert('刪除權限失敗，請檢查 Firestore Security Rules。'); }
+});
+document.getElementById('deletedAdminTbody').addEventListener('click', async (e)=>{
+  const btn = e.target.closest('button[data-action="restore-account"]');
+  if(!btn || !isSuperAdmin()) return;
+  const acc = findAccount(btn.dataset.uid);
+  if(!acc) return;
+  try{
+    await db.collection('users').doc(acc.uid).update({ deleted:false, active:false, restored_at:new Date().toISOString(), restored_by_uid:currentUser.uid, updated_at:new Date().toISOString() });
+    acc.deleted = false; acc.active = false;
+    renderAdminTable();
+    showToast('帳號權限已復原，請確認角色後再將狀態改為已啟用。');
+  }catch(err){ alert('復原失敗，請檢查 Firestore Security Rules。'); }
+});
 document.getElementById('adminTbody').addEventListener('change', async (e)=>{
   const nameInput = e.target.closest('input.name-edit-input');
   if(nameInput){
@@ -2694,8 +3030,12 @@ document.querySelectorAll('nav .nav-item[data-page]').forEach(btn=>{
 });
 document.getElementById('navAdmin').addEventListener('click', ()=>{ renderAdminTable(); });
 function switchPage(name){
-  if((name==='admin' || name==='softwareBackup') && typeof isAdmin==='function' && !isAdmin()){
+  if((name==='admin' || name==='softwareBackup' || name==='adminTools') && typeof isAdmin==='function' && !isAdmin()){
     alert('這個頁面僅限管理員使用。');
+    return;
+  }
+  if(name==='superAdminTools' && !isSuperAdmin()){
+    alert('這個頁面僅限總管理員使用。');
     return;
   }
   document.querySelectorAll('nav .nav-item[data-page]').forEach(btn=>{
@@ -2704,6 +3044,10 @@ function switchPage(name){
   document.querySelectorAll('main .page[id^="page-"]').forEach(sec=>{
     sec.classList.toggle('active', sec.id === 'page-'+name);
   });
+  if(name==='admin') renderAdminTable();
+  if(name==='adminTools') renderDutyAdminTools();
+  if(name==='superAdminTools') renderSuperAdminTools();
+  if(name==='library') renderLibraryAll();
   closeDrawer();
 }
 
@@ -2739,8 +3083,10 @@ async function saveItems(){
   if(!ok) alert('儲存失敗,請檢查網路連線後再試一次。');
   return ok;
 }
-function populateLocationSelect(){
-  document.getElementById('f_location').innerHTML = '<option value="">請選擇位置</option>' + CHEM_LOCATIONS.map(l=>`<option value="${l}">${l}</option>`).join('');
+function populateLocationSelect(currentValue){
+  const locations = CHEM_LOCATIONS.slice();
+  if(currentValue && !locations.includes(currentValue)) locations.push(currentValue);
+  document.getElementById('f_location').innerHTML = '<option value="">請選擇位置</option>' + locations.map(l=>`<option value="${escapeHtml(l)}">${escapeHtml(l)}${!CHEM_LOCATIONS.includes(l)?'（舊位置）':''}</option>`).join('');
 }
 const CHEM_FIELD_IDS = ['f_name_zh','f_name_en','f_iupac','f_cas','f_location','f_grade','f_quantity','f_unit','f_purchase_date','f_low_threshold','f_sds','f_note'];
 const CHEM_DRAFT_KEY = 'draft-chemical';
@@ -2794,7 +3140,8 @@ function renderHazPicker(){
 function populateFilters(){
   const locSel = document.getElementById('filterLoc');
   const curLoc = locSel.value;
-  locSel.innerHTML = '<option value="">所有位置</option>' + CHEM_LOCATIONS.map(l=>`<option value="${l}">${l}</option>`).join('');
+  const filterLocations = [...new Set(CHEM_LOCATIONS.concat(items.map(i=>i.location).filter(Boolean)))];
+  locSel.innerHTML = '<option value="">所有位置</option>' + filterLocations.map(l=>`<option value="${escapeHtml(l)}">${escapeHtml(l)}</option>`).join('');
   locSel.value = curLoc;
   const hazSel = document.getElementById('filterHaz');
   const curHaz = hazSel.value;
@@ -2847,7 +3194,8 @@ function renderAll(){ populateFilters(); renderStats(); renderTable(); }
 async function openForm(id){
   editingId = id || null;
   selectedHaz = new Set();
-  populateLocationSelect();
+  const existingLocation = id ? ((items.find(i=>i.id===id)||{}).location||'') : '';
+  populateLocationSelect(existingLocation);
   document.getElementById('formTitle').textContent = id ? '編輯藥品' : '新增藥品';
   document.getElementById('deleteBtn').style.display = (id && isAdmin()) ? 'inline-block' : 'none';
   document.getElementById('photoPreview').style.display = 'none';
@@ -3069,10 +3417,12 @@ async function saveMatItems(){
   if(!ok) alert('儲存失敗,請檢查網路連線後再試一次。');
   return ok;
 }
-function populateMatSelects(){
+function populateMatSelects(currentStorage){
   document.getElementById('m_part').innerHTML = '<option value="">請選擇部位</option>' + PART_OPTIONS.map(p=>`<option value="${p}">${p}</option>`).join('');
   document.getElementById('m_use').innerHTML = '<option value="">請選擇用途</option>' + USE_OPTIONS.map(u=>`<option value="${u}">${u}</option>`).join('');
-  document.getElementById('m_storage').innerHTML = '<option value="">請選擇位置</option>' + STORAGE_OPTIONS.map(o=>`<option value="${o.value}">${o.label}</option>`).join('');
+  const options = STORAGE_OPTIONS.map(o=>({...o}));
+  if(currentStorage && !options.some(o=>o.value===currentStorage)) options.push({value:currentStorage,label:`${currentStorage}（舊位置）`});
+  document.getElementById('m_storage').innerHTML = '<option value="">請選擇位置</option>' + options.map(o=>`<option value="${escapeHtml(o.value)}">${escapeHtml(o.label)}</option>`).join('');
 }
 const MAT_FIELD_IDS = ['m_species','m_source','m_acquired_date','m_acquired_unknown','m_part','m_storage','m_use','m_note'];
 const MAT_DRAFT_KEY = 'draft-material';
@@ -3099,6 +3449,17 @@ function populateMatFilters(){
   const curUse = useSel.value;
   useSel.innerHTML = '<option value="">所有用途</option>' + USE_OPTIONS.map(u=>`<option value="${u}">${u}</option>`).join('');
   useSel.value = curUse;
+  const ownerSel = document.getElementById('matFilterOwner');
+  const curOwner = ownerSel.value;
+  const ownerMap = new Map();
+  accounts.filter(a=>a.deleted!==true).forEach(a=>ownerMap.set(a.uid, {value:a.uid,label:`${a.code||'-'}${a.name?`(${a.name})`:''}`}));
+  matItems.forEach(i=>{
+    const acc = findAccount(i.created_by_uid||i.created_by);
+    const value = acc ? acc.uid : (i.created_by_uid||i.created_by||'');
+    if(value && !ownerMap.has(value)) ownerMap.set(value, {value,label:ownerLabel(value)});
+  });
+  ownerSel.innerHTML = '<option value="">所有使用者的試材</option>' + [...ownerMap.values()].sort((a,b)=>a.label.localeCompare(b.label,'zh-Hant')).map(o=>`<option value="${escapeHtml(o.value)}">${escapeHtml(o.label)}</option>`).join('');
+  ownerSel.value = curOwner;
 }
 function renderMatStats(){
   document.getElementById('matStatTotal').textContent = matItems.length;
@@ -3108,9 +3469,15 @@ function renderMatTable(){
   const search = document.getElementById('matSearch').value.trim().toLowerCase();
   const fStorage = document.getElementById('matFilterStorage').value;
   const fUse = document.getElementById('matFilterUse').value;
+  const fOwner = document.getElementById('matFilterOwner').value;
   let filtered = matItems.filter(i=>{
     if(fStorage && i.storage_location !== fStorage) return false;
     if(fUse && i.intended_use !== fUse) return false;
+    if(fOwner){
+      const acc = findAccount(i.created_by_uid||i.created_by);
+      const ownerKey = acc ? acc.uid : (i.created_by_uid||i.created_by||'');
+      if(ownerKey!==fOwner) return false;
+    }
     if(search){
       const hay = [i.species, i.source, i.id].join(' ').toLowerCase();
       if(!hay.includes(search)) return false;
@@ -3170,7 +3537,8 @@ document.getElementById('matDetailClose').addEventListener('click', closeMatDeta
 
 async function openMatForm(id){
   editingMatId = id || null;
-  populateMatSelects();
+  const existingStorage = id ? ((matItems.find(i=>i.id===id)||{}).storage_location||'') : '';
+  populateMatSelects(existingStorage);
   populateSpeciesDatalist();
   document.getElementById('matFormTitle').textContent = id ? '編輯試材' : '新增試材';
   document.getElementById('matDeleteBtn').style.display = 'none';
@@ -3327,6 +3695,7 @@ async function quickDeleteMat(id, ev){
 document.getElementById('matSearch').addEventListener('input', renderMatTable);
 document.getElementById('matFilterStorage').addEventListener('change', renderMatTable);
 document.getElementById('matFilterUse').addEventListener('change', renderMatTable);
+document.getElementById('matFilterOwner').addEventListener('change', renderMatTable);
 document.getElementById('matExportBtn').addEventListener('click', exportMatCsv);
 document.getElementById('matFormOverlay').addEventListener('click', (e)=>{ if(e.target.id==='matFormOverlay') closeMatForm(); });
 
@@ -3418,7 +3787,7 @@ function renderSmpTable(){
     if(fSolvent && extractDisplay(i) !== fSolvent) return false;
     if(fOwner && i.created_by !== fOwner) return false;
     if(search){
-      const hay = [i.species, i.id].join(' ').toLowerCase();
+      const hay = [i.name_zh, i.species, i.id].join(' ').toLowerCase();
       if(!hay.includes(search)) return false;
     }
     return true;
@@ -3432,7 +3801,7 @@ function renderSmpTable(){
     tr.className = 'row';
     const solventDisplay = extractDisplay(item);
     tr.innerHTML = `
-      <td data-label="物種">${escapeHtml(item.species||'-')}</td>
+      <td data-label="中文名稱"><div class="book-title">${escapeHtml(item.name_zh||'-')}</div><div class="book-meta">${escapeHtml(item.species||'')}</div></td>
       <td data-label="編號"><span class="id-badge">${truncate6(item.id)}</span></td>
       <td data-label="持有人">${truncate6(item.created_by || '-')}</td>
       <td data-label="萃取日期">${escapeHtml(item.extraction_date||'-')}</td>
@@ -4250,8 +4619,8 @@ function INSTRUMENTS_ALL(){
   const builtin = INSTRUMENTS_BUILTIN.map(b=>{
     const ov = instOverrides[b.name];
     return ov ? { ...b, ...ov, _origName:b.name } : { ...b, _origName:b.name };
-  });
-  return builtin.concat(customInstruments.map(c=>({ ...c, _custom:true })));
+  }).filter(i=>i._deleted!==true);
+  return builtin.concat(customInstruments.map(c=>({ ...c, _custom:true })).filter(i=>i._deleted!==true));
 }
 let iulItems = [];
 async function loadIulItems(){ iulItems = await fsGetAll('instrument-reservations'); }
@@ -4499,6 +4868,8 @@ function renderDrAll(){
   const wk = ensureDrWeek(info.weekKey);
   document.getElementById('drWeekLabel').textContent = info.label;
   document.getElementById('drThisWeekBtn').style.display = drWeekOffset===0 ? 'none' : 'inline-block';
+  const assignment = dutyAdminData.assignments && dutyAdminData.assignments[info.weekKey];
+  document.getElementById('drAssignedUser').textContent = assignment ? `${ownerLabel(assignment.user_uid||assignment.user_code)}${assignment.source==='draw'?'（抽籤）':'（指派）'}` : '尚未指派';
 
   // 表頭:帶上每天日期,本週的「今天」欄位高亮
   const todayIdx = drWeekOffset===0 ? (new Date().getDay()+6)%7 : -1; // 0=Mon
@@ -4577,6 +4948,82 @@ document.getElementById('drWeeklyList').addEventListener('change', async (e)=>{
     cell.by_uid = checked ? ((currentUser&&currentUser.uid)||null) : null;
     cell.at = checked ? new Date().toISOString() : null;
   });
+});
+
+/* ======================================================
+   管理員：值週生指派、加權抽籤與紀錄
+====================================================== */
+const DUTY_ADMIN_KEY = 'duty-admin-data';
+let dutyAdminData = {weights:{}, assignments:{}, history:[]};
+function normalizeDutyAdminData(raw){
+  return {
+    weights:(raw&&raw.weights&&typeof raw.weights==='object')?raw.weights:{},
+    assignments:(raw&&raw.assignments&&typeof raw.assignments==='object')?raw.assignments:{},
+    history:(raw&&Array.isArray(raw.history))?raw.history:[]
+  };
+}
+async function loadDutyAdminData(){
+  const res=await window.storage.get(DUTY_ADMIN_KEY,true);
+  let raw=null; if(res&&res.value){ try{raw=JSON.parse(res.value);}catch(_e){} }
+  dutyAdminData=normalizeDutyAdminData(raw);
+}
+async function saveDutyAdminData(){
+  if(!isAdmin()) return false;
+  try{ await window.storage.set(DUTY_ADMIN_KEY,JSON.stringify(dutyAdminData),true); return true; }
+  catch(err){ alert('值週生設定儲存失敗，請檢查網路與 Firestore 權限。'); return false; }
+}
+function eligibleDutyAccounts(){ return accounts.filter(a=>a.active===true&&a.deleted!==true); }
+function dutyAccountOptionLabel(acc){ return `${acc.code||'-'}${acc.name?`（${acc.name}）`:''}`; }
+function selectedDutyWeek(){ return document.getElementById('dutyAssignWeek').value || getISOWeekInfo(0).weekKey; }
+function renderDutyAdminTools(){
+  if(!isAdmin()) return;
+  const weekInput=document.getElementById('dutyAssignWeek');
+  if(!weekInput.value) weekInput.value=getISOWeekInfo(0).weekKey;
+  const users=eligibleDutyAccounts().sort((a,b)=>(a.code||'').localeCompare(b.code||'','zh-Hant'));
+  const userSel=document.getElementById('dutyAssignUser'), cur=userSel.value;
+  userSel.innerHTML=users.map(a=>`<option value="${escapeHtml(a.uid)}">${escapeHtml(dutyAccountOptionLabel(a))}</option>`).join('');
+  if(users.some(a=>a.uid===cur)) userSel.value=cur;
+  document.getElementById('dutyWeightTbody').innerHTML=users.map(a=>`
+    <tr><td data-label="使用者"><div class="name-zh">${escapeHtml(a.code||'-')}</div><div class="name-en">${escapeHtml(a.name||'')}</div></td><td data-label="角色">${escapeHtml(roleLabel(a.role))}</td><td data-label="權重"><input type="number" min="0" step="0.1" class="role-select duty-weight-input" data-uid="${escapeHtml(a.uid)}" value="${Number(dutyAdminData.weights[a.uid]??1)}" style="width:90px;"></td></tr>`).join('');
+  renderDutyCurrentAssignment();
+  const history=dutyAdminData.history.slice(0,100);
+  document.getElementById('dutyDrawHistory').innerHTML=history.length?history.map(h=>`<div class="history-row"><b>${escapeHtml(h.week_key||'-')}</b> · ${h.source==='draw'?'加權抽籤':'手動指派'} → <b>${escapeHtml(h.user_label||ownerLabel(h.user_uid))}</b><br><span style="color:var(--ink-soft);">${escapeHtml((h.at||'').slice(0,16).replace('T',' '))} · 操作者 ${escapeHtml(ownerLabel(h.by_uid))}${h.source==='draw'&&h.total_weight!=null?` · 總權重 ${h.total_weight}`:''}</span></div>`).join(''):'<div class="slot-empty">尚無指派或抽籤紀錄</div>';
+}
+function renderDutyCurrentAssignment(){
+  const week=selectedDutyWeek(), a=dutyAdminData.assignments[week];
+  document.getElementById('dutyCurrentAssignment').innerHTML=a?`<div class="assignment-banner" style="margin:0;"><span>${escapeHtml(week)}</span><b>${escapeHtml(ownerLabel(a.user_uid||a.user_code))}</b><span>${a.source==='draw'?'抽籤':'手動指派'}</span></div>`:`<div class="slot-empty">${escapeHtml(week)} 尚未指派</div>`;
+}
+async function commitDutyAssignment(userUid, source){
+  if(!isAdmin()) return;
+  const acc=findAccount(userUid), week=selectedDutyWeek();
+  if(!acc||acc.deleted===true||acc.active!==true){ alert('請選擇有效的使用者。'); return; }
+  const at=new Date().toISOString();
+  dutyAdminData.assignments[week]={user_uid:acc.uid,user_code:acc.code,source,at,by_uid:currentUser.uid};
+  const rec={id:`${Date.now()}-${Math.random().toString(36).slice(2,7)}`,week_key:week,user_uid:acc.uid,user_label:dutyAccountOptionLabel(acc),source,at,by_uid:currentUser.uid};
+  if(source==='draw') rec.total_weight=eligibleDutyAccounts().reduce((sum,a)=>sum+Math.max(0,Number(dutyAdminData.weights[a.uid]??1)),0);
+  dutyAdminData.history.unshift(rec);
+  dutyAdminData.history=dutyAdminData.history.slice(0,300);
+  if(await saveDutyAdminData()){
+    renderDutyAdminTools(); renderDrAll(); renderDashboard();
+    document.getElementById('dutyDrawResult').innerHTML=source==='draw'?`<div class="assignment-banner"><span>抽籤結果</span><b>${escapeHtml(dutyAccountOptionLabel(acc))}</b></div>`:'';
+  }
+}
+document.getElementById('dutyAssignWeek').addEventListener('change', renderDutyCurrentAssignment);
+document.getElementById('dutyAssignBtn').addEventListener('click', ()=>commitDutyAssignment(document.getElementById('dutyAssignUser').value,'manual'));
+document.getElementById('dutyWeightTbody').addEventListener('change', async (e)=>{
+  const input=e.target.closest('.duty-weight-input'); if(!input||!isAdmin()) return;
+  const weight=Math.max(0,Number(input.value)||0); dutyAdminData.weights[input.dataset.uid]=weight; input.value=weight; await saveDutyAdminData();
+});
+document.getElementById('dutyDrawBtn').addEventListener('click', async ()=>{
+  if(!isAdmin()) return;
+  const pool=eligibleDutyAccounts().map(a=>({acc:a,weight:Math.max(0,Number(dutyAdminData.weights[a.uid]??1))})).filter(x=>x.weight>0);
+  const total=pool.reduce((sum,x)=>sum+x.weight,0);
+  if(!pool.length||total<=0){ alert('沒有可參加抽籤的使用者，請至少將一人的權重設為大於 0。'); return; }
+  const bytes=new Uint32Array(1); crypto.getRandomValues(bytes);
+  let target=(bytes[0]/4294967296)*total, picked=pool[pool.length-1].acc;
+  for(const x of pool){ target-=x.weight; if(target<0){ picked=x.acc; break; } }
+  if(!confirm(`抽籤結果是「${dutyAccountOptionLabel(picked)}」。要將他指派為 ${selectedDutyWeek()} 的值週生嗎？`)) return;
+  await commitDutyAssignment(picked.uid,'draw');
 });
 
 /* ======================================================
@@ -4728,7 +5175,7 @@ function openTodoForm(){
   document.getElementById('todo_date').value = '';
   document.getElementById('todo_visibility').value = 'shared';
   document.getElementById('todo_assignee_wrap').style.display = 'none';
-  document.getElementById('todo_assignee').innerHTML = accounts.filter(a=>a.active===true).sort((a,b)=>a.code.localeCompare(b.code)).map(a=>`<option value="${escapeHtml(a.uid)}">${escapeHtml(a.name||a.code)}(${escapeHtml(a.code)})</option>`).join('');
+  document.getElementById('todo_assignee').innerHTML = accounts.filter(a=>a.active===true&&a.deleted!==true).sort((a,b)=>a.code.localeCompare(b.code)).map(a=>`<option value="${escapeHtml(a.uid)}">${escapeHtml(a.name||a.code)}(${escapeHtml(a.code)})</option>`).join('');
   document.getElementById('todoFormOverlay').classList.add('show');
 }
 function closeTodoForm(){ document.getElementById('todoFormOverlay').classList.remove('show'); }
@@ -4948,13 +5395,14 @@ function renderImGrid(){
     const hasNotes = entry && (entry.notes || (entry.photos&&entry.photos.length));
     const fileCount = entry && entry.files ? entry.files.length : 0;
     const maintCount = entry && entry.maintenance ? entry.maintenance.length : 0;
-    return `<div class="im-card" style="background:${imRoomColor(inst.room)};" onclick="openImDetail('${escapeHtml(inst.name)}')">
+    return `<div class="im-card" data-instrument-name="${escapeHtml(inst.name)}" style="background:${imRoomColor(inst.room)};">
       ${inst.photo ? `<img class="im-card-photo" src="${inst.photo}" alt="" loading="lazy">` : ''}
       <div class="im-card-name">${escapeHtml(inst.name)}</div>
       <div class="im-card-room">${roomLabel(inst.room)}</div>
       ${(hasNotes||fileCount||maintCount) ? `<div class="im-card-badges">${hasNotes?'📖':''}${fileCount?'📎':''}${maintCount?'🔧':''}</div>` : ''}
     </div>`;
   }).join('');
+  grid.querySelectorAll('.im-card[data-instrument-name]').forEach(card=>card.addEventListener('click', ()=>openImDetail(card.dataset.instrumentName)));
 }
 document.getElementById('imFilterRoom').addEventListener('change', renderImGrid);
 
@@ -4972,11 +5420,12 @@ function openImDetail(name){
   document.getElementById('im_maint_desc').value = '';
   document.getElementById('im_maint_photo').value = '';
   document.getElementById('im_maint_photoPreview').style.display = 'none';
-  const isCustom = customInstruments.some(i=>i.name===name);
-  document.getElementById('imEditInstrumentWrap').innerHTML = isAdmin()
+  document.getElementById('imEditInstrumentWrap').innerHTML = isSuperAdmin()
     ? `<button class="btn btn-ghost btn-sm" onclick="openImEdit()">✎ 編輯儀器</button>` : '';
-  document.getElementById('imDeleteInstrumentWrap').innerHTML = (isCustom && isSuperAdmin())
-    ? `<button class="btn btn-ghost btn-sm btn-row-delete" onclick="deleteCustomInstrument('${escapeHtml(name)}')">刪除這台儀器</button>` : '';
+  document.getElementById('imDeleteInstrumentWrap').innerHTML = isSuperAdmin()
+    ? `<button class="btn btn-ghost btn-sm btn-row-delete" id="imDeleteCurrentBtn">刪除這台儀器</button>` : '';
+  const deleteBtn = document.getElementById('imDeleteCurrentBtn');
+  if(deleteBtn) deleteBtn.addEventListener('click', ()=>deleteInstrument(name));
   renderImFileList();
   const qrTarget = document.getElementById('imQrTarget');
   qrTarget.innerHTML = '';
@@ -5108,16 +5557,18 @@ async function removeImMaint(id){
   renderImGrid();
 }
 
-document.getElementById('imAddInstrumentBtn').addEventListener('click', ()=>{
-  if(!isAdmin()){ alert('只有管理員以上才能新增儀器。'); return; }
+function openImAddForm(){
+  if(!isSuperAdmin()){ alert('只有總管理員才能新增儀器。'); return; }
   document.getElementById('im_new_name').value = '';
   document.getElementById('im_new_room').value = '602';
   document.getElementById('imAddOverlay').classList.add('show');
-});
+}
+document.getElementById('imAddInstrumentBtn').addEventListener('click', openImAddForm);
+document.getElementById('saAddInstrumentBtn').addEventListener('click', openImAddForm);
 document.getElementById('imAddClose').addEventListener('click', ()=> document.getElementById('imAddOverlay').classList.remove('show'));
 document.getElementById('imAddCancelBtn').addEventListener('click', ()=> document.getElementById('imAddOverlay').classList.remove('show'));
 document.getElementById('imAddSaveBtn').addEventListener('click', async ()=>{
-  if(!isAdmin()){ alert('只有管理員以上才能新增儀器。'); return; }
+  if(!isSuperAdmin()){ alert('只有總管理員才能新增儀器。'); return; }
   const name = document.getElementById('im_new_name').value.trim();
   const room = document.getElementById('im_new_room').value;
   if(!name){ alert('請輸入儀器名稱'); return; }
@@ -5127,20 +5578,65 @@ document.getElementById('imAddSaveBtn').addEventListener('click', async ()=>{
   if(!ok){ alert('儲存失敗,請檢查網路連線後再試一次。'); return; }
   document.getElementById('imAddOverlay').classList.remove('show');
   renderImGrid();
+  renderSuperAdminTools();
 });
-async function deleteCustomInstrument(name){
+async function deleteInstrument(name){
   if(!isSuperAdmin()){ alert('只有總管理員才能刪除儀器。'); return; }
   if(!confirm(`確定要刪除「${name}」嗎?這台儀器的說明書、維修紀錄跟預約歷史都不會自動清除,但清單中會移除。`)) return;
-  customInstruments = customInstruments.filter(i=>i.name!==name);
-  await saveCustomInstruments();
+  const inst = INSTRUMENTS_ALL().find(i=>i.name===name);
+  if(!inst) return;
+  if(inst._custom) customInstruments = customInstruments.filter(i=>i.name!==name);
+  else instOverrides[inst._origName] = { ...(instOverrides[inst._origName]||{}), _deleted:true };
+  const ok = await saveCustomInstruments();
+  if(!ok){ alert('刪除失敗，請檢查網路與權限。'); return; }
   document.getElementById('imDetailOverlay').classList.remove('show');
   renderImGrid();
+  renderSuperAdminTools();
 }
+
+/* ====== 總管理員：儀器與位置清單 ====== */
+function renderSuperAdminTools(){
+  if(!isSuperAdmin()) return;
+  const instList = document.getElementById('saInstrumentList');
+  instList.innerHTML = INSTRUMENTS_ALL().slice().sort((a,b)=>a.room.localeCompare(b.room)||a.name.localeCompare(b.name)).map(inst=>`
+    <div class="setting-row"><div><b>${escapeHtml(inst.name)}</b><div class="meta">${escapeHtml(roomLabel(inst.room))}${inst._custom?' · 自訂':' · 內建'}</div></div><button type="button" class="btn btn-ghost btn-sm btn-row-delete" data-delete-instrument="${escapeHtml(inst.name)}">刪除</button></div>`).join('') || '<div class="slot-empty">目前沒有儀器</div>';
+  document.getElementById('saChemLocationList').innerHTML = CHEM_LOCATIONS.map(loc=>`<div class="setting-row"><span>${escapeHtml(loc)}</span><button type="button" class="btn btn-ghost btn-sm btn-row-delete" data-delete-chem-location="${escapeHtml(loc)}">刪除</button></div>`).join('');
+  document.getElementById('saMatLocationList').innerHTML = STORAGE_OPTIONS.map(o=>`<div class="setting-row"><span>${escapeHtml(o.label)}</span><button type="button" class="btn btn-ghost btn-sm btn-row-delete" data-delete-mat-location="${escapeHtml(o.value)}">刪除</button></div>`).join('');
+}
+document.getElementById('saInstrumentList').addEventListener('click', (e)=>{
+  const btn=e.target.closest('[data-delete-instrument]'); if(btn) deleteInstrument(btn.dataset.deleteInstrument);
+});
+document.getElementById('saChemLocationAdd').addEventListener('click', async ()=>{
+  if(!isSuperAdmin()) return;
+  const input=document.getElementById('saChemLocationInput'), value=input.value.trim();
+  if(!value) return;
+  if(CHEM_LOCATIONS.includes(value)){ alert('這個藥品位置已存在。'); return; }
+  systemSettings.chem_locations.push(value); input.value=''; await saveSystemSettings();
+});
+document.getElementById('saMatLocationAdd').addEventListener('click', async ()=>{
+  if(!isSuperAdmin()) return;
+  const input=document.getElementById('saMatLocationInput'), value=input.value.trim();
+  if(!value) return;
+  if(STORAGE_OPTIONS.some(o=>o.value===value)){ alert('這個試材位置已存在。'); return; }
+  systemSettings.material_locations.push({value,label:value}); input.value=''; await saveSystemSettings();
+});
+document.getElementById('saChemLocationList').addEventListener('click', async (e)=>{
+  const btn=e.target.closest('[data-delete-chem-location]'); if(!btn||!isSuperAdmin()) return;
+  const value=btn.dataset.deleteChemLocation;
+  if(!confirm(`確定從選單移除「${value}」嗎？既有藥品資料不會被修改。`)) return;
+  systemSettings.chem_locations=systemSettings.chem_locations.filter(v=>v!==value); await saveSystemSettings();
+});
+document.getElementById('saMatLocationList').addEventListener('click', async (e)=>{
+  const btn=e.target.closest('[data-delete-mat-location]'); if(!btn||!isSuperAdmin()) return;
+  const value=btn.dataset.deleteMatLocation;
+  if(!confirm(`確定從選單移除「${storageLabel(value)}」嗎？既有試材資料不會被修改。`)) return;
+  systemSettings.material_locations=systemSettings.material_locations.filter(o=>o.value!==value); await saveSystemSettings();
+});
 
 /* ====== 編輯儀器(管理員):改名 / 換實驗室 / 封面照片 ====== */
 let imEditPhotoPath = null;
 function openImEdit(){
-  if(!isAdmin()){ alert('只有管理員以上才能編輯儀器。'); return; }
+  if(!isSuperAdmin()){ alert('只有總管理員才能編輯儀器。'); return; }
   const inst = INSTRUMENTS_ALL().find(i=>i.name===imCurrentName);
   if(!inst) return;
   document.getElementById('im_edit_name').value = inst.name;
@@ -5173,7 +5669,7 @@ document.getElementById('imEditPhotoClear').addEventListener('click', ()=>{
   document.getElementById('imEditPhotoClear').style.display = 'none';
 });
 document.getElementById('imEditSaveBtn').addEventListener('click', async ()=>{
-  if(!isAdmin()){ alert('只有管理員以上才能編輯儀器。'); return; }
+  if(!isSuperAdmin()){ alert('只有總管理員才能編輯儀器。'); return; }
   const inst = INSTRUMENTS_ALL().find(i=>i.name===imCurrentName);
   if(!inst) return;
   const newName = document.getElementById('im_edit_name').value.trim();
@@ -5494,9 +5990,6 @@ function openCpDetail(id){
   if(isAdmin()){
     const idx = CP_STAGE_ORDER.indexOf(item.status);
     if(idx>0) actions.push(`<button class="btn btn-ghost btn-sm" onclick="cpStepBack('${id}')">↩ 回上一步</button>`);
-    if(item.status==='pending' || item.status==='quoted'){
-      actions.push(`<button class="btn btn-ghost btn-sm btn-row-delete" onclick="cpCancelItem('${id}')">都不買</button>`);
-    }
     actions.push(`<button class="btn btn-ghost btn-sm btn-row-delete" onclick="quickDeleteCp('${id}')">刪除</button>`);
   }
   document.getElementById('cpDetailActions').innerHTML = actions.join('');
@@ -5673,6 +6166,8 @@ function renderCpKanban(){
 }
 function renderCpReviewList(){
   const list = cpItems.filter(i=>i.status==='quoted');
+  document.getElementById('cpPrintReportBtn').disabled = list.length===0;
+  document.getElementById('cpPrintReportBtn').title = list.length ? `產出 ${list.length} 筆待審核項目的黑白表格` : '目前沒有待審核項目';
   const wrap = document.getElementById('cpReviewList');
   wrap.innerHTML = list.length ? list.map(i=>{
     const cmp = i.comparison_id ? cmpItems.find(c=>c.id===i.comparison_id) : null;
@@ -5719,12 +6214,13 @@ function cmpEntryUnitPrice(entry){
 }
 function cmpAllEntries(record){
   const list = [];
+  const vendors = record.vendors || {};
   CP_VENDORS.forEach(v=>{
-    (record.vendors[v]||[]).forEach((e,idx)=> list.push({ vendorKey:v, vendorLabel:v, idx, ...e }));
+    (vendors[v]||[]).forEach((e,idx)=> list.push({ vendorKey:v, vendorLabel:v, idx, ...e }));
   });
-  if(record.vendors['其他']){
-    const label = record.vendors['其他'].name || '其他';
-    (record.vendors['其他'].entries||[]).forEach((e,idx)=> list.push({ vendorKey:'其他', vendorLabel:label, idx, ...e }));
+  if(vendors['其他']){
+    const label = vendors['其他'].name || '其他';
+    (vendors['其他'].entries||[]).forEach((e,idx)=> list.push({ vendorKey:'其他', vendorLabel:label, idx, ...e }));
   }
   return list;
 }
@@ -5734,7 +6230,10 @@ function cmpCheapestEntry(record){
   return entries.sort((a,b)=>a.unitPrice.value-b.unitPrice.value)[0];
 }
 
-/* ---- 比價表:卡片主視覺 ---- */
+function cmpLinkedPurchase(record){ return record&&record.linked_cp_id?cpItems.find(i=>i.id===record.linked_cp_id):null; }
+function cmpNameZh(record){ const linked=cmpLinkedPurchase(record); return record.name_zh || record.item_name || (linked&&linked.name_zh) || ''; }
+function cmpNameEn(record){ const linked=cmpLinkedPurchase(record); return record.name_en || (linked&&linked.name_en) || ''; }
+/* ---- 比價紀錄卡片（主畫面改由按鈕開啟） ---- */
 function cmpCardHtml(record){
   const cheapest = cmpCheapestEntry(record);
   let priceLine;
@@ -5746,18 +6245,77 @@ function cmpCardHtml(record){
   }else{
     priceLine = `<div style="font-size:11px;color:var(--ink-soft);margin-top:8px;">尚未填價格</div>`;
   }
-  return `<div class="cal-cell" style="text-align:left;min-height:92px;cursor:pointer;padding:12px;" onclick="openCmpDetail('${record.id}')">
-    <div style="font-size:13.5px;font-weight:700;">${escapeHtml(record.item_name)}</div>
+  return `<div class="cal-cell" data-cmp-id="${escapeHtml(record.id)}" style="text-align:left;min-height:108px;cursor:pointer;padding:12px;position:relative;">
+    <div style="font-size:13.5px;font-weight:700;padding-right:${isSuperAdmin()?'34px':'0'};">${escapeHtml(cmpNameZh(record)||'-')}</div>
+    ${cmpNameEn(record)?`<div style="font-size:10.5px;color:var(--ink-soft);margin-top:2px;">${escapeHtml(cmpNameEn(record))}</div>`:''}
     ${priceLine}
+    ${isSuperAdmin()?`<button type="button" class="btn-icon btn-row-delete" data-delete-cmp="${escapeHtml(record.id)}" title="刪除比價紀錄" style="position:absolute;right:8px;top:8px;">✕</button>`:''}
   </div>`;
 }
 function renderCmpCardGrid(){
   const grid = document.getElementById('cmpCardGrid');
-  if(!cmpItems.length){ grid.innerHTML = '<div class="empty" style="grid-column:1/-1;"><b>還沒有比價資料</b>點右上角「＋新增比價」開始</div>'; return; }
-  const sorted = cmpItems.slice().sort((a,b)=>(b.created_at||'').localeCompare(a.created_at||''));
+  const query=(document.getElementById('cmpHistorySearch').value||'').trim().toLowerCase();
+  const matched=cmpItems.filter(c=>!query||[cmpNameZh(c),cmpNameEn(c),c.item_name].join(' ').toLowerCase().includes(query));
+  if(!matched.length){ grid.innerHTML = `<div class="empty" style="grid-column:1/-1;"><b>${cmpItems.length?'找不到符合的比價紀錄':'還沒有比價資料'}</b>${cmpItems.length?'可以用中文名或英文名搜尋':'點「＋新增比價」開始'}</div>`; return; }
+  const sorted = matched.slice().sort((a,b)=>(b.created_at||'').localeCompare(a.created_at||''));
   grid.innerHTML = sorted.map(cmpCardHtml).join('');
 }
 document.getElementById('cmpAddBtn').addEventListener('click', ()=> openCmpDetail(null));
+document.getElementById('cmpHistoryBtn').addEventListener('click', ()=>{ document.getElementById('cmpHistoryOverlay').classList.add('show'); renderCmpCardGrid(); });
+document.getElementById('cmpHistoryClose').addEventListener('click', ()=>document.getElementById('cmpHistoryOverlay').classList.remove('show'));
+document.getElementById('cmpHistorySearch').addEventListener('input',renderCmpCardGrid);
+document.getElementById('cmpCardGrid').addEventListener('click',(e)=>{
+  const deleteBtn=e.target.closest('[data-delete-cmp]');
+  if(deleteBtn){ e.stopPropagation(); deletePriceComparison(deleteBtn.dataset.deleteCmp); return; }
+  const card=e.target.closest('[data-cmp-id]'); if(card) openCmpDetail(card.dataset.cmpId);
+});
+async function deletePriceComparison(id){
+  if(!isSuperAdmin()) return;
+  const record=cmpItems.find(c=>c.id===id); if(!record) return;
+  if(!confirm(`確定刪除「${cmpNameZh(record)||'未命名'}」的比價紀錄嗎？這個動作無法復原。`)) return;
+  const linked=record.linked_cp_id?cpItems.find(i=>i.id===record.linked_cp_id):null;
+  if(linked&&linked.comparison_id===record.id){
+    linked.comparison_id=null;
+    if(linked.status==='quoted') linked.status='pending';
+    const okLinked=await fsSetItem('chem-purchases',linked);
+    if(!okLinked){ alert('無法解除採買項目的比價關聯，因此尚未刪除。'); return; }
+  }
+  if(!await fsDeleteItem('price-comparisons',record.id,record._doc_id)){ alert('比價紀錄刪除失敗。'); return; }
+  cmpItems=cmpItems.filter(c=>c.id!==record.id);
+  if(cmpCurrentId===record.id) closeCmpDetail();
+  renderCmpCardGrid(); renderCpKanban();
+}
+
+/* ---- 已詢價待審核：黑白勾選／簽名報表（第一版） ---- */
+function buildPurchaseReviewReport(){
+  const reviewItems=cpItems.filter(i=>i.status==='quoted');
+  const generatedAt=new Date().toLocaleString('zh-TW',{hour12:false});
+  const sections=reviewItems.map((item,itemIndex)=>{
+    const cmp=item.comparison_id?cmpItems.find(c=>c.id===item.comparison_id):null;
+    const entries=cmp?cmpAllEntries(cmp):[];
+    const rows=(entries.length?entries:[{vendorLabel:'',purity:item.purity||'',amount:'',unit:'',price:'',note:'尚無比價規格'}]).map(e=>{
+      const up=cmpEntryUnitPrice(e);
+      return `<tr><td style="text-align:center;"><span class="paper-box"></span></td><td>${escapeHtml(e.vendorLabel||'')}</td><td>${escapeHtml(e.purity||'')}</td><td>${e.amount!==''&&e.amount!=null?`${e.amount}${escapeHtml(e.unit||'')}`:''}</td><td>${e.price!==''&&e.price!=null?`$${e.price}`:''}</td><td>${up?`$${up.value.toFixed(2)}/${escapeHtml(up.unit)}`:''}</td><td>${escapeHtml(e.note||'')}</td></tr>`;
+    }).join('');
+    return `<div class="report-item"><div class="report-item-title">${itemIndex+1}. ${escapeHtml(item.name_zh||'-')}${item.name_en?` / ${escapeHtml(item.name_en)}`:''}${item.cas?`　CAS: ${escapeHtml(item.cas)}`:''}</div><table><thead><tr><th style="width:38px;">勾選</th><th>廠商</th><th>純度／規格</th><th>容量</th><th>價格</th><th>每單位</th><th>備註</th></tr></thead><tbody>${rows}</tbody></table><div style="font-size:10.5px;margin-top:5px;">其他決定：□ 都不買　□ 延後採買　補充說明：________________________________________________________</div></div>`;
+  }).join('');
+  return `<h1>SFPLAB 採買比價審核表</h1><div class="report-meta">產出時間：${escapeHtml(generatedAt)}　待審核項目：${reviewItems.length} 筆</div>${sections}<div class="signature-grid"><div class="signature-box">申請人簽名：</div><div class="signature-box">審核人簽名：</div><div class="signature-box">經費確認：</div><div class="signature-box">日期：</div></div>`;
+}
+function openPurchaseReviewReport(){
+  const count=cpItems.filter(i=>i.status==='quoted').length;
+  if(!count){ alert('目前沒有「已詢價待審核」的項目。'); return; }
+  document.getElementById('purchasePrintArea').innerHTML=buildPurchaseReviewReport();
+  document.getElementById('purchaseReportOverlay').classList.add('show');
+}
+document.getElementById('cpPrintReportBtn').addEventListener('click',openPurchaseReviewReport);
+document.getElementById('purchaseReportClose').addEventListener('click',()=>document.getElementById('purchaseReportOverlay').classList.remove('show'));
+document.getElementById('purchaseReportPrintBtn').addEventListener('click',()=>{
+  document.body.classList.add('printing-purchase-report');
+  const cleanup=()=>document.body.classList.remove('printing-purchase-report');
+  window.addEventListener('afterprint',cleanup,{once:true});
+  window.print();
+  setTimeout(cleanup,1500);
+});
 
 /* ---- 比價明細:多規格編輯(純度/容量/單位/價格/備註) ---- */
 function cmpEntryRowHtml(vendorKey, entry, idx){
@@ -5836,7 +6394,7 @@ function cmpSwitchToResult(record){
   document.getElementById('cmp_editSection').style.display = 'none';
   document.getElementById('cmp_resultSection').style.display = 'block';
   renderCmpResultTable(record);
-  document.getElementById('cmp_addedNote').textContent = record.addedToList ? `✅ 已完成:${escapeHtml(record.decided_vendor||'')}` : '';
+  document.getElementById('cmp_addedNote').textContent = record.addedToList ? `✅ 已完成:${record.decided_vendor||''}` : '';
   cmpUpdateActionState(record);
 }
 document.getElementById('cmpShowEditBtn').addEventListener('click', cmpSwitchToEdit);
@@ -5844,7 +6402,8 @@ function openCmpDetail(id){
   cmpCurrentId = id;
   const item = id ? cmpItems.find(c=>c.id===id) : null;
   document.getElementById('cmpDetailTitle').textContent = item ? '比價結果' : '新增比價';
-  document.getElementById('cmp_item_name').value = item ? item.item_name||'' : '';
+  document.getElementById('cmp_item_name').value = item ? cmpNameZh(item) : '';
+  document.getElementById('cmp_item_name_en').value = item ? cmpNameEn(item) : '';
   renderCmpVendorBlocks(item ? item.vendors : null);
   const hasEntries = item && cmpAllEntries(item).length > 0;
   if(hasEntries) cmpSwitchToResult(item);
@@ -5853,14 +6412,15 @@ function openCmpDetail(id){
   document.getElementById('cmpDetailOverlay').classList.add('show');
 }
 document.getElementById('cmpDetailSaveBtn').addEventListener('click', async ()=>{
-  const item_name = document.getElementById('cmp_item_name').value.trim();
-  if(!item_name){ alert('請填寫藥品名稱'); return; }
+  const name_zh = document.getElementById('cmp_item_name').value.trim();
+  const name_en = document.getElementById('cmp_item_name_en').value.trim();
+  if(!name_zh){ alert('請填寫中文名稱'); return; }
   const vendors = gatherCmpVendorsFromDOM();
   const existing = cmpCurrentId ? cmpItems.find(c=>c.id===cmpCurrentId) : null;
   const record = {
     id: cmpCurrentId || genId(cmpItems, 'CMP'),
     _doc_id: existing ? existing._doc_id : null,
-    item_name, vendors,
+    item_name:name_zh, name_zh, name_en, vendors,
     decided_vendor: existing ? existing.decided_vendor : null,
     decided_vendor_key: existing ? existing.decided_vendor_key : null,
     decided_entry_idx: existing ? existing.decided_entry_idx : null,
@@ -5872,10 +6432,10 @@ document.getElementById('cmpDetailSaveBtn').addEventListener('click', async ()=>
     updated_at: new Date().toISOString(),
     updated_by_uid: (currentUser&&currentUser.uid)||null
   };
+  const ok = await fsSetItem('price-comparisons', record);
+  if(!ok){ alert('儲存失敗,請檢查網路連線後再試一次。'); return; }
   if(cmpCurrentId){ cmpItems = cmpItems.map(c=>c.id===cmpCurrentId?record:c); }
   else{ cmpItems.push(record); cmpCurrentId = record.id; }
-  const ok = await fsSetItem('price-comparisons', record);
-  if(!ok){ alert('儲存失敗,請檢查網路連線後再試一次。'); }
   renderCmpCardGrid();
   if(cmpAllEntries(record).length){ cmpSwitchToResult(record); }
   else{ showToast('已儲存(尚未填任何規格價格)', null, 3000); }
@@ -5884,8 +6444,9 @@ document.getElementById('cmpDetailSaveBtn').addEventListener('click', async ()=>
 /* ---- 比價結果:廠商分區表格 + 勾選送出 ---- */
 function renderCmpResultTable(record){
   const wrap = document.getElementById('cmp_resultTable');
+  const vendors = record.vendors || {};
   const vendorKeys = [...CP_VENDORS, '其他'].filter(v=>{
-    const entries = v==='其他' ? (record.vendors['其他']&&record.vendors['其他'].entries) : record.vendors[v];
+    const entries = v==='其他' ? (vendors['其他']&&vendors['其他'].entries) : vendors[v];
     return entries && entries.length;
   });
   if(!vendorKeys.length){ wrap.innerHTML = '<div class="empty">尚未填寫任何規格價格,請先編輯規格資料。</div>'; return; }
@@ -5893,9 +6454,9 @@ function renderCmpResultTable(record){
   const vendorData = {};
   let maxRows = 0;
   vendorKeys.forEach(v=>{
-    const rawEntries = v==='其他' ? record.vendors['其他'].entries : record.vendors[v];
+    const rawEntries = v==='其他' ? vendors['其他'].entries : vendors[v];
     const entries = rawEntries.map((e,idx)=>({ ...e, idx, unitPrice: cmpEntryUnitPrice(e) }));
-    const label = v==='其他' ? (record.vendors['其他'].name||'其他') : v;
+    const label = v==='其他' ? (vendors['其他'].name||'其他') : v;
     vendorData[v] = { label, entries };
     maxRows = Math.max(maxRows, entries.length);
   });
@@ -5963,7 +6524,7 @@ document.getElementById('cmpSubmitDecisionBtn').addEventListener('click', async 
   }else{
     const newItem = {
       id: genId(cpItems, 'CP'),
-      name_zh: record.item_name, name_en:'', cas:'',
+      name_zh: cmpNameZh(record), name_en:cmpNameEn(record), cas:'',
       package_sizes: [], purity: entry.purity||'',
       note: `由比價工具產生`,
       status: 'reviewed', vendor: vendorLabel, price: entry.price, pack: packStr,
@@ -6001,7 +6562,7 @@ async function cpStartComparison(id){
   closeCpDetail();
   const record = {
     id: genId(cmpItems, 'CMP'),
-    item_name: item.name_zh,
+    item_name: item.name_zh, name_zh:item.name_zh||'', name_en:item.name_en||'',
     vendors: {}, decided_vendor:null, decided_vendor_key:null, decided_entry_idx:null, addedToList:false, linked_cp_id: item.id,
     created_by_uid: (currentUser&&currentUser.uid)||null,
     created_by: (currentUser&&currentUser.code)||null, created_at: new Date().toISOString()
@@ -6104,16 +6665,175 @@ document.getElementById('cmpImportInput').addEventListener('change', (e)=>{
 
 
 /* ======================================================
+   圖書借閱：館藏、借閱、歸還與個人紀錄
+====================================================== */
+let libraryBooks=[];
+let libraryLoans=[];
+let editingLibraryBookId=null;
+let borrowingLibraryBookId=null;
+async function loadLibraryData(){
+  [libraryBooks,libraryLoans]=await Promise.all([fsGetAll('library-books'),fsGetAll('library-loans')]);
+}
+function activeLoanForBook(bookId){ return libraryLoans.find(l=>l.book_id===bookId&&l.status==='borrowed'&&!l.returned_at); }
+function nextBookCode(){
+  let max=0; libraryBooks.forEach(b=>{ const m=/^BOOK-(\d+)$/i.exec(b.code||b.id||''); if(m) max=Math.max(max,Number(m[1])); });
+  return `BOOK-${String(max+1).padStart(4,'0')}`;
+}
+function renderLibraryFilters(){
+  const sel=document.getElementById('libFilterCategory'),cur=sel.value;
+  const categories=[...new Set(libraryBooks.map(b=>b.category).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'zh-Hant'));
+  sel.innerHTML='<option value="">所有分類</option>'+categories.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+  sel.value=cur;
+}
+function renderLibraryAll(){
+  if(!document.getElementById('libTbody')) return;
+  renderLibraryFilters();
+  const search=document.getElementById('libSearch').value.trim().toLowerCase();
+  const category=document.getElementById('libFilterCategory').value;
+  const status=document.getElementById('libFilterStatus').value;
+  const activeLoans=libraryLoans.filter(l=>l.status==='borrowed'&&!l.returned_at);
+  document.getElementById('libStatTotal').textContent=libraryBooks.length;
+  document.getElementById('libStatAvailable').textContent=libraryBooks.filter(b=>!activeLoanForBook(b.id)).length;
+  document.getElementById('libStatMine').textContent=activeLoans.filter(l=>l.borrower_uid===currentUser.uid).length;
+  const filtered=libraryBooks.filter(b=>{
+    const loan=activeLoanForBook(b.id), currentStatus=loan?'borrowed':'available';
+    if(category&&b.category!==category) return false;
+    if(status&&currentStatus!==status) return false;
+    if(search&&![b.title,b.author,b.isbn,b.code,b.category].join(' ').toLowerCase().includes(search)) return false;
+    return true;
+  }).sort((a,b)=>(a.title||'').localeCompare(b.title||'','zh-Hant'));
+  const tbody=document.getElementById('libTbody');
+  tbody.innerHTML=filtered.map(book=>{
+    const loan=activeLoanForBook(book.id), mine=loan&&loan.borrower_uid===currentUser.uid;
+    const actions=[];
+    if(!loan) actions.push(`<button type="button" class="btn btn-primary btn-sm" data-lib-action="borrow" data-book-id="${escapeHtml(book.id)}">借閱</button>`);
+    if(loan&&(mine||isAdmin())) actions.push(`<button type="button" class="btn btn-ghost btn-sm" data-lib-action="return" data-loan-id="${escapeHtml(loan.id)}">歸還</button>`);
+    if(isAdmin()) actions.push(`<button type="button" class="btn btn-ghost btn-sm" data-lib-action="edit" data-book-id="${escapeHtml(book.id)}">編輯</button>`);
+    return `<tr>
+      <td data-label="圖書"><div class="book-title">${escapeHtml(book.title||'-')}</div><div class="book-meta">${escapeHtml(book.author||'作者未填')}${book.isbn?` · ISBN ${escapeHtml(book.isbn)}`:''}</div></td>
+      <td data-label="編號"><span class="id-badge">${escapeHtml(book.code||book.id)}</span></td>
+      <td data-label="分類">${book.category?`<span class="plain-tag">${escapeHtml(book.category)}</span>`:'-'}</td>
+      <td data-label="位置">${escapeHtml(book.location||'-')}</td>
+      <td data-label="狀態"><span class="plain-tag ${loan?'status-borrowed':'status-available'}">${loan?'借閱中':'可借閱'}</span></td>
+      <td data-label="借閱人 / 到期日">${loan?`${escapeHtml(ownerLabel(loan.borrower_uid||loan.borrower_code))}<div class="book-meta">到期 ${escapeHtml(loan.due_date||'-')}</div>`:'-'}</td>
+      <td class="cell-actions"><div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;">${actions.join('')}</div></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('libEmptyState').style.display=filtered.length?'none':'block';
+  const myHistory=libraryLoans.filter(l=>l.borrower_uid===currentUser.uid).sort((a,b)=>(b.borrowed_at||'').localeCompare(a.borrowed_at||''));
+  document.getElementById('libMyHistory').innerHTML=myHistory.length?myHistory.slice(0,30).map(l=>{
+    const book=libraryBooks.find(b=>b.id===l.book_id);
+    return `<div class="today-card"><div class="slot-row" style="border-top:none;"><span><b>${escapeHtml((book&&book.title)||l.book_title||'已移除圖書')}</b><div class="book-meta">借出 ${escapeHtml((l.borrowed_at||'').slice(0,10))} · 到期 ${escapeHtml(l.due_date||'-')}</div></span><span class="plain-tag ${l.status==='borrowed'?'status-borrowed':'status-available'}">${l.status==='borrowed'?'借閱中':`已歸還 ${escapeHtml((l.returned_at||'').slice(0,10))}`}</span></div></div>`;
+  }).join(''):'<div class="slot-empty">你還沒有借閱紀錄</div>';
+}
+function openLibraryBookForm(id){
+  if(!isAdmin()) return;
+  editingLibraryBookId=id||null;
+  const book=id?libraryBooks.find(b=>b.id===id):null;
+  document.getElementById('libBookTitle').textContent=book?'編輯圖書':'新增圖書';
+  document.getElementById('lib_code').value=book?(book.code||book.id):nextBookCode();
+  document.getElementById('lib_isbn').value=book?book.isbn||'':'';
+  document.getElementById('lib_title').value=book?book.title||'':'';
+  document.getElementById('lib_author').value=book?book.author||'':'';
+  document.getElementById('lib_category').value=book?book.category||'':'';
+  document.getElementById('lib_location').value=book?book.location||'':'';
+  document.getElementById('lib_note').value=book?book.note||'':'';
+  document.getElementById('libDeleteBtn').style.display=book?'inline-block':'none';
+  document.getElementById('libBookOverlay').classList.add('show');
+}
+function closeLibraryBookForm(){ document.getElementById('libBookOverlay').classList.remove('show'); editingLibraryBookId=null; }
+document.getElementById('libAddBtn').addEventListener('click',()=>openLibraryBookForm(null));
+document.getElementById('libBookClose').addEventListener('click',closeLibraryBookForm);
+document.getElementById('libBookCancel').addEventListener('click',closeLibraryBookForm);
+document.getElementById('libBookSave').addEventListener('click',async()=>{
+  if(!isAdmin()) return;
+  const code=document.getElementById('lib_code').value.trim(), title=document.getElementById('lib_title').value.trim();
+  if(!code||!title){ alert('請填寫圖書編號與書名。'); return; }
+  if(libraryBooks.some(b=>b.id!==editingLibraryBookId&&(b.code||b.id).toLowerCase()===code.toLowerCase())){ alert('這個圖書編號已存在。'); return; }
+  const old=editingLibraryBookId?libraryBooks.find(b=>b.id===editingLibraryBookId):null;
+  const book={
+    id:old?old.id:genId(libraryBooks,'BOOK'), _doc_id:old?old._doc_id:null, code,title,
+    isbn:document.getElementById('lib_isbn').value.trim(), author:document.getElementById('lib_author').value.trim(),
+    category:document.getElementById('lib_category').value.trim(), location:document.getElementById('lib_location').value.trim(), note:document.getElementById('lib_note').value.trim(),
+    current_loan_id:old?old.current_loan_id||null:null,
+    created_at:old?old.created_at:new Date().toISOString(), created_by_uid:old?old.created_by_uid:currentUser.uid,
+    updated_at:new Date().toISOString(), updated_by_uid:currentUser.uid
+  };
+  if(!await fsSetItem('library-books',book)){ alert('圖書儲存失敗。'); return; }
+  if(old) libraryBooks[libraryBooks.findIndex(b=>b.id===old.id)]=book; else libraryBooks.push(book);
+  closeLibraryBookForm(); renderLibraryAll();
+});
+document.getElementById('libDeleteBtn').addEventListener('click',async()=>{
+  if(!isAdmin()||!editingLibraryBookId) return;
+  const book=libraryBooks.find(b=>b.id===editingLibraryBookId); if(!book) return;
+  if(activeLoanForBook(book.id)){ alert('這本書目前借閱中，歸還後才能刪除。'); return; }
+  if(!confirm(`確定刪除「${book.title}」嗎？既有借閱歷史仍會保留。`)) return;
+  if(!await fsDeleteItem('library-books',book.id,book._doc_id)){ alert('刪除失敗。'); return; }
+  libraryBooks=libraryBooks.filter(b=>b.id!==book.id); closeLibraryBookForm(); renderLibraryAll();
+});
+function openLibraryBorrow(bookId){
+  const book=libraryBooks.find(b=>b.id===bookId); if(!book||activeLoanForBook(book.id)) return;
+  borrowingLibraryBookId=book.id;
+  document.getElementById('libBorrowBookLabel').innerHTML=`<div class="book-title">${escapeHtml(book.title)}</div><div class="book-meta">${escapeHtml(book.author||'作者未填')} · ${escapeHtml(book.code||book.id)}</div>`;
+  const due=new Date(); due.setDate(due.getDate()+30);
+  document.getElementById('lib_due_date').value=localDateISO(due);
+  document.getElementById('lib_borrow_note').value='';
+  document.getElementById('libBorrowOverlay').classList.add('show');
+}
+function closeLibraryBorrow(){ document.getElementById('libBorrowOverlay').classList.remove('show'); borrowingLibraryBookId=null; }
+document.getElementById('libBorrowClose').addEventListener('click',closeLibraryBorrow);
+document.getElementById('libBorrowConfirm').addEventListener('click',async()=>{
+  const book=libraryBooks.find(b=>b.id===borrowingLibraryBookId), dueDate=document.getElementById('lib_due_date').value;
+  if(!book||!dueDate) return;
+  const loanRef=db.collection('library-loans').doc(), bookRef=db.collection('library-books').doc(book._doc_id);
+  const loan={id:`LOAN-${Date.now()}`,book_id:book.id,book_doc_id:book._doc_id,book_title:book.title,borrower_uid:currentUser.uid,borrower_code:currentUser.code,due_date:dueDate,note:document.getElementById('lib_borrow_note').value.trim(),status:'borrowed',borrowed_at:new Date().toISOString(),returned_at:null,_doc_id:loanRef.id};
+  try{
+    await db.runTransaction(async tx=>{
+      const snap=await tx.get(bookRef), data=snap.data()||{};
+      if(data.current_loan_id) throw new Error('already-borrowed');
+      tx.update(bookRef,{current_loan_id:loanRef.id,updated_at:new Date().toISOString()});
+      tx.set(loanRef,loan);
+    });
+  }catch(err){ alert(err&&err.message==='already-borrowed'?'這本書剛剛已被其他人借走。':'借閱失敗，請檢查網路與權限。'); return; }
+  book.current_loan_id=loanRef.id; libraryLoans.push(loan); closeLibraryBorrow(); renderLibraryAll(); showToast('借閱完成');
+});
+async function returnLibraryLoan(loanId){
+  const loan=libraryLoans.find(l=>l.id===loanId), book=loan&&libraryBooks.find(b=>b.id===loan.book_id);
+  if(!loan||!book||(!isAdmin()&&loan.borrower_uid!==currentUser.uid)) return;
+  if(!confirm(`確定歸還「${book.title}」嗎？`)) return;
+  const loanRef=db.collection('library-loans').doc(loan._doc_id), bookRef=db.collection('library-books').doc(book._doc_id), returnedAt=new Date().toISOString();
+  try{
+    await db.runTransaction(async tx=>{
+      const loanSnap=await tx.get(loanRef); if(!loanSnap.exists) throw new Error('missing-loan');
+      tx.update(loanRef,{status:'returned',returned_at:returnedAt,returned_by_uid:currentUser.uid});
+      tx.update(bookRef,{current_loan_id:null,updated_at:returnedAt});
+    });
+  }catch(err){ alert('歸還失敗，請檢查網路與權限。'); return; }
+  loan.status='returned'; loan.returned_at=returnedAt; book.current_loan_id=null; renderLibraryAll(); showToast('已完成歸還');
+}
+document.getElementById('libTbody').addEventListener('click',(e)=>{
+  const btn=e.target.closest('[data-lib-action]'); if(!btn) return;
+  if(btn.dataset.libAction==='borrow') openLibraryBorrow(btn.dataset.bookId);
+  if(btn.dataset.libAction==='return') returnLibraryLoan(btn.dataset.loanId);
+  if(btn.dataset.libAction==='edit') openLibraryBookForm(btn.dataset.bookId);
+});
+document.getElementById('libSearch').addEventListener('input',renderLibraryAll);
+document.getElementById('libFilterCategory').addEventListener('change',renderLibraryAll);
+document.getElementById('libFilterStatus').addEventListener('change',renderLibraryAll);
+
+/* ======================================================
    帳號管理:全部資料匯出/匯入
 ====================================================== */
 const FULL_BACKUP_COLLECTIONS = {
   chemicals: ()=>items, materials: ()=>matItems, samples: ()=>smpItems,
   'chem-usage-logs': ()=>culItems, 'instrument-reservations': ()=>iulItems,
-  'todo-items': ()=>todoItems, 'chem-purchases': ()=>cpItems, 'price-comparisons': ()=>cmpItems
+  'todo-items': ()=>todoItems, 'chem-purchases': ()=>cpItems, 'price-comparisons': ()=>cmpItems,
+  'library-books': ()=>libraryBooks, 'library-loans': ()=>libraryLoans
 };
 const FULL_BACKUP_BLOBS = {
   [DR_KEY]: ()=>drData, [IM_KEY]: ()=>imData,
-  [CUSTOM_INSTRUMENTS_KEY]: ()=>({ list:customInstruments, overrides:instOverrides }), [SB_KEY]: ()=>sbData
+  [CUSTOM_INSTRUMENTS_KEY]: ()=>({ list:customInstruments, overrides:instOverrides }), [SB_KEY]: ()=>sbData,
+  [SYSTEM_SETTINGS_KEY]: ()=>systemSettings, [DUTY_ADMIN_KEY]: ()=>dutyAdminData
 };
 document.getElementById('migrateUidBtn').addEventListener('click', async ()=>{
   if(!isSuperAdmin()) return;
@@ -6161,7 +6881,7 @@ document.getElementById('migrateUidBtn').addEventListener('click', async ()=>{
   }finally{ btn.disabled=false; }
 });
 document.getElementById('fullExportBtn').addEventListener('click', ()=>{
-  const payload = { version:1, exported_at: new Date().toISOString(), collections:{}, blobs:{} };
+  const payload = { version:2, exported_at: new Date().toISOString(), collections:{}, blobs:{} };
   Object.keys(FULL_BACKUP_COLLECTIONS).forEach(k=> payload.collections[k] = FULL_BACKUP_COLLECTIONS[k]());
   Object.keys(FULL_BACKUP_BLOBS).forEach(k=> payload.blobs[k] = FULL_BACKUP_BLOBS[k]());
   const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
@@ -6181,7 +6901,7 @@ document.getElementById('fullImportInput').addEventListener('change', (e)=>{
     try{ payload = JSON.parse(ev.target.result); }
     catch(err){ alert('檔案格式錯誤,無法解析JSON。'); return; }
     if(!payload.collections || !payload.blobs){ alert('這個檔案看起來不是全部資料備份檔。'); return; }
-    if(!confirm('確定要匯入嗎?這會完全覆蓋目前所有的藥品/試材/樣品/帳號等資料,此動作無法復原,建議先自己另外備份一份現有資料再匯入。')) return;
+    if(!confirm('確定要匯入嗎?這會完全覆蓋備份檔內的藥品、試材、樣品、採買、圖書與值週等資料；帳號不在匯入範圍。此動作無法復原,建議先另外備份現有資料。')) return;
     const status = document.getElementById('fullBackupStatus');
     status.textContent = '匯入中,請稍候...';
     try{
@@ -6271,11 +6991,13 @@ function renderDashboard(){
   const info = getISOWeekInfo(0);
   const wk = ensureDrWeek(info.weekKey);
   let doneCount = 0, totalCount = 0;
-  DR_ALL_DAYS.forEach(d=>{ wk.daily[d].forEach(cell=>{ totalCount++; if(cell.checked) doneCount++; }); });
+  DR_ALL_DAYS.forEach(d=>{ DR_DAILY_TASKS.forEach((task,ti)=>{ if(!task.days.includes(d)) return; const cell=wk.daily[d][ti]; totalCount++; if(cell.checked) doneCount++; }); });
   const weeklyTasks = drWeeklyTasks(info.weekKey);
   wk.weekly.slice(0, weeklyTasks.length).forEach(cell=>{ totalCount++; if(cell.checked) doneCount++; });
   const pct = totalCount ? Math.round(doneCount/totalCount*100) : 0;
+  const dutyAssignment=dutyAdminData.assignments&&dutyAdminData.assignments[info.weekKey];
   document.getElementById('dashDutyProgress').innerHTML = `
+    <div class="book-meta" style="margin-bottom:7px;">本週值週生：<b style="color:var(--pine-deep);">${dutyAssignment?escapeHtml(ownerLabel(dutyAssignment.user_uid||dutyAssignment.user_code)):'尚未指派'}</b></div>
     <div class="dash-progress-bar" style="margin-top:2px;"><div class="dash-progress-fill" style="width:${pct}%;"></div></div>
     <div class="dash-progress-label"><span>${doneCount} / ${totalCount} 項已完成</span><span>${pct}%</span></div>
     <div class="dash-row" style="border-top:none;padding-top:10px;" onclick="switchPage('dutyRoster')"><span class="dash-row-title">前往值週生工作表 →</span></div>
@@ -6345,7 +7067,8 @@ function startRealtimeSync(){
   watchCollection(db.collection('users'), rows=>{
     accounts = rows.map(r=>({ ...r, uid:r._doc_id }));
     const me = accounts.find(a=>a.uid===currentUser.uid);
-    if(!me || me.active!==true){
+    if(!me || me.active!==true || me.deleted===true){
+      stopIdleLogoutTimer();
       auth.signOut().finally(()=>location.reload());
       return;
     }
@@ -6357,6 +7080,9 @@ function startRealtimeSync(){
     if(roleChanged){ location.reload(); return; }
     renderUserBadge();
     if(isAdmin()) renderAdminTable();
+    renderMatAll();
+    renderLibraryAll();
+    if(isAdmin()) renderDutyAdminTools();
   }, 'users');
   watchCollection(db.collection('chemicals'), rows=>{ items=rows; renderAll(); renderDashboard(); }, 'chemicals');
   watchCollection(db.collection('materials'), rows=>{ matItems=rows; renderMatAll(); }, 'materials');
@@ -6366,6 +7092,8 @@ function startRealtimeSync(){
   watchCollection(db.collection('instrument-reservations'), rows=>{ iulItems=rows; renderIulAll(); renderDashboard(); }, 'instrument-reservations');
   watchCollection(db.collection('chem-purchases'), rows=>{ cpItems=rows; renderCpKanban(); renderDashboard(); }, 'chem-purchases');
   watchCollection(db.collection('price-comparisons'), rows=>{ cmpItems=rows; renderCmpCardGrid(); renderCpKanban(); }, 'price-comparisons');
+  watchCollection(db.collection('library-books'), rows=>{ libraryBooks=rows; renderLibraryAll(); }, 'library-books');
+  watchCollection(db.collection('library-loans'), rows=>{ libraryLoans=rows; renderLibraryAll(); }, 'library-loans');
 
   if(isAdmin()){
     watchCollection(db.collection('todo-items'), rows=>{ todoItems=rows; renderTodoAll(); renderDashboard(); }, 'todo-items');
@@ -6382,18 +7110,25 @@ function startRealtimeSync(){
   }
 
   watchBlob(DR_KEY, data=>{ drData=data||{}; renderDrAll(); renderDashboard(); }, 'duty-roster');
+  watchBlob(DUTY_ADMIN_KEY, data=>{ dutyAdminData=normalizeDutyAdminData(data); renderDrAll(); if(isAdmin()) renderDutyAdminTools(); renderDashboard(); }, 'duty-admin');
   watchBlob(SB_KEY, data=>{ sbData=data||{}; renderSbTable(); renderDashboard(); }, 'software-backup');
   watchBlob(IM_KEY, data=>{ imData=data||{}; renderImGrid(); }, 'instrument-manual');
-  watchBlob(CUSTOM_INSTRUMENTS_KEY, data=>{ customInstruments=data||[]; renderImGrid(); }, 'custom-instruments');
+  watchBlob(CUSTOM_INSTRUMENTS_KEY, data=>{
+    if(Array.isArray(data)){ customInstruments=data; instOverrides={}; }
+    else{ customInstruments=(data&&data.list)||[]; instOverrides=(data&&data.overrides)||{}; }
+    renderImGrid(); if(isSuperAdmin()) renderSuperAdminTools();
+  }, 'custom-instruments');
+  watchBlob(SYSTEM_SETTINGS_KEY, data=>{ applySystemSettings(data); renderAll(); renderMatAll(); if(isSuperAdmin()) renderSuperAdminTools(); }, 'system-settings');
 }
 
 async function loadAllAppData(){
   if(!currentUser || appDataLoaded) return;
   try{
+    await loadSystemSettings();
     await Promise.all([
       loadItems(), loadMatItems(), loadSmpItems(), loadCulItems(), loadIulItems(),
       loadSbData(), loadDrData(), loadTodoItems(), loadCustomInstruments(),
-      loadImData(), loadCpItems(), loadCmpItems()
+      loadImData(), loadCpItems(), loadCmpItems(), loadDutyAdminData(), loadLibraryData()
     ]);
     appDataLoaded = true;
     startRealtimeSync();
@@ -6409,6 +7144,9 @@ async function loadAllAppData(){
   renderTodoAll();
   renderImGrid();
   renderCpKanban();
+  renderLibraryAll();
+  if(isAdmin()) renderDutyAdminTools();
+  if(isSuperAdmin()) renderSuperAdminTools();
   renderDashboard();
   tryDeepLink();
 }
