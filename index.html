@@ -219,14 +219,16 @@
   .todo-row .todo-title{flex:1;font-weight:500;}
   .todo-row .todo-date{font-size:11px;color:var(--ink-soft);flex-shrink:0;background:var(--surface,#F0F0EC);padding:2px 8px;border-radius:20px;}
   .todo-row .todo-date.overdue{color:#fff;background:#B23A2E;font-weight:700;}
-  .cp-kanban{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;align-items:start;}
-  .cp-col{border-radius:10px;padding:10px;min-height:100px;}
-  .cp-col-pending{background:#F1F1EF;}
-  .cp-col-quoted{background:#FBEADA;}
-  .cp-col-reviewed{background:#EAE1F5;}
-  .cp-col-ordered{background:#DCEAF4;}
-  .cp-col-delivered{background:#DFF0EE;}
-  .cp-col-ready{background:#E4F3E7;}
+  .cp-kanban{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;align-items:start;width:100%;}
+  .cp-col{border-radius:var(--radius);padding:10px;background:var(--panel);border:1px solid var(--line);}
+  .cp-col.is-empty{padding:8px 10px;opacity:.65;}
+  .cp-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:0;}
+  .cp-col-pending .cp-dot{background:#8C9994;}
+  .cp-col-quoted .cp-dot{background:#DB9A32;}
+  .cp-col-reviewed .cp-dot{background:#8A6FC0;}
+  .cp-col-ordered .cp-dot{background:#4A80B5;}
+  .cp-col-delivered .cp-dot{background:#3FA08C;}
+  .cp-col-ready .cp-dot{background:#1E8449;}
   .cp-col-header{font-size:11.5px;font-weight:700;margin-bottom:8px;display:flex;justify-content:space-between;color:var(--ink);}
   .cp-card{background:#fff;border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:12px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.08);line-height:1.4;}
   .cp-card:hover{box-shadow:0 2px 6px rgba(0,0,0,.14);}
@@ -343,6 +345,12 @@
     .dash-chips{margin-bottom:12px;}
     .dash-quick{margin-bottom:14px;}
     .dash-quick button .qi{font-size:18px;}
+    /* 儀器使用登記/步驟/採買:手機緊湊與寬度保險 */
+    #imGrid, .cp-kanban, .mini-calendar{width:100%;}
+    .cal-cell{min-height:44px;padding:6px 4px;}
+    .today-card{padding:10px 12px;}
+    .cp-col{margin-bottom:0;}
+    .cp-col-header{font-size:12px;}
     .layout{flex-direction:column;padding:10px 10px 80px;gap:10px;}
 
     /* 精簡頂欄:漢堡按鈕 + 品牌 + 使用者頭像,取代原本橫向捲動的分頁列 */
@@ -568,9 +576,9 @@
       <button class="nav-item" data-page="dutyRoster"><span class="ic">🧹</span> 值週生</button>
       <button class="nav-item" data-page="todoList"><span class="ic">✅</span> 待辦事項</button>
       <button class="nav-item" data-page="instrumentManual"><span class="ic">📖</span> 儀器使用步驟</button>
-      <button class="nav-item" data-page="chemPurchase"><span class="ic">🛒</span> 購買</button>
+      <button class="nav-item" data-page="chemPurchase"><span class="ic">🛒</span> 採買及報修</button>
       <div style="flex:1;"></div>
-      <button class="nav-item" data-page="softwareBackup"><span class="ic">💾</span> 軟體備份</button>
+      <button class="nav-item" id="navSoftwareBackup" data-page="softwareBackup" style="display:none;"><span class="ic">💾</span> 軟體備份</button>
       <button class="nav-item nav-item-admin-pinned" id="navAdmin" data-page="admin" style="display:none;"><span class="ic">👤</span> 帳號管理</button>
     </nav>
   </aside>
@@ -615,7 +623,7 @@
             <div id="dashChemAlerts"></div>
           </div>
           <div class="dash-card" id="dashCardPurchase">
-            <div class="dash-card-title">🛒 採購待處理</div>
+            <div class="dash-card-title">🛒 採買/報修待處理</div>
             <div id="dashPurchaseAlerts"></div>
           </div>
           <div class="dash-card" id="dashCardBackup">
@@ -1080,13 +1088,12 @@
     <section class="page" id="page-chemPurchase">
       <div class="hdr">
         <div>
-          <h1>購買</h1>
+          <h1>採買及報修</h1>
           <div class="sub">SFPLAB · PURCHASE PIPELINE</div>
         </div>
       </div>
       <div class="toolbar">
-        <button class="btn btn-primary" id="cpAddChemBtn">🧪 藥品購買</button>
-        <button class="btn btn-primary" id="cpAddOtherBtn">🔧 耗材購買與儀器維護</button>
+        <button class="btn btn-primary" id="cpAddChemBtn">＋ 新增採買/報修</button>
       </div>
       <div class="cp-kanban" id="cpKanban"></div>
 
@@ -1241,9 +1248,11 @@
             <button class="btn btn-ghost btn-sm" id="cmpShowEditBtn">✏️ 編輯規格資料</button>
           </div>
           <div id="cmp_resultTable"></div>
+          <div id="cmp_stageHint" style="font-size:11.5px;color:var(--ink-soft);margin-top:8px;"></div>
           <div class="modal-actions">
             <div style="flex:1;"></div>
             <button class="btn btn-ghost btn-sm" id="cmpCancelDecisionBtn">都不買</button>
+            <button class="btn btn-primary btn-sm" id="cmpSendReviewBtn" style="margin-left:8px;display:none;">確定,送出審核</button>
             <button class="btn btn-primary btn-sm" id="cmpSubmitDecisionBtn" style="margin-left:8px;">確定送出</button>
           </div>
           <div id="cmp_addedNote" style="font-size:11.5px;color:var(--pine-deep);margin-top:6px;"></div>
@@ -2400,6 +2409,7 @@ function renderUserBadge(){
   document.getElementById('ub_code').textContent = badgeParts.length ? badgeParts.join(' · ') : '一般成員';
   document.getElementById('topbarAvatar').textContent = (currentUser && currentUser.code) ? currentUser.code.slice(0,2).toUpperCase() : '-';
   document.getElementById('navAdmin').style.display = isAdmin() ? 'flex' : 'none';
+  document.getElementById('navSoftwareBackup').style.display = isAdmin() ? 'flex' : 'none';
   document.querySelectorAll('.nav-item-superadmin').forEach(el=>{ el.style.display = isSuperAdmin() ? 'flex' : 'none'; });
   document.getElementById('fullBackupSectionTitle').style.display = isSuperAdmin() ? 'block' : 'none';
   document.getElementById('fullBackupCard').style.display = isSuperAdmin() ? 'block' : 'none';
@@ -2413,7 +2423,28 @@ document.getElementById('registerPane').addEventListener('submit', e=> e.prevent
 document.getElementById('googleRegPane').addEventListener('submit', e=> e.preventDefault());
 
 /* ---- Google 快速登入 ---- */
+/* LINE / FB / IG 等 App 內建瀏覽器會隔離 sessionStorage,Google 登入必定失敗(missing initial state),需引導到外部瀏覽器 */
+function inAppBrowserName(){
+  const ua = navigator.userAgent || '';
+  if(/Line\//i.test(ua)) return 'LINE';
+  if(/FBAN|FBAV|FB_IAB/i.test(ua)) return 'Facebook';
+  if(/Instagram/i.test(ua)) return 'Instagram';
+  if(/MicroMessenger/i.test(ua)) return 'WeChat';
+  return null;
+}
+function showInAppBrowserGuide(appName){
+  if(appName === 'LINE'){
+    const url = new URL(location.href);
+    url.searchParams.set('openExternalBrowser', '1');
+    setAuthStatus('LINE 內建瀏覽器無法使用 Google 登入,正在改用外部瀏覽器重新開啟...', 'error');
+    location.href = url.toString();
+  }else{
+    setAuthStatus(`${appName} 的內建瀏覽器無法使用 Google 登入。請點右上角「⋯」選單 → 以瀏覽器開啟(Chrome / Safari),或改用 Email 密碼登入。`, 'error');
+  }
+}
 document.getElementById('googleLoginBtn').addEventListener('click', async ()=>{
+  const inApp = inAppBrowserName();
+  if(inApp){ showInAppBrowserGuide(inApp); return; }
   const btn = document.getElementById('googleLoginBtn');
   btn.disabled = true;
   try{
@@ -2424,11 +2455,25 @@ document.getElementById('googleLoginBtn').addEventListener('click', async ()=>{
   }catch(err){
     if(err && (err.code==='auth/popup-closed-by-user' || err.code==='auth/cancelled-popup-request')){
       /* 使用者自己關掉視窗,不需顯示錯誤 */
+    }else if(err && (err.code==='auth/missing-initial-state' || /missing initial state/i.test(err.message||''))){
+      setAuthStatus('這個瀏覽器環境無法完成 Google 登入(通常是 App 內建瀏覽器或無痕模式造成)。請改用 Chrome / Safari 開啟本頁,或使用 Email 密碼登入。', 'error');
     }else{
       setAuthStatus(authErrorMessage(err), 'error');
     }
   }finally{ btn.disabled = false; }
 });
+// 一進登入頁就先提示,不用等按了才發現
+(function(){
+  const inApp = inAppBrowserName();
+  if(!inApp) return;
+  const gBtn = document.getElementById('googleLoginBtn');
+  const note = document.createElement('div');
+  note.style.cssText = 'font-size:11px;color:#8A4B12;background:#FBEFDB;border:1px solid #F0D8A8;border-radius:8px;padding:8px 10px;margin-top:8px;text-align:left;line-height:1.5;';
+  note.textContent = inApp === 'LINE'
+    ? '偵測到 LINE 內建瀏覽器:按上方 Google 登入會自動改用外部瀏覽器開啟。'
+    : `偵測到 ${inApp} 內建瀏覽器:Google 登入需改用 Chrome / Safari 開啟本頁,Email 密碼登入則不受影響。`;
+  gBtn.insertAdjacentElement('afterend', note);
+})();
 document.getElementById('googleRegSubmitBtn').addEventListener('click', async ()=>{
   if(!pendingGoogleUser){ showLoginPane('login'); return; }
   const code = document.getElementById('greg_code').value.trim();
@@ -2641,6 +2686,10 @@ document.querySelectorAll('nav .nav-item[data-page]').forEach(btn=>{
 });
 document.getElementById('navAdmin').addEventListener('click', ()=>{ renderAdminTable(); });
 function switchPage(name){
+  if((name==='admin' || name==='softwareBackup') && typeof isAdmin==='function' && !isAdmin()){
+    alert('這個頁面僅限管理員使用。');
+    return;
+  }
   document.querySelectorAll('nav .nav-item[data-page]').forEach(btn=>{
     btn.classList.toggle('active', btn.dataset.page===name);
   });
@@ -5295,7 +5344,6 @@ function openCpForm(id, defaultType){
 }
 function closeCpForm(){ document.getElementById('cpFormOverlay').classList.remove('show'); editingCpId = null; }
 document.getElementById('cpAddChemBtn').addEventListener('click', ()=> openCpForm(null, 'chemical'));
-document.getElementById('cpAddOtherBtn').addEventListener('click', ()=> openCpForm(null, 'consumable'));
 document.getElementById('cpFormClose').addEventListener('click', closeCpForm);
 document.getElementById('cpCancelBtn').addEventListener('click', closeCpForm);
 document.getElementById('cpSaveBtn').addEventListener('click', async ()=>{
@@ -5342,10 +5390,13 @@ document.getElementById('cpSaveBtn').addEventListener('click', async ()=>{
     updated_at: new Date().toISOString(),
     updated_by_uid: (currentUser&&currentUser.uid)||null
   };
+  const saveBtn = document.getElementById('cpSaveBtn');
+  saveBtn.disabled = true; // 避免手機雙擊送出兩次造成重複卡片
   const ok = await fsSetItem('chem-purchases', item);
+  saveBtn.disabled = false;
   if(!ok){ alert('儲存失敗,請檢查網路連線後再試一次。'); return; }
   if(editingCpId){ cpItems = cpItems.map(i=>i.id===editingCpId?item:i); }
-  else{ cpItems.push(item); }
+  else if(!cpItems.some(i=>i.id===item.id)){ cpItems.push(item); }
   closeCpForm();
   renderCpKanban();
 });
@@ -5399,10 +5450,14 @@ function openCpDetail(id){
 
   const canAct = isAdmin() || item.created_by_uid===(currentUser&&currentUser.uid);
   const actions = [];
-  if(canAct && item.status==='pending'){
-    actions.push(`<button class="btn btn-ghost btn-sm" onclick="cpStartComparison('${id}')">🧮 新增比價資料</button>`);
-    actions.push(`<button class="btn btn-primary btn-sm" onclick="closeCpDetail();openCpOrder('${id}')">標記已訂購</button>`);
-    actions.push(`<button class="btn btn-ghost btn-sm" onclick="openCpForm('${id}')">編輯</button>`);
+  if(item.status==='pending'){
+    const cmp = item.comparison_id ? cmpItems.find(c=>c.id===item.comparison_id) : null;
+    if(canAct){
+      actions.push(cmp
+        ? `<button class="btn btn-primary btn-sm" onclick="closeCpDetail();openCmpDetail('${cmp.id}')">📋 繼續填寫比價資料</button>`
+        : `<button class="btn btn-primary btn-sm" onclick="cpStartComparison('${id}')">🧮 新增比價資料</button>`);
+      actions.push(`<button class="btn btn-ghost btn-sm" onclick="openCpForm('${id}')">編輯</button>`);
+    }
   }
   if(canAct && item.status==='quoted'){
     const cmp = item.comparison_id ? cmpItems.find(c=>c.id===item.comparison_id) : null;
@@ -5431,7 +5486,9 @@ function openCpDetail(id){
   if(isAdmin()){
     const idx = CP_STAGE_ORDER.indexOf(item.status);
     if(idx>0) actions.push(`<button class="btn btn-ghost btn-sm" onclick="cpStepBack('${id}')">↩ 回上一步</button>`);
-    actions.push(`<button class="btn btn-ghost btn-sm btn-row-delete" onclick="cpCancelItem('${id}')">都不買</button>`);
+    if(item.status==='pending' || item.status==='quoted'){
+      actions.push(`<button class="btn btn-ghost btn-sm btn-row-delete" onclick="cpCancelItem('${id}')">都不買</button>`);
+    }
     actions.push(`<button class="btn btn-ghost btn-sm btn-row-delete" onclick="quickDeleteCp('${id}')">刪除</button>`);
   }
   document.getElementById('cpDetailActions').innerHTML = actions.join('');
@@ -5596,11 +5653,9 @@ function renderCpKanban(){
   const kanban = document.getElementById('cpKanban');
   kanban.innerHTML = CP_STAGE_ORDER.map(stage=>{
     const list = cpItems.filter(i=>i.status===stage);
-    const cards = list.length
-      ? list.map(i=>`<div class="cp-card" onclick="openCpDetail('${i.id}')">${escapeHtml(cpCardLabel(i))}</div>`).join('')
-      : '<div class="cp-col-empty">-</div>';
-    return `<div class="cp-col ${CP_STAGE_CLASS[stage]}">
-      <div class="cp-col-header"><span>${CP_STAGE_LABEL[stage]}</span><span>${list.length}</span></div>
+    const cards = list.map(i=>`<div class="cp-card" onclick="openCpDetail('${i.id}')">${escapeHtml(cpCardLabel(i))}</div>`).join('');
+    return `<div class="cp-col ${CP_STAGE_CLASS[stage]}${list.length?'':' is-empty'}">
+      <div class="cp-col-header"><span><span class="cp-dot"></span>${CP_STAGE_LABEL[stage]}</span><span>${list.length}</span></div>
       ${cards}
     </div>`;
   }).join('');
@@ -5773,7 +5828,8 @@ function cmpSwitchToResult(record){
   document.getElementById('cmp_editSection').style.display = 'none';
   document.getElementById('cmp_resultSection').style.display = 'block';
   renderCmpResultTable(record);
-  document.getElementById('cmp_addedNote').textContent = record.addedToList ? `✅ 已送出審核:${escapeHtml(record.decided_vendor||'')}` : '';
+  document.getElementById('cmp_addedNote').textContent = record.addedToList ? `✅ 已完成:${escapeHtml(record.decided_vendor||'')}` : '';
+  cmpUpdateActionState(record);
 }
 document.getElementById('cmpShowEditBtn').addEventListener('click', cmpSwitchToEdit);
 function openCmpDetail(id){
@@ -5949,14 +6005,47 @@ async function cpStartComparison(id){
     alert('建立比價資料失敗,請檢查網路與權限後再試一次。');
     return;
   }
-  item.status = 'quoted';
+  // 只記錄關聯,狀態留在「待購買」;填完價格按「確定,送出審核」才會進入已詢價待審核
   item.comparison_id = record.id;
   const okCp = await fsSetItem('chem-purchases', item);
-  if(!okCp){ alert('比價資料已建立,但更新採購狀態失敗(可能只有建立者或管理員能更新這筆採購)。'); }
+  if(!okCp){ alert('比價資料已建立,但更新採購資料失敗(可能只有建立者或管理員能更新這筆採購)。'); }
   renderCpKanban();
   renderCmpCardGrid();
   openCmpDetail(record.id);
 }
+/* 詢價完成,送出給老師審核:採購從「待購買」移到「已詢價待審核」 */
+async function cmpSendForReview(){
+  const record = cmpItems.find(c=>c.id===cmpCurrentId);
+  if(!record) return;
+  if(!cmpAllEntries(record).length){ alert('還沒有任何規格價格,請先按「修改」填寫比價資料。'); return; }
+  const item = record.linked_cp_id ? cpItems.find(i=>i.id===record.linked_cp_id) : null;
+  if(!item){ alert('找不到對應的採購項目。'); return; }
+  if(item.status!=='pending'){ alert('這筆採購已經送出審核了。'); return; }
+  item.status = 'quoted';
+  const ok = await fsSetItem('chem-purchases', item);
+  if(!ok){ item.status='pending'; alert('送出失敗,請檢查網路與權限後再試一次。'); return; }
+  renderCpKanban();
+  cmpUpdateActionState(record);
+  showToast('✅ 已送出審核,等待老師選擇廠商');
+}
+/* 依採購階段控制比價視窗的按鈕:詢價中→確定/修改;待審核→選廠商/都不買;已決定→唯讀 */
+function cmpUpdateActionState(record){
+  const linked = record.linked_cp_id ? cpItems.find(i=>i.id===record.linked_cp_id) : null;
+  const stage = record.addedToList ? 'done'
+    : (linked && linked.status==='pending') ? 'quoting'
+    : (!linked || linked.status==='quoted') ? 'deciding'
+    : 'done';
+  document.getElementById('cmpSendReviewBtn').style.display = stage==='quoting' ? 'inline-block' : 'none';
+  document.getElementById('cmpSubmitDecisionBtn').style.display = stage==='deciding' ? 'inline-block' : 'none';
+  document.getElementById('cmpCancelDecisionBtn').style.display = stage==='deciding' ? 'inline-block' : 'none';
+  document.getElementById('cmpShowEditBtn').style.display = stage==='done' ? 'none' : 'inline-block';
+  document.getElementById('cmpShowEditBtn').textContent = stage==='quoting' ? '✏️ 修改' : '✏️ 編輯規格資料';
+  const hint = document.getElementById('cmp_stageHint');
+  hint.textContent = stage==='quoting' ? '確認價格都填好後,按「確定,送出審核」交給老師選擇廠商。'
+    : stage==='deciding' ? '請勾選要購買的廠商規格,按「確定送出」進入待訂購;或選「都不買」。'
+    : '';
+}
+document.getElementById('cmpSendReviewBtn').addEventListener('click', cmpSendForReview);
 
 /* ---- Excel 範本下載 / 匯入(匯入到目前開啟的這筆比價明細) ---- */
 document.getElementById('cmpDownloadTemplateBtn').addEventListener('click', ()=>{
@@ -6207,7 +6296,7 @@ function renderDashboard(){
   // ---- 沒內容的卡片自動收合,騰出畫面空間 ----
   const cardStates = [
     { id:'dashCardChem', name:'藥品', show: chemAlertRows.length>0 },
-    { id:'dashCardPurchase', name:'採購', show: purchaseRows.length>0 },
+    { id:'dashCardPurchase', name:'採買/報修', show: purchaseRows.length>0 },
     { id:'dashCardBackup', name:'軟體備份', show: overdueBackups.length>0 },
     { id:'dashCardReservations', name:'儀器預約', show: upcoming.length>0 },
     { id:'dashCardTodos', name:'待辦', show: myTodos.length>0 }
