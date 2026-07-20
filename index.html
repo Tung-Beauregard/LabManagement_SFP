@@ -356,7 +356,8 @@
     /* 帳號管理手機卡片化 */
     #page-admin .name-edit-input, #page-admin .role-select{width:100%;padding:9px 10px;font-size:13px;border:1px solid var(--line);border-radius:8px;background:#fff;}
     #page-admin tr.row td[data-label]::before{min-width:74px;}
-    .layout{flex-direction:column;padding:10px 10px 80px;gap:10px;}
+    .layout{flex-direction:column;padding:10px 10px 80px;gap:10px;align-items:stretch;}
+    .main{width:100%;}
 
     /* 精簡頂欄:漢堡按鈕 + 品牌 + 使用者頭像,取代原本橫向捲動的分頁列 */
     .hamburger-btn{display:flex;align-items:center;justify-content:center;width:46px;height:46px;flex-shrink:0;border:none;background:var(--pine);box-shadow:0 3px 10px rgba(27,75,67,.45);border-radius:12px;font-size:23px;color:#fff;cursor:pointer;}
@@ -1561,7 +1562,6 @@
       <div class="label-top">
         <div>
           <h3 id="md_species"></h3>
-          <div class="iupac-lg" id="md_name_zh"></div>
           <div class="en" id="md_id"></div>
         </div>
       </div>
@@ -1600,10 +1600,6 @@
     <div class="field row2">
       <div><label>物種 *</label><input type="text" id="m_species" list="speciesList" placeholder="例如 台灣土肉桂"><div style="font-size:11px;color:var(--ink-soft);margin-top:4px;">請填寫學名,例如 Acacia confusa;之前輸入過的物種會出現在下拉選單中</div></div>
       <div><label>來源</label><input type="text" id="m_source" placeholder="例如 宜蘭 / 採集人"></div>
-    </div>
-    <div class="field">
-      <label>中文名稱</label>
-      <input type="text" id="m_name_zh" placeholder="例如 月桃">
     </div>
     <div class="field row2">
       <div>
@@ -1865,9 +1861,6 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 const fileStorage = firebase.storage();
-// Storage SDK 預設可能重試很久；照片另有 Firestore 備援，不讓表單長時間卡住。
-if(typeof fileStorage.setMaxUploadRetryTime === 'function') fileStorage.setMaxUploadRetryTime(4000);
-if(typeof fileStorage.setMaxOperationRetryTime === 'function') fileStorage.setMaxOperationRetryTime(10000);
 const FS_COLLECTION = 'lab-data';
 
 window.storage = {
@@ -2178,17 +2171,7 @@ function compressPhoto(file, onDone){
 function storageSafeSegment(value){
   return encodeURIComponent(String(value||'unknown')).replace(/%/g,'_');
 }
-function friendlyStorageError(err){
-  const code = err && err.code;
-  if(code==='storage/retry-limit-exceeded') return '照片服務連線逾時，請稍後再試。';
-  if(code==='storage/quota-exceeded') return 'Firebase Storage 額度或方案無法使用，請管理員檢查用量與計費方案。';
-  if(code==='storage/bucket-not-found') return 'Firebase Storage 尚未建立或設定錯誤，請管理員檢查儲存空間設定。';
-  if(code==='storage/unauthenticated') return '登入狀態已失效，請重新登入後再試。';
-  if(code==='storage/unauthorized') return '沒有照片上傳權限，請管理員檢查 Firebase Storage Rules。';
-  if(code==='storage/canceled') return '照片上傳已取消。';
-  return (err && err.message) || '照片上傳失敗。';
-}
-async function uploadPhotoSource(src, folder, recordId, slot, existingPath, options){
+async function uploadPhotoSource(src, folder, recordId, slot, existingPath){
   if(!src) return { url:null, path:null, uploaded:false };
   if(!String(src).startsWith('data:')) return { url:src, path:existingPath||null, uploaded:false };
   if(!currentUser || !currentUser.uid) throw new Error('尚未登入，無法上傳照片。');
@@ -2201,23 +2184,14 @@ async function uploadPhotoSource(src, folder, recordId, slot, existingPath, opti
   const ext = blob.type==='image/png' ? 'png' : blob.type==='image/webp' ? 'webp' : 'jpg';
   const path = `lab-photos/${storageSafeSegment(folder)}/${storageSafeSegment(currentUser.uid)}/${storageSafeSegment(recordId)}/${Date.now()}_${random}_${storageSafeSegment(slot)}.${ext}`;
   const ref = fileStorage.ref(path);
-  try{
-    await ref.put(blob, { contentType:blob.type||'image/jpeg', customMetadata:{ ownerUid:currentUser.uid, recordId:String(recordId||'') } });
-    const url = await ref.getDownloadURL();
-    return { url, path, uploaded:true };
-  }catch(err){
-    console.warn('Firebase Storage photo upload failed:', err);
-    if(options && options.allowInlineFallback){
-      showToast('照片服務暫時無回應，已改用備援方式儲存照片。', null, 3600);
-      return { url:src, path:null, uploaded:false, inlineFallback:true };
-    }
-    throw new Error(friendlyStorageError(err));
-  }
+  await ref.put(blob, { contentType:blob.type||'image/jpeg', customMetadata:{ ownerUid:currentUser.uid, recordId:String(recordId||'') } });
+  const url = await ref.getDownloadURL();
+  return { url, path, uploaded:true };
 }
-async function uploadPreviewPhoto(previewId, folder, recordId, slot, existingPath, options){
+async function uploadPreviewPhoto(previewId, folder, recordId, slot, existingPath){
   const preview = document.getElementById(previewId);
   const src = preview && preview.style.display!=='none' ? preview.src : null;
-  return uploadPhotoSource(src, folder, recordId, slot, existingPath, options);
+  return uploadPhotoSource(src, folder, recordId, slot, existingPath);
 }
 async function deleteStoredPhoto(path){
   if(!path) return;
@@ -2239,17 +2213,6 @@ function bindPhotoUpload(dropId, inputId, previewId){
       preview.style.display = 'block';
     });
   });
-}
-// 避免從輸入框拖曳反白到遮罩外放開時，誤判成點擊背景而關閉表單。
-function bindBackdropClose(overlayId, closeHandler){
-  const overlay = document.getElementById(overlayId);
-  let pressedOnBackdrop = false;
-  overlay.addEventListener('pointerdown', (e)=>{ pressedOnBackdrop = e.target===overlay; });
-  overlay.addEventListener('pointerup', (e)=>{
-    if(pressedOnBackdrop && e.target===overlay) closeHandler();
-    pressedOnBackdrop = false;
-  });
-  overlay.addEventListener('pointercancel', ()=>{ pressedOnBackdrop = false; });
 }
 function nextSeq(list){
   let max = 0;
@@ -2951,7 +2914,7 @@ async function handleSave(){
   if(!name_zh || !location){ alert('請至少填寫「中文名稱」與「存放位置」'); return; }
   const recordId = editingId || genId(items, 'CHEM');
   let photoInfo;
-  try{ photoInfo = await uploadPreviewPhoto('photoPreview','chemicals',recordId,'bottle',existingItem&&existingItem.photo_path,{allowInlineFallback:true}); }
+  try{ photoInfo = await uploadPreviewPhoto('photoPreview','chemicals',recordId,'bottle',existingItem&&existingItem.photo_path); }
   catch(err){ alert(err.message || '照片上傳失敗。'); return; }
   const data = {
     id: recordId,
@@ -2980,8 +2943,7 @@ async function handleSave(){
   };
   const ok = await fsSetItem('chemicals', data);
   if(!ok){ if(photoInfo.uploaded) await deleteStoredPhoto(photoInfo.path); alert('儲存失敗,請檢查網路連線後再試一次。'); return; }
-  const chemIdx = items.findIndex(i=>i._doc_id===data._doc_id || i.id===data.id);
-  if(chemIdx>=0){ items[chemIdx] = data; }
+  if(editingId){ items[items.findIndex(i=>i.id===editingId)] = data; }
   else{ items.push(data); }
   if(existingItem && existingItem.photo_path && existingItem.photo_path!==photoInfo.path) await deleteStoredPhoto(existingItem.photo_path);
   if(!editingId) await clearDraft(CHEM_DRAFT_KEY);
@@ -3086,7 +3048,7 @@ document.getElementById('search').addEventListener('input', renderTable);
 document.getElementById('filterLoc').addEventListener('change', renderTable);
 document.getElementById('filterHaz').addEventListener('change', renderTable);
 document.getElementById('exportBtn').addEventListener('click', exportCsv);
-bindBackdropClose('formOverlay', closeForm);
+document.getElementById('formOverlay').addEventListener('click', (e)=>{ if(e.target.id==='formOverlay') closeForm(); });
 document.getElementById('detailOverlay').addEventListener('click', (e)=>{ if(e.target.id==='detailOverlay') closeDetail(); });
 
 /* ======================================================
@@ -3112,7 +3074,7 @@ function populateMatSelects(){
   document.getElementById('m_use').innerHTML = '<option value="">請選擇用途</option>' + USE_OPTIONS.map(u=>`<option value="${u}">${u}</option>`).join('');
   document.getElementById('m_storage').innerHTML = '<option value="">請選擇位置</option>' + STORAGE_OPTIONS.map(o=>`<option value="${o.value}">${o.label}</option>`).join('');
 }
-const MAT_FIELD_IDS = ['m_species','m_name_zh','m_source','m_acquired_date','m_acquired_unknown','m_part','m_storage','m_use','m_note'];
+const MAT_FIELD_IDS = ['m_species','m_source','m_acquired_date','m_acquired_unknown','m_part','m_storage','m_use','m_note'];
 const MAT_DRAFT_KEY = 'draft-material';
 const saveMatDraftDebounced = debounce(()=>{ if(!editingMatId) saveDraft(MAT_DRAFT_KEY, gatherMatDraft()); }, 700);
 function gatherMatDraft(){
@@ -3150,7 +3112,7 @@ function renderMatTable(){
     if(fStorage && i.storage_location !== fStorage) return false;
     if(fUse && i.intended_use !== fUse) return false;
     if(search){
-      const hay = [i.species, i.name_zh, i.source, i.id].join(' ').toLowerCase();
+      const hay = [i.species, i.source, i.id].join(' ').toLowerCase();
       if(!hay.includes(search)) return false;
     }
     return true;
@@ -3190,7 +3152,6 @@ function openMatDetail(id){
   const item = matItems.find(i=>i.id===id);
   if(!item) return;
   document.getElementById('md_species').textContent = item.species || '-';
-  document.getElementById('md_name_zh').textContent = item.name_zh || '';
   document.getElementById('md_id').textContent = item.id;
   document.getElementById('md_part').innerHTML = item.part ? `<span class="plain-tag">${escapeHtml(item.part)}</span>` : '';
   document.getElementById('md_storage').innerHTML = item.storage_location ? `<span class="plain-tag">${escapeHtml(storageLabel(item.storage_location))}</span>` : '';
@@ -3220,7 +3181,6 @@ async function openMatForm(id){
     const item = matItems.find(i=>i.id===id);
     document.getElementById('m_id').value = item.id;
     document.getElementById('m_species').value = item.species||'';
-    document.getElementById('m_name_zh').value = item.name_zh||'';
     document.getElementById('m_source').value = item.source||'';
     document.getElementById('m_acquired_date').value = item.acquired_date||'';
     document.getElementById('m_acquired_unknown').checked = !!item.acquired_unknown;
@@ -3256,7 +3216,7 @@ async function openMatForm(id){
     document.getElementById('clearMatBtn').style.display = 'inline-block';
     pendingMatId = genId(matItems, 'MAT');
     document.getElementById('m_id').value = pendingMatId;
-    ['m_species','m_name_zh','m_source','m_acquired_date','m_part','m_storage','m_use','m_note'].forEach(id=>document.getElementById(id).value='');
+    ['m_species','m_source','m_acquired_date','m_part','m_storage','m_use','m_note'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('m_acquired_unknown').checked = false;
     const draft = await loadDraft(MAT_DRAFT_KEY);
     applyMatDraft(draft);
@@ -3295,13 +3255,12 @@ async function handleMatSave(){
   if(!species || !part || !storage_location){ alert('請至少填寫「物種」「部位」與「存放位置」'); return; }
   const recordId = editingMatId || pendingMatId || genId(matItems, 'MAT');
   let photoInfo;
-  try{ photoInfo = await uploadPreviewPhoto('m_photoPreview','materials',recordId,'material',existingItem&&existingItem.photo_path,{allowInlineFallback:true}); }
+  try{ photoInfo = await uploadPreviewPhoto('m_photoPreview','materials',recordId,'material',existingItem&&existingItem.photo_path); }
   catch(err){ alert(err.message || '照片上傳失敗。'); return; }
   const data = {
     id: recordId,
     _doc_id: existingItem ? existingItem._doc_id : null,
     species,
-    name_zh: document.getElementById('m_name_zh').value.trim(),
     source: document.getElementById('m_source').value.trim(),
     acquired_unknown: document.getElementById('m_acquired_unknown').checked,
     acquired_date: document.getElementById('m_acquired_unknown').checked ? '' : document.getElementById('m_acquired_date').value,
@@ -3319,8 +3278,7 @@ async function handleMatSave(){
   };
   const ok = await fsSetItem('materials', data);
   if(!ok){ if(photoInfo.uploaded) await deleteStoredPhoto(photoInfo.path); alert('儲存失敗,請檢查網路連線後再試一次。'); return; }
-  const matIdx = matItems.findIndex(i=>i._doc_id===data._doc_id || i.id===data.id);
-  if(matIdx>=0){ matItems[matIdx] = data; }
+  if(editingMatId){ matItems[matItems.findIndex(i=>i.id===editingMatId)] = data; }
   else{ matItems.push(data); }
   if(existingItem && existingItem.photo_path && existingItem.photo_path!==photoInfo.path) await deleteStoredPhoto(existingItem.photo_path);
   if(!editingMatId) await clearDraft(MAT_DRAFT_KEY);
@@ -3343,9 +3301,9 @@ bindPhotoUpload('m_photoDrop','m_photoInput','m_photoPreview');
 document.getElementById('m_photoInput').addEventListener('change', ()=> setTimeout(saveMatDraftDebounced, 50));
 
 function exportMatCsv(){
-  const headers = ['編號','物種','中文名稱','來源','取得日期','部位','存放位置','預計用途','備註'];
+  const headers = ['編號','物種','來源','取得日期','部位','存放位置','預計用途','備註'];
   const rows = matItems.map(i=>[
-    i.id, i.species, i.name_zh, i.source, i.acquired_unknown ? '未知' : i.acquired_date, i.part, storageLabel(i.storage_location), i.intended_use, i.note
+    i.id, i.species, i.source, i.acquired_unknown ? '未知' : i.acquired_date, i.part, storageLabel(i.storage_location), i.intended_use, i.note
   ]);
   downloadCsv(`試材清單_${localDateISO()}.csv`, headers, rows);
 }
@@ -3370,7 +3328,7 @@ document.getElementById('matSearch').addEventListener('input', renderMatTable);
 document.getElementById('matFilterStorage').addEventListener('change', renderMatTable);
 document.getElementById('matFilterUse').addEventListener('change', renderMatTable);
 document.getElementById('matExportBtn').addEventListener('click', exportMatCsv);
-bindBackdropClose('matFormOverlay', closeMatForm);
+document.getElementById('matFormOverlay').addEventListener('click', (e)=>{ if(e.target.id==='matFormOverlay') closeMatForm(); });
 
 /* ======================================================
    樣品清單
@@ -3879,8 +3837,7 @@ async function handleSmpSave(){
   };
   const ok = await fsSetItem('samples', data);
   if(!ok){ await Promise.all(uploadedNow.map(deleteStoredPhoto)); alert('儲存失敗,請檢查網路連線後再試一次。'); return; }
-  const smpIdx = smpItems.findIndex(i=>i._doc_id===data._doc_id || i.id===data.id);
-  if(smpIdx>=0){ smpItems[smpIdx] = data; }
+  if(editingSmpId){ smpItems[smpItems.findIndex(i=>i.id===editingSmpId)] = data; }
   else{ smpItems.push(data); }
   if(existingItem){
     const oldPaths=[existingItem.photo_extract_path,existingItem.photo_bottle_path,existingItem.moisture&&existingItem.moisture.photo_path];
@@ -4191,7 +4148,7 @@ document.getElementById('culSaveBtn').addEventListener('click', async ()=>{
       tx.set(logRef, log);
     });
     chem.quantity = committedQty;
-    if(!culItems.some(i=>i._doc_id===log._doc_id)) culItems.push(log);
+    culItems.push(log);
     closeCulForm();
     renderAll();
     renderCulAll();
@@ -4353,7 +4310,7 @@ document.getElementById('iulSaveBtn').addEventListener('click', async ()=>{
   };
   const ok = await fsSetItem('instrument-reservations', rec);
   if(!ok){ alert('儲存失敗,請檢查網路連線後再試一次。'); return; }
-  if(!iulItems.some(i=>i._doc_id===rec._doc_id)) iulItems.push(rec);
+  iulItems.push(rec);
   closeIulForm();
   renderIulAll();
 });
@@ -4802,7 +4759,7 @@ document.getElementById('todoSaveBtn').addEventListener('click', async ()=>{
   };
   const ok = await fsSetItem('todo-items', item);
   if(!ok){ alert('儲存失敗,請檢查網路連線後再試一次。'); return; }
-  if(!todoItems.some(i=>i._doc_id===item._doc_id)) todoItems.push(item);
+  todoItems.push(item);
   closeTodoForm();
   renderTodoAll();
 });
@@ -5537,6 +5494,9 @@ function openCpDetail(id){
   if(isAdmin()){
     const idx = CP_STAGE_ORDER.indexOf(item.status);
     if(idx>0) actions.push(`<button class="btn btn-ghost btn-sm" onclick="cpStepBack('${id}')">↩ 回上一步</button>`);
+    if(item.status==='pending' || item.status==='quoted'){
+      actions.push(`<button class="btn btn-ghost btn-sm btn-row-delete" onclick="cpCancelItem('${id}')">都不買</button>`);
+    }
     actions.push(`<button class="btn btn-ghost btn-sm btn-row-delete" onclick="quickDeleteCp('${id}')">刪除</button>`);
   }
   document.getElementById('cpDetailActions').innerHTML = actions.join('');
