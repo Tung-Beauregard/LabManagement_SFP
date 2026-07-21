@@ -6850,6 +6850,63 @@ document.getElementById('cmpDownloadTemplateBtn').addEventListener('click', ()=>
   XLSX.writeFile(wb, '比價範本.xlsx');
 });
 document.getElementById('cmpImportBtn').addEventListener('click', ()=> document.getElementById('cmpImportInput').click());
+
+/* 欄位標題對應:允許欄位順序不同,也允許檔案多出「品名/CAS」這類欄位。
+   比對順序很重要:「廠商(填力方/友和...直接填名稱)」含有「名稱」二字,
+   必須先判定為廠商欄,才不會被誤認成品名欄。 */
+const CMP_COL_PATTERNS = [
+  ['vendor', /廠商|供應商|報價商|vendor|supplier/],
+  ['purity', /純度|等級|purity|grade/],
+  ['amount', /包裝量|容量|數量|^量$|amount|qty/],
+  ['unit',   /單位|unit/],
+  ['price',  /價格|單價|金額|報價|price|cost/],
+  ['note',   /備註|附註|說明|note|remark/],
+  ['name',   /品名|品項|名稱|化合物|cas|item|name|compound/]
+];
+function cmpHeaderText(v){ return String(v==null?'':v).replace(/[\s\u3000]/g,'').toLowerCase(); }
+function cmpFindHeaderRow(rows){
+  for(let i=0;i<Math.min(rows.length,10);i++){
+    const cells=(rows[i]||[]).map(cmpHeaderText);
+    const hasVendor=cells.some(c=>/廠商|vendor|supplier/.test(c));
+    const hasPrice=cells.some(c=>/價格|price|cost/.test(c));
+    if(hasVendor&&hasPrice) return i;
+  }
+  return -1;
+}
+function cmpMapColumns(headerRow){
+  const map={};
+  (headerRow||[]).forEach((cell,idx)=>{
+    const text=cmpHeaderText(cell);
+    if(!text) return;
+    for(const [key,re] of CMP_COL_PATTERNS){
+      if(map[key]==null && re.test(text)){ map[key]=idx; break; }
+    }
+  });
+  return map;
+}
+function cmpParseNumber(v){
+  if(v==null||v==='') return null;
+  if(typeof v==='number') return isFinite(v)?v:null;
+  const n=Number(String(v).replace(/[^\d.\-]/g,''));
+  return isFinite(n)&&n!==0?n:(n===0?0:null);
+}
+function cmpNormalizeUnit(v){
+  const s=String(v==null?'':v).trim().toLowerCase().replace(/[\s\u3000]/g,'');
+  if(/^(kg|kgs|公斤|千克)$/.test(s)) return 'kg';
+  if(/^(g|gm|gram|grams|公克|克)$/.test(s)) return 'g';
+  if(/^(l|lt|liter|litre|公升|升)$/.test(s)) return 'L';
+  if(/^(ml|cc|毫升|㏄)$/.test(s)) return 'mL';
+  return '';
+}
+function cmpNameKey(s){
+  return String(s==null?'':s).toLowerCase().replace(/[\s\u3000（）()\[\]，,、；;：:／\/‧·．.\-_]/g,'');
+}
+function cmpNameMatches(rowName, targets){
+  const a=cmpNameKey(rowName);
+  if(!a) return false;
+  return targets.some(t=>{ const b=cmpNameKey(t); return b.length>=2 && (a.includes(b)||b.includes(a)); });
+}
+
 document.getElementById('cmpImportInput').addEventListener('change', (e)=>{
   const file = e.target.files[0];
   if(!file) return;
@@ -6860,23 +6917,78 @@ document.getElementById('cmpImportInput').addEventListener('change', (e)=>{
       const data = new Uint8Array(ev.target.result);
       const wb = XLSX.read(data, {type:'array'});
       const ws = wb.Sheets[wb.SheetNames[0]];
-      rows = XLSX.utils.sheet_to_json(ws, {header:1});
+      rows = XLSX.utils.sheet_to_json(ws, {header:1, blankrows:false});
     }catch(err){ alert('無法讀取這個檔案,請確認是Excel或CSV格式。'); return; }
     if(!rows || rows.length<2){ alert('檔案內容看起來是空的'); return; }
-    let imported = 0;
-    rows.slice(1).forEach(row=>{
-      const vendorName = row[0], purity = row[1], amount = row[2], unit = row[3], price = row[4], note = row[5];
-      if(!vendorName || !amount || !price) return;
-      const vendorKey = CP_VENDORS.includes(String(vendorName).trim()) ? String(vendorName).trim() : '其他';
-      if(vendorKey==='其他' && !document.getElementById('cmp_customName').value.trim()){
-        document.getElementById('cmp_customName').value = String(vendorName).trim();
+
+    const headerIdx = cmpFindHeaderRow(rows);
+    const map = headerIdx>=0 ? cmpMapColumns(rows[headerIdx])
+                             : {vendor:0, purity:1, amount:2, unit:3, price:4, note:5};
+    if(map.vendor==null || map.amount==null || map.price==null){
+      alert('找不到「廠商」「包裝量」「價格」這幾欄,請確認標題列是否與範本一致。');
+      return;
+    }
+    let dataRows = rows.slice(headerIdx>=0 ? headerIdx+1 : 1);
+
+    /* 檔案裡含多個品項時,只匯入目前這筆比價的品項 */
+    if(map.name!=null){
+      const names=[...new Set(dataRows.map(r=>String((r||[])[map.name]||'').trim()).filter(Boolean))];
+      if(names.length>1){
+        const targets=[document.getElementById('cmp_item_name').value.trim(),
+                       document.getElementById('cmp_item_name_en').value.trim()].filter(Boolean);
+        let picked = targets.length ? names.filter(n=>cmpNameMatches(n,targets)) : [];
+        if(!picked.length){
+          const ans = window.prompt('這個檔案包含多個品項,請輸入要匯入的編號(0 = 全部匯入):\n'
+            + names.map((n,i)=>`${i+1}. ${n}`).join('\n'), '0');
+          if(ans===null) return;
+          const pick=parseInt(String(ans).trim(),10);
+          if(pick===0) picked=names;
+          else if(pick>=1 && pick<=names.length) picked=[names[pick-1]];
+          else { alert('編號不正確,已取消匯入。'); return; }
+        }
+        const keep=new Set(picked);
+        dataRows = dataRows.filter(r=> keep.has(String((r||[])[map.name]||'').trim()));
       }
+    }
+
+    let imported=0, skipped=0;
+    const touched=new Set();
+    dataRows.forEach(row=>{
+      if(!row) return;
+      const vendorName=String(row[map.vendor]==null?'':row[map.vendor]).trim();
+      const amount=cmpParseNumber(row[map.amount]);
+      const price=cmpParseNumber(row[map.price]);
+      if(!vendorName || !amount || !price){ if(vendorName||amount||price) skipped++; return; }
+      const vendorKey = CP_VENDORS.includes(vendorName) ? vendorName : '其他';
       const container = document.querySelector(`.cmp-entries[data-vendor="${vendorKey}"]`);
-      const entry = { purity: purity?String(purity).trim():'', amount: Number(amount), unit: String(unit||'mL').trim(), price: Number(price), note: note?String(note).trim():'' };
+      if(!container){ skipped++; return; }
+      if(vendorKey==='其他'){
+        const custom=document.getElementById('cmp_customName');
+        if(custom && !custom.value.trim()) custom.value=vendorName;
+      }
+      const entry={
+        purity: map.purity!=null && row[map.purity]!=null ? String(row[map.purity]).trim() : '',
+        amount: amount,
+        unit: (map.unit!=null ? cmpNormalizeUnit(row[map.unit]) : '') || 'mL',
+        price: price,
+        note: map.note!=null && row[map.note]!=null ? String(row[map.note]).trim() : ''
+      };
       container.insertAdjacentHTML('beforeend', cmpEntryRowHtml(vendorKey, entry, container.children.length));
+      touched.add(container);
       imported++;
     });
-    showToast(`📥 已匯入 ${imported} 筆規格,記得按「儲存比價資料」`, null, 3500);
+
+    /* 匯入後把該廠商原本的空白列清掉,避免留下沒填的規格列 */
+    touched.forEach(container=>{
+      [...container.querySelectorAll('.cmp-entry-row')].forEach(r=>{
+        const a=r.querySelector('.cmp-e-amount').value.trim();
+        const p=r.querySelector('.cmp-e-price').value.trim();
+        if(!a && !p && container.querySelectorAll('.cmp-entry-row').length>1) r.remove();
+      });
+    });
+
+    if(!imported){ alert('沒有可匯入的資料,請確認廠商、包裝量、價格三欄都有填。'); return; }
+    showToast(`📥 已匯入 ${imported} 筆規格${skipped?`,略過 ${skipped} 筆資料不完整的列`:''},記得按「儲存比價資料」`, null, 3500);
   };
   reader.readAsArrayBuffer(file);
   e.target.value = '';
