@@ -4,6 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="app-version" content="2026.07.21-1">
 <meta name="theme-color" content="#1B4B43" id="metaThemeColor">
 <title>SFPLAB 實驗室管理系統</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>">
@@ -422,6 +423,13 @@
   .book-meta{font-size:11px;color:var(--ink-soft);margin-top:3px;}
   .status-available{background:#E4F3E7;color:#1E6B38;}
   .status-borrowed{background:var(--amber-bg);color:var(--amber-ink);}
+  /* 新版本提示 */
+  #updateBanner{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:9999;display:none;align-items:center;gap:10px;background:var(--pine);color:var(--on-pine);padding:10px 14px;border-radius:var(--radius-sm);box-shadow:var(--shadow-md);font-size:12.5px;max-width:92vw;}
+  #updateBanner button{border:none;border-radius:var(--radius-sm);padding:6px 10px;font-size:12px;cursor:pointer;}
+  #updateBanner .ub-reload{background:var(--on-pine);color:var(--pine-deep);font-weight:700;}
+  #updateBanner .ub-later{background:transparent;color:var(--on-pine);text-decoration:underline;padding:6px 2px;}
+  .app-version{font-size:10.5px;color:var(--ink-soft);padding:6px 10px 0;font-family:var(--mono);}
+  .app-version button{background:none;border:none;color:var(--ink-soft);text-decoration:underline;font-size:10.5px;cursor:pointer;padding:0 0 0 6px;}
   /* 比價結果:實線框、廠商之間粗線分隔 */
   .cmp-result-table{border-collapse:collapse;width:100%;font-size:11.5px;}
   .cmp-result-table th,.cmp-result-table td{border:1px solid var(--ink);padding:5px 6px;text-align:center;vertical-align:middle;background:var(--panel);color:var(--ink);letter-spacing:0;text-transform:none;}
@@ -439,9 +447,20 @@
   .tip:hover,.tip:focus{background:var(--ink);color:var(--panel);border-color:var(--ink);outline:none;}
   .tip::after{content:attr(data-tip);position:absolute;bottom:145%;left:50%;transform:translateX(-50%);width:210px;background:var(--ink);color:var(--panel);padding:7px 9px;border-radius:3px;font-size:10.5px;line-height:1.6;white-space:pre-wrap;text-align:left;opacity:0;visibility:hidden;z-index:80;pointer-events:none;box-shadow:var(--shadow-md);}
   .tip:hover::after,.tip:focus::after{opacity:1;visibility:visible;}
-  .print-report .rep-tight th,.print-report .rep-tight td{font-size:9px;padding:3px 4px;text-align:center;}
-  .print-report .rep-tight .vsep{border-left:2px solid #000;}
-  .print-report .rep-tight .cap-col{font-weight:700;white-space:nowrap;}
+  .print-report .rep-grid{border-collapse:collapse;width:100%;table-layout:auto;}
+  .print-report .rep-grid th,.print-report .rep-grid td{border:1px solid #000;padding:3px 5px;font-size:9px;text-align:center;vertical-align:middle;color:#000;background:#fff;letter-spacing:0;text-transform:none;}
+  .print-report .rep-grid thead th{background:#ECECEC;font-weight:700;}
+  .print-report .rep-grid .vsep{border-left:2px solid #000;}
+  .print-report .rep-grid tr.item-top td{border-top:2px solid #000;}
+  .print-report .rep-grid .c-idx{width:22px;}
+  .print-report .rep-grid .c-name{text-align:left;font-weight:700;font-size:9.5px;min-width:120px;}
+  .print-report .rep-grid .c-cas{width:74px;font-family:"IBM Plex Mono",monospace;}
+  .print-report .rep-grid .c-cap{width:52px;font-weight:700;white-space:nowrap;}
+  .print-report .rep-grid .c-dec{width:40px;}
+  .print-report .rep-grid .sub{font-size:7.5px;color:#444;font-weight:400;margin-top:1px;}
+  .print-report .rep-grid .cellline{padding:1px 0;}
+  .print-report .rep-grid .cellline + .cellline{border-top:1px dotted #999;margin-top:2px;padding-top:3px;}
+  .print-report .report-foot{font-size:9px;margin-top:8px;}
   .print-report{background:#fff;color:#000;font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif;padding:18px;}
   .print-report h1{font-size:20px;text-align:center;margin:0 0 4px;}
   .print-report .report-meta{text-align:center;font-size:11px;margin-bottom:14px;}
@@ -718,6 +737,12 @@
   </div>
 </div>
 
+<div id="updateBanner">
+  <span id="updateBannerText">已有新版本</span>
+  <button type="button" class="ub-reload" id="updateReloadBtn">重新載入</button>
+  <button type="button" class="ub-later" id="updateLaterBtn">稍後</button>
+</div>
+
 <div class="topbar-mobile" id="topbarMobile">
   <button class="hamburger-btn" id="drawerOpenBtn" type="button" aria-label="開啟選單">☰</button>
   <div class="brand-m">SFPLAB</div>
@@ -755,6 +780,7 @@
       <button class="nav-item nav-theme" id="themeToggleBtn" type="button" aria-pressed="false">
         <span class="ic" id="themeToggleIcon">🌙</span> <span id="themeToggleLabel">夜間模式</span>
       </button>
+      <div class="app-version">v<span id="appVersionText">-</span><button type="button" id="checkUpdateBtn">檢查更新</button></div>
     </nav>
   </aside>
 
@@ -3238,6 +3264,52 @@ document.querySelectorAll('nav .nav-item[data-page]').forEach(btn=>{
   btn.addEventListener('click', ()=> switchPage(btn.dataset.page));
 });
 document.getElementById('navAdmin').addEventListener('click', ()=>{ renderAdminTable(); });
+
+/* ======================================================
+   新版本偵測:定時抓自己的檔頭比對 app-version
+====================================================== */
+const APP_VERSION = (document.querySelector('meta[name="app-version"]')||{}).content || '0';
+let updateFoundVersion = null;
+let updateDismissed = false;
+document.getElementById('appVersionText').textContent = APP_VERSION;
+function showUpdateBanner(ver){
+  if(updateDismissed) return;
+  updateFoundVersion = ver;
+  document.getElementById('updateBannerText').textContent = '已有新版本 v'+ver+',重新載入即可更新';
+  document.getElementById('updateBanner').style.display = 'flex';
+}
+async function checkForUpdate(manual){
+  try{
+    const url = location.pathname + '?_v=' + Date.now();
+    /* 只抓檔頭,省流量;伺服器不支援 Range 時會回整份,一樣能解析 */
+    const res = await fetch(url, { cache:'no-store', headers:{ 'Range':'bytes=0-3000' } });
+    if(!res.ok && res.status!==206){ if(manual) showToast('檢查失敗,請確認網路連線', 'error'); return; }
+    const text = await res.text();
+    const m = text.match(/name=["']app-version["']\s+content=["']([^"']+)["']/);
+    if(!m){ if(manual) showToast('抓不到版本資訊', 'error'); return; }
+    if(m[1] !== APP_VERSION){
+      updateDismissed = false;
+      showUpdateBanner(m[1]);
+    }else if(manual){
+      showToast('✅ 目前已是最新版 v'+APP_VERSION);
+    }
+  }catch(e){
+    if(manual) showToast('檢查失敗,請確認網路連線', 'error');
+  }
+}
+document.getElementById('updateReloadBtn').addEventListener('click', ()=>{
+  /* 帶上版本參數繞過瀏覽器與 CDN 的舊快取 */
+  location.href = location.pathname + '?v=' + encodeURIComponent(updateFoundVersion||Date.now());
+});
+document.getElementById('updateLaterBtn').addEventListener('click', ()=>{
+  updateDismissed = true;
+  document.getElementById('updateBanner').style.display = 'none';
+});
+document.getElementById('checkUpdateBtn').addEventListener('click', ()=> checkForUpdate(true));
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) checkForUpdate(false); });
+setInterval(()=>{ if(!document.hidden) checkForUpdate(false); }, 15*60*1000);
+setTimeout(()=> checkForUpdate(false), 30*1000);
+
 function switchPage(name){
   if((name==='admin' || name==='softwareBackup' || name==='adminTools') && typeof isAdmin==='function' && !isAdmin()){
     alert('這個頁面僅限管理員使用。');
@@ -6768,38 +6840,84 @@ async function deletePriceComparison(id){
 function buildPurchaseReviewReport(){
   const reviewItems=cpItems.filter(i=>i.status==='quoted');
   const generatedAt=new Date().toLocaleString('zh-TW',{hour12:false});
-  const sections=reviewItems.map((item,itemIndex)=>{
+
+  /* 先把每個品項的比價矩陣算好,再取所有廠商的聯集當成欄位 */
+  const data=reviewItems.map(item=>{
     const cmp=item.comparison_id?cmpItems.find(c=>c.id===item.comparison_id):null;
-    const entries=cmp?cmpAllEntries(cmp):[];
-    const title=`${itemIndex+1}. ${escapeHtml(item.name_zh||'-')}${item.name_en?` / ${escapeHtml(item.name_en)}`:''}${item.cas?`　CAS: ${escapeHtml(item.cas)}`:''}`;
-    let table;
-    if(!cmp || !entries.length){
-      table=`<table class="rep-tight"><tbody><tr><td>尚無比價規格</td></tr></tbody></table>`;
-    }else{
-      const { vendorKeys, labels, rows, cheapest } = cmpBuildMatrix(cmp);
-      let thead='<tr><th class="cap-col">容量</th>';
-      vendorKeys.forEach((v,i)=> thead += `<th class="${i?'vsep':''}">${escapeHtml(labels[v])}</th>`);
-      thead+='</tr>';
-      const tbody=rows.map(row=>{
-        let tr=`<tr><td class="cap-col">${escapeHtml(row.label)}</td>`;
-        vendorKeys.forEach((v,i)=>{
-          const list=row.byVendor[v]||[];
-          const sep=i?'vsep':'';
-          if(!list.length){ tr+=`<td class="${sep}">-</td>`; return; }
-          const cells=list.map(e=>{
-            const isCheapest=cheapest && cheapest.vendorKey===v && cheapest.idx===e.idx;
-            const sub=[e.unitPrice?`$${e.unitPrice.value.toFixed(2)}/${e.unitPrice.unit}${isCheapest?' ★':''}`:'', e.purity||''].filter(Boolean).join('　');
-            return `<div style="padding:1px 0;"><span class="paper-box" style="width:11px;height:11px;"></span> <b>$${e.price}</b>${sub?`<div style="font-size:8px;">${escapeHtml(sub)}</div>`:''}</div>`;
-          }).join('');
-          tr+=`<td class="${sep}">${cells}</td>`;
-        });
-        return tr+'</tr>';
-      }).join('');
-      table=`<table class="rep-tight"><thead>${thead}</thead><tbody>${tbody}</tbody></table>`;
+    const matrix=(cmp && cmpAllEntries(cmp).length) ? cmpBuildMatrix(cmp) : null;
+    const byLabel={};
+    if(matrix){
+      matrix.vendorKeys.forEach(v=>{ byLabel[matrix.labels[v]]=v; });
     }
-    return `<div class="report-item"><div class="report-item-title">${title}</div>${table}<div style="font-size:9px;margin-top:4px;">★ 為每單位最便宜　其他決定：□ 都不買　□ 延後採買　補充說明：____________________________________________</div></div>`;
+    return { item, matrix, byLabel };
+  });
+  const labelSet=new Set();
+  data.forEach(d=> Object.keys(d.byLabel).forEach(l=> labelSet.add(l)));
+  const known=CP_VENDORS.filter(v=>labelSet.has(v));
+  const extra=[...labelSet].filter(l=>!CP_VENDORS.includes(l)).sort((a,b)=>a.localeCompare(b,'zh-Hant'));
+  const vendorCols=[...known,...extra];
+  if(!vendorCols.length) vendorCols.push('廠商');
+
+  const head=`<thead>
+    <tr>
+      <th rowspan="2" class="c-idx">#</th>
+      <th rowspan="2" class="c-name">品名</th>
+      <th rowspan="2" class="c-cas">CAS</th>
+      <th rowspan="2" class="c-cap">容量</th>
+      ${vendorCols.map(v=>`<th colspan="2" class="vsep">${escapeHtml(v)}</th>`).join('')}
+      <th rowspan="2" class="c-dec">都不買</th>
+    </tr>
+    <tr>
+      ${vendorCols.map(()=>`<th class="vsep">價格</th><th>每單位</th>`).join('')}
+    </tr>
+  </thead>`;
+
+  const body=data.map((d,itemIndex)=>{
+    const item=d.item;
+    const rows=d.matrix ? d.matrix.rows : [];
+    const span=Math.max(rows.length,1);
+    const nameCell=`<td rowspan="${span}" class="c-name first">${escapeHtml(item.name_zh||'-')}${item.name_en?`<div class="sub">${escapeHtml(item.name_en)}</div>`:''}</td>`;
+    const casCell=`<td rowspan="${span}" class="first">${escapeHtml(item.cas||'-')}</td>`;
+    const idxCell=`<td rowspan="${span}" class="first">${itemIndex+1}</td>`;
+    const decCell=`<td rowspan="${span}" class="first"><span class="paper-box"></span></td>`;
+
+    if(!rows.length){
+      return `<tr class="item-top">${idxCell}${nameCell}${casCell}<td class="first">-</td>`
+        + vendorCols.map((v,i)=>`<td class="first ${i?'vsep':''}">-</td><td class="first">-</td>`).join('')
+        + `${decCell}</tr>`;
+    }
+    return rows.map((row,ri)=>{
+      const first = ri===0;
+      const cls = first ? 'first' : '';
+      let tr = `<tr class="${first?'item-top':''}">`;
+      if(first) tr += idxCell + nameCell + casCell;
+      tr += `<td class="c-cap ${cls}">${escapeHtml(row.label)}</td>`;
+      vendorCols.forEach((label,i)=>{
+        const key=d.byLabel[label];
+        const list=(key && row.byVendor[key]) ? row.byVendor[key] : [];
+        const sep=i?'vsep':'';
+        if(!list.length){ tr += `<td class="${sep} ${cls}">-</td><td class="${cls}">-</td>`; return; }
+        const priceCell=list.map(e=>`<div class="cellline"><span class="paper-box"></span> <b>$${e.price}</b>${e.purity?`<div class="sub">${escapeHtml(e.purity)}</div>`:''}</div>`).join('');
+        const unitCell=list.map(e=>{
+          const isCheapest=d.matrix.cheapest && d.matrix.cheapest.vendorKey===key && d.matrix.cheapest.idx===e.idx;
+          return `<div class="cellline">${e.unitPrice?`$${e.unitPrice.value.toFixed(2)}/${e.unitPrice.unit}${isCheapest?' ★':''}`:'-'}${e.purity?'<div class="sub">&nbsp;</div>':''}</div>`;
+        }).join('');
+        tr += `<td class="${sep} ${cls}">${priceCell}</td><td class="${cls}">${unitCell}</td>`;
+      });
+      if(first) tr += decCell;
+      return tr + '</tr>';
+    }).join('');
   }).join('');
-  return `<h1>SFPLAB 採買比價審核表</h1><div class="report-meta">產出時間：${escapeHtml(generatedAt)}　待審核項目：${reviewItems.length} 筆</div>${sections}<div class="signature-grid"><div class="signature-box">申請人簽名：</div><div class="signature-box">審核人簽名：</div><div class="signature-box">經費確認：</div><div class="signature-box">日期：</div></div>`;
+
+  const table=reviewItems.length
+    ? `<table class="rep-grid">${head}<tbody>${body}</tbody></table>`
+    : '<div>目前沒有待審核項目</div>';
+
+  return `<h1>SFPLAB 採買比價審核表</h1>`
+    + `<div class="report-meta">產出時間：${escapeHtml(generatedAt)}　待審核項目：${reviewItems.length} 筆　★ 為該品項每單位最便宜</div>`
+    + table
+    + `<div class="report-foot">審核方式：在要採購的規格前面打勾；整項不買請勾最右欄。補充說明：______________________________________________________________</div>`
+    + `<div class="signature-grid"><div class="signature-box">申請人簽名：</div><div class="signature-box">審核人簽名：</div><div class="signature-box">經費確認：</div><div class="signature-box">日期：</div></div>`;
 }
 function openPurchaseReviewReport(){
   const count=cpItems.filter(i=>i.status==='quoted').length;
