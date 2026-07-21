@@ -422,6 +422,26 @@
   .book-meta{font-size:11px;color:var(--ink-soft);margin-top:3px;}
   .status-available{background:#E4F3E7;color:#1E6B38;}
   .status-borrowed{background:var(--amber-bg);color:var(--amber-ink);}
+  /* 比價結果:實線框、廠商之間粗線分隔 */
+  .cmp-result-table{border-collapse:collapse;width:100%;font-size:11.5px;}
+  .cmp-result-table th,.cmp-result-table td{border:1px solid var(--ink);padding:5px 6px;text-align:center;vertical-align:middle;background:var(--panel);color:var(--ink);letter-spacing:0;text-transform:none;}
+  .cmp-result-table thead th{background:var(--tint);font-weight:700;font-size:11.5px;}
+  .cmp-result-table thead tr:first-child th{border-bottom:2px solid var(--ink);}
+  .cmp-result-table .vsep{border-left:2.5px solid var(--ink);}
+  .cmp-result-table .cap-col{background:var(--tint);font-weight:700;white-space:nowrap;width:76px;}
+  .cmp-result-table .cmp-cell{display:block;padding:2px 0;cursor:pointer;}
+  .cmp-result-table .cmp-cell + .cmp-cell{border-top:1px dashed var(--line);margin-top:3px;padding-top:5px;}
+  .cmp-result-table .cmp-cell-main{font-weight:700;margin-left:3px;}
+  .cmp-result-table .cmp-cell-sub{display:block;font-size:10px;color:var(--ink-soft);margin-top:1px;}
+  .cmp-result-table .cmp-empty{color:var(--ink-soft);}
+  /* 浮動備註 */
+  .tip{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border:1px solid var(--line);border-radius:50%;font-size:9.5px;line-height:1;color:var(--ink-soft);cursor:help;position:relative;vertical-align:middle;margin-left:3px;user-select:none;}
+  .tip:hover,.tip:focus{background:var(--ink);color:var(--panel);border-color:var(--ink);outline:none;}
+  .tip::after{content:attr(data-tip);position:absolute;bottom:145%;left:50%;transform:translateX(-50%);width:210px;background:var(--ink);color:var(--panel);padding:7px 9px;border-radius:3px;font-size:10.5px;line-height:1.6;white-space:pre-wrap;text-align:left;opacity:0;visibility:hidden;z-index:80;pointer-events:none;box-shadow:var(--shadow-md);}
+  .tip:hover::after,.tip:focus::after{opacity:1;visibility:visible;}
+  .print-report .rep-tight th,.print-report .rep-tight td{font-size:9px;padding:3px 4px;text-align:center;}
+  .print-report .rep-tight .vsep{border-left:2px solid #000;}
+  .print-report .rep-tight .cap-col{font-weight:700;white-space:nowrap;}
   .print-report{background:#fff;color:#000;font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif;padding:18px;}
   .print-report h1{font-size:20px;text-align:center;margin:0 0 4px;}
   .print-report .report-meta{text-align:center;font-size:11px;margin-bottom:14px;}
@@ -6751,11 +6771,33 @@ function buildPurchaseReviewReport(){
   const sections=reviewItems.map((item,itemIndex)=>{
     const cmp=item.comparison_id?cmpItems.find(c=>c.id===item.comparison_id):null;
     const entries=cmp?cmpAllEntries(cmp):[];
-    const rows=(entries.length?entries:[{vendorLabel:'',purity:item.purity||'',amount:'',unit:'',price:'',note:'尚無比價規格'}]).map(e=>{
-      const up=cmpEntryUnitPrice(e);
-      return `<tr><td style="text-align:center;"><span class="paper-box"></span></td><td>${escapeHtml(e.vendorLabel||'')}</td><td>${escapeHtml(e.purity||'')}</td><td>${e.amount!==''&&e.amount!=null?`${e.amount}${escapeHtml(e.unit||'')}`:''}</td><td>${e.price!==''&&e.price!=null?`$${e.price}`:''}</td><td>${up?`$${up.value.toFixed(2)}/${escapeHtml(up.unit)}`:''}</td><td>${escapeHtml(e.note||'')}</td></tr>`;
-    }).join('');
-    return `<div class="report-item"><div class="report-item-title">${itemIndex+1}. ${escapeHtml(item.name_zh||'-')}${item.name_en?` / ${escapeHtml(item.name_en)}`:''}${item.cas?`　CAS: ${escapeHtml(item.cas)}`:''}</div><table><thead><tr><th style="width:38px;">勾選</th><th>廠商</th><th>純度／規格</th><th>容量</th><th>價格</th><th>每單位</th><th>備註</th></tr></thead><tbody>${rows}</tbody></table><div style="font-size:10.5px;margin-top:5px;">其他決定：□ 都不買　□ 延後採買　補充說明：________________________________________________________</div></div>`;
+    const title=`${itemIndex+1}. ${escapeHtml(item.name_zh||'-')}${item.name_en?` / ${escapeHtml(item.name_en)}`:''}${item.cas?`　CAS: ${escapeHtml(item.cas)}`:''}`;
+    let table;
+    if(!cmp || !entries.length){
+      table=`<table class="rep-tight"><tbody><tr><td>尚無比價規格</td></tr></tbody></table>`;
+    }else{
+      const { vendorKeys, labels, rows, cheapest } = cmpBuildMatrix(cmp);
+      let thead='<tr><th class="cap-col">容量</th>';
+      vendorKeys.forEach((v,i)=> thead += `<th class="${i?'vsep':''}">${escapeHtml(labels[v])}</th>`);
+      thead+='</tr>';
+      const tbody=rows.map(row=>{
+        let tr=`<tr><td class="cap-col">${escapeHtml(row.label)}</td>`;
+        vendorKeys.forEach((v,i)=>{
+          const list=row.byVendor[v]||[];
+          const sep=i?'vsep':'';
+          if(!list.length){ tr+=`<td class="${sep}">-</td>`; return; }
+          const cells=list.map(e=>{
+            const isCheapest=cheapest && cheapest.vendorKey===v && cheapest.idx===e.idx;
+            const sub=[e.unitPrice?`$${e.unitPrice.value.toFixed(2)}/${e.unitPrice.unit}${isCheapest?' ★':''}`:'', e.purity||''].filter(Boolean).join('　');
+            return `<div style="padding:1px 0;"><span class="paper-box" style="width:11px;height:11px;"></span> <b>$${e.price}</b>${sub?`<div style="font-size:8px;">${escapeHtml(sub)}</div>`:''}</div>`;
+          }).join('');
+          tr+=`<td class="${sep}">${cells}</td>`;
+        });
+        return tr+'</tr>';
+      }).join('');
+      table=`<table class="rep-tight"><thead>${thead}</thead><tbody>${tbody}</tbody></table>`;
+    }
+    return `<div class="report-item"><div class="report-item-title">${title}</div>${table}<div style="font-size:9px;margin-top:4px;">★ 為每單位最便宜　其他決定：□ 都不買　□ 延後採買　補充說明：____________________________________________</div></div>`;
   }).join('');
   return `<h1>SFPLAB 採買比價審核表</h1><div class="report-meta">產出時間：${escapeHtml(generatedAt)}　待審核項目：${reviewItems.length} 筆</div>${sections}<div class="signature-grid"><div class="signature-box">申請人簽名：</div><div class="signature-box">審核人簽名：</div><div class="signature-box">經費確認：</div><div class="signature-box">日期：</div></div>`;
 }
@@ -6943,53 +6985,79 @@ document.getElementById('cmpDetailSaveBtn').addEventListener('click', async ()=>
   if(cardCreated) showToast('📌 已在採買看板建立標籤,狀態:已詢價待審核', null, 3500);
 });
 
-/* ---- 比價結果:廠商分區表格 + 勾選送出 ---- */
-function renderCmpResultTable(record){
-  const wrap = document.getElementById('cmp_resultTable');
+/* ---- 比價結果:橫式表格,同容量放同一列 ---- */
+function cmpCapacityBase(e){
+  const amount = Number(e.amount)||0;
+  const isWeight = e.unit==='g' || e.unit==='kg';
+  const base = (e.unit==='kg' || e.unit==='L') ? amount*1000 : amount;
+  return { isWeight, base };
+}
+function cmpBuildMatrix(record){
   const vendors = record.vendors || {};
   const vendorKeys = [...CP_VENDORS, '其他'].filter(v=>{
     const entries = v==='其他' ? (vendors['其他']&&vendors['其他'].entries) : vendors[v];
     return entries && entries.length;
   });
+  const labels = {};
+  const rowMap = new Map();
+  const all = [];
+  vendorKeys.forEach(v=>{
+    labels[v] = v==='其他' ? (vendors['其他'].name||'其他') : v;
+    const raw = v==='其他' ? vendors['其他'].entries : vendors[v];
+    raw.forEach((e,idx)=>{
+      const entry = { ...e, idx, vendorKey:v, unitPrice: cmpEntryUnitPrice(e) };
+      const cap = cmpCapacityBase(e);
+      const key = (cap.isWeight?'w':'v') + ':' + cap.base;
+      if(!rowMap.has(key)) rowMap.set(key, { label: `${e.amount}${e.unit||''}`, isWeight:cap.isWeight, base:cap.base, byVendor:{} });
+      const row = rowMap.get(key);
+      if(!row.byVendor[v]) row.byVendor[v] = [];
+      row.byVendor[v].push(entry);
+      if(entry.unitPrice) all.push(entry);
+    });
+  });
+  const rows = [...rowMap.values()].sort((a,b)=> (a.isWeight===b.isWeight) ? a.base-b.base : (a.isWeight?-1:1));
+  const cheapest = all.length ? all.slice().sort((a,b)=>a.unitPrice.value-b.unitPrice.value)[0] : null;
+  return { vendorKeys, labels, rows, cheapest };
+}
+function cmpNoteTip(note){
+  if(!note) return '';
+  return `<span class="tip" tabindex="0" data-tip="${escapeHtml(note)}">?</span>`;
+}
+function renderCmpResultTable(record){
+  const wrap = document.getElementById('cmp_resultTable');
+  const { vendorKeys, labels, rows, cheapest } = cmpBuildMatrix(record);
   if(!vendorKeys.length){ wrap.innerHTML = '<div class="empty">尚未填寫任何規格價格,請先編輯規格資料。</div>'; return; }
 
-  const vendorData = {};
-  let maxRows = 0;
-  vendorKeys.forEach(v=>{
-    const rawEntries = v==='其他' ? vendors['其他'].entries : vendors[v];
-    const entries = rawEntries.map((e,idx)=>({ ...e, idx, unitPrice: cmpEntryUnitPrice(e) }));
-    const label = v==='其他' ? (vendors['其他'].name||'其他') : v;
-    vendorData[v] = { label, entries };
-    maxRows = Math.max(maxRows, entries.length);
-  });
-  const allWithPrice = [];
-  vendorKeys.forEach(v=> vendorData[v].entries.forEach(e=>{ if(e.unitPrice) allWithPrice.push({ vendorKey:v, ...e }); }));
-  const cheapest = allWithPrice.length ? allWithPrice.slice().sort((a,b)=>a.unitPrice.value-b.unitPrice.value)[0] : null;
-
-  let thead = '<tr>';
-  vendorKeys.forEach(v=> thead += `<th colspan="6" style="text-align:center;">${escapeHtml(vendorData[v].label)}</th>`);
-  thead += '</tr><tr>';
-  vendorKeys.forEach(()=> thead += '<th>選</th><th>純度</th><th>容量</th><th>價格</th><th>每單位</th><th>備註</th>');
+  let thead = '<tr><th class="cap-col">容量</th>';
+  vendorKeys.forEach((v,i)=> thead += `<th class="${i?'vsep':''}">${escapeHtml(labels[v])}</th>`);
   thead += '</tr>';
 
-  let tbody = '';
-  for(let r=0;r<maxRows;r++){
-    tbody += '<tr>';
-    vendorKeys.forEach(v=>{
-      const e = vendorData[v].entries[r];
-      if(!e){ tbody += '<td></td><td></td><td></td><td></td><td></td><td></td>'; return; }
-      const isCheapest = cheapest && cheapest.vendorKey===v && cheapest.idx===e.idx;
-      const checked = record.decided_vendor_key===v && record.decided_entry_idx===e.idx;
-      tbody += `<td><input type="radio" name="cmp_decision" value="${v}::${e.idx}" ${checked?'checked':''}></td>
-        <td>${escapeHtml(e.purity||'-')}</td>
-        <td>${e.amount}${escapeHtml(e.unit)}</td>
-        <td>$${e.price}</td>
-        <td>${e.unitPrice?`$${e.unitPrice.value.toFixed(2)}/${e.unitPrice.unit}${isCheapest?' 🏆':''}`:'-'}</td>
-        <td>${escapeHtml(e.note||'-')}</td>`;
+  const tbody = rows.map(row=>{
+    let tr = `<tr><td class="cap-col">${escapeHtml(row.label)}</td>`;
+    vendorKeys.forEach((v,i)=>{
+      const list = row.byVendor[v] || [];
+      const sep = i ? 'vsep' : '';
+      if(!list.length){ tr += `<td class="${sep} cmp-empty">-</td>`; return; }
+      const cells = list.map(e=>{
+        const isCheapest = cheapest && cheapest.vendorKey===v && cheapest.idx===e.idx;
+        const checked = record.decided_vendor_key===v && record.decided_entry_idx===e.idx;
+        const sub = [
+          e.unitPrice ? `$${e.unitPrice.value.toFixed(2)}/${e.unitPrice.unit}${isCheapest?' 🏆':''}` : '',
+          e.purity || ''
+        ].filter(Boolean).join('　');
+        return `<label class="cmp-cell">
+          <input type="radio" name="cmp_decision" value="${v}::${e.idx}" ${checked?'checked':''}>
+          <span class="cmp-cell-main">$${e.price}</span>${cmpNoteTip(e.note)}
+          ${sub?`<span class="cmp-cell-sub">${escapeHtml(sub)}</span>`:''}
+        </label>`;
+      }).join('');
+      tr += `<td class="${sep}">${cells}</td>`;
     });
-    tbody += '</tr>';
-  }
-  wrap.innerHTML = `<div class="tablewrap"><table style="font-size:11.5px;"><thead>${thead}</thead><tbody>${tbody}</tbody></table></div>`;
+    return tr + '</tr>';
+  }).join('');
+
+  wrap.innerHTML = `<div class="tablewrap"><table class="cmp-result-table"><thead>${thead}</thead><tbody>${tbody}</tbody></table></div>`
+    + '<div style="font-size:10.5px;color:var(--ink-soft);margin-top:6px;">🏆 為每單位最便宜;備註點「?」查看。</div>';
 }
 document.getElementById('cmpSubmitDecisionBtn').addEventListener('click', async ()=>{
   const record = cmpItems.find(c=>c.id===cmpCurrentId);
