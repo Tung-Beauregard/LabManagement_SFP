@@ -1387,6 +1387,8 @@
       </div>
       <div class="toolbar">
         <button class="btn btn-primary" id="cpAddChemBtn">＋ 新增採買/報修</button>
+        <button class="btn btn-ghost" id="cpImportQuoteBtn">📥 匯入報價Excel</button>
+        <input type="file" id="cpImportQuoteInput" accept=".xlsx,.xls,.csv" class="visually-hidden-file">
         <button class="btn btn-ghost" id="cmpHistoryBtn">🔎 比價紀錄</button>
         <button class="btn btn-ghost" id="cpPrintReportBtn">🖨️ 產出待審核報表</button>
       </div>
@@ -7305,6 +7307,147 @@ document.getElementById('cmpImportInput').addEventListener('change', (e)=>{
 
     if(!imported){ alert('沒有可匯入的資料,請確認廠商、包裝量、價格三欄都有填。'); return; }
     showToast(`📥 已匯入 ${imported} 筆規格${skipped?`,略過 ${skipped} 筆資料不完整的列`:''},記得按「儲存比價資料」`, null, 3500);
+  };
+  reader.readAsArrayBuffer(file);
+  e.target.value = '';
+});
+
+/* ---- 從報價 Excel 一次建立多個待購買項目(每個品項一張標籤 + 一份比價) ---- */
+function cpExtractCas(text){
+  const m = String(text||'').match(/(\d{2,7}-\d{2}-\d)/);
+  return m ? m[1] : '';
+}
+function cpCleanItemName(text){
+  const s = String(text||'').replace(/[（(]\s*CAS[:：\s]*\d{2,7}-\d{2}-\d\s*[)）]/ig, '').trim();
+  return s || String(text||'').trim();
+}
+async function cpImportQuoteRows(rows){
+  const headerIdx = cmpFindHeaderRow(rows);
+  if(headerIdx<0){ alert('找不到標題列,請確認檔案第一列有「廠商」「價格」等欄位名稱。'); return; }
+  const map = cmpMapColumns(rows[headerIdx]);
+  if(map.name==null){
+    alert('這個檔案沒有「品名」欄。\n在採買頁匯入時需要品名欄才知道要建立哪些項目,\n如果只有單一品項,請改在比價視窗裡匯入。');
+    return;
+  }
+  if(map.vendor==null || map.amount==null || map.price==null){
+    alert('找不到「廠商」「包裝量」「價格」這幾欄,請確認標題列是否與範本一致。');
+    return;
+  }
+  const dataRows = rows.slice(headerIdx+1);
+  const groups = new Map();
+  let skipped = 0;
+  dataRows.forEach(r=>{
+    if(!r) return;
+    const rawName = String(r[map.name]==null?'':r[map.name]).trim();
+    const vendorName = String(r[map.vendor]==null?'':r[map.vendor]).trim();
+    const amount = cmpParseNumber(r[map.amount]);
+    const price = cmpParseNumber(r[map.price]);
+    if(!rawName || !vendorName || !amount || !price){ if(rawName||vendorName) skipped++; return; }
+    const key = cmpNameKey(rawName);
+    if(!groups.has(key)) groups.set(key, { label: rawName, entries: [] });
+    groups.get(key).entries.push({
+      vendorName,
+      purity: map.purity!=null && r[map.purity]!=null ? String(r[map.purity]).trim() : '',
+      amount,
+      unit: (map.unit!=null ? cmpNormalizeUnit(r[map.unit]) : '') || 'mL',
+      price,
+      note: map.note!=null && r[map.note]!=null ? String(r[map.note]).trim() : ''
+    });
+  });
+  if(!groups.size){ alert('沒有可匯入的資料,請確認品名、廠商、包裝量、價格都有填。'); return; }
+
+  const list = [...groups.values()];
+  const total = list.reduce((n,g)=>n+g.entries.length,0);
+  const preview = list.slice(0,12).map(g=>'・'+g.label+'('+g.entries.length+' 筆報價)').join('\n')
+    + (list.length>12 ? '\n…其他 '+(list.length-12)+' 項' : '');
+  const dupNames = list.filter(g=> cpItems.some(i=> i.name_zh && cmpNameKey(i.name_zh)===cmpNameKey(cpCleanItemName(g.label)) && !['ready','cancelled'].includes(i.status)))
+                       .map(g=>g.label);
+  const dupText = dupNames.length ? '\n\n注意:採買看板裡已經有同名的項目('+dupNames.length+' 項),繼續匯入會另外建立新標籤。' : '';
+  if(!confirm('準備建立 '+list.length+' 個品項、共 '+total+' 筆報價。\n每個品項會產生一張採買標籤,狀態直接是「已詢價待審核」,並附上比價資料。\n\n'+preview+dupText+'\n\n要繼續嗎?')) return;
+
+  let okCount = 0, failCount = 0;
+  for(const g of list){
+    const vendors = {};
+    CP_VENDORS.forEach(v=>{ vendors[v] = []; });
+    let otherName = '';
+    const otherEntries = [];
+    g.entries.forEach(en=>{
+      const entry = { purity: en.purity, amount: en.amount, unit: en.unit, price: en.price, note: en.note };
+      if(CP_VENDORS.includes(en.vendorName)){
+        vendors[en.vendorName].push(entry);
+      }else{
+        if(!otherName) otherName = en.vendorName;
+        if(en.vendorName !== otherName){
+          entry.note = ('廠商:'+en.vendorName+(entry.note?' '+entry.note:'')).trim();
+        }
+        otherEntries.push(entry);
+      }
+    });
+    vendors['其他'] = { name: otherName || '其他', entries: otherEntries };
+
+    const nameClean = cpCleanItemName(g.label);
+    const cas = cpExtractCas(g.label);
+    const record = {
+      id: genId(cmpItems, 'CMP'), _doc_id: null,
+      item_name: nameClean, name_zh: nameClean, name_en: '', cas,
+      type: 'chemical', vendors,
+      decided_vendor: null, decided_vendor_key: null, decided_entry_idx: null,
+      addedToList: false, linked_cp_id: null, logs: [],
+      created_by_uid: (currentUser&&currentUser.uid)||null,
+      created_by: (currentUser&&currentUser.code)||null,
+      created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+      updated_by_uid: (currentUser&&currentUser.uid)||null
+    };
+    const item = {
+      id: genId(cpItems, 'CP'), _doc_id: null,
+      type: 'chemical', name_zh: nameClean, name_en: '', cas,
+      package_sizes: [], purity: '', pack: '',
+      note: '由報價Excel匯入',
+      status: 'quoted', vendor: null, price: null,
+      comparison_id: record.id,
+      order_sent_date: null, received_date: null, ready_date: null, sds_date: null,
+      logs: [],
+      created_by_uid: (currentUser&&currentUser.uid)||null,
+      created_by: (currentUser&&currentUser.code)||null,
+      created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+      updated_by_uid: (currentUser&&currentUser.uid)||null
+    };
+    record.linked_cp_id = item.id;
+    cpLogPush(record, '報價Excel匯入', g.entries.length+' 筆報價');
+    cpLogPush(item, '報價Excel匯入', '直接進入已詢價待審核');
+
+    const okRec = await fsSetItem('price-comparisons', record);
+    const okItem = okRec ? await fsSetItem('chem-purchases', item) : false;
+    if(okRec && okItem){
+      cmpItems.push(record);
+      cpItems.push(item);
+      okCount++;
+    }else{
+      failCount++;
+    }
+  }
+  renderCpKanban();
+  renderCmpCardGrid();
+  const msg = '📥 已建立 '+okCount+' 個品項'
+    + (skipped ? ',略過 '+skipped+' 筆資料不完整的列' : '')
+    + (failCount ? ',有 '+failCount+' 項儲存失敗,請檢查網路與權限' : '');
+  showToast(msg, failCount?'error':null, 4500);
+}
+document.getElementById('cpImportQuoteBtn').addEventListener('click', ()=> document.getElementById('cpImportQuoteInput').click());
+document.getElementById('cpImportQuoteInput').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = async (ev)=>{
+    let rows;
+    try{
+      const data = new Uint8Array(ev.target.result);
+      const wb = XLSX.read(data, {type:'array'});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      rows = XLSX.utils.sheet_to_json(ws, {header:1, blankrows:false});
+    }catch(err){ alert('無法讀取這個檔案,請確認是Excel或CSV格式。'); return; }
+    if(!rows || rows.length<2){ alert('檔案內容看起來是空的'); return; }
+    await cpImportQuoteRows(rows);
   };
   reader.readAsArrayBuffer(file);
   e.target.value = '';
