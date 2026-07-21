@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="app-version" content="2026.07.21-2">
+<meta name="app-version" content="2026.07.21-3">
 <meta name="theme-color" content="#1B4B43" id="metaThemeColor">
 <title>SFPLAB 實驗室管理系統</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>">
@@ -473,15 +473,16 @@
   .print-report .signature-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:18px;page-break-inside:avoid;}
   .print-report .report-date{font-size:10px;margin-top:10px;text-align:right;}
   .print-report .signature-box{border-bottom:1px solid #000;min-height:55px;font-size:11px;padding-top:4px;}
+  #printRoot{display:none;}
   @media print{
     @page{size:A4 portrait;margin:8mm;}
+    /* 列印時把報表搬到 body 底下的 printRoot,其餘一律隱藏。
+       用 display:none 而不是 visibility:hidden,也不用絕對定位,
+       否則內容超過一頁時瀏覽器會重複輸出或截斷。 */
     body.printing-purchase-report{background:#fff;}
     body.printing-purchase-report > *{display:none !important;}
-    body.printing-purchase-report > #purchaseReportOverlay{display:block !important;position:static;background:#fff;padding:0;overflow:visible;}
-    body.printing-purchase-report #purchaseReportOverlay .modal{display:block !important;max-width:none !important;width:auto !important;box-shadow:none !important;border:none !important;padding:0 !important;margin:0 !important;max-height:none !important;overflow:visible !important;}
-    body.printing-purchase-report #purchaseReportOverlay .toolbar,
-    body.printing-purchase-report #purchaseReportOverlay .close{display:none !important;}
-    body.printing-purchase-report #purchasePrintArea{display:block !important;width:auto;max-width:none;padding:0;margin:0;}
+    body.printing-purchase-report > #printRoot{display:block !important;}
+    body.printing-purchase-report #printRoot #purchasePrintArea{display:block !important;width:auto;max-width:none;margin:0;padding:0;}
     .print-report .rep-grid thead{display:table-header-group;}
     .print-report .rep-grid tr{page-break-inside:avoid;}
   }
@@ -749,6 +750,8 @@
   <button type="button" class="ub-reload" id="updateReloadBtn">重新載入</button>
   <button type="button" class="ub-later" id="updateLaterBtn">稍後</button>
 </div>
+
+<div id="printRoot"></div>
 
 <div class="topbar-mobile" id="topbarMobile">
   <button class="hamburger-btn" id="drawerOpenBtn" type="button" aria-label="開啟選單">☰</button>
@@ -7017,11 +7020,21 @@ function openPurchaseReviewReport(){
 document.getElementById('cpPrintReportBtn').addEventListener('click',openPurchaseReviewReport);
 document.getElementById('purchaseReportClose').addEventListener('click',()=>document.getElementById('purchaseReportOverlay').classList.remove('show'));
 document.getElementById('purchaseReportPrintBtn').addEventListener('click',()=>{
+  const area=document.getElementById('purchasePrintArea');
+  const root=document.getElementById('printRoot');
+  const home=area.parentNode;
+  if(!area || !root || !home) return;
+  root.appendChild(area);
   document.body.classList.add('printing-purchase-report');
-  const cleanup=()=>document.body.classList.remove('printing-purchase-report');
+  let restored=false;
+  const cleanup=()=>{
+    if(restored) return;
+    restored=true;
+    document.body.classList.remove('printing-purchase-report');
+    home.appendChild(area);
+  };
   window.addEventListener('afterprint',cleanup,{once:true});
-  window.print();
-  setTimeout(cleanup,1500);
+  try{ window.print(); }finally{ setTimeout(cleanup,0); }
 });
 
 /* ---- 比價明細:多規格編輯(純度/容量/單位/價格/備註) ---- */
