@@ -1436,6 +1436,8 @@
           <div class="label-secondary-row" id="cpd_meta"></div>
         </div>
         <div id="cpDetailActions" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;"></div>
+        <div class="section-title" style="margin-top:16px;">操作紀錄</div>
+        <div id="cpd_logs"></div>
       </div>
     </div>
 
@@ -1493,10 +1495,12 @@
           <label>備註</label>
           <textarea id="cp_note" rows="2"></textarea>
         </div>
+        <div id="cp_batchList" style="display:none;background:var(--panel-soft);border:1px solid var(--line);border-radius:var(--radius-sm);padding:8px 10px;margin-bottom:10px;"></div>
         <div class="modal-actions">
           <button class="btn btn-ghost" id="cpDeleteBtn" style="color:var(--danger);border-color:var(--danger);display:none;">刪除</button>
           <div style="flex:1;"></div>
           <button class="btn btn-ghost" id="cpCancelBtn">取消</button>
+          <button class="btn btn-ghost" id="cpSaveAddBtn" style="margin-left:8px;">儲存並繼續新增</button>
           <button class="btn btn-primary" id="cpSaveBtn" style="margin-left:8px;">儲存</button>
         </div>
       </div>
@@ -1540,6 +1544,19 @@
           <div><label>中文名稱 *</label><input type="text" id="cmp_item_name"></div>
           <div><label>英文名稱</label><input type="text" id="cmp_item_name_en"></div>
         </div>
+        <div id="cmp_standaloneWrap" style="display:none;">
+          <div class="field row2">
+            <div><label>類型</label>
+              <select id="cmp_new_type"><option value="chemical">藥品</option><option value="consumable">耗材</option></select>
+            </div>
+            <div><label>CAS No.(選填)</label><input type="text" id="cmp_cas" placeholder="例如 93-15-2"></div>
+          </div>
+          <div style="font-size:11px;color:var(--ink-soft);margin:-4px 0 12px;">外部報價單可以直接在這裡建立。填好價格按「儲存比價資料」後,系統會自動在採買看板產生一張標籤,並直接放到「已詢價待審核」。</div>
+        </div>
+        <details style="margin-bottom:10px;">
+          <summary style="font-size:11.5px;color:var(--ink-soft);cursor:pointer;">操作紀錄</summary>
+          <div id="cmp_logs" style="margin-top:6px;"></div>
+        </details>
 
         <div id="cmp_editSection">
           <div class="toolbar" style="margin-bottom:10px;">
@@ -1581,10 +1598,12 @@
         </div>
         <div class="stats">
           <div class="stat"><div class="n" id="todoStatOpen">0</div><div class="l">未完成</div></div>
+          <div class="stat"><div class="n" id="todoStatDone">0</div><div class="l">已完成</div></div>
         </div>
       </div>
       <div class="toolbar">
         <button class="btn btn-ghost" id="todoViewAllBtn">📋 查看所有工作</button>
+        <button class="btn btn-ghost" id="todoDoneBtn">✅ 已完成工作</button>
         <button class="btn btn-primary" id="todoAddBtn">＋ 新增工作</button>
       </div>
 
@@ -1641,6 +1660,35 @@
           <select id="todoFilterStatus"><option value="open">未完成</option><option value="done">已完成</option><option value="all">全部</option></select>
         </div>
         <div id="todoFullList"></div>
+      </div>
+    </div>
+
+    <!-- 待辦事項:已完成工作 -->
+    <div class="overlay" id="todoDoneOverlay">
+      <div class="modal" style="max-width:620px;">
+        <button class="close" id="todoDoneClose">✕</button>
+        <h2>已完成工作</h2>
+        <div class="field">
+          <input type="text" id="todoDoneSearch" placeholder="搜尋工作內容、完成者、建立者">
+        </div>
+        <div class="toolbar" style="margin-bottom:8px;">
+          <select id="todoDoneRange">
+            <option value="7">最近 7 天</option>
+            <option value="30" selected>最近 30 天</option>
+            <option value="90">最近 90 天</option>
+            <option value="all">全部</option>
+            <option value="custom">自訂日期</option>
+          </select>
+          <select id="todoDoneWho"><option value="">所有人</option></select>
+          <button class="btn btn-ghost btn-sm" id="todoDoneResetBtn">清除條件</button>
+        </div>
+        <div class="field row2" id="todoDoneCustomWrap" style="display:none;">
+          <div><label style="font-size:12px;">起</label><input type="date" id="todoDoneFrom"></div>
+          <div><label style="font-size:12px;">迄</label><input type="date" id="todoDoneTo"></div>
+        </div>
+        <div id="todoDoneSummary" style="font-size:11.5px;color:var(--ink-soft);margin-bottom:8px;"></div>
+        <div id="todoDoneList"></div>
+        <div style="font-size:11px;color:var(--ink-soft);margin-top:10px;">取消打勾會把工作放回未完成清單。</div>
       </div>
     </div>
   </main>
@@ -5390,11 +5438,13 @@ async function toggleTodoDone(id, done){
   const isOwnerOrAdmin = isAdmin() || item.created_by_uid===(currentUser&&currentUser.uid);
   const canToggle = isOwnerOrAdmin || item.visibility==='shared' || item.assignee_uid===(currentUser&&currentUser.uid);
   if(!canToggle){ alert('你沒有權限更新這項待辦。'); renderTodoAll(); return; }
-  const oldDone = item.done, oldDoneAt = item.done_at;
+  const oldDone = item.done, oldDoneAt = item.done_at, oldDoneBy = item.done_by;
   item.done = done;
   item.done_at = done ? new Date().toISOString() : null;
   let ok;
   if(isOwnerOrAdmin){
+    item.done_by = done ? ((currentUser&&currentUser.code)||null) : null;
+    item.done_by_uid = done ? ((currentUser&&currentUser.uid)||null) : null;
     ok = await fsSetItem('todo-items', item);
   }else{
     // 共享/被指派的成員:Security Rules 只允許改 done 與 done_at,用欄位級更新
@@ -5403,7 +5453,7 @@ async function toggleTodoDone(id, done){
       ok = true;
     }catch(e){ console.error('toggleTodoDone update failed:', e); ok = false; }
   }
-  if(!ok){ item.done=oldDone; item.done_at=oldDoneAt; alert('更新失敗。'); }
+  if(!ok){ item.done=oldDone; item.done_at=oldDoneAt; item.done_by=oldDoneBy; alert('更新失敗。'); }
   renderTodoAll();
 }
 async function quickDeleteTodo(id){
@@ -5482,10 +5532,12 @@ function renderTodoAll(){
   const visible = todoItems.filter(todoVisibleToMe);
   const open = visible.filter(i=>!i.done);
   document.getElementById('todoStatOpen').textContent = open.length;
+  document.getElementById('todoStatDone').textContent = visible.filter(i=>i.done).length;
   renderTodoTodayTomorrow();
   renderTodoCalendar();
   renderTodoOpenList();
   renderTodoFullList();
+  renderTodoDoneList();
 }
 function renderTodoTodayTomorrow(){
   const visible = todoItems.filter(todoVisibleToMe);
@@ -5535,6 +5587,104 @@ function renderTodoFullList(){
 document.getElementById('todoViewAllBtn').addEventListener('click', ()=>{ renderTodoFullList(); document.getElementById('todoListOverlay').classList.add('show'); });
 document.getElementById('todoListClose').addEventListener('click', ()=> document.getElementById('todoListOverlay').classList.remove('show'));
 document.getElementById('todoFilterStatus').addEventListener('change', renderTodoFullList);
+
+/* ---- 已完成工作:可依關鍵字、期間、完成者查詢 ---- */
+function todoDoneDate(item){
+  if(item.done_at){
+    const d = new Date(item.done_at);
+    if(!isNaN(d.getTime())) return localDateISO(d);
+  }
+  if(item.due_date) return item.due_date;
+  if(item.created_at){
+    const d = new Date(item.created_at);
+    if(!isNaN(d.getTime())) return localDateISO(d);
+  }
+  return '';
+}
+function todoDaysAgoISO(n){
+  const d = new Date();
+  d.setDate(d.getDate()-n);
+  return localDateISO(d);
+}
+function todoDoneRowHtml(item){
+  const date = todoDoneDate(item);
+  const who = item.done_by || item.created_by || '';
+  const canRemove = isAdmin() || item.created_by_uid===(currentUser&&currentUser.uid);
+  return `<div class="todo-row done">
+    <input type="checkbox" checked onchange="toggleTodoDone('${item.id}', this.checked)">
+    <span class="todo-title">${escapeHtml(item.title)}${todoVisibilityBadge(item)}</span>
+    <span class="todo-date">${escapeHtml(date||'無日期')}${who?' · '+escapeHtml(who):''}</span>
+    <div class="todo-actions">
+      ${canRemove ? `<button class="btn-icon btn-row-delete" onclick="quickDeleteTodo('${item.id}')" title="刪除">✕</button>` : ''}
+    </div>
+  </div>`;
+}
+function renderTodoDoneWhoOptions(list){
+  const sel = document.getElementById('todoDoneWho');
+  const keep = sel.value;
+  const names = [...new Set(list.map(i=> i.done_by || i.created_by || '').filter(Boolean))].sort();
+  sel.innerHTML = '<option value="">所有人</option>' + names.map(n=>`<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
+  sel.value = names.includes(keep) ? keep : '';
+}
+function renderTodoDoneList(){
+  const wrap = document.getElementById('todoDoneList');
+  if(!wrap) return;
+  const all = todoItems.filter(todoVisibleToMe).filter(i=>i.done);
+  renderTodoDoneWhoOptions(all);
+
+  const kw = (document.getElementById('todoDoneSearch').value||'').trim().toLowerCase();
+  const range = document.getElementById('todoDoneRange').value;
+  const who = document.getElementById('todoDoneWho').value;
+  document.getElementById('todoDoneCustomWrap').style.display = range==='custom' ? 'flex' : 'none';
+
+  let from = '', to = '';
+  if(range==='custom'){
+    from = document.getElementById('todoDoneFrom').value || '';
+    to = document.getElementById('todoDoneTo').value || '';
+  }else if(range!=='all'){
+    from = todoDaysAgoISO(Number(range)-1);
+  }
+
+  let list = all.filter(item=>{
+    const date = todoDoneDate(item);
+    if(from && (!date || date < from)) return false;
+    if(to && (!date || date > to)) return false;
+    if(who && (item.done_by || item.created_by || '') !== who) return false;
+    if(kw){
+      const hay = [item.title, item.done_by, item.created_by, item.assignee, date].filter(Boolean).join(' ').toLowerCase();
+      if(!hay.includes(kw)) return false;
+    }
+    return true;
+  });
+  list.sort((a,b)=> (todoDoneDate(b)||'').localeCompare(todoDoneDate(a)||''));
+
+  const rangeText = range==='all' ? '全部期間'
+    : range==='custom' ? `${from||'不限'} ~ ${to||'不限'}`
+    : `最近 ${range} 天`;
+  document.getElementById('todoDoneSummary').textContent =
+    `${rangeText}·共 ${list.length} 筆(已完成總計 ${all.length} 筆)`;
+
+  wrap.innerHTML = list.length
+    ? `<div class="today-card">${list.map(todoDoneRowHtml).join('')}</div>`
+    : `<div class="empty"><b>沒有符合條件的已完成工作</b>調整期間或關鍵字再試一次</div>`;
+}
+document.getElementById('todoDoneBtn').addEventListener('click', ()=>{
+  renderTodoDoneList();
+  document.getElementById('todoDoneOverlay').classList.add('show');
+});
+document.getElementById('todoDoneClose').addEventListener('click', ()=> document.getElementById('todoDoneOverlay').classList.remove('show'));
+['todoDoneRange','todoDoneWho','todoDoneFrom','todoDoneTo'].forEach(id=>{
+  document.getElementById(id).addEventListener('change', renderTodoDoneList);
+});
+document.getElementById('todoDoneSearch').addEventListener('input', renderTodoDoneList);
+document.getElementById('todoDoneResetBtn').addEventListener('click', ()=>{
+  document.getElementById('todoDoneSearch').value = '';
+  document.getElementById('todoDoneRange').value = '30';
+  document.getElementById('todoDoneWho').value = '';
+  document.getElementById('todoDoneFrom').value = '';
+  document.getElementById('todoDoneTo').value = '';
+  renderTodoDoneList();
+});
 
 /* ======================================================
    儀器說明書(標籤卡+說明書+維修紀錄)
@@ -6017,6 +6167,46 @@ let cpActionId = null; // 目前正在標記訂購/到貨的項目
 let cpDetailId = null;
 async function loadCpItems(){ cpItems = await fsGetAll('chem-purchases'); }
 
+/* ---- 操作紀錄:每張標籤都記錄誰在什麼時候做了什麼 ---- */
+function cpActorName(){
+  if(!currentUser) return '未登入';
+  const code = currentUser.code || '';
+  const name = currentUser.name || '';
+  if(code && name && code!==name) return code+'('+name+')';
+  return code || name || '未知使用者';
+}
+function cpLogPush(obj, action, detail){
+  if(!obj) return obj;
+  if(!Array.isArray(obj.logs)) obj.logs = [];
+  obj.logs.push({
+    at: new Date().toISOString(),
+    by: cpActorName(),
+    by_uid: (currentUser&&currentUser.uid)||null,
+    action: action||'',
+    detail: detail||''
+  });
+  if(obj.logs.length>60) obj.logs = obj.logs.slice(-60);
+  return obj;
+}
+function cpLogTime(iso){
+  const d = new Date(iso);
+  if(!iso || isNaN(d.getTime())) return iso||'';
+  const p = n=>String(n).padStart(2,'0');
+  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());
+}
+function cpLogListHtml(obj, emptyText){
+  const logs = (obj && Array.isArray(obj.logs)) ? obj.logs.slice().reverse() : [];
+  if(!logs.length) return '<div style="font-size:11px;color:var(--ink-soft);">'+escapeHtml(emptyText||'目前沒有操作紀錄')+'</div>';
+  return '<ul style="list-style:none;margin:0;padding:0;font-size:11px;color:var(--ink-soft);">'
+    + logs.map(l=>'<li style="padding:4px 0;border-bottom:1px dashed var(--line-soft);">'
+        + '<b style="color:var(--ink);">'+escapeHtml(l.action||'')+'</b>'
+        + '<span style="margin-left:6px;">'+escapeHtml(l.by||'')+'</span>'
+        + '<span style="margin-left:6px;">'+escapeHtml(cpLogTime(l.at))+'</span>'
+        + (l.detail?'<div style="margin-top:2px;">'+escapeHtml(l.detail)+'</div>':'')
+      +'</li>').join('')
+    + '</ul>';
+}
+
 const CP_TYPE_ICON = { chemical:'🧪', consumable:'📦', instrument_maintenance:'🔧' };
 function cpCardLabel(item){
   const icon = CP_TYPE_ICON[item.type||'chemical'] || '';
@@ -6035,6 +6225,9 @@ function cpToggleTypeFields(type){
   document.getElementById('cp_chemFields').style.display = type==='chemical' ? 'block' : 'none';
   document.getElementById('cp_consumableFields').style.display = type==='consumable' ? 'block' : 'none';
   document.getElementById('cp_instrumentFields').style.display = type==='instrument_maintenance' ? 'block' : 'none';
+  /* 儀器維護不做連續新增 */
+  document.getElementById('cpSaveAddBtn').style.display =
+    (type==='instrument_maintenance' || editingCpId) ? 'none' : 'inline-block';
 }
 document.getElementById('cp_type').addEventListener('change', (e)=> cpToggleTypeFields(e.target.value));
 function openCpForm(id, defaultType){
@@ -6062,6 +6255,8 @@ function openCpForm(id, defaultType){
 
   document.getElementById('cp_note').value = (item && type!=='instrument_maintenance') ? item.note||'' : '';
   document.getElementById('cpDeleteBtn').style.display = (item && isAdmin()) ? 'inline-block' : 'none';
+  cpBatchAdded = [];
+  cpRenderBatchList();
   document.getElementById('cpDetailOverlay').classList.remove('show');
   document.getElementById('cpFormOverlay').classList.add('show');
 }
@@ -6069,7 +6264,31 @@ function closeCpForm(){ document.getElementById('cpFormOverlay').classList.remov
 document.getElementById('cpAddChemBtn').addEventListener('click', ()=> openCpForm(null, 'chemical'));
 document.getElementById('cpFormClose').addEventListener('click', closeCpForm);
 document.getElementById('cpCancelBtn').addEventListener('click', closeCpForm);
-document.getElementById('cpSaveBtn').addEventListener('click', async ()=>{
+/* ---- 連續新增:藥品/耗材可以一次建立多筆,儀器維護維持單筆 ---- */
+let cpBatchAdded = [];
+function cpRenderBatchList(){
+  const box = document.getElementById('cp_batchList');
+  if(!box) return;
+  if(!cpBatchAdded.length){ box.innerHTML=''; box.style.display='none'; return; }
+  box.style.display='block';
+  box.innerHTML = '<div style="font-size:11.5px;color:var(--ink-soft);margin-bottom:4px;">本次已新增 '+cpBatchAdded.length+' 筆</div>'
+    + cpBatchAdded.map(n=>'<div style="font-size:12px;padding:2px 0;">・'+escapeHtml(n)+'</div>').join('');
+}
+function cpClearFormFields(type){
+  if(type==='chemical'){
+    document.getElementById('cp_name_zh').value='';
+    document.getElementById('cp_name_en').value='';
+    document.getElementById('cp_cas').value='';
+    document.querySelectorAll('.cp_pkg').forEach(cb=>{ cb.checked=false; });
+    document.getElementById('cp_name_zh').focus();
+  }else if(type==='consumable'){
+    document.getElementById('cp_consumable_name').value='';
+    document.getElementById('cp_consumable_spec').value='';
+    document.getElementById('cp_consumable_name').focus();
+  }
+  document.getElementById('cp_note').value='';
+}
+async function cpSaveFormItem(keepOpen){
   const type = document.getElementById('cp_type').value;
   const existing = editingCpId ? cpItems.find(i=>i.id===editingCpId) : null;
   let name_zh, name_en='', cas='', package_sizes=[], purity='', pack='', note;
@@ -6107,22 +6326,34 @@ document.getElementById('cpSaveBtn').addEventListener('click', async ()=>{
     received_date: existing ? existing.received_date : null,
     ready_date: existing ? existing.ready_date : null,
     sds_date: existing ? existing.sds_date : null,
+    logs: existing ? (existing.logs||[]) : [],
     created_by_uid: existing ? (existing.created_by_uid||null) : ((currentUser&&currentUser.uid)||null),
     created_by: existing ? existing.created_by : ((currentUser&&currentUser.code)||null),
     created_at: existing ? existing.created_at : new Date().toISOString(),
     updated_at: new Date().toISOString(),
     updated_by_uid: (currentUser&&currentUser.uid)||null
   };
+  cpLogPush(item, existing ? '編輯項目' : '新增項目', name_zh);
   const saveBtn = document.getElementById('cpSaveBtn');
-  saveBtn.disabled = true; // 避免手機雙擊送出兩次造成重複卡片
+  const saveAddBtn = document.getElementById('cpSaveAddBtn');
+  saveBtn.disabled = true; saveAddBtn.disabled = true; // 避免手機雙擊送出兩次造成重複卡片
   const ok = await fsSetItem('chem-purchases', item);
-  saveBtn.disabled = false;
+  saveBtn.disabled = false; saveAddBtn.disabled = false;
   if(!ok){ alert('儲存失敗,請檢查網路連線後再試一次。'); return; }
   if(editingCpId){ cpItems = cpItems.map(i=>i.id===editingCpId?item:i); }
   else if(!cpItems.some(i=>i.id===item.id)){ cpItems.push(item); }
-  closeCpForm();
   renderCpKanban();
-});
+  if(keepOpen && !editingCpId){
+    cpBatchAdded.push(name_zh);
+    cpRenderBatchList();
+    cpClearFormFields(type);
+    showToast('✅ 已新增「'+name_zh+'」,可以繼續填下一筆', null, 2200);
+    return;
+  }
+  closeCpForm();
+}
+document.getElementById('cpSaveBtn').addEventListener('click', ()=> cpSaveFormItem(false));
+document.getElementById('cpSaveAddBtn').addEventListener('click', ()=> cpSaveFormItem(true));
 document.getElementById('cpDeleteBtn').addEventListener('click', async ()=>{
   if(!editingCpId || !isAdmin()) return;
   if(!confirm('確定要刪除這筆待購買項目嗎?此動作無法復原。')) return;
@@ -6212,6 +6443,7 @@ function openCpDetail(id){
     actions.push(`<button class="btn btn-ghost btn-sm btn-row-delete" onclick="quickDeleteCp('${id}')">刪除</button>`);
   }
   document.getElementById('cpDetailActions').innerHTML = actions.join('');
+  document.getElementById('cpd_logs').innerHTML = cpLogListHtml(item, '這筆項目在加入操作紀錄功能前建立,沒有歷史紀錄。');
   document.getElementById('cpDetailOverlay').classList.add('show');
 }
 async function cpStepBack(id){
@@ -6221,6 +6453,7 @@ async function cpStepBack(id){
   const idx = CP_STAGE_ORDER.indexOf(item.status);
   if(idx<=0) return;
   item.status = CP_STAGE_ORDER[idx-1];
+  cpLogPush(item, '回上一步', CP_STAGE_LABEL[item.status]||'');
   await fsSetItem('chem-purchases', item);
   closeCpDetail();
   renderCpKanban();
@@ -6232,6 +6465,7 @@ async function cpCancelItem(id){
   if(!item) return;
   item.prev_status = item.status;
   item.status = 'cancelled';
+  cpLogPush(item, '標記都不買', '');
   await fsSetItem('chem-purchases', item);
   closeCpDetail();
   renderCpKanban();
@@ -6272,6 +6506,7 @@ document.getElementById('cpOrderSaveBtn').addEventListener('click', async ()=>{
   item.pack = document.getElementById('cpo_pack').value.trim();
   item.order_sent_date = date;
   item.status = 'ordered';
+  cpLogPush(item, '標記已訂購', `${item.vendor||''} ${item.pack||''} ${item.price!=null?'$'+item.price:''} 送出日 ${date}`.trim());
   const ok = await fsSetItem('chem-purchases', item);
   if(!ok){ alert('儲存失敗,請檢查網路連線後再試一次。'); }
   document.getElementById('cpOrderOverlay').classList.remove('show');
@@ -6294,6 +6529,7 @@ document.getElementById('cpReceiveSaveBtn').addEventListener('click', async ()=>
   item.received_date = date;
   item.sds_date = document.getElementById('cpr_sds_date').value || null;
   item.status = 'delivered';
+  cpLogPush(item, '標記已到貨', `到貨日 ${date}`);
   const ok = await fsSetItem('chem-purchases', item);
   if(!ok){ alert('儲存失敗,請檢查網路連線後再試一次。'); }
   document.getElementById('cpReceiveOverlay').classList.remove('show');
@@ -6304,6 +6540,7 @@ async function cpMarkReady(id){
   if(!item) return;
   item.ready_date = localDateISO();
   item.status = 'ready';
+  cpLogPush(item, '確認可入庫', item.ready_date);
   await fsSetItem('chem-purchases', item);
   closeCpDetail();
   renderCpKanban();
@@ -6623,6 +6860,10 @@ function openCmpDetail(id){
   document.getElementById('cmpDetailTitle').textContent = item ? '比價結果' : '新增比價';
   document.getElementById('cmp_item_name').value = item ? cmpNameZh(item) : '';
   document.getElementById('cmp_item_name_en').value = item ? cmpNameEn(item) : '';
+  document.getElementById('cmp_new_type').value = (item && item.type) || 'chemical';
+  document.getElementById('cmp_cas').value = (item && item.cas) || '';
+  document.getElementById('cmp_standaloneWrap').style.display = (item && item.linked_cp_id) ? 'none' : 'block';
+  document.getElementById('cmp_logs').innerHTML = cpLogListHtml(item, item ? '這筆比價沒有歷史紀錄。' : '尚未建立,還沒有紀錄。');
   renderCmpVendorBlocks(item ? item.vendors : null);
   const hasEntries = item && cmpAllEntries(item).length > 0;
   if(hasEntries) cmpSwitchToResult(item);
@@ -6640,6 +6881,9 @@ document.getElementById('cmpDetailSaveBtn').addEventListener('click', async ()=>
     id: cmpCurrentId || genId(cmpItems, 'CMP'),
     _doc_id: existing ? existing._doc_id : null,
     item_name:name_zh, name_zh, name_en, vendors,
+    type: existing ? (existing.type||'chemical') : (document.getElementById('cmp_new_type').value||'chemical'),
+    cas: document.getElementById('cmp_cas').value.trim(),
+    logs: existing ? (existing.logs||[]) : [],
     decided_vendor: existing ? existing.decided_vendor : null,
     decided_vendor_key: existing ? existing.decided_vendor_key : null,
     decided_entry_idx: existing ? existing.decided_entry_idx : null,
@@ -6651,13 +6895,50 @@ document.getElementById('cmpDetailSaveBtn').addEventListener('click', async ()=>
     updated_at: new Date().toISOString(),
     updated_by_uid: (currentUser&&currentUser.uid)||null
   };
+  cpLogPush(record, existing ? '編輯比價資料' : '建立比價', name_zh);
   const ok = await fsSetItem('price-comparisons', record);
   if(!ok){ alert('儲存失敗,請檢查網路連線後再試一次。'); return; }
   if(cmpCurrentId){ cmpItems = cmpItems.map(c=>c.id===cmpCurrentId?record:c); }
   else{ cmpItems.push(record); cmpCurrentId = record.id; }
+
+  /* 外部報價單:沒有對應的待購買項目時,自動補一張標籤並直接放進「已詢價待審核」 */
+  let cardCreated = false;
+  if(!record.linked_cp_id && cmpAllEntries(record).length){
+    const newItem = {
+      id: genId(cpItems, 'CP'), _doc_id: null,
+      type: record.type||'chemical',
+      name_zh: record.name_zh, name_en: record.name_en||'', cas: record.cas||'',
+      package_sizes: [], purity: '', pack: '',
+      note: '外部報價單,直接建立比價',
+      status: 'quoted', vendor: null, price: null,
+      comparison_id: record.id,
+      order_sent_date: null, received_date: null, ready_date: null, sds_date: null,
+      logs: [],
+      created_by_uid: (currentUser&&currentUser.uid)||null,
+      created_by: (currentUser&&currentUser.code)||null,
+      created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+      updated_by_uid: (currentUser&&currentUser.uid)||null
+    };
+    cpLogPush(newItem, '外部報價建立', '跳過待購買,直接進入已詢價待審核');
+    const okItem = await fsSetItem('chem-purchases', newItem);
+    if(okItem){
+      cpItems.push(newItem);
+      record.linked_cp_id = newItem.id;
+      cpLogPush(record, '建立採買標籤', newItem.name_zh);
+      await fsSetItem('price-comparisons', record);
+      cardCreated = true;
+      renderCpKanban();
+    }else{
+      alert('比價已儲存,但建立採買標籤失敗,請檢查網路與權限。');
+    }
+  }
+
   renderCmpCardGrid();
+  document.getElementById('cmp_standaloneWrap').style.display = record.linked_cp_id ? 'none' : 'block';
+  document.getElementById('cmp_logs').innerHTML = cpLogListHtml(record);
   if(cmpAllEntries(record).length){ cmpSwitchToResult(record); }
   else{ showToast('已儲存(尚未填任何規格價格)', null, 3000); }
+  if(cardCreated) showToast('📌 已在採買看板建立標籤,狀態:已詢價待審核', null, 3500);
 });
 
 /* ---- 比價結果:廠商分區表格 + 勾選送出 ---- */
@@ -6726,6 +7007,7 @@ document.getElementById('cmpSubmitDecisionBtn').addEventListener('click', async 
   record.decided_vendor_key = vendorKey;
   record.decided_entry_idx = idx;
   record.addedToList = true;
+  cpLogPush(record, '決定廠商', `${vendorLabel} ${packStr} $${entry.price}`);
   const okRec = await fsSetItem('price-comparisons', record);
   if(!okRec){ alert('儲存比價決定失敗,請檢查網路與權限(只有建立者或管理員能修改這份比價)。'); return; }
 
@@ -6737,6 +7019,7 @@ document.getElementById('cmpSubmitDecisionBtn').addEventListener('click', async 
       item.pack = packStr;
       if(entry.purity) item.purity = entry.purity;
       item.status = 'reviewed';
+      cpLogPush(item, '決定廠商', `${vendorLabel} ${packStr} $${entry.price}`);
       const okItem = await fsSetItem('chem-purchases', item);
       if(!okItem){ alert('比價決定已儲存,但更新採購狀態失敗(可能只有建立者或管理員能更新這筆採購)。'); }
     }
@@ -6750,14 +7033,18 @@ document.getElementById('cmpSubmitDecisionBtn').addEventListener('click', async 
       order_sent_date: null, received_date: null, ready_date: null, sds_date: null,
       comparison_id: record.id,
       created_by_uid: (currentUser&&currentUser.uid)||null,
-      created_by: (currentUser&&currentUser.code)||null, created_at: new Date().toISOString()
+      created_by: (currentUser&&currentUser.code)||null, created_at: new Date().toISOString(), logs: []
     };
+    cpLogPush(newItem, '由比價工具建立', `${vendorLabel} ${packStr} $${entry.price}`);
     cpItems.push(newItem);
     await fsSetItem('chem-purchases', newItem);
   }
   document.getElementById('cmp_addedNote').textContent = `✅ 已送出審核:${record.decided_vendor},請到「已審核待訂購」欄位確認後標記已訂購。`;
   renderCmpResultTable(record);
   renderCpKanban(); renderCmpCardGrid();
+  closeCmpDetail();
+  switchPage('chemPurchase');
+  showToast(`✅ 已決定:${record.decided_vendor},請到「已審核待訂購」標記已訂購。`, null, 3500);
 });
 document.getElementById('cmpCancelDecisionBtn').addEventListener('click', async ()=>{
   const record = cmpItems.find(c=>c.id===cmpCurrentId);
@@ -6765,13 +7052,21 @@ document.getElementById('cmpCancelDecisionBtn').addEventListener('click', async 
   if(!confirm('確定這項不買了嗎?')) return;
   record.decided_vendor = '都不買';
   record.addedToList = true;
+  cpLogPush(record, '標記都不買', '');
   await fsSetItem('price-comparisons', record);
   if(record.linked_cp_id){
     const item = cpItems.find(i=>i.id===record.linked_cp_id);
-    if(item){ item.prev_status = item.status; item.status = 'cancelled'; await fsSetItem('chem-purchases', item); }
+    if(item){
+      item.prev_status = item.status; item.status = 'cancelled';
+      cpLogPush(item, '標記都不買', '');
+      await fsSetItem('chem-purchases', item);
+    }
   }
   document.getElementById('cmp_addedNote').textContent = '已標記為都不買。';
   renderCpKanban(); renderCmpCardGrid();
+  closeCmpDetail();
+  switchPage('chemPurchase');
+  showToast('已標記為都不買。', null, 3000);
 });
 
 /* ---- 從待購買項目啟動比價 ---- */
@@ -6784,8 +7079,10 @@ async function cpStartComparison(id){
     item_name: item.name_zh, name_zh:item.name_zh||'', name_en:item.name_en||'',
     vendors: {}, decided_vendor:null, decided_vendor_key:null, decided_entry_idx:null, addedToList:false, linked_cp_id: item.id,
     created_by_uid: (currentUser&&currentUser.uid)||null,
-    created_by: (currentUser&&currentUser.code)||null, created_at: new Date().toISOString()
+    created_by: (currentUser&&currentUser.code)||null, created_at: new Date().toISOString(), logs: []
   };
+  cpLogPush(record, '建立比價', item.name_zh);
+  cpLogPush(item, '開始詢價比價', '');
   cmpItems.push(record);
   const okCmp = await fsSetItem('price-comparisons', record);
   if(!okCmp){
@@ -6810,10 +7107,15 @@ async function cmpSendForReview(){
   if(!item){ alert('找不到對應的採購項目。'); return; }
   if(item.status!=='pending'){ alert('這筆採購已經送出審核了。'); return; }
   item.status = 'quoted';
+  cpLogPush(item, '送出審核', cmpNameZh(record));
+  cpLogPush(record, '送出審核', '等待選擇廠商');
   const ok = await fsSetItem('chem-purchases', item);
-  if(!ok){ item.status='pending'; alert('送出失敗,請檢查網路與權限後再試一次。'); return; }
+  if(!ok){ item.status='pending'; item.logs.pop(); alert('送出失敗,請檢查網路與權限後再試一次。'); return; }
+  await fsSetItem('price-comparisons', record);
   renderCpKanban();
   cmpUpdateActionState(record);
+  closeCmpDetail();
+  switchPage('chemPurchase');
   showToast('✅ 已送出審核,等待老師選擇廠商');
 }
 /* 依採購階段控制比價視窗的按鈕:詢價中→確定/修改;待審核→選廠商/都不買;已決定→唯讀 */
@@ -6930,24 +7232,38 @@ document.getElementById('cmpImportInput').addEventListener('change', (e)=>{
     }
     let dataRows = rows.slice(headerIdx>=0 ? headerIdx+1 : 1);
 
-    /* 檔案裡含多個品項時,只匯入目前這筆比價的品項 */
+    /* 檔案裡含多個品項時,只匯入目前這筆比價的品項。
+       同一個化合物的多筆報價(不同廠商、不同包裝)會被歸成同一組,一次全部帶進來。
+       品名寫法略有差異(空格、括號、CAS 位置不同)也會歸成同一組。 */
     if(map.name!=null){
-      const names=[...new Set(dataRows.map(r=>String((r||[])[map.name]||'').trim()).filter(Boolean))];
-      if(names.length>1){
+      const groups = new Map(); // 正規化後的品名 -> { label, raw:Set }
+      dataRows.forEach(r=>{
+        const raw = String((r||[])[map.name]||'').trim();
+        if(!raw) return;
+        const key = cmpNameKey(raw);
+        if(!groups.has(key)) groups.set(key, { label: raw, raw: new Set() });
+        groups.get(key).raw.add(raw);
+      });
+      const keys = [...groups.keys()];
+      if(keys.length>1){
         const targets=[document.getElementById('cmp_item_name').value.trim(),
                        document.getElementById('cmp_item_name_en').value.trim()].filter(Boolean);
-        let picked = targets.length ? names.filter(n=>cmpNameMatches(n,targets)) : [];
+        let picked = targets.length ? keys.filter(k=>cmpNameMatches(groups.get(k).label, targets)) : [];
         if(!picked.length){
-          const ans = window.prompt('這個檔案包含多個品項,請輸入要匯入的編號(0 = 全部匯入):\n'
-            + names.map((n,i)=>`${i+1}. ${n}`).join('\n'), '0');
+          const ans = window.prompt('這個檔案包含多個品項,請輸入要匯入的編號(可用逗號選多個,0 = 全部匯入):\n'
+            + keys.map((k,i)=>`${i+1}. ${groups.get(k).label}`).join('\n'), '0');
           if(ans===null) return;
-          const pick=parseInt(String(ans).trim(),10);
-          if(pick===0) picked=names;
-          else if(pick>=1 && pick<=names.length) picked=[names[pick-1]];
-          else { alert('編號不正確,已取消匯入。'); return; }
+          const nums = String(ans).split(/[,,、\s]+/).map(s=>parseInt(s,10)).filter(n=>!isNaN(n));
+          if(!nums.length){ alert('編號不正確,已取消匯入。'); return; }
+          if(nums.includes(0)) picked = keys;
+          else{
+            picked = nums.filter(n=>n>=1&&n<=keys.length).map(n=>keys[n-1]);
+            if(!picked.length){ alert('編號不正確,已取消匯入。'); return; }
+          }
         }
-        const keep=new Set(picked);
-        dataRows = dataRows.filter(r=> keep.has(String((r||[])[map.name]||'').trim()));
+        const keepRaw = new Set();
+        picked.forEach(k=> groups.get(k).raw.forEach(v=>keepRaw.add(v)));
+        dataRows = dataRows.filter(r=> keepRaw.has(String((r||[])[map.name]||'').trim()));
       }
     }
 
