@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="app-version" content="2026.07.21-1">
+<meta name="app-version" content="2026.07.21-2">
 <meta name="theme-color" content="#1B4B43" id="metaThemeColor">
 <title>SFPLAB 實驗室管理系統</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>">
@@ -447,16 +447,17 @@
   .tip:hover,.tip:focus{background:var(--ink);color:var(--panel);border-color:var(--ink);outline:none;}
   .tip::after{content:attr(data-tip);position:absolute;bottom:145%;left:50%;transform:translateX(-50%);width:210px;background:var(--ink);color:var(--panel);padding:7px 9px;border-radius:3px;font-size:10.5px;line-height:1.6;white-space:pre-wrap;text-align:left;opacity:0;visibility:hidden;z-index:80;pointer-events:none;box-shadow:var(--shadow-md);}
   .tip:hover::after,.tip:focus::after{opacity:1;visibility:visible;}
+  .print-report{max-width:760px;margin:0 auto;}
   .print-report .rep-grid{border-collapse:collapse;width:100%;table-layout:auto;}
   .print-report .rep-grid th,.print-report .rep-grid td{border:1px solid #000;padding:3px 5px;font-size:9px;text-align:center;vertical-align:middle;color:#000;background:#fff;letter-spacing:0;text-transform:none;}
   .print-report .rep-grid thead th{background:#ECECEC;font-weight:700;}
   .print-report .rep-grid .vsep{border-left:2px solid #000;}
   .print-report .rep-grid tr.item-top td{border-top:2px solid #000;}
-  .print-report .rep-grid .c-idx{width:22px;}
-  .print-report .rep-grid .c-name{text-align:left;font-weight:700;font-size:9.5px;min-width:120px;}
-  .print-report .rep-grid .c-cas{width:74px;font-family:"IBM Plex Mono",monospace;}
-  .print-report .rep-grid .c-cap{width:52px;font-weight:700;white-space:nowrap;}
-  .print-report .rep-grid .c-dec{width:40px;}
+  .print-report .rep-grid .c-idx{width:20px;}
+  .print-report .rep-grid .c-name{text-align:left;font-weight:700;font-size:9.5px;width:168px;word-break:break-word;}
+  .print-report .rep-grid .c-cas{width:66px;font-family:"IBM Plex Mono",monospace;}
+  .print-report .rep-grid .c-cap{width:46px;font-weight:700;white-space:nowrap;}
+  .print-report .rep-grid .c-dec{width:44px;white-space:nowrap;}
   .print-report .rep-grid .sub{font-size:7.5px;color:#444;font-weight:400;margin-top:1px;}
   .print-report .rep-grid .cellline{padding:1px 0;}
   .print-report .rep-grid .cellline + .cellline{border-top:1px dotted #999;margin-top:2px;padding-top:3px;}
@@ -469,14 +470,20 @@
   .print-report table{table-layout:auto;border-collapse:collapse;width:100%;}
   .print-report th,.print-report td{border:1px solid #000;background:#fff;color:#000;padding:5px 6px;font-size:10.5px;letter-spacing:0;text-transform:none;vertical-align:middle;}
   .print-report .paper-box{display:inline-block;width:15px;height:15px;border:1.5px solid #000;vertical-align:middle;}
-  .print-report .signature-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:20px;page-break-inside:avoid;}
+  .print-report .signature-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:18px;page-break-inside:avoid;}
+  .print-report .report-date{font-size:10px;margin-top:10px;text-align:right;}
   .print-report .signature-box{border-bottom:1px solid #000;min-height:55px;font-size:11px;padding-top:4px;}
   @media print{
-    @page{size:A4 landscape;margin:10mm;}
-    body.printing-purchase-report *{visibility:hidden !important;}
-    body.printing-purchase-report #purchasePrintArea,
-    body.printing-purchase-report #purchasePrintArea *{visibility:visible !important;}
-    body.printing-purchase-report #purchasePrintArea{position:absolute;left:0;top:0;width:100%;padding:0;}
+    @page{size:A4 portrait;margin:8mm;}
+    body.printing-purchase-report{background:#fff;}
+    body.printing-purchase-report > *{display:none !important;}
+    body.printing-purchase-report > #purchaseReportOverlay{display:block !important;position:static;background:#fff;padding:0;overflow:visible;}
+    body.printing-purchase-report #purchaseReportOverlay .modal{display:block !important;max-width:none !important;width:auto !important;box-shadow:none !important;border:none !important;padding:0 !important;margin:0 !important;max-height:none !important;overflow:visible !important;}
+    body.printing-purchase-report #purchaseReportOverlay .toolbar,
+    body.printing-purchase-report #purchaseReportOverlay .close{display:none !important;}
+    body.printing-purchase-report #purchasePrintArea{display:block !important;width:auto;max-width:none;padding:0;margin:0;}
+    .print-report .rep-grid thead{display:table-header-group;}
+    .print-report .rep-grid tr{page-break-inside:avoid;}
   }
 
   /* ---- responsive: phones & narrow screens ---- */
@@ -1078,6 +1085,17 @@
           <div class="help">刪除後只會停止提供給新資料選擇，既有藥品的位置仍會保留顯示。</div>
           <div class="toolbar" style="margin-bottom:0;"><input type="text" id="saChemLocationInput" placeholder="新增位置名稱"><button class="btn btn-primary btn-sm" id="saChemLocationAdd">新增</button></div>
           <div class="setting-list" id="saChemLocationList"></div>
+        </div>
+        <div class="management-card">
+          <h3>已詢價待審核項目｜批次刪除</h3>
+          <div class="help">勾選要刪除的項目後一次移除,連同該項目的比價資料一起刪掉。此動作無法復原,僅總管理員可用。</div>
+          <div class="toolbar" style="margin-bottom:6px;">
+            <label style="font-size:12px;display:flex;align-items:center;gap:5px;"><input type="checkbox" id="saQuotedSelectAll"> 全選</label>
+            <span style="flex:1;"></span>
+            <span id="saQuotedCount" style="font-size:11.5px;color:var(--ink-soft);"></span>
+            <button class="btn btn-ghost btn-sm btn-row-delete" id="saQuotedDeleteBtn" disabled>刪除勾選</button>
+          </div>
+          <div class="setting-list" id="saQuotedList"></div>
         </div>
         <div class="management-card">
           <h3>試材存放位置</h3>
@@ -6025,8 +6043,78 @@ function renderSuperAdminTools(){
   instList.innerHTML = INSTRUMENTS_ALL().slice().sort((a,b)=>a.room.localeCompare(b.room)||a.name.localeCompare(b.name)).map(inst=>`
     <div class="setting-row"><div><b>${escapeHtml(inst.name)}</b><div class="meta">${escapeHtml(roomLabel(inst.room))}${inst._custom?' · 自訂':' · 內建'}</div></div><div style="display:flex;gap:4px;"><button type="button" class="btn btn-ghost btn-sm" data-edit-instrument="${escapeHtml(inst.name)}">編輯</button><button type="button" class="btn btn-ghost btn-sm btn-row-delete" data-delete-instrument="${escapeHtml(inst.name)}">刪除</button></div></div>`).join('') || '<div class="slot-empty">目前沒有儀器</div>';
   document.getElementById('saChemLocationList').innerHTML = CHEM_LOCATIONS.map(loc=>`<div class="setting-row"><span>${escapeHtml(loc)}</span><div style="display:flex;gap:4px;"><button type="button" class="btn btn-ghost btn-sm" data-edit-chem-location="${escapeHtml(loc)}">編輯</button><button type="button" class="btn btn-ghost btn-sm btn-row-delete" data-delete-chem-location="${escapeHtml(loc)}">刪除</button></div></div>`).join('');
+  renderSaQuotedList();
   document.getElementById('saMatLocationList').innerHTML = STORAGE_OPTIONS.map(o=>`<div class="setting-row"><span>${escapeHtml(o.label)}</span><div style="display:flex;gap:4px;"><button type="button" class="btn btn-ghost btn-sm" data-edit-mat-location="${escapeHtml(o.value)}">編輯</button><button type="button" class="btn btn-ghost btn-sm btn-row-delete" data-delete-mat-location="${escapeHtml(o.value)}">刪除</button></div></div>`).join('');
 }
+/* ---- 已詢價待審核:批次刪除(僅總管理員) ---- */
+function renderSaQuotedList(){
+  const box = document.getElementById('saQuotedList');
+  if(!box) return;
+  const list = cpItems.filter(i=>i.status==='quoted')
+                      .sort((a,b)=>(b.created_at||'').localeCompare(a.created_at||''));
+  document.getElementById('saQuotedCount').textContent = list.length ? `共 ${list.length} 筆` : '';
+  document.getElementById('saQuotedSelectAll').checked = false;
+  document.getElementById('saQuotedDeleteBtn').disabled = true;
+  if(!list.length){ box.innerHTML = '<div class="slot-empty">目前沒有已詢價待審核的項目</div>'; return; }
+  box.innerHTML = list.map(item=>{
+    const cmp = item.comparison_id ? cmpItems.find(c=>c.id===item.comparison_id) : null;
+    const n = cmp ? cmpAllEntries(cmp).length : 0;
+    const meta = [item.cas?('CAS '+item.cas):'', n?(n+' 筆報價'):'無比價資料', item.created_by?('建立者 '+item.created_by):'']
+      .filter(Boolean).join(' · ');
+    return `<div class="setting-row">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+        <input type="checkbox" class="sa-quoted-cb" value="${escapeHtml(item.id)}">
+        <span><b>${escapeHtml(item.name_zh||'-')}</b><div class="meta">${escapeHtml(meta)}</div></span>
+      </label>
+    </div>`;
+  }).join('');
+}
+function saQuotedChecked(){
+  return [...document.querySelectorAll('.sa-quoted-cb:checked')].map(cb=>cb.value);
+}
+document.getElementById('saQuotedList').addEventListener('change', ()=>{
+  const total = document.querySelectorAll('.sa-quoted-cb').length;
+  const picked = saQuotedChecked().length;
+  document.getElementById('saQuotedDeleteBtn').disabled = picked===0;
+  document.getElementById('saQuotedSelectAll').checked = total>0 && picked===total;
+});
+document.getElementById('saQuotedSelectAll').addEventListener('change', (e)=>{
+  document.querySelectorAll('.sa-quoted-cb').forEach(cb=>{ cb.checked = e.target.checked; });
+  document.getElementById('saQuotedDeleteBtn').disabled = !e.target.checked || !document.querySelectorAll('.sa-quoted-cb').length;
+});
+document.getElementById('saQuotedDeleteBtn').addEventListener('click', async ()=>{
+  if(!isSuperAdmin()){ alert('只有總管理員可以使用這個功能。'); return; }
+  const ids = saQuotedChecked();
+  if(!ids.length) return;
+  const names = ids.map(id=>{ const it=cpItems.find(i=>i.id===id); return it?(it.name_zh||id):id; });
+  const preview = names.slice(0,10).map(n=>'・'+n).join('\n') + (names.length>10?`\n…其他 ${names.length-10} 筆`:'');
+  if(!confirm(`確定要刪除這 ${ids.length} 筆待審核項目嗎?\n連同它們的比價資料一起刪除,無法復原。\n\n${preview}`)) return;
+
+  const btn = document.getElementById('saQuotedDeleteBtn');
+  btn.disabled = true;
+  let ok=0, fail=0;
+  for(const id of ids){
+    const item = cpItems.find(i=>i.id===id);
+    if(!item){ fail++; continue; }
+    const cmp = item.comparison_id ? cmpItems.find(c=>c.id===item.comparison_id) : null;
+    const okItem = await fsDeleteItem('chem-purchases', item.id, item._doc_id);
+    if(!okItem){ fail++; continue; }
+    cpItems = cpItems.filter(i=>i.id!==item.id);
+    if(cmp){
+      const okCmp = await fsDeleteItem('price-comparisons', cmp.id, cmp._doc_id);
+      if(okCmp){
+        cmpItems = cmpItems.filter(c=>c.id!==cmp.id);
+        if(cmpCurrentId===cmp.id) closeCmpDetail();
+      }
+    }
+    ok++;
+  }
+  renderSaQuotedList();
+  renderCpKanban();
+  renderCmpCardGrid();
+  showToast(`🗑️ 已刪除 ${ok} 筆${fail?`,${fail} 筆失敗`:''}`, fail?'error':null, 3500);
+});
+
 document.getElementById('saNavOrderList').addEventListener('click', async (e)=>{
   const btn=e.target.closest('[data-nav-move]'); if(!btn||!isSuperAdmin()) return;
   const page=btn.dataset.navPage, dir=btn.dataset.navMove;
@@ -6916,8 +7004,9 @@ function buildPurchaseReviewReport(){
   return `<h1>SFPLAB 採買比價審核表</h1>`
     + `<div class="report-meta">產出時間：${escapeHtml(generatedAt)}　待審核項目：${reviewItems.length} 筆　★ 為該品項每單位最便宜</div>`
     + table
-    + `<div class="report-foot">審核方式：在要採購的規格前面打勾；整項不買請勾最右欄。補充說明：______________________________________________________________</div>`
-    + `<div class="signature-grid"><div class="signature-box">申請人簽名：</div><div class="signature-box">審核人簽名：</div><div class="signature-box">經費確認：</div><div class="signature-box">日期：</div></div>`;
+    + `<div class="report-foot">審核方式：在要採購的規格前面打勾；整項不買請勾最右欄。補充說明：__________________________________________________</div>`
+    + `<div class="signature-grid"><div class="signature-box">申請人簽名：</div><div class="signature-box">審核人簽名：</div></div>`
+    + `<div class="report-date">日期：${escapeHtml(localDateISO())}</div>`;
 }
 function openPurchaseReviewReport(){
   const count=cpItems.filter(i=>i.status==='quoted').length;
