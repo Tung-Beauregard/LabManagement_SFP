@@ -1441,6 +1441,9 @@
         <select id="galFilterType" style="padding:8px 11px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--panel-soft);color:var(--ink);font-size:13px;">
           <option value="">所有類型</option><option value="ftir">FTIR</option><option value="lc">LC</option><option value="gc">GC</option><option value="tga">TGA</option><option value="dsc">DSC</option>
         </select>
+        <select id="galFilterUser" style="padding:8px 11px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--panel-soft);color:var(--ink);font-size:13px;">
+          <option value="">所有建立者</option>
+        </select>
       </div>
       <div class="gal-grid" id="galGrid"></div>
       <div class="slot-empty" id="galEmpty" style="display:none;">目前還沒有存入的圖譜。到「圖譜分析」做好圖後按「存入圖譜」即可。</div>
@@ -8367,34 +8370,78 @@ function ftirReadSpc(buf){
 }
 function ftirXAxis(s){const x=new Array(s.n);for(let i=0;i<s.n;i++)x[i]=s.first+(s.last-s.first)*i/(s.n-1);return x;}
 
-/* ============ 官能基對照 ============ */
+/* ============ 官能基對照 ============
+   欄位:[下限, 上限, 短標(英文), 詳細(英文 + 中文), 優先權]
+   優先權:數字越大越優先(同波數有多個候選時用來排序)。
+   區間整理自 Socrates、Pavia、Coblentz 等常見紅外特徵頻率參考普遍收錄之範圍,
+   以不含氮有機物(醇/酚/醚/酯/酮/醛/羧酸/羧酸鹽/烯/炔/芳香/烷鏈)為主,
+   含氮官能基(N-H, C≡N, amide, C-N)仍收錄但不特別加權。僅供初判。 */
 const FTIR_BANDS=[
- [3200,3600,'O-H','O-H 伸縮，醇／酚／水',3],[3300,3500,'N-H','N-H 伸縮，胺或醯胺',2],
- [3270,3310,'≡C-H','末端炔 ≡C-H 伸縮',2],[2500,3300,'COOH','羧酸 O-H，寬帶',1],
- [3000,3100,'=C-H','烯／芳香 =C-H 伸縮',3],[2950,3000,'CH₃ as','CH₃ 反對稱伸縮',3],
- [2915,2940,'CH₂ as','CH₂ 反對稱伸縮',3],[2860,2880,'CH₃ s','CH₃ 對稱伸縮',3],
- [2840,2865,'CH₂ s','CH₂ 對稱伸縮',3],[2695,2830,'CHO','醛基 C-H，常見雙峰',2],
- [2500,2600,'S-H','S-H 伸縮',2],[2200,2260,'C≡N','腈類 C≡N 伸縮',3],
- [2100,2200,'C≡C','炔類 C≡C 伸縮',2],[1745,1765,'C=O 酯','酯類 C=O',3],
- [1730,1750,'C=O 酯','飽和酯 C=O',3],[1720,1740,'C=O 醛','醛類 C=O',2],
- [1700,1725,'C=O','酮／羧酸 C=O',3],[1680,1700,'C=O 共軛','共軛羰基',2],
- [1630,1690,'醯胺 I','醯胺 I，C=O 伸縮',2],[1600,1680,'C=C','烯類 C=C 伸縮',2],
- [1580,1620,'芳 C=C','芳香環骨架',2],[1540,1580,'COO⁻ as','羧酸鹽反對稱（皂化）',3],
- [1515,1560,'醯胺 II','醯胺 II，N-H 彎曲',2],[1490,1520,'芳 C=C','芳香環骨架',2],
- [1440,1480,'CH₂ 剪','CH₂ 剪式／CH₃ 反對稱彎曲',3],[1395,1440,'COO⁻ s','羧酸鹽對稱／O-H 面內彎曲',2],
- [1365,1395,'CH₃ 彎','CH₃ 對稱彎曲',2],[1310,1365,'C-N','C-N 伸縮或酚 O-H 彎曲',1],
- [1250,1310,'C-O','酯／芳醚 C-O，芳香胺 C-N',2],[1200,1255,'C-O-C','芳基烷基醚，酚 C-O',2],
- [1150,1205,'C-O','二級醇或酯 C-O',2],[1050,1150,'C-O-C','醚／一級醇 C-O，糖苷鍵',2],
- [1000,1060,'C-O','一級醇 C-O',2],[960,1000,'trans C-H','trans 雙鍵面外彎曲（共軛三烯）',3],
- [880,925,'=CH₂','端烯 =CH₂ 面外彎曲',2],[855,885,'芳 H','芳香孤立氫面外彎曲',2],
- [800,860,'芳 2H','對位取代芳香，或 C-Cl',2],[735,790,'芳 3H','間位取代芳香面外彎曲',2],
- [715,740,'(CH₂)ₙ','CH₂ 搖擺，長碳鏈',3],[690,715,'單取代芳','單取代芳香，或 cis C-H',2],
+ // ---- 3700–2500 X–H 伸縮區 ----
+ [3580,3670,'O-H','O-H stretch, free 游離氫氧基(醇/酚,無氫鍵)',3],
+ [3200,3550,'O-H','O-H stretch, H-bonded 氫鍵締合(醇/酚/水,寬帶)',3],
+ [2500,3300,'O-H (COOH)','O-H stretch of carboxylic acid 羧酸氫氧基,極寬帶',2],
+ [3300,3500,'N-H','N-H stretch 胺/醯胺 N-H 伸縮',2],
+ [3060,3100,'Aromatic C-H','Aromatic C-H stretch 芳香環 C-H 伸縮',3],
+ [3010,3060,'=C-H','=C-H stretch of alkene 烯類 C-H 伸縮',3],
+ [3260,3320,'≡C-H','≡C-H stretch of terminal alkyne 末端炔 C-H 伸縮',2],
+ [2950,3000,'C-H (CH₃ asym)','Asymmetric CH₃ stretch 甲基反對稱伸縮',3],
+ [2915,2940,'C-H (CH₂ asym)','Asymmetric CH₂ stretch 亞甲基反對稱伸縮',3],
+ [2860,2885,'C-H (CH₃ sym)','Symmetric CH₃ stretch 甲基對稱伸縮',3],
+ [2840,2865,'C-H (CH₂ sym)','Symmetric CH₂ stretch 亞甲基對稱伸縮',3],
+ [2695,2830,'C-H (CHO)','Aldehyde C-H stretch 醛基 C-H(常見雙峰約 2720/2820)',2],
+ [2550,2600,'S-H','S-H stretch 硫醇 S-H 伸縮',1],
+ // ---- 2400–2000 參鍵區 ----
+ [2240,2275,'N=C=O','Isocyanate stretch 異氰酸酯',1],
+ [2200,2260,'C≡N','C≡N stretch of nitrile 腈類',2],
+ [2100,2260,'C≡C','C≡C stretch of alkyne 炔類',2],
+ [1900,2000,'C=C=C','Allene / ketene stretch 累積雙鍵',1],
+ // ---- 1900–1550 雙鍵伸縮區(羰基為主)----
+ [1800,1830,'C=O (anhydride)','Anhydride C=O stretch 酸酐(常成對)',2],
+ [1770,1800,'C=O (acyl halide)','Acyl halide C=O stretch 醯鹵',2],
+ [1745,1770,'C=O (ester)','Ester C=O stretch 酯類羰基',3],
+ [1730,1750,'C=O (ester)','Saturated ester C=O stretch 飽和酯羰基',3],
+ [1720,1740,'C=O (aldehyde)','Aldehyde C=O stretch 醛類羰基',2],
+ [1705,1725,'C=O (ketone)','Ketone / carboxylic acid C=O stretch 酮/羧酸羰基',3],
+ [1700,1725,'C=O (COOH)','Carboxylic acid C=O stretch 羧酸羰基',2],
+ [1666,1700,'C=O (conjugated)','Conjugated C=O stretch 共軛羰基',2],
+ [1630,1695,'C=O (amide I)','Amide I band, C=O stretch 醯胺 I 帶',2],
+ [1620,1680,'C=C','C=C stretch of alkene 烯類雙鍵',2],
+ [1590,1620,'Aromatic C=C','Aromatic ring C=C stretch 芳香環骨架振動',2],
+ [1500,1560,'Aromatic C=C','Aromatic ring C=C stretch 芳香環骨架振動',2],
+ [1550,1610,'COO⁻ (asym)','Asymmetric carboxylate stretch 羧酸鹽反對稱伸縮',3],
+ [1515,1570,'N-H (amide II)','Amide II band, N-H bend 醯胺 II 帶',1],
+ [1500,1570,'N-O (asym)','Asymmetric N=O stretch of nitro 硝基反對稱',1],
+ // ---- 1500–1300 彎曲區 ----
+ [1440,1480,'C-H (CH₂ scissor)','CH₂ scissoring / CH₃ asym bend 亞甲基剪式/甲基反對稱彎曲',3],
+ [1395,1450,'COO⁻ (sym)','Symmetric carboxylate stretch 羧酸鹽對稱伸縮',2],
+ [1370,1400,'C-H (CH₃ sym)','Symmetric CH₃ bend 甲基對稱彎曲',2],
+ [1330,1420,'O-H (bend)','O-H in-plane bend 氫氧基面內彎曲(醇/酚/酸)',2],
+ [1300,1370,'N-O (sym)','Symmetric N=O stretch of nitro 硝基對稱',1],
+ // ---- 1350–1000 C-O / C-N 伸縮區 ----
+ [1250,1310,'C-O','C-O stretch 芳醚/酯/芳香胺 C-N',2],
+ [1230,1290,'C-N','C-N stretch of aromatic amine 芳香胺',1],
+ [1180,1260,'C-O-C','Aryl-alkyl ether / phenol C-O 芳基烷基醚、酚 C-O',2],
+ [1120,1205,'C-O','Secondary alcohol / ester C-O 二級醇/酯 C-O',2],
+ [1050,1150,'C-O-C','Ether / primary alcohol C-O 醚/一級醇 C-O、糖苷鍵',2],
+ [1000,1060,'C-O','Primary alcohol C-O stretch 一級醇 C-O',2],
+ [1000,1100,'C-N','Aliphatic C-N stretch 脂肪胺 C-N',1],
+ // ---- 1000–650 面外彎曲 / 指紋區 ----
+ [960,1000,'=C-H (trans)','trans-alkene =C-H out-of-plane bend 反式雙鍵面外彎曲',3],
+ [885,995,'=CH₂','Terminal alkene =CH₂ out-of-plane bend 端烯面外彎曲',2],
+ [860,900,'Aromatic C-H','Isolated aromatic H, out-of-plane bend 芳香孤立氫面外彎曲',2],
+ [800,860,'Aromatic C-H','para-substituted aromatic C-H bend 對位取代芳香面外彎曲',2],
+ [735,810,'Aromatic C-H','meta-substituted aromatic C-H bend 間位取代芳香面外彎曲',2],
+ [690,760,'Aromatic C-H','mono-substituted aromatic C-H bend 單取代芳香面外彎曲',2],
+ [715,745,'C-H (CH₂ rock)','Long-chain CH₂ rock 長碳鏈亞甲基搖擺',2],
+ [600,800,'C-Cl','C-Cl stretch 碳氯鍵伸縮',1],
+ [500,600,'C-Br','C-Br stretch 碳溴鍵伸縮',1],
 ];
 function ftirAssign(wn){
   const h=FTIR_BANDS.filter(b=>wn>=b[0]&&wn<=b[1]);
-  if(!h.length)return{tag:'',full:'未列於對照表'};
+  if(!h.length)return{tag:'',full:'未列於對照表 not in reference table'};
   h.sort((a,b)=>(b[4]-a[4])||((a[1]-a[0])-(b[1]-b[0])));
-  const p=h[0],ex=h.slice(1).filter(z=>(z[1]-z[0])<=250).slice(0,1);
+  const p=h[0],ex=h.slice(1).filter(z=>(z[1]-z[0])<=250 && z[2]!==p[2]).slice(0,1);
   return{tag:p[2],full:[p[3]].concat(ex.map(z=>z[3])).join('  /  ')};
 }
 const FTIR_PLAIN={'₂':'2','₃':'3','ₙ':'n','⁻':'-','≡':'#'};
@@ -8472,10 +8519,11 @@ function ftirBuildSVG(spec){
     t.peaks.forEach((p,k)=>{
       const yy=p.abs-t._min+t._base,px=X(p.wn),py=Y(yy);
       let lab=p.wn.toFixed(decimals);
-      if(labelMode==='both'){const tg=ftirAssign(p.wn).tag;if(tg)lab+=' '+ftirPlain(tg);}
-      const lift=maxSingle*(0.03+0.05*(k%3)),ly=Y(yy+lift);
+      if(labelMode==='both'){const tg=ftirAssign(p.wn).tag;if(tg)lab+=' '+ftirPlain(tg).replace(/\s*\(.*$/,'');}
+      const lift=maxSingle*(0.015+0.04*(k%3)),ly=Y(yy+lift);
       const pinned=(guides||[]).some(g=>Math.abs(g-p.wn)<0.51);
-      S.push(`<text class="pk" data-wn="${p.wn.toFixed(2)}" style="cursor:pointer" x="${px.toFixed(1)}" y="${ly.toFixed(1)}" font-size="9.5" font-weight="${pinned?'700':'400'}" fill="${c}" text-anchor="start" transform="rotate(-90 ${px.toFixed(1)} ${ly.toFixed(1)})">${lab}</text>`);
+      // rotate(-90)+start:文字沿峰尖正上方垂直往上排;dominant-baseline central 使字幹中線對齊峰尖 x
+      S.push(`<text class="pk" data-wn="${p.wn.toFixed(2)}" style="cursor:pointer" x="${px.toFixed(1)}" y="${(ly+3).toFixed(1)}" font-size="9.5" font-weight="${pinned?'700':'400'}" fill="${c}" text-anchor="start" dominant-baseline="central" transform="rotate(-90 ${px.toFixed(1)} ${(ly+3).toFixed(1)})">${lab}</text>`);
       markers.push({px,py,ti});
     });
   });
@@ -8510,6 +8558,7 @@ const ftirState={sel:[],ymode:'abs',atrRef:2000,prom:0.02,topN:14,
   legend:{show:true,pos:'tr',frame:false}};
 let ftirCurrent=null;
 let ftirInited=false;
+let ftirEditingId=null;
 const fq=s=>document.querySelector(s);
 
 function initFtirOnce(){
@@ -8524,7 +8573,7 @@ function initFtirOnce(){
 
   fq('#ftirSelAll').onclick=()=>{ftirState.sel=FTIR_LIB.map(x=>x.id);ftirRenderLib();ftirRender();};
   fq('#ftirClearSel').onclick=()=>{ftirState.sel=[];ftirRenderLib();ftirRender();};
-  fq('#ftirWipe').onclick=()=>{if(confirm('確定清空這台電腦暫存的光譜?已存入圖譜的不受影響。')){FTIR_LIB=[];ftirState.sel=[];ftirState.guides=[];ftirRenderLib();ftirRender();}};
+  fq('#ftirWipe').onclick=()=>{if(confirm('確定清空這台電腦暫存的光譜?已存入圖譜的不受影響。')){FTIR_LIB=[];ftirState.sel=[];ftirState.guides=[];ftirEditingId=null;ftirUpdateSaveLabel();ftirRenderLib();ftirRender();}};
   fq('#ftirShowTitle').onchange=e=>{ftirState.showTitle=e.target.checked;ftirRender();};
   fq('#ftirTitle').oninput=e=>{ftirState.title=e.target.value;ftirRender();};
   fq('#ftirShowAxisTitles').onchange=e=>{ftirState.showAxisTitles=e.target.checked;ftirRender();};
@@ -8547,6 +8596,7 @@ function ftirSeg(sel,cb){const s=fq(sel);s.querySelectorAll('button').forEach(b=
 
 function ftirHandleFiles(list){
   const arr=[...list];let pending=arr.length;if(!pending)return;
+  ftirEditingId=null; ftirUpdateSaveLabel();
   arr.forEach(f=>{
     const ext=f.name.toLowerCase().split('.').pop(),rd=new FileReader();
     rd.onload=()=>{
@@ -8620,14 +8670,14 @@ function ftirRender(){
   ['#ftirDlPng','#ftirDlSvg','#ftirDlCsv','#ftirSave'].forEach(s=>fq(s).disabled=false);
 }
 function ftirRenderTable(traces,multi){
-  let head=`<tr><th>樣品</th><th style="text-align:right">波數 cm⁻¹</th><th style="text-align:right">數值</th><th>短標</th><th>建議歸屬</th>${multi?'<th>比較線</th>':''}</tr>`;
+  let head=`<tr>${multi?'<th>樣品</th>':''}<th style="text-align:right">波數 cm⁻¹</th><th>官能基</th><th>建議歸屬(中文)</th>${multi?'<th>比較線</th>':''}</tr>`;
   let rows='';
   traces.forEach((t,ti)=>{
     t.peaks.forEach((p)=>{const a=ftirAssign(p.wn);
       const pinned=ftirState.guides.some(g=>Math.abs(g-p.wn)<0.51);
       rows+=`<tr data-wn="${p.wn.toFixed(2)}">
-        <td class="tag" style="color:${FTIR_COLORS[ti%FTIR_COLORS.length]}">${multi?escapeHtml(t.name):'—'}</td>
-        <td class="num">${p.wn.toFixed(2)}</td><td class="num">${p.abs.toFixed(4)}</td>
+        ${multi?`<td class="tag" style="color:${FTIR_COLORS[ti%FTIR_COLORS.length]}">${escapeHtml(t.name)}</td>`:''}
+        <td class="num">${p.wn.toFixed(2)}</td>
         <td class="tag" style="color:${FTIR_COLORS[ti%FTIR_COLORS.length]}">${a.tag||'—'}</td>
         <td>${a.full}</td>
         ${multi?`<td style="text-align:center">${pinned?'●':'○'}</td>`:''}</tr>`;});
@@ -8667,8 +8717,9 @@ function ftirDownloadCsv(){
 async function ftirSaveToGallery(){
   if(!ftirCurrent){alert('目前沒有可儲存的圖譜。');return;}
   if(!currentUser){alert('尚未登入。');return;}
+  const single=!ftirCurrent.multi;
   const defName=ftirCurrent.name==='overlay'?'疊圖':ftirCurrent.name;
-  const name=prompt('圖譜名稱',defName);
+  const name=prompt(single?'圖譜名稱':'圖譜名稱(疊圖存檔後不可再進圖譜分析編輯)',defName);
   if(name===null)return;
   const trimmed=name.trim();if(!trimmed){alert('名稱不可空白。');return;}
 
@@ -8678,24 +8729,46 @@ async function ftirSaveToGallery(){
     peaks.push({sample:t.name,wn:+p.wn.toFixed(2),val:+p.abs.toFixed(4),tag:a.tag,full:a.full});}));
 
   const rec={
-    id:'spec-'+Date.now()+Math.random().toString(36).slice(2,6),
+    id: (ftirEditingId||('spec-'+Date.now()+Math.random().toString(36).slice(2,6))),
     type:'ftir',
     name:trimmed,
     svg,
     peaks,
     ymode:ftirCurrent.ymode,
-    bind_type:'',      // 之後綁定用:mat / smp
-    bind_id:'',
-    bind_label:'',
+    bind_type:'', bind_id:'', bind_label:'',
+    editable:false,
     created_by_uid:currentUser.uid,
     created_by:currentUser.name||currentUser.email||'',
     created_at:new Date().toISOString()
   };
+  // 若是覆蓋既有筆,保留原本綁定與建立者資訊
+  if(ftirEditingId){
+    const prev=spectraItems.find(s=>s.id===ftirEditingId);
+    if(prev){ rec.bind_type=prev.bind_type||''; rec.bind_id=prev.bind_id||''; rec.bind_label=prev.bind_label||'';
+      rec.created_by_uid=prev.created_by_uid; rec.created_by=prev.created_by;
+      rec.created_at=prev.created_at; rec._doc_id=prev._doc_id; }
+  }
+  // 只有單譜存原始數據,供回頭編輯(疊圖不存,避免超過 Firestore 1MB 上限)
+  if(single){
+    const src=FTIR_LIB.find(x=>x.id===ftirState.sel[0]);
+    if(src){
+      rec.editable=true;
+      rec.source={ n:src.n, first:src.first, last:src.last, y:src.y, name:src.name };
+      rec.settings={ ymode:ftirState.ymode, atrRef:ftirState.atrRef, prom:ftirState.prom,
+        topN:ftirState.topN, labelMode:ftirState.labelMode,
+        showTitle:ftirState.showTitle, title:ftirState.title,
+        showAxisTitles:ftirState.showAxisTitles, showTickLabels:ftirState.showTickLabels };
+    }
+  }
   const btn=fq('#ftirSave');btn.disabled=true;const old=btn.textContent;btn.textContent='儲存中…';
   const ok=await fsSetItem('spectra',rec);
   btn.textContent=old;btn.disabled=false;
-  if(ok){showToast('✅ 已存入圖譜');}
+  if(ok){ showToast(ftirEditingId?'✅ 已更新圖譜':'✅ 已存入圖譜'); ftirEditingId=null; ftirUpdateSaveLabel(); }
   else{alert('存入失敗,請檢查網路與 Firestore 權限。');}
+}
+function ftirUpdateSaveLabel(){
+  const b=fq('#ftirSave'); if(!b) return;
+  b.textContent = ftirEditingId ? '更新此圖譜' : '存入圖譜';
 }
 
 /* ============ 圖譜藝廊 ============ */
@@ -8707,23 +8780,33 @@ function renderGallery(){
   if(!grid) return;
   const search=(document.getElementById('galSearch').value||'').toLowerCase().trim();
   const ftype=document.getElementById('galFilterType').value;
+  const userSel=document.getElementById('galFilterUser');
+  const fuser=userSel?userSel.value:'';
+  // 動態維護建立者下拉(保留當前選取)
+  if(userSel){
+    const users=[...new Set(spectraItems.map(s=>s.created_by).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+    const cur=userSel.value;
+    userSel.innerHTML='<option value="">所有建立者</option>'+users.map(u=>`<option value="${escapeHtml(u)}" ${u===cur?'selected':''}>${escapeHtml(u)}</option>`).join('');
+  }
   let list=spectraItems.slice();
   if(ftype)list=list.filter(s=>s.type===ftype);
+  if(fuser)list=list.filter(s=>s.created_by===fuser);
   if(search)list=list.filter(s=>[s.name,s.type,s.bind_label,s.created_by].join(' ').toLowerCase().includes(search));
-  if(!list.length){grid.innerHTML='';empty.style.display=spectraItems.length?'block':'block';empty.textContent=spectraItems.length?'沒有符合條件的圖譜。':'目前還沒有存入的圖譜。到「圖譜分析」做好圖後按「存入圖譜」即可。';return;}
+  if(!list.length){grid.innerHTML='';empty.style.display='block';empty.textContent=spectraItems.length?'沒有符合條件的圖譜。':'目前還沒有存入的圖譜。到「圖譜分析」做好圖後按「存入圖譜」即可。';return;}
   empty.style.display='none';
   grid.innerHTML=list.map(s=>`
     <div class="gal-card" data-gal-id="${escapeHtml(s.id)}">
       <div class="gal-thumb">${s.svg||''}</div>
       <div class="gal-meta">
         <div class="gt" title="${escapeHtml(s.name)}">${escapeHtml(s.name)}</div>
-        <div class="gm"><span class="gal-type">${SPEC_TYPE_LABEL[s.type]||s.type}</span>${s.bind_label?'<span>'+escapeHtml(s.bind_label)+'</span>':''}<span>${(s.created_at||'').slice(0,10)}</span></div>
+        <div class="gm"><span class="gal-type">${SPEC_TYPE_LABEL[s.type]||s.type}</span>${s.bind_label?'<span>'+escapeHtml(s.bind_label)+'</span>':''}<span>${escapeHtml(s.created_by||'')}</span><span>${(s.created_at||'').slice(0,10)}</span></div>
       </div>
     </div>`).join('');
   grid.querySelectorAll('.gal-card').forEach(c=>c.onclick=()=>openGalDetail(c.dataset.galId));
 }
 document.getElementById('galSearch').addEventListener('input', renderGallery);
 document.getElementById('galFilterType').addEventListener('change', renderGallery);
+document.getElementById('galFilterUser').addEventListener('change', renderGallery);
 
 function galBindOptions(rec){
   const mats=(typeof matItems!=='undefined'?matItems:[]).map(m=>({v:'mat:'+m.id,label:'試材 '+(m.name_zh||m.species||m.id)}));
@@ -8736,7 +8819,7 @@ function galBindOptions(rec){
 function openGalDetail(id){
   const rec=spectraItems.find(s=>s.id===id);if(!rec)return;
   const canManage=currentUser&&(rec.created_by_uid===currentUser.uid||isAdmin());
-  const peakRows=(rec.peaks||[]).map(p=>`<tr><td class="tag">${escapeHtml(p.sample||'—')}</td><td class="num">${(+p.wn).toFixed(2)}</td><td class="num">${(+p.val).toFixed(4)}</td><td class="tag">${escapeHtml(p.tag||'—')}</td><td>${escapeHtml(p.full||'')}</td></tr>`).join('');
+  const peakRows=(rec.peaks||[]).map(p=>`<tr><td class="num">${(+p.wn).toFixed(2)}</td><td class="tag">${escapeHtml(p.tag||'—')}</td><td>${escapeHtml(p.full||'')}</td></tr>`).join('');
   document.getElementById('galDetailBody').innerHTML=`
     <h2 style="margin:0 18px 4px 0;">${escapeHtml(rec.name)}</h2>
     <div style="font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-bottom:14px;">
@@ -8746,11 +8829,12 @@ function openGalDetail(id){
     <div class="gd-svg">${rec.svg||''}</div>
     ${canManage?`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:14px;">
       <label style="font-size:12px;color:var(--ink-soft);">綁定樣品/試材</label>
-      <select id="galBindSel" style="flex:1;min-width:180px;padding:7px 9px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--panel-soft);color:var(--ink);font-size:13px;">${galBindOptions(rec)}</select>
+      <select id="galBindSel" style="flex:1;min-width:160px;padding:7px 9px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--panel-soft);color:var(--ink);font-size:13px;">${galBindOptions(rec)}</select>
       <button class="btn btn-ghost btn-sm" id="galBindSave">儲存綁定</button>
+      ${rec.editable?'<button class="btn btn-primary btn-sm" id="galEdit">回圖譜分析編輯</button>':''}
       <button class="btn btn-ghost btn-sm btn-row-delete" id="galDelete">刪除圖譜</button>
-    </div>`:''}
-    ${peakRows?`<table style="margin-top:16px;"><thead><tr><th>樣品</th><th style="text-align:right">波數 cm⁻¹</th><th style="text-align:right">數值</th><th>短標</th><th>建議歸屬</th></tr></thead><tbody>${peakRows}</tbody></table>`:''}
+    </div>${rec.editable?'':'<div class="ftir-hint" style="margin-top:8px;">此圖譜為疊圖或舊格式,未保存原始數據,無法回圖譜分析編輯。</div>'}`:''}
+    ${peakRows?`<table style="margin-top:16px;"><thead><tr><th style="text-align:right">波數 cm⁻¹</th><th>官能基</th><th>建議歸屬(中文)</th></tr></thead><tbody>${peakRows}</tbody></table>`:''}
   `;
   document.getElementById('galDetailOverlay').classList.add('show');
   if(canManage){
@@ -8765,6 +8849,8 @@ function openGalDetail(id){
       if(ok){showToast('✅ 已更新綁定');document.getElementById('galDetailOverlay').classList.remove('show');}
       else alert('儲存失敗。');
     };
+    const editBtn=document.getElementById('galEdit');
+    if(editBtn)editBtn.onclick=()=>loadSpectrumToEditor(rec);
     document.getElementById('galDelete').onclick=async()=>{
       if(!confirm('確定刪除這張圖譜?此動作無法復原。'))return;
       const ok=await fsDeleteItem('spectra',rec.id,rec._doc_id);
@@ -8772,6 +8858,40 @@ function openGalDetail(id){
       else alert('刪除失敗。');
     };
   }
+}
+
+/* 把已存的單譜載回圖譜分析,還原設定供重新編輯 */
+function loadSpectrumToEditor(rec){
+  if(!rec.editable||!rec.source){alert('這張圖譜沒有可編輯的原始數據。');return;}
+  document.getElementById('galDetailOverlay').classList.remove('show');
+  // 切到圖譜分析頁
+  document.querySelectorAll('.sidebar nav .nav-item').forEach(b=>b.classList.remove('active'));
+  const navBtn=document.querySelector('.nav-item[data-page="spectra"]');if(navBtn)navBtn.classList.add('active');
+  switchPage('spectra');
+  initFtirOnce();
+  // 確保 FTIR 子標籤在前
+  document.querySelectorAll('#spTabs .sp-tab').forEach(b=>b.classList.toggle('active', b.dataset.sp==='ftir'));
+  document.querySelectorAll('#page-spectra .sp-panel').forEach(p=>p.classList.toggle('active', p.id==='sp-ftir'));
+  // 載入原始數據為一條暫存光譜
+  const sid='s'+Date.now()+Math.random().toString(36).slice(2,6);
+  FTIR_LIB.push({id:sid,name:rec.source.name||rec.name,n:rec.source.n,first:rec.source.first,last:rec.source.last,y:rec.source.y});
+  ftirState.sel=[sid];ftirState.guides=[];
+  // 還原顯示設定
+  const st=rec.settings||{};
+  if(st.ymode){ftirState.ymode=st.ymode;document.querySelectorAll('#ftirYmode button').forEach(b=>b.classList.toggle('on',b.dataset.v===st.ymode));
+    fq('#ftirAtrBox').classList.toggle('hide',st.ymode!=='atr');fq('#ftirKmBox').classList.toggle('hide',st.ymode!=='km');}
+  if(st.atrRef!=null){ftirState.atrRef=st.atrRef;fq('#ftirAtrRef').value=st.atrRef;}
+  if(st.prom!=null){ftirState.prom=st.prom;fq('#ftirProm').value=st.prom*100;fq('#ftirPromOut').textContent=(st.prom*100).toFixed(1)+'%';}
+  if(st.topN!==undefined){ftirState.topN=st.topN;const tv=st.topN==null?40:st.topN;fq('#ftirTopn').value=tv;fq('#ftirTopnOut').textContent=st.topN==null?'全部':st.topN;}
+  if(st.labelMode){ftirState.labelMode=st.labelMode;document.querySelectorAll('#ftirLabelmode button').forEach(b=>b.classList.toggle('on',b.dataset.v===st.labelMode));}
+  if(st.title!=null){ftirState.title=st.title;fq('#ftirTitle').value=st.title;}
+  if(st.showTitle!=null){ftirState.showTitle=st.showTitle;fq('#ftirShowTitle').checked=st.showTitle;}
+  if(st.showAxisTitles!=null){ftirState.showAxisTitles=st.showAxisTitles;fq('#ftirShowAxisTitles').checked=st.showAxisTitles;}
+  if(st.showTickLabels!=null){ftirState.showTickLabels=st.showTickLabels;fq('#ftirShowTickLabels').checked=st.showTickLabels;}
+  // 標記為「編輯既有筆」,存檔時覆蓋
+  ftirEditingId=rec.id;
+  ftirRenderLib();ftirRender();ftirUpdateSaveLabel();
+  showToast('已載入,可調整後按「更新此圖譜」');
 }
 document.getElementById('galDetailClose').addEventListener('click',()=>document.getElementById('galDetailOverlay').classList.remove('show'));
 document.getElementById('galDetailOverlay').addEventListener('click',e=>{if(e.target.id==='galDetailOverlay')document.getElementById('galDetailOverlay').classList.remove('show');});
