@@ -8520,10 +8520,11 @@ function ftirBuildSVG(spec){
       const yy=p.abs-t._min+t._base,px=X(p.wn),py=Y(yy);
       let lab=p.wn.toFixed(decimals);
       if(labelMode==='both'){const tg=ftirAssign(p.wn).tag;if(tg)lab+=' '+ftirPlain(tg).replace(/\s*\(.*$/,'');}
-      const lift=maxSingle*(0.015+0.04*(k%3)),ly=Y(yy+lift);
+      const gap=maxSingle*(0.012+0.03*(k%3));        // 標籤底端離峰尖的間距,錯開相鄰標籤高度
+      const anchorY=Y(yy+gap);                         // 文字起點:峰尖上方
       const pinned=(guides||[]).some(g=>Math.abs(g-p.wn)<0.51);
-      // rotate(-90)+start:文字沿峰尖正上方垂直往上排;dominant-baseline central 使字幹中線對齊峰尖 x
-      S.push(`<text class="pk" data-wn="${p.wn.toFixed(2)}" style="cursor:pointer" x="${px.toFixed(1)}" y="${(ly+3).toFixed(1)}" font-size="9.5" font-weight="${pinned?'700':'400'}" fill="${c}" text-anchor="start" dominant-baseline="central" transform="rotate(-90 ${px.toFixed(1)} ${(ly+3).toFixed(1)})">${lab}</text>`);
+      // 繞峰尖上方點 rotate(-90):text-anchor=end 讓文字往上延伸;middle baseline 使字幹中線落在峰尖 px 正上方
+      S.push(`<text class="pk" data-wn="${p.wn.toFixed(2)}" style="cursor:pointer" x="${px.toFixed(1)}" y="${anchorY.toFixed(1)}" font-size="9.5" font-weight="${pinned?'700':'400'}" fill="${c}" text-anchor="end" dominant-baseline="middle" transform="rotate(-90 ${px.toFixed(1)} ${anchorY.toFixed(1)})">${lab}</text>`);
       markers.push({px,py,ti});
     });
   });
