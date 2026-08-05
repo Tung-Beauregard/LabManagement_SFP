@@ -742,6 +742,40 @@
   @media(max-width:880px){
     .ftir-grid{grid-template-columns:1fr;}
   }
+
+/* ===== GC-MS (TIC Bench) scoped styles ===== */
+.gcms-root{
+  --gc-paper:var(--panel); --gc-ink:var(--ink); --gc-ink-2:var(--ink-soft); --gc-ink-3:var(--ink-soft);
+  --gc-rule:var(--line); --gc-rule-2:var(--line-soft); --gc-trace:#D81E05; --gc-field:var(--panel-soft);
+  --gc-accent:var(--pine);
+  --gc-sans:var(--sans);
+  --gc-serif:"Times New Roman",Times,"Noto Serif TC",serif;
+  --gc-mono:var(--mono);
+}.gcms-root .top{display:flex;align-items:baseline;gap:16px;padding:14px 20px;border-bottom:1px solid var(--gc-ink);
+     position:sticky;top:0;background:var(--gc-paper);z-index:20;flex-wrap:wrap}.gcms-root .brand{font-family:var(--gc-mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase}.gcms-root .brand b{color:var(--gc-trace)}.gcms-root .tagline{color:var(--gc-ink-3);font-size:12px}.gcms-root .top .sp{flex:1}.gcms-root .tbtn{background:none;border:1px solid var(--gc-rule);padding:6px 12px;border-radius:2px;color:var(--gc-ink-2)}.gcms-root .tbtn:hover{border-color:var(--gc-ink);color:var(--gc-ink)}.gcms-root .tbtn.on{background:var(--gc-ink);color:var(--gc-paper);border-color:var(--gc-ink)}.gcms-root .wrap{display:grid;grid-template-columns:230px 1fr;min-height:calc(100vh - 52px)}@media(max-width:860px){.gcms-root .wrap{grid-template-columns:1fr}.gcms-root .rail{border-right:none;border-bottom:1px solid var(--gc-rule)}}.gcms-root .rail{border-right:1px solid var(--gc-rule);padding:16px;display:flex;flex-direction:column;gap:14px}.gcms-root .lab{font-family:var(--gc-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--gc-ink-3);
+     display:flex;align-items:center;gap:8px}.gcms-root .lab::after{content:"";flex:1;height:1px;background:var(--gc-rule-2)}.gcms-root .drop{border:1px dashed var(--gc-rule);border-radius:3px;padding:18px 10px;text-align:center;color:var(--gc-ink-3);
+      font-size:12px;transition:.15s}.gcms-root .drop:hover, .gcms-root .drop.over{border-color:var(--gc-trace);color:var(--gc-trace);background:#fff}.gcms-root .drop b{display:block;color:var(--gc-ink);font-size:13px;margin-bottom:3px}.gcms-root .slist{display:flex;flex-direction:column;gap:1px;max-height:44vh;overflow:auto}.gcms-root .sitem{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:2px;cursor:pointer;font-size:13px}.gcms-root .sitem:hover{background:var(--gc-rule-2)}.gcms-root .sitem.on{background:var(--gc-ink);color:var(--gc-paper)}.gcms-root .sitem .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.gcms-root .sitem .ct{font-family:var(--gc-mono);font-size:10px;opacity:.6}.gcms-root .sitem .x{opacity:0;border:none;background:none;color:inherit;padding:0 2px;font-size:14px;line-height:1}.gcms-root .sitem:hover .x{opacity:.55}.gcms-root .sitem .x:hover{opacity:1;color:var(--gc-trace)}.gcms-root .empty{color:var(--gc-ink-3);font-size:12px;font-style:italic;padding:4px 2px}.gcms-root .ctl{display:flex;flex-direction:column;gap:7px}.gcms-root .row{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--gc-ink-2)}.gcms-root .row label{flex:1}.gcms-root .row input{width:66px;padding:4px 6px;border:1px solid var(--gc-rule);border-radius:2px;background:#fff;
+           font-family:var(--gc-mono);font-size:12px;text-align:right}.gcms-root .row input:focus{outline:none;border-color:var(--gc-accent)}.gcms-root .main{padding:20px 22px 60px;min-width:0}.gcms-root .hd{display:flex;align-items:flex-end;gap:14px;margin-bottom:14px;flex-wrap:wrap}.gcms-root .hd h1{margin:0;font-family:var(--gc-serif);font-size:26px;font-weight:400}.gcms-root .hd .meta{font-family:var(--gc-mono);font-size:11px;color:var(--gc-ink-3);letter-spacing:.04em}.gcms-root .hd .sp{flex:1}.gcms-root .hd input.title{font-family:var(--gc-serif);font-size:15px;padding:5px 9px;border:1px solid var(--gc-rule);
+                border-radius:2px;background:var(--gc-field);width:230px}.gcms-root .hd input.title:focus{outline:none;border-color:var(--gc-accent)}.gcms-root .card{border:1px solid var(--gc-rule);border-radius:3px;background:#fff;padding:14px;margin-bottom:18px}.gcms-root #chart{width:100%;display:block}.gcms-root .chartbar{display:flex;gap:7px;align-items:center;margin-top:9px;font-size:12px;color:var(--gc-ink-3);flex-wrap:wrap}.gcms-root .chartbar .cg{font-family:var(--gc-mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--gc-ink-3)}.gcms-root .chartbar .sep{width:1px;height:16px;background:var(--gc-rule);margin:0 4px}.gcms-root .chartbar .rt.w{width:92px}.gcms-root .chartbar .rt{width:56px;padding:4px 6px;border:1px solid var(--gc-rule);border-radius:2px;background:var(--gc-field);
+              font-family:var(--gc-mono);font-size:12px;text-align:right}.gcms-root .chartbar .rt:focus{outline:none;border-color:var(--gc-accent);background:#fff}.gcms-root .tbtn.sm{padding:4px 9px;font-size:12px}.gcms-root .lbchk{cursor:pointer}.gcms-root .izchip{display:inline-flex;align-items:center;gap:5px;padding:3px 5px 3px 7px;border:1px solid var(--gc-rule);
+        border-radius:2px;background:#fff;font-family:var(--gc-mono);font-size:11px;color:var(--gc-ink-2)}.gcms-root .izchip i{width:8px;height:8px;background:var(--c);border-radius:1px;display:inline-block}.gcms-root .izchip button{border:none;background:none;color:var(--gc-ink-3);padding:0 2px;font-size:13px;line-height:1;cursor:pointer}.gcms-root .izchip button:hover{color:var(--gc-trace)}.gcms-root td.idcell{font-family:var(--gc-serif);white-space:nowrap}.gcms-root td.idchk{white-space:nowrap}.gcms-root td.idchk label{display:inline-flex;align-items:center;gap:2px;font-family:var(--gc-sans);font-size:11px;
+               color:var(--gc-ink-2);cursor:pointer;margin:0 2px}.gcms-root td.idchk input{margin:0;cursor:pointer}.gcms-root .chk{display:flex;align-items:center;gap:5px;cursor:pointer}.gcms-root table{width:100%;border-collapse:collapse;font-family:var(--gc-serif);font-size:14px}.gcms-root thead th{font-weight:400;padding:7px 6px;border-top:2px solid var(--gc-ink);border-bottom:1px solid var(--gc-ink);
+         text-align:center;white-space:nowrap;font-size:13px}.gcms-root tbody td{padding:4px 6px;text-align:center;border-bottom:1px solid var(--gc-rule-2)}.gcms-root tbody tr:last-child td{border-bottom:2px solid var(--gc-ink)}.gcms-root tbody tr.bleed{color:var(--gc-ink-3);background:#FAF7F2}.gcms-root tbody tr.bleed .cmp{font-style:italic}.gcms-root td.ed{background:var(--gc-field);cursor:text;min-width:96px}.gcms-root td.ed:focus{outline:2px solid var(--gc-accent);outline-offset:-2px;background:#fff}.gcms-root td.ed:empty::before{content:attr(data-ph);color:#C9C4B4;font-style:italic;font-size:12px}.gcms-root .rowtools{white-space:nowrap}.gcms-root .rowtools button{border:none;background:none;color:var(--gc-ink-3);padding:1px 4px;border-radius:2px;font-size:13px;line-height:1}.gcms-root .rowtools button:hover{background:var(--gc-rule-2);color:var(--gc-trace)}.gcms-root .hint{font-family:var(--gc-mono);font-size:9px;color:var(--gc-ink-3);letter-spacing:.06em}.gcms-root .sug{position:absolute;z-index:60;background:#fff;border:1px solid var(--gc-ink);border-radius:3px;
+     box-shadow:0 6px 22px rgba(0,0,0,.13);min-width:230px;max-height:250px;overflow:auto;font-family:var(--gc-sans)}.gcms-root .sug .sh{font-family:var(--gc-mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--gc-ink-3);
+         padding:7px 10px 4px}.gcms-root .sug button{display:flex;width:100%;gap:8px;align-items:baseline;border:none;background:none;text-align:left;
+            padding:6px 10px;font-size:13px;border-top:1px solid var(--gc-rule-2)}.gcms-root .sug button:hover{background:var(--gc-rule-2)}.gcms-root .sug .d{font-family:var(--gc-mono);font-size:10px;color:var(--gc-ink-3);margin-left:auto}.gcms-root .sug .none{padding:8px 10px;font-size:12px;color:var(--gc-ink-3);font-style:italic}.gcms-root .sug button.pd .d{color:#B07A12}.gcms-root .sugadd{border-top:1px solid var(--gc-rule);background:#FCFBF6}.gcms-root .sugadd .af{display:flex;gap:5px;padding:0 10px 7px}.gcms-root .sugadd .an{flex:1;min-width:0;padding:5px 7px;border:1px solid var(--gc-rule);border-radius:2px;background:#fff;font-size:12.5px}.gcms-root .sugadd .ak{width:62px;padding:5px 7px;border:1px solid var(--gc-rule);border-radius:2px;background:#fff;
+            font-family:var(--gc-mono);font-size:12.5px;text-align:right}.gcms-root .sugadd .an:focus, .gcms-root .sugadd .ak:focus{outline:none;border-color:var(--gc-accent)}.gcms-root .sugadd .asub{width:calc(100% - 20px);margin:0 10px 9px;padding:6px;border:1px solid var(--gc-ink);
+              background:var(--gc-ink);color:var(--gc-paper);border-radius:2px;font-size:12.5px;display:block}.gcms-root .tabs{display:flex;gap:2px;margin:2px 0 12px;border-bottom:1px solid var(--gc-rule)}.gcms-root .tabs button{border:none;background:none;padding:7px 13px;font-size:13px;color:var(--gc-ink-3);
+             border-bottom:2px solid transparent;margin-bottom:-1px}.gcms-root .tabs button.on{color:var(--gc-ink);border-bottom-color:var(--gc-trace)}.gcms-root .tabs .badge{display:inline-block;min-width:17px;padding:0 5px;margin-left:5px;border-radius:9px;
+             background:#B07A12;color:#fff;font-size:10px;font-family:var(--gc-mono);line-height:16px}.gcms-root .pd-item{display:flex;align-items:center;gap:9px;padding:9px 4px;border-bottom:1px solid var(--gc-rule-2)}.gcms-root .pd-item .nm{font-family:var(--gc-serif);font-size:14px}.gcms-root .pd-item .ki{font-family:var(--gc-mono);font-size:12px;color:var(--gc-ink-2)}.gcms-root .pd-item .mt{font-family:var(--gc-mono);font-size:9.5px;color:var(--gc-ink-3);letter-spacing:.03em}.gcms-root .pd-item .sp{flex:1}.gcms-root .pd-item .ok{border:1px solid var(--gc-accent);background:var(--gc-accent);color:#fff;padding:4px 11px;border-radius:2px;font-size:12px}.gcms-root .pd-item .no{border:1px solid var(--gc-rule);background:none;color:var(--gc-ink-2);padding:4px 11px;border-radius:2px;font-size:12px}.gcms-root .pd-item.done{opacity:.5}.gcms-root .adminbar{display:flex;align-items:center;gap:9px;padding:8px 11px;background:#fff;border:1px solid var(--gc-rule);
+          border-radius:2px;margin-bottom:11px;font-size:12px;flex-wrap:wrap}.gcms-root .adminbar input[type=text]{padding:5px 8px;border:1px solid var(--gc-rule);border-radius:2px;background:var(--gc-field);font-size:12.5px;width:120px}.gcms-root .panel{position:fixed;inset:0;background:rgba(20,19,14,.34);display:none;align-items:flex-start;
+       justify-content:center;padding:50px 16px;z-index:80}.gcms-root .panel.on{display:flex}.gcms-root .pbox{background:var(--gc-paper);border:1px solid var(--gc-ink);border-radius:3px;max-width:600px;width:100%;
+      max-height:80vh;overflow:auto;padding:20px}.gcms-root .pbox h2{margin:0 0 4px;font-family:var(--gc-serif);font-size:20px;font-weight:400}.gcms-root .pbox p.sub{margin:0 0 16px;color:var(--gc-ink-3);font-size:12px}.gcms-root .alk{width:100%;border-collapse:collapse;font-family:var(--gc-mono);font-size:13px}.gcms-root .alk th{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--gc-ink-3);font-weight:400;
+        padding:5px;border-bottom:1px solid var(--gc-rule);text-align:left}.gcms-root .alk td{padding:2px}.gcms-root .alk input{width:100%;padding:5px 7px;border:1px solid var(--gc-rule);border-radius:2px;background:var(--gc-field);
+           font-family:var(--gc-mono);font-size:13px}.gcms-root .alk input:focus{outline:none;border-color:var(--gc-accent);background:#fff}.gcms-root .pact{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}.gcms-root .pact .sp{flex:1}.gcms-root .btn{border:1px solid var(--gc-ink);background:var(--gc-ink);color:var(--gc-paper);padding:7px 15px;border-radius:2px}.gcms-root .btn.g{background:none;color:var(--gc-ink-2);border-color:var(--gc-rule)}.gcms-root .btn.g:hover{border-color:var(--gc-ink);color:var(--gc-ink)}.gcms-root .note{font-size:12px;color:var(--gc-ink-2);background:#fff;border-left:2px solid var(--gc-accent);padding:8px 11px;margin-top:12px}.gcms-root .addbar{display:flex;gap:7px}.gcms-root .setgrid{display:grid;grid-template-columns:190px 1fr;gap:14px}@media(max-width:640px){.gcms-root .setgrid{grid-template-columns:1fr}}.gcms-root .setlist{border:1px solid var(--gc-rule);border-radius:2px;max-height:52vh;overflow:auto;background:#fff}.gcms-root .setlist .it{padding:8px 10px;border-bottom:1px solid var(--gc-rule-2);cursor:pointer}.gcms-root .setlist .it:hover{background:var(--gc-rule-2)}.gcms-root .setlist .it.on{background:var(--gc-ink);color:var(--gc-paper)}.gcms-root .setlist .it .n{font-size:13px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.gcms-root .setlist .it .m{font-family:var(--gc-mono);font-size:9.5px;opacity:.62;letter-spacing:.04em}.gcms-root .frow{display:flex;align-items:center;gap:8px;margin-bottom:6px}.gcms-root .frow label{width:52px;font-size:12px;color:var(--gc-ink-3);flex:none}.gcms-root .frow input{flex:1;padding:6px 8px;border:1px solid var(--gc-rule);border-radius:2px;background:var(--gc-field);font-size:13px}.gcms-root .frow input:focus{outline:none;border-color:var(--gc-accent);background:#fff}.gcms-root .alkbar{display:flex;align-items:center;gap:9px;margin:-4px 0 14px;flex-wrap:wrap}.gcms-root .alkbar .k{font-family:var(--gc-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--gc-ink-3)}.gcms-root .alkbar .k.dim{opacity:.75;text-transform:none;letter-spacing:.03em}.gcms-root .alkbar select{padding:5px 9px;border:1px solid var(--gc-rule);border-radius:2px;background:#fff;font-size:13px;max-width:330px}.gcms-root .alkbar select:focus{outline:none;border-color:var(--gc-accent)}.gcms-root .addbar input{padding:7px 9px;border:1px solid var(--gc-rule);border-radius:2px;background:var(--gc-field);font-size:13px}.gcms-root .addbar input:focus{outline:none;border-color:var(--gc-accent);background:#fff}.gcms-root .addbar #dbNewName{flex:1;font-family:var(--gc-serif)}.gcms-root .addbar #dbNewKi{width:82px;font-family:var(--gc-mono);text-align:right}.gcms-root .dbcount{font-family:var(--gc-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+         color:var(--gc-ink-3);padding:2px 0 6px}@keyframes flash{from{background:#FFF0B8}to{background:transparent}}.gcms-root .alk tr.new td{animation:flash 1.6s ease-out}.gcms-root .blank{text-align:center;padding:70px 20px;color:var(--gc-ink-3)}.gcms-root .blank .big{font-family:var(--gc-serif);font-size:22px;color:var(--gc-ink-2);margin-bottom:6px}.gcms-root .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--gc-ink);color:var(--gc-paper);
+       padding:9px 18px;border-radius:2px;font-size:13px;z-index:99;opacity:0;transition:.2s;pointer-events:none}.gcms-root .toast.on{opacity:1}
+
 </style>
 </head>
 <body>
@@ -1426,7 +1460,137 @@
 
       <!-- 其餘四個佔位 -->
       <div class="sp-panel" id="sp-lc"><div class="sp-placeholder"><div class="sp-ph-icon">🧪</div><b>LC 液相層析</b><span>這個模組還在規劃中,之後會加入資料上傳與圖譜分析。</span></div></div>
-      <div class="sp-panel" id="sp-gc"><div class="sp-placeholder"><div class="sp-ph-icon">🌫️</div><b>GC 氣相層析</b><span>這個模組還在規劃中,之後會加入資料上傳與圖譜分析。</span></div></div>
+      <div class="sp-panel" id="sp-gc">
+<div class="gcms-root">
+<div class="top gc-toolbar">
+  <div class="sp"></div>
+  <button class="tbtn" id="gc_bAlk">烷類 RT</button>
+  <button class="tbtn" id="gc_bDb">KI 資料庫</button>
+  <button class="tbtn" id="gc_bPng">下載圖 PNG</button>
+  <button class="tbtn" id="gc_bCopy">複製表格</button>
+  <button class="tbtn" id="gc_bCsv">匯出 CSV</button>
+</div>
+
+<div class="wrap">
+  <div class="rail">
+    <div>
+      <div class="lab">載入</div>
+      <label class="drop" id="gc_drop">
+        <b>選擇或拖入 CSV</b>
+        可一次多檔 · Agilent / Shimadzu / Thermo
+        <input type="file" id="gc_file" accept=".csv,.CSV,.txt,.tsv,.TXT" multiple hidden>
+      </label>
+    </div>
+    <div>
+      <div class="lab">樣品</div>
+      <div class="slist" id="gc_slist"></div>
+    </div>
+    <div>
+      <div class="lab">積分參數</div>
+      <div class="ctl">
+        <div class="row"><label>起始 RT</label><input id="gc_pRtMin" type="number" step="0.5" value="5"></div>
+        <div class="row"><label>結束 RT</label><input id="gc_pRtMax" type="number" step="1" value="50"></div>
+        <div class="row"><label>最小 Area%</label><input id="gc_pMinPct" type="number" step="0.05" value="0.1"></div>
+        <div class="row"><label>峰突出度</label><input id="gc_pProm" type="number" step="500" value="2500"></div>
+        <div class="row"><label>bleed 標記 RT</label><input id="gc_pBleed" type="number" step="1" value="30"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main" id="gc_main"></div>
+</div>
+
+<!-- 烷類面板 -->
+<div class="panel" id="gc_pnAlk"><div class="pbox" style="max-width:720px">
+  <h2>烷類 RT 組合</h2>
+  <p class="sub">每個圖譜可綁定不同的組合。不同批次注射的正構烷 RT 不同時,建立各自的版本再套用。</p>
+
+  <div class="setgrid">
+    <div class="setlist" id="gc_setList"></div>
+    <div class="setedit">
+      <div class="frow"><label>名稱</label><input id="gc_setName" placeholder="例:C8–C20 2026-07 批"></div>
+      <div class="frow"><label>使用者</label><input id="gc_setUser" placeholder="例:W / 玟"></div>
+      <div class="frow"><label>日期</label><input id="gc_setDate" type="date"></div>
+      <div class="frow"><label>備註</label><input id="gc_setNote" placeholder="管柱、注射批次…"></div>
+      <div class="dbcount" id="gc_setCount"></div>
+      <div style="max-height:34vh;overflow:auto;border-top:1px solid var(--gc-rule)">
+        <table class="alk"><thead><tr><th style="width:70px">Cn</th><th>Apex RT (min)</th><th style="width:34px"></th></tr></thead>
+        <tbody id="gc_alkBody"></tbody></table>
+      </div>
+      <div style="display:flex;gap:7px;margin-top:8px">
+        <button class="btn g" id="gc_alkAdd">新增一列</button>
+        <button class="btn g" id="gc_alkPaste">貼上多列</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="pact">
+    <button class="btn g" id="gc_setNew">新建組合</button>
+    <button class="btn g" id="gc_setDup">複製為新版本</button>
+    <button class="btn g" id="gc_setDel">刪除</button>
+    <div class="sp"></div>
+    <button class="btn g" id="gc_alkAll">套用到全部樣品</button>
+    <button class="btn" id="gc_alkSave">儲存並套用到目前樣品</button>
+  </div>
+  <div class="note">「複製為新版本」會保留原組合,方便你留存不同批次的紀錄。已綁定舊組合的圖譜不受影響。</div>
+</div></div>
+
+<!-- KI 資料庫面板 -->
+<div class="panel" id="gc_pnDb"><div class="pbox">
+  <h2>KI 資料庫</h2>
+  <p class="sub">在 Compound 欄輸入時,會依該峰的 KI 給 ±<span id="gc_tolShow">20</span> 以內的候選。</p>
+
+  <div class="tabs">
+    <button id="gc_tabDb" class="on">資料庫</button>
+    <button id="gc_tabPd">待審核<span class="badge" id="gc_pdBadge">0</span></button>
+  </div>
+
+  <div id="gc_paneDb">
+  <div class="addbar">
+    <input id="gc_dbNewName" placeholder="化合物名稱" autocomplete="off">
+    <input id="gc_dbNewKi" type="number" placeholder="KI" step="1">
+    <button class="btn" id="gc_dbAdd">新增</button>
+  </div>
+  <div class="row" style="margin:12px 0 8px">
+    <input id="gc_dbSearch" placeholder="搜尋名稱或 KI" style="flex:1;width:auto;text-align:left">
+    <label style="flex:none">容差 ±</label><input id="gc_dbTol" type="number" step="5" value="20">
+  </div>
+  <div class="dbcount" id="gc_dbCount"></div>
+
+  <div style="max-height:44vh;overflow:auto;border-top:1px solid var(--gc-rule)">
+  <table class="alk"><thead><tr><th>Compound</th><th style="width:90px">KI</th><th style="width:34px"></th></tr></thead>
+  <tbody id="gc_dbBody"></tbody></table>
+  </div>
+
+  </div><!-- /paneDb -->
+
+  <div id="gc_panePd" style="display:none">
+    <div class="adminbar">
+      <span>我是</span><input type="text" id="gc_pdMe" placeholder="你的名字">
+      <label class="chk"><input type="checkbox" id="gc_pdAdmin"> 管理員模式</label>
+      <div class="sp" style="flex:1"></div>
+      <button class="btn g" id="gc_pdExport" style="padding:5px 11px">匯出送審</button>
+      <button class="btn g" id="gc_pdImport" style="padding:5px 11px">匯入提案</button>
+    </div>
+    <div id="gc_pdList"></div>
+    <div class="note" style="margin-top:10px">此頁的審核是<b>流程分工,不是權限控管</b> —— 資料存在各自瀏覽器,誰都能改自己的本機副本。若要真正的權限管理,需接後端(如 Firestore)。目前用法:成員「匯出送審」把提案檔給管理員,管理員審核後「匯出資料庫 CSV」發回給大家匯入。</div>
+  </div>
+
+  <div class="pact">
+    <button class="btn g" id="gc_dbImport">匯入 CSV</button>
+    <button class="btn g" id="gc_dbExport">匯出 CSV</button>
+    <button class="btn g" id="gc_dbReset">還原內建</button>
+    <div class="sp"></div>
+    <button class="btn" id="gc_dbClose">關閉</button>
+  </div>
+  <div class="note">內建的是常見萜類的概略參考值(非極性管柱),僅供初篩。<b>正式鑑定請以你自己的標準品、質譜比對與正式參考書核對。</b>手動新增或匯入的值都存在瀏覽器快取。匯入 CSV 需有 name,ki 兩欄。</div>
+  <input type="file" id="gc_dbFile" accept=".csv" hidden>
+  <input type="file" id="gc_pdFile" accept=".csv" hidden>
+</div></div>
+
+<div class="toast" id="gc_toast"></div>
+</div>
+</div>
       <div class="sp-panel" id="sp-tga"><div class="sp-placeholder"><div class="sp-ph-icon">🔥</div><b>TGA 熱重分析</b><span>這個模組還在規劃中,之後會加入資料上傳與圖譜分析。</span></div></div>
       <div class="sp-panel" id="sp-dsc"><div class="sp-placeholder"><div class="sp-ph-icon">📉</div><b>DSC 示差掃描熱量</b><span>這個模組還在規劃中,之後會加入資料上傳與圖譜分析。</span></div></div>
     </section>
@@ -8353,6 +8517,7 @@ document.getElementById('spTabs').addEventListener('click', (e)=>{
   const key = btn.dataset.sp;
   document.querySelectorAll('#spTabs .sp-tab').forEach(b=>b.classList.toggle('active', b===btn));
   document.querySelectorAll('#page-spectra .sp-panel').forEach(p=>p.classList.toggle('active', p.id==='sp-'+key));
+  if(key==='gc' && window.__initGcms) window.__initGcms();
 });
 
 /* ============ FTIR 讀檔 ============ */
@@ -8896,6 +9061,958 @@ function loadSpectrumToEditor(rec){
 }
 document.getElementById('galDetailClose').addEventListener('click',()=>document.getElementById('galDetailOverlay').classList.remove('show'));
 document.getElementById('galDetailOverlay').addEventListener('click',e=>{if(e.target.id==='galDetailOverlay')document.getElementById('galDetailOverlay').classList.remove('show');});
+
+
+/* ===== GC-MS(TIC Bench)整合:localStorage 版,封装于 IIFE,不污染全域 ===== */
+(function(){
+  let gcmsBooted=false;
+  window.__initGcms=function(){
+    if(gcmsBooted) return;
+    // 元素还没插入就先不跑(保险)
+    if(!document.getElementById('gc_main')) return;
+    gcmsBooted=true;
+    __gcmsBody();
+  };
+  function __gcmsBody(){
+
+/* =========================================================
+   儲存(localStorage;在不支援的環境自動退回記憶體)
+   ========================================================= */
+const Store=(()=>{
+  let ok=true; try{localStorage.setItem('_t','1');localStorage.removeItem('_t')}catch(e){ok=false}
+  const mem={};
+  return{
+    get(k,d){ try{ const v=ok?localStorage.getItem(k):mem[k]; return v?JSON.parse(v):d }catch(e){ return d } },
+    set(k,v){ try{ const s=JSON.stringify(v); if(ok)localStorage.setItem(k,s); else mem[k]=s }catch(e){} }
+  };
+})();
+
+/* =========================================================
+   內建 KI 參考(常見萜類概略值,非極性管柱)
+   ========================================================= */
+const DB_DEFAULT=[
+ ["Tricyclene",926],["α-Thujene",930],["α-Pinene",939],["Camphene",954],["Sabinene",975],
+ ["β-Pinene",979],["β-Myrcene",990],["α-Phellandrene",1002],["δ-3-Carene",1011],["α-Terpinene",1017],
+ ["p-Cymene",1024],["o-Cymene",1026],["Limonene",1029],["1,8-Cineole",1031],["(Z)-β-Ocimene",1037],
+ ["(E)-β-Ocimene",1050],["γ-Terpinene",1059],["cis-Sabinene hydrate",1070],["Terpinolene",1088],
+ ["Linalool",1096],["n-Nonanal",1100],["α-Campholenal",1126],["trans-Pinocarveol",1139],
+ ["Camphor",1146],["Citronellal",1153],["Borneol",1169],["4-Terpinenol",1177],["α-Terpineol",1188],
+ ["Decanal",1201],["trans-Carveol",1215],["Citronellol",1223],["Neral",1235],["Carvone",1243],
+ ["Geraniol",1252],["Geranial",1264],["Bornyl acetate",1285],["Thymol",1289],["Carvacrol",1298],
+ ["δ-Elemene",1335],["α-Cubebene",1345],["Eugenol",1356],["α-Copaene",1374],["β-Bourbonene",1387],
+ ["β-Elemene",1389],["Methyl eugenol",1403],["(E)-Caryophyllene",1417],["β-Copaene",1430],
+ ["α-Humulene",1452],["(E)-β-Farnesene",1454],["γ-Muurolene",1478],["Germacrene D",1484],
+ ["β-Selinene",1489],["Bicyclogermacrene",1500],["α-Muurolene",1500],["(E,E)-α-Farnesene",1505],
+ ["β-Bisabolene",1505],["γ-Cadinene",1513],["δ-Cadinene",1522],["Elemol",1548],["Germacrene B",1559],
+ ["(E)-Nerolidol",1561],["Spathulenol",1577],["Caryophyllene oxide",1582],["Globulol",1590],
+ ["Viridiflorol",1592],["Guaiol",1600],["β-Oplopenone",1607],["Humulene epoxide II",1608],
+ ["1-epi-Cubenol",1627],["γ-Eudesmol",1630],["epi-α-Cadinol",1638],["epi-α-Muurolol",1640],
+ ["α-Muurolol",1644],["β-Eudesmol",1649],["α-Cadinol",1652],["α-Eudesmol",1652],["Bulnesol",1670],
+ ["α-Bisabolol",1685],["(2Z,6E)-Farnesol",1722],["Benzyl benzoate",1759]
+];
+
+/* =========================================================
+   狀態
+   ========================================================= */
+let samples=Store.get('tb.samples',[]);
+/* 烷類:具名版本組合。每個樣品用 alkSetId 綁定自己的一組 */
+const DEFAULT_ROWS=[[8,3.164],[9,5.092],[10,7.884],[11,11.204],[12,14.564],[13,17.815],
+                    [14,20.895],[15,23.797],[16,26.531],[17,29.113],[18,31.554],
+                    [19,33.869],[20,36.070]];
+let alkSets=Store.get('tb.alkSets',null);
+if(!alkSets){                                   // 由舊版單一組合遷移
+  const old=Store.get('tb.alkanes',null);
+  alkSets=[{id:'a0',name:'預設 C8–C20',user:'',date:new Date().toISOString().slice(0,10),
+            note:'',rows:(old&&old.length?old:DEFAULT_ROWS).map(r=>[r[0],r[1]])}];
+}
+let kidb=Store.get('tb.kidb',DB_DEFAULT);
+let kiTol=Store.get('tb.kitol',20);
+let params=Store.get('tb.params',{rtMin:5,rtMax:50,minPct:0.1,prom:2500,bleed:30});
+let cur=Store.get('tb.cur',null);
+let editSetId=alkSets[0].id;                    // 面板正在編輯的組合
+let pending=Store.get('tb.pending',[]);         // 待審核的成分提案
+let me=Store.get('tb.me','');                   // 目前使用者名稱
+let isAdmin=Store.get('tb.admin',false);        // 管理員模式(僅流程用,非權限控管)
+const save=()=>{Store.set('tb.samples',samples);Store.set('tb.alkSets',alkSets);
+  Store.set('tb.kidb',kidb);Store.set('tb.kitol',kiTol);Store.set('tb.params',params);Store.set('tb.cur',cur);
+  Store.set('tb.pending',pending);Store.set('tb.me',me);Store.set('tb.admin',isAdmin)};
+const getSet=id=>alkSets.find(a=>a.id===id)||alkSets[0];
+const setOf=s=>getSet(s&&s.alkSetId?s.alkSetId:alkSets[0].id);
+const newId=()=>'a'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+
+/* =========================================================
+   解析 CSV
+   ========================================================= */
+/* =========================================================
+   通用解析:Agilent ChemStation / Shimadzu GCMSsolution /
+             Thermo Xcalibur 以及一般兩欄文字匯出
+   策略:不假設固定表頭列數,改成找出檔案裡最長的一段
+         「連續數值列」,再判斷各欄的角色。
+   ========================================================= */
+function detectDelim(lines){
+  const cand=['\t',';',','];
+  // 取檔案中後段的樣本列(避開前面的後設資料)
+  const body=lines.filter(l=>l.trim()).slice(-300);
+  let best=',', bestScore=-1;
+  for(const d of cand){
+    let good=0, cols=0;
+    for(const l of body){
+      const p=l.split(d);
+      if(p.length<2)continue;
+      // 全部欄位都能解析成數字才算「好的一列」
+      const v=p.map(num);
+      if(v.every(x=>isFinite(x))){ good++; cols=Math.max(cols,p.length) }
+    }
+    // 成功率優先;同分時欄數多者勝
+    const score=good*10+cols;
+    if(good>0&&score>bestScore){ bestScore=score; best=d }
+  }
+  return best;
+}
+function num(s){
+  if(s==null)return NaN;
+  s=String(s).trim().replace(/^["']|["']$/g,'');
+  if(!s)return NaN;
+  // 逗號小數(歐系):1234,56 -> 1234.56;1,234.56 的千分位則移除
+  if(/^-?\d{1,3}(\.\d{3})+,\d+$/.test(s)) s=s.replace(/\./g,'').replace(',','.');
+  else if(/^-?\d+,\d+$/.test(s)) s=s.replace(',','.');
+  else s=s.replace(/,(?=\d{3}\b)/g,'');
+  // 整串必須是合法數字,避免 "500;800" 被 parseFloat 誤讀成 500
+  if(!/^-?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/.test(s))return NaN;
+  return parseFloat(s);
+}
+function parseCSV(text,fname){
+  text=text.replace(/^\uFEFF/,'');
+  const lines=text.split(/\r?\n/);
+  const D=detectDelim(lines);
+
+  // --- 後設資料:樣品名與日期(各廠牌關鍵字)---
+  let name='',date='';
+  const head=lines.slice(0,60);
+  for(const ln of head){
+    const p=ln.split(D).map(x=>x.replace(/^["']|["']$/g,'').trim());
+    const key=(p[0]||'').toLowerCase().replace(/[:#]/g,'').trim();
+    if(!name&&/^(sample name|sample|sample id|データファイル名)$/.test(key)&&p[1])name=p[1];
+    if(!name&&/^(data file name|file|file name)$/.test(key)&&p[1])
+      name=p[1].split(/[\\/]/).pop().replace(/\.(qgd|raw|d|ms)$/i,'');
+    const m=ln.match(/(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4})/)               // 04 Aug 2026
+          ||ln.match(/(\d{4})[/-](\d{1,2})[/-](\d{1,2})/)                  // 2026/07/28
+          ||ln.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);                     // 7/28/2026
+    if(!date&&m){
+      const MO={jan:'01',feb:'02',mar:'03',apr:'04',may:'05',jun:'06',
+                jul:'07',aug:'08',sep:'09',oct:'10',nov:'11',dec:'12'};
+      if(MO[String(m[2]).toLowerCase()]) date=m[3]+'-'+MO[m[2].toLowerCase()];
+      else if(m[1].length===4) date=m[1]+'-'+String(m[2]).padStart(2,'0');
+      else date=m[3]+'-'+String(m[1]).padStart(2,'0');
+    }
+  }
+
+  // --- 找最長的連續數值區塊 ---
+  const isNumRow=l=>{
+    if(!l.trim())return null;
+    const p=l.split(D);
+    if(p.length<2)return null;
+    const v=p.map(num);
+    return (isFinite(v[0])&&v.slice(1).some(isFinite))?v:null;
+  };
+  let best={s:-1,e:-1,n:0}, s=-1;
+  for(let i=0;i<=lines.length;i++){
+    const ok=i<lines.length&&isNumRow(lines[i]);
+    if(ok){ if(s<0)s=i } else if(s>=0){
+      if(i-s>best.n)best={s,e:i,n:i-s}; s=-1;
+    }
+  }
+  if(best.n<10) throw new Error('找不到數值資料區塊');
+
+  const rows=[];
+  for(let i=best.s;i<best.e;i++){const v=isNumRow(lines[i]); if(v)rows.push(v)}
+
+  // --- 選欄:第 1 欄為 RT;強度欄取「非相對強度」的那欄 ---
+  const ncol=Math.min(...rows.map(r=>r.length));
+  let icol=1;
+  if(ncol>=3){
+    // 相對強度欄:最大值≈100 且落在 0-100
+    const looksRel=c=>{let mx=-1,ok=true;
+      for(const r of rows){const v=r[c]; if(!isFinite(v)){continue}
+        if(v<0||v>100.5){ok=false;break} if(v>mx)mx=v}
+      return ok&&mx>90&&mx<=100.5};
+    const cands=[]; for(let c=1;c<ncol;c++) if(!looksRel(c))cands.push(c);
+    icol=cands.length?cands[0]:1;
+  }
+  const rt=[],ab=[];
+  for(const r of rows){const a=r[0],b=r[icol];
+    if(isFinite(a)&&isFinite(b)){rt.push(a);ab.push(b)}}
+  if(rt.length<10)throw new Error('數值資料太少');
+
+  // --- 單位:RT 若為秒(跨距過大且無小數特徵)則換算為分 ---
+  let unit='min';
+  const span=rt[rt.length-1]-rt[0];
+  if(span>180){ for(let i=0;i<rt.length;i++)rt[i]/=60; unit='sec→min' }
+
+  if(!name)name=fname.replace(/\.(csv|txt|tsv)$/i,'');
+  return {id:'s'+Date.now()+Math.random().toString(36).slice(2,6),
+          file:fname,name,date,title:(date?date+'\n':'')+name,
+          rt,ab,italic:false,edits:{},dropped:[],
+          src:{delim:D==='\t'?'TAB':D,cols:ncol,intensityCol:icol+1,unit,rows:rt.length}};
+}
+
+/* =========================================================
+   ALS 基線(pentadiagonal,banded LDL)
+   ========================================================= */
+function alsBaseline(y,lam,p,niter){
+  const n=y.length, w=new Float64Array(n).fill(1), z=new Float64Array(n);
+  // D2'D2 的五對角係數
+  const d0=new Float64Array(n),d1=new Float64Array(n),d2=new Float64Array(n);
+  for(let i=0;i<n;i++){
+    let a=0; // (D'D)[i][i]
+    if(i>=2&&i<=n-3)a=6; else if(i===0||i===n-1)a=1; else if(i===1||i===n-2)a=5;
+    d0[i]=a;
+  }
+  for(let i=0;i<n-1;i++) d1[i]=(i===0||i===n-2)?-2:-4;
+  for(let i=0;i<n-2;i++) d2[i]=1;
+  const a0=new Float64Array(n),a1=new Float64Array(n),a2=new Float64Array(n);
+  const l1=new Float64Array(n),l2=new Float64Array(n),dg=new Float64Array(n),tmp=new Float64Array(n);
+  for(let it=0;it<niter;it++){
+    for(let i=0;i<n;i++){a0[i]=w[i]+lam*d0[i];a1[i]=lam*d1[i];a2[i]=lam*d2[i]}
+    // banded LDL^T
+    for(let i=0;i<n;i++){
+      let s=a0[i];
+      if(i>=1)s-=l1[i-1]*l1[i-1]*dg[i-1];
+      if(i>=2)s-=l2[i-2]*l2[i-2]*dg[i-2];
+      dg[i]=s||1e-12;
+      if(i<n-1){let t=a1[i]; if(i>=1)t-=l2[i-1]*l1[i-1]*dg[i-1]; l1[i]=t/dg[i]}
+      if(i<n-2){l2[i]=a2[i]/dg[i]}
+    }
+    for(let i=0;i<n;i++){let s=w[i]*y[i];
+      if(i>=1)s-=l1[i-1]*dg[i-1]*tmp[i-1];
+      if(i>=2)s-=l2[i-2]*dg[i-2]*tmp[i-2];
+      tmp[i]=s/dg[i];
+    }
+    for(let i=n-1;i>=0;i--){let s=tmp[i];
+      if(i<n-1)s-=l1[i]*z[i+1];
+      if(i<n-2)s-=l2[i]*z[i+2];
+      z[i]=s;
+    }
+    for(let i=0;i<n;i++) w[i]=y[i]>z[i]?p:1-p;
+  }
+  return z;
+}
+const smooth=y=>{const n=y.length,o=new Float64Array(n);
+  for(let i=0;i<n;i++){let s=0,c=0;for(let k=-3;k<=3;k++){const j=i+k;if(j>=0&&j<n){s+=y[j];c++}}o[i]=s/c}return o};
+
+/* =========================================================
+   積分
+   ========================================================= */
+function integrate(s,P){
+  const rt=s.rt, y=Float64Array.from(s.ab), n=y.length;
+  const base=alsBaseline(y,1e5,1e-3,10);
+  const yc=new Float64Array(n); for(let i=0;i<n;i++) yc[i]=Math.max(0,y[i]-base[i]);
+  const ys=smooth(yc);
+  let mx=0; for(let i=0;i<n;i++) if(yc[i]>mx)mx=yc[i];
+  const thr=mx*0.002, pk=[];
+  for(let i=2;i<n-2;i++){
+    if(ys[i]>=ys[i-1]&&ys[i]>ys[i+1]){
+      let l=i;while(l>0&&ys[l-1]<ys[l])l--;
+      let r=i;while(r<n-1&&ys[r+1]<ys[r])r++;
+      if(ys[i]-Math.max(ys[l],ys[r])>=P.prom) pk.push(i);
+    }
+  }
+  const sp=[]; for(let i=0;i<pk.length-1;i++){let m=pk[i];
+    for(let j=pk[i];j<=pk[i+1];j++) if(yc[j]<yc[m])m=j; sp.push(m)}
+  let out=[];
+  for(let i=0;i<pk.length;i++){
+    const p=pk[i]; let lz=p; while(lz>0&&yc[lz-1]>thr)lz--;
+    let l=i>0?Math.max(lz,sp[i-1]):lz;
+    let rz=p; while(rz<n-1&&yc[rz+1]>thr)rz++;
+    let r=i<pk.length-1?Math.min(rz,sp[i]):rz;
+    if(r-l<2)continue;
+    let a=0; for(let j=l;j<r;j++) a+=(yc[j]+yc[j+1])/2*(rt[j+1]-rt[j]);
+    out.push({rt:rt[p],area:a,h:yc[p],l:rt[l],r:rt[r],il:l,ir:r});
+  }
+  out=out.filter(o=>o.rt>=P.rtMin&&o.rt<=P.rtMax);
+  let tot=out.reduce((x,o)=>x+o.area,0);
+  out=out.filter(o=>o.area/tot*100>=P.minPct);
+  tot=out.reduce((x,o)=>x+o.area,0);
+  out.forEach(o=>o.pct=o.area/tot*100);
+  return {peaks:out,base};
+}
+/* 刪除峰後重新正規化(不留空號) */
+function activePeaks(s){
+  const P=params, r=integrate(s,P);
+  const keep=r.peaks.filter(p=>!(s.dropped||[]).includes(p.rt.toFixed(3)));
+  const tot=keep.reduce((x,o)=>x+o.area,0);
+  keep.forEach((o,i)=>{o.pct=o.area/tot*100;o.no=i+1});
+  return keep;
+}
+/* Kovats KI — 依該樣品綁定的烷類組合計算 */
+function calcKI(rt,set){
+  const A=(set&&set.rows?set.rows:[]).filter(a=>isFinite(a[0])&&isFinite(a[1])).sort((x,y)=>x[1]-y[1]);
+  if(A.length<2)return null;
+  for(let i=0;i<A.length-1;i++){
+    if(rt>=A[i][1]&&rt<=A[i+1][1])
+      return Math.round(100*(A[i][0]+(Math.log(rt)-Math.log(A[i][1]))/(Math.log(A[i+1][1])-Math.log(A[i][1]))));
+  }
+  return null;
+}
+
+/* =========================================================
+   繪圖(SVG 24:7)
+   ========================================================= */
+function chartSVG(s,opts={}){
+  const W=1200,H=350,L=78,R=18,T=16,B=52;
+  const pw=W-L-R,ph=H-T-B;
+  const xmax=params.rtMax||50;
+  let ymax=0; for(let i=0;i<s.rt.length;i++) if(s.rt[i]<=xmax&&s.ab[i]>ymax)ymax=s.ab[i];
+  if(isFinite(s.yMax)&&s.yMax>0){ ymax=s.yMax; }          // 手動指定
+  else { ymax*=1.06;
+    const e0=Math.pow(10,Math.floor(Math.log10(ymax)));
+    ymax=[1,2,2.5,5,10].map(m=>m*e0).find(v=>v>=ymax)||10*e0; }
+  const X=v=>L+v/xmax*pw, Y=v=>T+ph-v/ymax*ph;
+  let d='';
+  for(let i=0;i<s.rt.length;i++){ if(s.rt[i]>xmax)break;
+    d+=(i?'L':'M')+X(s.rt[i]).toFixed(2)+' '+Y(s.ab[i]).toFixed(2) }
+  const exp=Math.floor(Math.log10(ymax)), sc=Math.pow(10,exp);
+  let ticks='';
+  for(let v=0;v<=xmax+.001;v+=10) ticks+=`<line x1="${X(v)}" y1="${T+ph}" x2="${X(v)}" y2="${T+ph+5}" stroke="#16150F"/>
+    <text x="${X(v)}" y="${T+ph+21}" text-anchor="middle" font-family="Times New Roman,serif" font-size="15">${v}</text>`;
+  for(let k=0;k<=5;k++){const v=ymax*k/5;
+    ticks+=`<line x1="${L-5}" y1="${Y(v)}" x2="${L}" y2="${Y(v)}" stroke="#16150F"/>
+    <text x="${L-9}" y="${Y(v)+5}" text-anchor="end" font-family="Times New Roman,serif" font-size="14">${(v/sc).toFixed(1)}</text>`}
+
+  /* ---- 峰標註:預設標編號,化合物名稱選填 ---- */
+  const pk=activePeaks(s);
+  const labeled=pk.filter(p=>(s.labels||{})[p.rt.toFixed(3)]!==false);
+  const showName=!!s.showName;
+  let ann='';
+  const placed=[];                                  // 已放置的標籤,用於錯開
+  // 依峰高由大到小指派層級:高峰優先佔第 0 層(不拉線),矮峰才往上抬並拉引線
+  const order=labeled.slice().sort((a,b)=>b.h-a.h);
+  const lay=new Map();
+  order.forEach(p=>{
+    const x=X(p.rt);
+    const key=p.rt.toFixed(3);
+    const nm=showName?((s.edits[key]||{}).cmp||''):'';
+    const txt=nm?`${p.no}. ${nm}`:String(p.no);
+    const wEst=txt.length*(nm?6.6:7.5)+4;
+    let tier=0;
+    for(let t=0;t<8;t++){
+      const clash=placed.some(q=>Math.abs(q.x-x)<(q.w+wEst)/2&&q.tier===t);
+      if(!clash){tier=t;break} tier=t+1;
+    }
+    placed.push({x,w:wEst,tier});
+    lay.set(key,{x,txt,nm,tier});
+  });
+  // 依 RT 順序輸出,維持繪圖順序穩定
+  labeled.forEach(p=>{
+    const key=p.rt.toFixed(3), o=lay.get(key); if(!o)return;
+    const yTop=Y(p.h);
+    const ly=Math.max(T+11,yTop-(14+o.tier*15));
+    o.ly=ly;                                   // 記下標籤最終高度,供圈選框避讓
+    if(o.tier>0) ann+=`<line x1="${o.x.toFixed(1)}" y1="${(ly+3).toFixed(1)}" x2="${o.x.toFixed(1)}" y2="${(yTop-3).toFixed(1)}"
+      stroke="#1F4E5F" stroke-width="0.7"/>`;
+    ann+=`<text x="${o.x.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle"
+      font-family="Times New Roman,serif" font-size="${o.nm?12:13}">${esc(o.txt)}</text>`;
+  });
+
+  /* ---- 放大插圖:可多組,各自配色對應 ---- */
+  let inset='', selRect='';
+  const IC=['#1F5FD8','#0E8074','#9A3FA8','#C2670B'];      // 各組配色
+  const izs=(s.insets||[]).filter(z=>isFinite(z.from)&&isFinite(z.to)&&z.to>z.from)
+                          .slice(0,4).sort((a,b)=>a.from-b.from);
+  if(izs.length){
+    const n=izs.length, gap=12;
+    const iw=Math.min(pw*0.34,(pw-gap*(n-1)-12)/n), ih=ph*(n>2?0.30:0.34);
+    const totalW=n*iw+(n-1)*gap, startX=L+pw-10-totalW, iy0=T+8;
+    const IPAD=24;                                          // 插圖頂端預留給編號
+    izs.forEach((iz,k)=>{
+      const col=IC[k%IC.length];
+      const x1=X(iz.from), x2=X(iz.to);
+      let izMax=0; for(let i=0;i<s.rt.length;i++)
+        if(s.rt[i]>=iz.from&&s.rt[i]<=iz.to&&s.ab[i]>izMax)izMax=s.ab[i];
+      const iy=izMax*1.12||1;
+      // 圈選框:2 倍峰高,且高過此區間內所有標籤
+      let labTop=Infinity;
+      labeled.forEach(q=>{ if(q.rt>=iz.from&&q.rt<=iz.to){
+        const o=lay.get(q.rt.toFixed(3)); if(o&&isFinite(o.ly))labTop=Math.min(labTop,o.ly); }});
+      const need=isFinite(labTop)?labTop-13:Infinity;
+      const panelBottom=iy0+ih+10;                          // 面板下緣,框不得超過
+      const boxTop=Math.max(panelBottom,Math.min(Y(izMax*2),need));
+      selRect+=`<rect x="${x1.toFixed(1)}" y="${boxTop.toFixed(1)}" width="${(x2-x1).toFixed(1)}"
+        height="${(T+ph+3-boxTop).toFixed(1)}" fill="none" stroke="${col}" stroke-width="1.6"/>`;
+      // 插圖面板
+      const ix=startX+k*(iw+gap);
+      const IX=v=>ix+(v-iz.from)/(iz.to-iz.from)*iw;
+      const IY=v=>iy0+ih-v/iy*(ih-IPAD);
+      let idp='';
+      for(let i=0;i<s.rt.length;i++){ if(s.rt[i]<iz.from)continue; if(s.rt[i]>iz.to)break;
+        idp+=(idp?'L':'M')+IX(s.rt[i]).toFixed(2)+' '+IY(s.ab[i]).toFixed(2) }
+      inset+=`<rect x="${ix.toFixed(1)}" y="${iy0}" width="${iw.toFixed(1)}" height="${ih.toFixed(1)}"
+          fill="#fff" stroke="${col}" stroke-width="1.6"/>
+        <path d="${idp}" fill="none" stroke="#D81E05" stroke-width="1"/>
+        <text x="${(ix+5).toFixed(1)}" y="${(iy0+ih-4).toFixed(1)}" font-family="Times New Roman,serif"
+          font-size="10" fill="${col}">${iz.from}–${iz.to} min</text>`;
+      // 插圖內編號:高峰優先佔低層
+      const inPk=pk.filter(q=>q.rt>=iz.from&&q.rt<=iz.to&&(s.labels||{})[q.rt.toFixed(3)]!==false);
+      const ip=[], ilay=new Map();
+      inPk.slice().sort((a,b)=>b.h-a.h).forEach(q=>{
+        const x=IX(q.rt), w=String(q.no).length*7+3;
+        let tier=0;
+        for(let t=0;t<8;t++){const clash=ip.some(u=>Math.abs(u.x-x)<(u.w+w)/2&&u.tier===t);
+          if(!clash){tier=t;break} tier=t+1}
+        ip.push({x,w,tier}); ilay.set(q.rt.toFixed(3),{x,tier});
+      });
+      inPk.forEach(q=>{
+        const o=ilay.get(q.rt.toFixed(3)); if(!o)return;
+        const yTop=IY(q.h), ly=Math.max(iy0+10,yTop-(11+o.tier*12));
+        if(o.tier>0)inset+=`<line x1="${o.x.toFixed(1)}" y1="${(ly+3).toFixed(1)}" x2="${o.x.toFixed(1)}"
+          y2="${(yTop-3).toFixed(1)}" stroke="#1F4E5F" stroke-width="0.7"/>`;
+        inset+=`<text x="${o.x.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle"
+          font-family="Times New Roman,serif" font-size="11">${q.no}</text>`;
+      });
+      // 連接線:框頂 → 面板底部最近的一角
+      const bx=(x1+x2)/2, px=ix+iw/2;
+      inset+=`<line x1="${(px<bx?ix+iw:ix).toFixed(1)}" y1="${(iy0+ih).toFixed(1)}"
+        x2="${(px<bx?x2:x1).toFixed(1)}" y2="${boxTop.toFixed(1)}"
+        stroke="${col}" stroke-width="0.8" stroke-dasharray="3 3"/>`;
+    });
+  }
+
+  /* ---- 標題框 ---- */
+  let box='';
+  const lines=(s.title||'').split('\n').filter(x=>x);
+  if(lines.length){
+    const bw=Math.max(...lines.map(t=>t.length))*9.5+40, bh=lines.length*23+18;
+    const bx=W-R-bw-8, by=(s.insets&&s.insets.length)?T+ph-bh-10:T+10;      // 有插圖時標題移到下方
+    box=`<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" fill="#fff" stroke="#16150F" stroke-width="1.6"/>`;
+    lines.forEach((t,i)=>{ const it=s.italic&&i===lines.length-1;
+      box+=`<text x="${(bx+bw/2).toFixed(1)}" y="${by+25+i*23}" text-anchor="middle" font-family="Times New Roman,serif"
+        font-size="17" ${it?'font-style="italic"':'font-weight="bold"'}>${esc(t)}</text>`});
+  }
+  return `<svg id="gc_svg" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+    <rect width="${W}" height="${H}" fill="#fff"/>
+    <text x="${L-52}" y="${T+ph/2}" transform="rotate(-90 ${L-52} ${T+ph/2})" text-anchor="middle"
+      font-family="Times New Roman,serif" font-size="16">Total ion counts</text>
+    <text x="${L+pw/2}" y="${H-10}" text-anchor="middle" font-family="Times New Roman,serif" font-size="16">Retention time (min)</text>
+    <text x="${L-4}" y="${T-3}" text-anchor="end" font-family="Times New Roman,serif" font-size="12">×10<tspan dy="-4" font-size="9">${exp}</tspan></text>
+    <rect x="${L}" y="${T}" width="${pw}" height="${ph}" fill="none" stroke="#16150F" stroke-width="1.3"/>
+    ${ticks}${selRect}<path d="${d}" fill="none" stroke="#D81E05" stroke-width="1.05" stroke-linejoin="round"/>
+    ${ann}${inset}${box}</svg>`;
+}
+const esc=t=>String(t).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+/* Identification 顯示值:由 MS / KI 勾選決定(預設兩者皆勾) */
+const identText=e=>{e=e||{};const a=[];if(e.ms!==false)a.push('MS');if(e.ki!==false)a.push('KI');return a.join(',')};
+
+/* =========================================================
+   畫面
+   ========================================================= */
+function renderRail(){
+  const el=document.getElementById('gc_slist');
+  if(!samples.length){el.innerHTML='<div class="empty">尚未載入樣品</div>';return}
+  el.innerHTML=samples.map(s=>`<div class="sitem ${s.id===cur?'on':''}" data-id="${s.id}">
+    <span class="nm">${esc(s.name)}</span><span class="ct">${s.date||''}</span>
+    <button class="x" data-del="${s.id}" title="移除">×</button></div>`).join('');
+  el.querySelectorAll('.sitem').forEach(d=>d.onclick=e=>{
+    if(e.target.dataset.del){samples=samples.filter(x=>x.id!==e.target.dataset.del);
+      if(cur===e.target.dataset.del)cur=samples[0]?.id||null; save();renderRail();renderMain();return}
+    cur=d.dataset.id; save(); renderRail(); renderMain();
+  });
+}
+
+function renderMain(){
+  const m=document.getElementById('gc_main');
+  const s=samples.find(x=>x.id===cur);
+  if(s&&!s.insets){ s.insets=s.inset?[s.inset]:[]; delete s.inset; save(); }   // 舊單組資料遷移
+  if(!s){m.innerHTML=`<div class="blank"><div class="big">載入 TIC CSV 開始</div>
+    左側選檔或拖入。檔案與標註都存在這台瀏覽器,重新開啟不會消失。</div>`;return}
+  const pk=activePeaks(s);
+  const AS=setOf(s);
+  m.innerHTML=`
+   <div class="hd">
+     <h1${s.italic?' style="font-style:italic"':''}>${esc(s.name)}</h1>
+     <div class="meta">${s.date||'—'} · ${s.rt.length} pts · ${pk.length} peaks${s.src?` · ${s.src.delim==='TAB'?'TAB':'“'+s.src.delim+'”'} 分隔 · 第 ${s.src.intensityCol} 欄為強度${s.src.unit!=='min'?' · '+s.src.unit:''}`:''}</div>
+     <div class="sp"></div>
+     <input class="title" id="fTitle" value="${esc((s.title||'').replace(/\n/g,' | '))}" title="圖上標題框(用 | 分行)">
+     <label class="chk"><input type="checkbox" id="fItal" ${s.italic?'checked':''}> 學名斜體</label>
+   </div>
+   <div class="alkbar">
+     <span class="k">烷類 RT</span>
+     <select id="fAlk" title="此圖譜使用的烷類組合">
+       ${alkSets.map(a=>`<option value="${a.id}" ${a.id===AS.id?'selected':''}>${esc(a.name)}${a.user?' · '+esc(a.user):''} (${a.rows.length})</option>`).join('')}
+     </select>
+     <button class="tbtn" id="fAlkEdit">編輯組合</button>
+     <span class="k dim">${AS.date||''}${AS.note?' · '+esc(AS.note):''}</span>
+   </div>
+   <div class="card">${chartSVG(s,{labels:document.getElementById('gc_fLbl')?.checked})}
+     <div class="chartbar">
+       <span class="cg">標註</span>
+       <button class="tbtn sm" id="lbAll">全標</button>
+       <button class="tbtn sm" id="lbNone">全不標</button>
+       <button class="tbtn sm" id="lbMain">只標 ≥1%</button>
+       <label class="chk"><input type="checkbox" id="fName" ${s.showName?'checked':''}> 一併顯示化合物名稱</label>
+       <span class="sep"></span>
+       <span class="cg">Y 軸上限</span>
+       <input class="rt w" id="fYMax" type="number" step="100000" placeholder="自動" value="${s.yMax||''}">
+       <button class="tbtn sm" id="yAuto">自動</button>
+       <button class="tbtn sm" id="yUp" title="放大訊號(上限減半)">▲</button>
+       <button class="tbtn sm" id="yDn" title="縮小訊號(上限加倍)">▼</button>
+       <span class="sep"></span>
+       <span class="cg">放大區間</span>
+       <input class="rt" id="izFrom" type="number" step="0.5" placeholder="起">
+       <span>–</span>
+       <input class="rt" id="izTo" type="number" step="0.5" placeholder="迄">
+       <button class="tbtn sm" id="izApply">+ 新增</button>
+       ${(s.insets||[]).map((z,i)=>`<span class="izchip" style="--c:${['#1F5FD8','#0E8074','#9A3FA8','#C2670B'][i%4]}">
+         <i></i>${z.from}–${z.to}<button data-izrm="${i}" title="移除">×</button></span>`).join('')}
+       ${(s.insets||[]).length?'<button class="tbtn sm" id="izClear">全部清除</button>':''}
+     </div>
+   </div>
+   <table><thead><tr>
+     <th style="width:38px" title="是否在圖上標註">標</th><th style="width:56px">Peak #</th><th>Compound</th><th style="width:120px">Retention time (min)</th>
+     <th style="width:60px">KI</th><th style="width:70px">rKI</th><th style="width:70px">Area(%)</th>
+     <th style="width:100px">Identification</th><th style="width:40px"></th></tr></thead>
+   <tbody>${pk.map(p=>{
+     const k=p.rt.toFixed(3), e=s.edits[k]||{}, ki=calcKI(p.rt,AS);
+     const isB=p.rt>=(params.bleed||99);
+     const on=(s.labels||{})[k]!==false;
+     return `<tr class="${isB?'bleed':''}" data-k="${k}">
+       <td><input type="checkbox" class="lbchk" data-k="${k}" ${on?'checked':''}></td>
+       <td>${p.no}</td>
+       <td class="ed cmp" contenteditable data-f="cmp" data-ph="${isB?'? bleed':'填入'}" data-ki="${ki||''}">${esc(e.cmp||'')}</td>
+       <td>${p.rt.toFixed(3)}</td><td>${ki??''}</td>
+       <td class="ed" contenteditable data-f="rki" data-ph="—">${esc(e.rki||'')}</td>
+       <td>${p.pct.toFixed(2)}</td>
+       <td class="idcell">${esc(identText(e))}</td>
+       <td class="idchk"><label><input type="checkbox" class="cMS" data-k="${k}" ${e.ms!==false?'checked':''}>MS</label><label><input type="checkbox" class="cKI" data-k="${k}" ${e.ki!==false?'checked':''}>KI</label></td>
+       <td class="rowtools"><button data-drop="${k}" title="刪除此峰(其餘自動重新編號與正規化)">×</button></td></tr>`}).join('')}
+   </tbody></table>
+   ${(s.dropped||[]).length?`<div class="chartbar"><span>已刪除 ${(s.dropped).length} 支峰</span>
+     <button class="tbtn" id="undrop">全部復原</button></div>`:''}`;
+
+  document.getElementById('gc_fTitle').onchange=e=>{s.title=e.target.value.split('|').map(x=>x.trim()).join('\n');save();renderMain()};
+  document.getElementById('gc_fItal').onchange=e=>{s.italic=e.target.checked;save();renderMain()};
+  document.getElementById('gc_fAlk').onchange=e=>{s.alkSetId=e.target.value;save();renderMain();
+    toast('已套用「'+setOf(s).name+'」,KI 已重算')};
+  document.getElementById('gc_fAlkEdit').onclick=()=>{editSetId=setOf(s).id;drawAlk();document.getElementById('gc_pnAlk').classList.add('on')};
+  document.getElementById('gc_fName').onchange=e=>{s.showName=e.target.checked;save();renderMain()};
+  m.querySelectorAll('.cMS,.cKI').forEach(c=>c.onchange=()=>{
+    const k=c.dataset.k, f=c.classList.contains('cMS')?'ms':'ki';
+    s.edits[k]=Object.assign({},s.edits[k],{[f]:c.checked}); save();
+    c.closest('tr').querySelector('.idcell').textContent=identText(s.edits[k]);});
+  m.querySelectorAll('.lbchk').forEach(c=>c.onchange=()=>{
+    s.labels=s.labels||{}; s.labels[c.dataset.k]=c.checked; save(); renderMain()});
+  document.getElementById('gc_lbAll').onclick=()=>{s.labels={};save();renderMain()};
+  document.getElementById('gc_lbNone').onclick=()=>{s.labels={};
+    activePeaks(s).forEach(p=>s.labels[p.rt.toFixed(3)]=false);save();renderMain()};
+  document.getElementById('gc_lbMain').onclick=()=>{s.labels={};
+    activePeaks(s).forEach(p=>{if(p.pct<1)s.labels[p.rt.toFixed(3)]=false});save();renderMain()};
+  document.getElementById('gc_izApply').onclick=()=>{
+    const a=parseFloat(document.getElementById('gc_izFrom').value),b2=parseFloat(document.getElementById('gc_izTo').value);
+    if(!isFinite(a)||!isFinite(b2)||b2<=a)return toast('請輸入有效的放大區間');
+    s.insets=s.insets||[];
+    if(s.insets.length>=4)return toast('最多 4 組放大區間');
+    s.insets.push({from:a,to:b2}); s.insets.sort((x,y)=>x.from-y.from);
+    save();renderMain();toast(`已新增放大區間 ${a}–${b2} min`)};
+  m.querySelectorAll('[data-izrm]').forEach(b=>b.onclick=()=>{
+    s.insets.splice(+b.dataset.izrm,1); save(); renderMain()});
+  const izc=document.getElementById('gc_izClear');
+  if(izc)izc.onclick=()=>{s.insets=[];save();renderMain()};
+  const curYMax=()=>{ if(isFinite(s.yMax)&&s.yMax>0)return s.yMax;
+    let m=0; for(let i=0;i<s.rt.length;i++) if(s.rt[i]<=(params.rtMax||50)&&s.ab[i]>m)m=s.ab[i];
+    const e=Math.pow(10,Math.floor(Math.log10(m*1.06)));
+    return [1,2,2.5,5,10].map(k=>k*e).find(v=>v>=m*1.06)||10*e; };
+  document.getElementById('gc_fYMax').onchange=e=>{
+    const v=parseFloat(e.target.value); s.yMax=isFinite(v)&&v>0?v:null; save(); renderMain()};
+  document.getElementById('gc_yAuto').onclick=()=>{s.yMax=null;save();renderMain();toast('Y 軸恢復自動')};
+  document.getElementById('gc_yUp').onclick=()=>{s.yMax=Math.round(curYMax()/2);save();renderMain()};
+  document.getElementById('gc_yDn').onclick=()=>{s.yMax=Math.round(curYMax()*2);save();renderMain()};
+  m.querySelectorAll('[data-drop]').forEach(b=>b.onclick=()=>{
+    s.dropped=[...(s.dropped||[]),b.dataset.drop];save();renderRail();renderMain();toast('已刪除,Area% 重新正規化')});
+  const ud=document.getElementById('gc_undrop'); if(ud)ud.onclick=()=>{s.dropped=[];save();renderMain()};
+  m.querySelectorAll('td.ed').forEach(td=>{
+    td.onblur=ev=>{const k=td.closest('tr').dataset.k;
+      s.edits[k]=Object.assign({},s.edits[k],{[td.dataset.f]:td.textContent.trim()});save();
+      // 若焦點是移到建議選單內(例如新增表單的輸入框),保持選單開啟
+      const to=ev&&ev.relatedTarget;
+      if(sugEl&&(sugEl.contains(to)||sugEl.contains(document.activeElement)))return;
+      hideSug()};
+    if(td.dataset.f==='cmp') td.onfocus=()=>showSug(td);
+    td.onkeydown=ev=>{if(ev.key==='Enter'){ev.preventDefault();td.blur()}};
+  });
+}
+
+/* KI 建議 */
+let sugEl=null;
+function hideSug(){                      // 只移除當下這一個,避免誤刪剛開的選單
+  const el=sugEl; if(!el)return; sugEl=null;
+  setTimeout(()=>el.remove(),160);
+}
+function showSug(td){
+  if(sugEl){sugEl.remove();sugEl=null}
+  const ki=parseFloat(td.dataset.ki); if(!isFinite(ki))return;
+  const rt=td.closest('tr').dataset.k;
+  const hit=kidb.map(([n,v])=>({n,v,d:Math.abs(v-ki)})).filter(x=>x.d<=kiTol).sort((a,b)=>a.d-b.d).slice(0,12);
+  const pend=pending.filter(x=>x.status==='pending'&&Math.abs(x.ki-ki)<=kiTol)
+                    .sort((a,b)=>Math.abs(a.ki-ki)-Math.abs(b.ki-ki)).slice(0,5);
+  const r=td.getBoundingClientRect(); const el=document.createElement('div');
+  el.className='sug'; el.style.left=r.left+window.scrollX+'px'; el.style.top=r.bottom+window.scrollY+2+'px';
+  el.innerHTML=`<div class="sh">KI ${ki} ±${kiTol} 候選</div>`+
+    (hit.length?hit.map(h=>`<button data-n="${esc(h.n)}">${esc(h.n)}<span class="d">${h.v} · Δ${h.d}</span></button>`).join('')
+     :'<div class="none">資料庫內沒有相近的化合物</div>')+
+    (pend.length?`<div class="sh">待審核(尚未進資料庫)</div>`+
+      pend.map(x=>`<button data-n="${esc(x.name)}" class="pd">${esc(x.name)}<span class="d">${x.ki} · 待審</span></button>`).join(''):'')+
+    `<div class="sugadd">
+       <div class="sh" style="padding:8px 10px 5px">找不到?新增自訂成分</div>
+       <div class="af">
+         <input class="an" placeholder="化合物名稱" autocomplete="off">
+         <input class="ak" type="number" value="${ki}" title="KI(預設帶入本峰計算值)">
+       </div>
+       <button class="asub">送出提案</button>
+     </div>`;
+  document.body.appendChild(el); sugEl=el;
+  el.querySelectorAll('button[data-n]').forEach(b=>b.onmousedown=ev=>{ev.preventDefault();
+    td.textContent=b.dataset.n; td.blur()});
+  // 阻止表單區的點擊讓輸入框失焦而關閉選單
+  const add=el.querySelector('.sugadd');
+  add.onmousedown=ev=>{ if(ev.target.tagName!=='INPUT') ev.preventDefault(); };
+  // 點選單以外的地方才關閉
+  if(!showSug._doc){ showSug._doc=true;
+    document.addEventListener('mousedown',ev=>{
+      if(sugEl&&!sugEl.contains(ev.target)&&!(ev.target.classList&&ev.target.classList.contains('cmp'))) hideSug();
+    });
+  }
+  const nIn=el.querySelector('.an'), kIn=el.querySelector('.ak');
+  const submit=()=>{
+    const name=nIn.value.trim(), v=parseFloat(kIn.value);
+    if(!name){nIn.focus();return toast('請輸入化合物名稱')}
+    if(!isFinite(v))return toast('請輸入 KI 數值');
+    const dup=kidb.find(d=>d[0].toLowerCase()===name.toLowerCase());
+    if(dup)return toast(`資料庫已有 ${dup[0]}(KI ${dup[1]})`);
+    if(pending.some(x=>x.status==='pending'&&x.name.toLowerCase()===name.toLowerCase()))
+      return toast('這個成分已在待審清單中');
+    const s0=samples.find(x=>x.id===cur);
+    pending.push({id:'p'+Date.now().toString(36),name,ki:v,status:'pending',
+      by:me||'(未署名)',at:new Date().toISOString().slice(0,16).replace('T',' '),
+      rt:parseFloat(rt),sample:s0?s0.name:''});
+    save();
+    td.textContent=name;               // 表格先填上,不必等審核
+    s0&&(s0.edits[rt]=Object.assign({},s0.edits[rt],{cmp:name}));
+    save(); td.blur(); renderMain();
+    toast(`已送出「${name}」待審核,表格已填入`);
+  };
+  el.querySelector('.asub').onclick=submit;
+  [nIn,kIn].forEach(i=>i.onkeydown=ev=>{
+    if(ev.key==='Enter'){ev.preventDefault();submit()}
+    ev.stopPropagation();
+  });
+}
+
+/* =========================================================
+   面板
+   ========================================================= */
+document.getElementById('gc_bAlk').onclick=()=>{
+  const s0=samples.find(x=>x.id===cur); if(s0)editSetId=setOf(s0).id;
+  drawAlk();document.getElementById('gc_pnAlk').classList.add('on')};
+document.getElementById('gc_bDb').onclick=()=>{drawDb();drawPd();document.getElementById('gc_pnDb').classList.add('on')};
+document.getElementById('gc_dbClose').onclick=()=>document.getElementById('gc_pnDb').classList.remove('on');
+[document.getElementById('gc_pnAlk'),document.getElementById('gc_pnDb')].forEach(p=>p.onclick=e=>{if(e.target===p){
+  if(p===document.getElementById('gc_pnAlk')&&typeof stashRows==='function'){stashRows();save()}
+  p.classList.remove('on');renderMain()}});
+
+/* ---------- 烷類組合面板 ---------- */
+function drawAlk(){
+  const st=getSet(editSetId); editSetId=st.id;
+  // 組合清單
+  document.getElementById('gc_setList').innerHTML=alkSets.map(a=>{
+    const used=samples.filter(x=>setOf(x).id===a.id).length;
+    return `<div class="it ${a.id===editSetId?'on':''}" data-sid="${a.id}">
+      <span class="n">${esc(a.name||'(未命名)')}</span>
+      <span class="m">${a.rows.length} 點${a.user?' · '+esc(a.user):''}${a.date?' · '+a.date:''} · ${used} 樣品</span></div>`}).join('');
+  document.querySelectorAll('#gc_setList .it').forEach(d=>d.onclick=()=>{
+    stashRows(); editSetId=d.dataset.sid; drawAlk()});
+  // 後設欄位
+  document.getElementById('gc_setName').value=st.name||''; document.getElementById('gc_setUser').value=st.user||'';
+  document.getElementById('gc_setDate').value=st.date||''; document.getElementById('gc_setNote').value=st.note||'';
+  document.getElementById('gc_setCount').textContent=st.rows.length+' 點';
+  // RT 列
+  document.getElementById('gc_alkBody').innerHTML=st.rows.map((a,i)=>
+    `<tr><td><input value="${a[0]}" data-i="${i}" data-c="0"></td>
+     <td><input value="${a[1]}" data-i="${i}" data-c="1"></td>
+     <td><button class="tbtn" data-rm="${i}" style="padding:3px 7px">×</button></td></tr>`).join('')
+    ||'<tr><td colspan="3" style="padding:12px;color:#8C887A;font-style:italic">尚無資料,請新增或貼上</td></tr>';
+  document.querySelectorAll('#gc_alkBody [data-rm]').forEach(b=>b.onclick=()=>{
+    stashRows(); getSet(editSetId).rows.splice(+b.dataset.rm,1); drawAlk()});
+}
+/* 把畫面上的輸入寫回目前組合(不排序,避免打字時跳動) */
+function stashRows(){
+  const st=getSet(editSetId); if(!st)return;
+  document.querySelectorAll('#gc_alkBody input').forEach(i=>{
+    const v=parseFloat(i.value); const r=st.rows[+i.dataset.i];
+    if(r)r[+i.dataset.c]=isFinite(v)?v:i.value;
+  });
+  st.name=document.getElementById('gc_setName').value.trim(); st.user=document.getElementById('gc_setUser').value.trim();
+  st.date=document.getElementById('gc_setDate').value; st.note=document.getElementById('gc_setNote').value.trim();
+}
+document.getElementById('gc_alkAdd').onclick=()=>{stashRows();getSet(editSetId).rows.push(['','']);drawAlk()};
+document.getElementById('gc_alkPaste').onclick=()=>{
+  const t=prompt('每列一筆,格式「碳數 RT」或「碳數,RT」(可直接從 Excel 複製兩欄貼上):');
+  if(!t)return; stashRows();
+  const rows=t.split(/\n/).map(l=>l.trim()).filter(Boolean).map(l=>{
+    const p=l.split(/[\s,;\t]+/).map(parseFloat); return [p[0],p[1]];
+  }).filter(r=>isFinite(r[0])&&isFinite(r[1]));
+  if(!rows.length)return toast('沒有解析到有效資料');
+  getSet(editSetId).rows=rows; drawAlk(); toast(`已載入 ${rows.length} 點`);
+};
+document.getElementById('gc_setNew').onclick=()=>{
+  stashRows();
+  const st={id:newId(),name:'新組合',user:'',date:new Date().toISOString().slice(0,10),note:'',
+            rows:DEFAULT_ROWS.map(r=>[r[0],r[1]])};
+  alkSets.push(st); editSetId=st.id; save(); drawAlk(); document.getElementById('gc_setName').select();
+};
+document.getElementById('gc_setDup').onclick=()=>{
+  stashRows(); const o=getSet(editSetId);
+  const st={id:newId(),name:(o.name||'組合')+' 複本',user:o.user,
+            date:new Date().toISOString().slice(0,10),note:o.note,rows:o.rows.map(r=>[r[0],r[1]])};
+  alkSets.push(st); editSetId=st.id; save(); drawAlk(); document.getElementById('gc_setName').select(); toast('已複製為新版本');
+};
+document.getElementById('gc_setDel').onclick=()=>{
+  if(alkSets.length<2)return toast('至少要保留一組');
+  const st=getSet(editSetId);
+  const used=samples.filter(x=>setOf(x).id===st.id).length;
+  if(!confirm(`刪除「${st.name}」?`+(used?`\n有 ${used} 個樣品使用中,會改回第一組。`:'')))return;
+  alkSets=alkSets.filter(a=>a.id!==st.id);
+  samples.forEach(x=>{if(x.alkSetId===st.id)x.alkSetId=alkSets[0].id});
+  editSetId=alkSets[0].id; save(); drawAlk(); renderMain(); toast('已刪除');
+};
+function commitSet(){
+  stashRows(); const st=getSet(editSetId);
+  st.rows=st.rows.filter(a=>isFinite(a[0])&&isFinite(a[1])).sort((x,y)=>x[1]-y[1]);
+  save(); return st;
+}
+document.getElementById('gc_alkSave').onclick=()=>{
+  const st=commitSet(); const s=samples.find(x=>x.id===cur);
+  if(s){s.alkSetId=st.id; save()}
+  document.getElementById('gc_pnAlk').classList.remove('on'); drawAlk(); renderMain();
+  toast(s?`已套用「${st.name}」到 ${s.name}`:'已儲存組合');
+};
+document.getElementById('gc_alkAll').onclick=()=>{
+  const st=commitSet();
+  if(!samples.length)return toast('尚無樣品');
+  if(!confirm(`把「${st.name}」套用到全部 ${samples.length} 個樣品?`))return;
+  samples.forEach(x=>x.alkSetId=st.id); save(); document.getElementById('gc_pnAlk').classList.remove('on'); renderMain();
+  toast(`已套用到 ${samples.length} 個樣品`);
+};
+let dbFilter='', dbFlash=null;
+function drawDb(){
+  document.getElementById('gc_tolShow').textContent=kiTol;
+  document.getElementById('gc_dbTol').value=kiTol;
+  const q=dbFilter.trim().toLowerCase();
+  const sorted=kidb.slice().sort((a,c)=>a[1]-c[1]);
+  const view=q?sorted.filter(d=>d[0].toLowerCase().includes(q)||String(d[1]).includes(q)):sorted;
+  document.getElementById('gc_dbCount').textContent=q?`${view.length} / ${kidb.length} 筆`:`${kidb.length} 筆`;
+  const b=document.getElementById('gc_dbBody');
+  b.innerHTML=view.map(d=>
+    `<tr class="${d[0]===dbFlash?'new':''}" data-key="${esc(d[0])}">
+      <td><input value="${esc(d[0])}" data-f="n"></td>
+      <td><input value="${d[1]}" data-f="v" type="number"></td>
+      <td><button class="tbtn" data-rm="${esc(d[0])}" style="padding:3px 7px">×</button></td></tr>`).join('')
+    ||'<tr><td colspan="3" style="padding:14px;color:#8C887A;font-style:italic">沒有符合的化合物</td></tr>';
+  b.querySelectorAll('[data-rm]').forEach(x=>x.onclick=()=>{
+    kidb=kidb.filter(d=>d[0]!==x.dataset.rm); save(); drawDb(); toast('已刪除');});
+  b.querySelectorAll('input').forEach(inp=>inp.onchange=()=>{
+    const key=inp.closest('tr').dataset.key;
+    const rec=kidb.find(d=>d[0]===key); if(!rec)return;
+    if(inp.dataset.f==='n'){const v=inp.value.trim(); if(v)rec[0]=v}
+    else {const v=parseFloat(inp.value); if(isFinite(v))rec[1]=v}
+    save(); drawDb();
+  });
+  if(dbFlash){const el=b.querySelector('tr.new'); if(el)el.scrollIntoView({block:'center'}); dbFlash=null}
+}
+function dbAddEntry(){
+  const nEl=document.getElementById('gc_dbNewName'), kEl=document.getElementById('gc_dbNewKi');
+  const name=nEl.value.trim(), ki=parseFloat(kEl.value);
+  if(!name) return toast('請輸入化合物名稱');
+  if(!isFinite(ki)) return toast('請輸入 KI 數值');
+  const i=kidb.findIndex(d=>d[0].toLowerCase()===name.toLowerCase());
+  if(i>=0){kidb[i][1]=ki; dbFlash=kidb[i][0]; toast(`已更新 ${name} → KI ${ki}`)}
+  else {kidb.push([name,ki]); dbFlash=name; toast(`已新增 ${name}(KI ${ki})`)}
+  nEl.value=''; kEl.value=''; nEl.focus();
+  save(); drawDb();
+}
+document.getElementById('gc_dbTol').onchange=e=>{kiTol=parseInt(e.target.value)||20;save();document.getElementById('gc_tolShow').textContent=kiTol};
+document.getElementById('gc_dbAdd').onclick=dbAddEntry;
+['gc_dbNewName','gc_dbNewKi'].forEach(id=>document.getElementById(id).onkeydown=e=>{
+  if(e.key==='Enter'){e.preventDefault(); dbAddEntry()}});
+document.getElementById('gc_dbSearch').oninput=e=>{dbFilter=e.target.value; drawDb()};
+document.getElementById('gc_dbReset').onclick=()=>{
+  if(!confirm('還原成內建的 80 筆?你手動新增的會消失。'))return;
+  kidb=DB_DEFAULT.map(d=>[d[0],d[1]]); save(); drawDb(); toast('已還原內建清單')};
+
+/* ---------- 待審核佇列 ---------- */
+function drawPd(){
+  document.getElementById('gc_pdBadge').textContent=pending.filter(x=>x.status==='pending').length;
+  document.getElementById('gc_pdMe').value=me;
+  document.getElementById('gc_pdAdmin').checked=isAdmin;
+  const list=document.getElementById('gc_pdList');
+  const items=pending.slice().sort((a,b)=>(a.status==='pending'?-1:1)-(b.status==='pending'?-1:1)||b.at.localeCompare(a.at));
+  if(!items.length){list.innerHTML='<div class="none" style="padding:16px 2px;color:var(--gc-ink-3);font-style:italic">目前沒有提案。在成分表的 Compound 欄找不到候選時,可從下拉選單新增。</div>';return}
+  list.innerHTML=items.map(x=>`<div class="pd-item ${x.status!=='pending'?'done':''}" data-id="${x.id}">
+    <span class="nm">${esc(x.name)}</span><span class="ki">KI ${x.ki}</span>
+    <span class="mt">${esc(x.by)} · ${x.at}${x.sample?' · '+esc(x.sample):''}${x.rt?' · RT '+x.rt.toFixed(3):''}</span>
+    <span class="sp"></span>
+    ${x.status==='pending'
+      ? (isAdmin?`<button class="ok" data-ok="${x.id}">核准</button><button class="no" data-no="${x.id}">退回</button>`
+               :`<span class="mt">待管理員審核</span>`)
+      : `<span class="mt">${x.status==='approved'?'已核准 ✓':'已退回'}${x.byAdmin?' · '+esc(x.byAdmin):''}</span>
+         <button class="no" data-rm="${x.id}">移除</button>`}
+  </div>`).join('');
+  list.querySelectorAll('[data-ok]').forEach(b=>b.onclick=()=>{
+    const x=pending.find(v=>v.id===b.dataset.ok);
+    const i=kidb.findIndex(d=>d[0].toLowerCase()===x.name.toLowerCase());
+    if(i>=0)kidb[i][1]=x.ki; else kidb.push([x.name,x.ki]);
+    x.status='approved'; x.byAdmin=me||'(管理員)';
+    save(); drawPd(); drawDb(); toast(`已核准「${x.name}」並加入資料庫`);
+  });
+  list.querySelectorAll('[data-no]').forEach(b=>b.onclick=()=>{
+    const x=pending.find(v=>v.id===b.dataset.no);
+    x.status='rejected'; x.byAdmin=me||'(管理員)'; save(); drawPd(); toast(`已退回「${x.name}」`);
+  });
+  list.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{
+    pending=pending.filter(v=>v.id!==b.dataset.rm); save(); drawPd();
+  });
+}
+document.getElementById('gc_tabDb').onclick=()=>{
+  document.getElementById('gc_tabDb').classList.add('on'); document.getElementById('gc_tabPd').classList.remove('on');
+  document.getElementById('gc_paneDb').style.display=''; document.getElementById('gc_panePd').style.display='none'; drawDb();};
+document.getElementById('gc_tabPd').onclick=()=>{
+  document.getElementById('gc_tabPd').classList.add('on'); document.getElementById('gc_tabDb').classList.remove('on');
+  document.getElementById('gc_panePd').style.display=''; document.getElementById('gc_paneDb').style.display='none'; drawPd();};
+document.getElementById('gc_pdMe').oninput=e=>{me=e.target.value.trim();save()};
+document.getElementById('gc_pdAdmin').onchange=e=>{isAdmin=e.target.checked;save();drawPd()};
+document.getElementById('gc_pdExport').onclick=()=>{
+  const p=pending.filter(x=>x.status==='pending');
+  if(!p.length)return toast('沒有待審提案');
+  dl('ki_proposals.csv','name,ki,by,at,sample,rt\n'+
+    p.map(x=>`"${x.name}",${x.ki},"${x.by}","${x.at}","${x.sample||''}",${x.rt||''}`).join('\n'));
+  toast(`已匯出 ${p.length} 筆提案`);
+};
+document.getElementById('gc_pdImport').onclick=()=>document.getElementById('gc_pdFile').click();
+document.getElementById('gc_pdFile').onchange=e=>{const f=e.target.files[0];if(!f)return;
+  const r=new FileReader(); r.onload=()=>{
+    const rows=r.result.split(/\r?\n/).slice(1).map(l=>l.match(/("[^"]*"|[^,]*)/g)||[]).filter(p=>p.length>=2);
+    let n=0;
+    rows.forEach(p=>{
+      const q=v=>String(v||'').replace(/^"|"$/g,'').trim();
+      const name=q(p[0]), ki=parseFloat(p[1]);
+      if(!name||!isFinite(ki))return;
+      if(kidb.some(d=>d[0].toLowerCase()===name.toLowerCase()))return;
+      if(pending.some(x=>x.status==='pending'&&x.name.toLowerCase()===name.toLowerCase()))return;
+      pending.push({id:'p'+Date.now().toString(36)+n,name,ki,status:'pending',
+        by:q(p[2])||'(匯入)',at:q(p[3])||new Date().toISOString().slice(0,16).replace('T',' '),
+        sample:q(p[4]),rt:parseFloat(p[5])||null}); n++;
+    });
+    save(); drawPd(); toast(`已匯入 ${n} 筆提案`);
+  }; r.readAsText(f); e.target.value='';
+};
+document.getElementById('gc_dbExport').onclick=()=>dl('ki_database.csv',
+  'name,ki\n'+kidb.map(d=>`"${d[0]}",${d[1]}`).join('\n'));
+document.getElementById('gc_dbImport').onclick=()=>document.getElementById('gc_dbFile').click();
+document.getElementById('gc_dbFile').onchange=e=>{const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();r.onload=()=>{
+    const rows=r.result.split(/\r?\n/).slice(1).map(l=>l.split(',')).filter(p=>p.length>=2);
+    let n=0; rows.forEach(p=>{const nm=p[0].replace(/^"|"$/g,'').trim(),v=parseFloat(p[1]);
+      if(nm&&isFinite(v)){const i=kidb.findIndex(d=>d[0]===nm); if(i>=0)kidb[i][1]=v; else kidb.push([nm,v]); n++}});
+    save();drawDb();toast(`已匯入 ${n} 筆`)};
+  r.readAsText(f)};
+
+/* =========================================================
+   載入 / 匯出
+   ========================================================= */
+const drop=document.getElementById('gc_drop'), fileIn=document.getElementById('gc_file');
+drop.onclick=()=>fileIn.click();
+drop.ondragover=e=>{e.preventDefault();drop.classList.add('over')};
+drop.ondragleave=()=>drop.classList.remove('over');
+drop.ondrop=e=>{e.preventDefault();drop.classList.remove('over');load(e.dataTransfer.files)};
+fileIn.onchange=e=>load(e.target.files);
+function load(fl){
+  let n=0;
+  [...fl].forEach(f=>{const r=new FileReader();
+    r.onload=()=>{ try{ const s=parseCSV(r.result,f.name); samples.push(s); cur=s.id; n++;
+        save();renderRail();renderMain(); toast(`已載入 ${f.name}`);
+      }catch(err){ toast(`${f.name}:${err.message}`) } };
+    r.readAsText(f)});
+}
+document.querySelectorAll('.ctl input').forEach(i=>i.onchange=()=>{
+  params={rtMin:+document.getElementById('gc_pRtMin').value,rtMax:+document.getElementById('gc_pRtMax').value,minPct:+document.getElementById('gc_pMinPct').value,prom:+document.getElementById('gc_pProm').value,bleed:+document.getElementById('gc_pBleed').value};
+  save();renderMain()});
+
+document.getElementById('gc_bCsv').onclick=()=>{
+  const s=samples.find(x=>x.id===cur); if(!s)return toast('先載入樣品');
+  const rows=[['Peak','Compound','RT','KI','rKI','Area_pct','Identification']];
+  const AS=setOf(s);
+  activePeaks(s).forEach(p=>{const k=p.rt.toFixed(3),e=s.edits[k]||{};
+    rows.push([p.no,`"${e.cmp||''}"`,p.rt.toFixed(3),calcKI(p.rt,AS)??'',e.rki||'',p.pct.toFixed(2),`"${e.id??'MS,KI'}"`])});
+  dl(`peaks_${s.name}.csv`,rows.map(r=>r.join(',')).join('\n'));
+};
+/* 複製成分表(Peak # → Identification),HTML 格式貼進 PPT/Word 會保留表格 */
+function buildTable(){
+  const s=samples.find(x=>x.id===cur); if(!s)return null;
+  const AS=setOf(s), heads=['Peak #','Compound','Retention time (min)','KI','rKI','Area(%)','Identification'];
+  const rows=activePeaks(s).map(p=>{
+    const k=p.rt.toFixed(3), e=s.edits[k]||{};
+    return [p.no, e.cmp||'', p.rt.toFixed(3), calcKI(p.rt,AS)??'', e.rki||'', p.pct.toFixed(2), identText(e)];
+  });
+  const F='font-family:Times New Roman,serif;font-size:11pt';
+  const html=`<table style="border-collapse:collapse;${F}">
+    <thead><tr>${heads.map(h=>`<th style="${F};font-weight:normal;padding:4px 8px;border-top:1.5pt solid #000;border-bottom:0.75pt solid #000;text-align:center">${esc(h)}</th>`).join('')}</tr></thead>
+    <tbody>${rows.map((r,i)=>`<tr>${r.map(c=>`<td style="${F};padding:3px 8px;text-align:center${i===rows.length-1?';border-bottom:1.5pt solid #000':''}">${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+  const text=[heads.join('\t'),...rows.map(r=>r.join('\t'))].join('\n');
+  return {html,text,n:rows.length};
+}
+document.getElementById('gc_bCopy').onclick=async()=>{
+  const t=buildTable(); if(!t)return toast('先載入樣品');
+  try{
+    if(navigator.clipboard&&window.ClipboardItem){
+      await navigator.clipboard.write([new ClipboardItem({
+        'text/html':new Blob([t.html],{type:'text/html'}),
+        'text/plain':new Blob([t.text],{type:'text/plain'})})]);
+      return toast(`已複製 ${t.n} 列(可直接貼到 PPT)`);
+    }
+  }catch(e){}
+  // 後備:選取隱藏節點再 execCommand
+  const d=document.createElement('div');
+  d.style.cssText='position:fixed;left:-99999px;top:0;opacity:0';
+  d.innerHTML=t.html; document.body.appendChild(d);
+  const r=document.createRange(); r.selectNodeContents(d);
+  const sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+  let ok=false; try{ok=document.execCommand('copy')}catch(e){}
+  sel.removeAllRanges(); d.remove();
+  toast(ok?`已複製 ${t.n} 列(可直接貼到 PPT)`:'複製失敗,請改用匯出 CSV');
+};
+document.getElementById('gc_bPng').onclick=()=>{
+  const s=samples.find(x=>x.id===cur); if(!s)return toast('先載入樣品');
+  const svg=document.getElementById('gc_svg'); const xml=new XMLSerializer().serializeToString(svg);
+  const img=new Image(); const SC=2.4;
+  img.onload=()=>{const c=document.createElement('canvas');c.width=1200*SC;c.height=350*SC;
+    const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);
+    x.drawImage(img,0,0,c.width,c.height);
+    c.toBlob(b=>{const u=URL.createObjectURL(b);const a=document.createElement('a');
+      a.href=u;a.download=`TIC_${s.name}.png`;a.click();URL.revokeObjectURL(u)})};
+  img.src='data:image/svg+xml;base64,'+btoa(unescape(encodeURIComponent(xml)));
+};
+function dl(name,txt){const b=new Blob([txt],{type:'text/csv;charset=utf-8'});const u=URL.createObjectURL(b);
+  const a=document.createElement('a');a.href=u;a.download=name;a.click();URL.revokeObjectURL(u)}
+function toast(t){const e=document.getElementById('gc_toast');e.textContent=t;e.classList.add('on');
+  clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),2000)}
+
+/* init */
+document.getElementById('gc_pRtMin').value=params.rtMin;document.getElementById('gc_pRtMax').value=params.rtMax;document.getElementById('gc_pMinPct').value=params.minPct;
+document.getElementById('gc_pProm').value=params.prom;document.getElementById('gc_pBleed').value=params.bleed;
+if(!samples.find(x=>x.id===cur))cur=samples[0]?.id||null;
+renderRail();renderMain();
+
+  } // __gcmsBody
+})();
+
 
 let realtimeUnsubscribers = [];
 function snapshotItems(snap){ return snap.docs.map(d=>({ ...d.data(), _doc_id:d.id })); }
