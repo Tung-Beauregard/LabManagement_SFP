@@ -664,6 +664,84 @@
   html[data-theme="night"] .im-card-photo,
   html[data-theme="night"] .thumb{filter:brightness(.9);}
   html[data-theme="night"] .skeleton-row{opacity:.7;}
+  /* ============ 圖譜分析 ============ */
+  .sp-tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:16px;flex-wrap:wrap;}
+  .sp-tab{background:none;border:none;border-bottom:2px solid transparent;padding:9px 16px;font-size:13.5px;font-weight:600;color:var(--ink-soft);cursor:pointer;font-family:var(--sans);margin-bottom:-1px;}
+  .sp-tab:hover{color:var(--ink);}
+  .sp-tab.active{color:var(--pine);border-bottom-color:var(--pine);}
+  html[data-theme="night"] .sp-tab.active{color:var(--pine-deep);border-bottom-color:var(--pine-deep);}
+  .sp-panel{display:none;}
+  .sp-panel.active{display:block;}
+  .sp-placeholder{border:1.5px dashed var(--line);border-radius:var(--radius);padding:48px 20px;text-align:center;color:var(--ink-soft);}
+  .sp-ph-icon{font-size:38px;margin-bottom:10px;opacity:.7;}
+  .sp-placeholder b{display:block;font-size:15px;color:var(--ink);margin-bottom:6px;}
+  .sp-placeholder span{font-size:12.5px;}
+
+  .ftir-grid{display:grid;grid-template-columns:300px 1fr;gap:16px;align-items:start;}
+  .ftir-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px;}
+  .ftir-card+.ftir-card{margin-top:12px;}
+  .ftir-card h3{font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:var(--ink-soft);margin:0 0 11px;font-weight:700;display:flex;align-items:center;gap:8px;}
+  .ftir-card h3 .cnt{margin-left:auto;font-weight:600;color:var(--pine);}
+  .ftir-drop{border:1.5px dashed var(--line);border-radius:var(--radius-sm);background:var(--panel-soft);padding:15px 12px;text-align:center;cursor:pointer;transition:.15s;color:var(--ink-soft);}
+  .ftir-drop:hover,.ftir-drop.over{border-color:var(--pine);background:var(--tint);color:var(--pine);}
+  .ftir-drop strong{color:var(--ink);display:block;font-size:13px;margin-bottom:2px;}
+  .ftir-drop small{font-family:var(--mono);font-size:10.5px;}
+  .ftir-lib{margin-top:10px;display:flex;flex-direction:column;gap:3px;max-height:230px;overflow:auto;}
+  .ftir-lib:empty::after{content:"尚無光譜";color:var(--ink-soft);font-size:12px;padding:6px 2px;}
+  .ftir-row{display:flex;align-items:center;gap:8px;padding:6px 7px;border-radius:var(--radius-sm);border:1px solid transparent;font-size:12.5px;}
+  .ftir-row:hover{background:var(--panel-soft);}
+  .ftir-row.sel{background:var(--tint);border-color:var(--pine);}
+  .ftir-row input[type=checkbox]{width:15px;height:15px;flex:none;}
+  .ftir-row .swatch{width:11px;height:11px;border-radius:3px;flex:none;}
+  .ftir-row .nm{flex:1;font-family:var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;}
+  .ftir-row .rm{color:var(--ink-soft);padding:0 4px;border-radius:4px;cursor:pointer;}
+  .ftir-row .rm:hover{background:var(--panel);color:var(--danger);}
+  .ftir-row .mv{color:var(--ink-soft);cursor:pointer;font-size:9px;padding:0 2px;line-height:1;}
+  .ftir-row .mv:hover{color:var(--pine);}
+  .ftir-libtools{display:flex;gap:7px;margin-top:9px;}
+  .ftir-hint{font-size:11px;color:var(--ink-soft);line-height:1.55;margin-top:8px;}
+  .ftir-chk{display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:10px;}
+  .ftir-chk input{width:16px;height:16px;}
+  .ftir-seg{display:flex;border:1px solid var(--line);border-radius:var(--radius-sm);overflow:hidden;}
+  .ftir-seg button{flex:1;padding:7px 3px;border:0;background:var(--panel-soft);font-size:12px;cursor:pointer;color:var(--ink-soft);font-family:var(--sans);}
+  .ftir-seg button.on{background:var(--pine);color:var(--on-pine);}
+  .ftir-parambox{background:var(--panel-soft);border:1px solid var(--line);border-radius:var(--radius-sm);padding:11px;margin-top:9px;}
+  .ftir-parambox.hide{display:none;}
+  .ftir-rangerow{display:flex;align-items:center;gap:10px;}
+  .ftir-rangerow input[type=range]{flex:1;accent-color:var(--pine);}
+  .ftir-rangerow output{font-family:var(--mono);font-size:12px;min-width:40px;text-align:right;}
+  .ftir-btnrow{display:flex;gap:8px;flex-wrap:wrap;}
+  .ftir-btnrow .btn{flex:1;}
+  .ftir-plotcard{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px;}
+  .ftir-plotwrap{width:100%;overflow:auto;}
+  .ftir-plotwrap svg{display:block;width:100%;height:auto;background:#fff;font-family:"Times New Roman",Georgia,serif;border-radius:var(--radius-sm);}
+  .ftir-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:360px;color:var(--ink-soft);text-align:center;gap:8px;}
+  .ftir-empty svg{background:none;opacity:.5;}
+  #ftirTablewrap table,#galDetailBody table{width:100%;border-collapse:collapse;margin-top:14px;font-size:13px;}
+  #ftirTablewrap th,#ftirTablewrap td,#galDetailBody th,#galDetailBody td{text-align:left;padding:6px 9px;border-bottom:1px solid var(--line);}
+  #ftirTablewrap th,#galDetailBody th{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);font-weight:700;}
+  #ftirTablewrap td.num,#galDetailBody td.num{font-family:var(--mono);text-align:right;white-space:nowrap;}
+  #ftirTablewrap td.tag,#galDetailBody td.tag{font-family:var(--mono);}
+  #ftirTablewrap tbody tr,#galDetailBody tbody tr{cursor:pointer;}
+  #ftirTablewrap tbody tr:hover,#galDetailBody tbody tr:hover{background:var(--tint);}
+  #ftirTablewrap .note{font-size:11px;color:var(--ink-soft);line-height:1.55;margin-top:11px;}
+
+  /* 圖譜藝廊 */
+  .gal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;}
+  .gal-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:.12s;}
+  .gal-card:hover{border-color:var(--pine);box-shadow:var(--shadow-md);}
+  .gal-thumb{width:100%;height:150px;background:#fff;border-bottom:1px solid var(--line);overflow:hidden;display:flex;align-items:center;justify-content:center;}
+  .gal-thumb svg{width:100%;height:100%;object-fit:contain;}
+  .gal-meta{padding:10px 12px;}
+  .gal-meta .gt{font-size:13px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .gal-meta .gm{font-size:10.5px;color:var(--ink-soft);font-family:var(--mono);margin-top:3px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+  .gal-type{font-size:9.5px;padding:1px 6px;border-radius:var(--pill);background:var(--tint);color:var(--pine-deep);font-weight:700;font-family:var(--sans);text-transform:uppercase;letter-spacing:.05em;}
+  #galDetailBody .gd-svg{width:100%;background:#fff;border:1px solid var(--line);border-radius:var(--radius-sm);overflow:auto;}
+  #galDetailBody .gd-svg svg{display:block;width:100%;height:auto;}
+
+  @media(max-width:880px){
+    .ftir-grid{grid-template-columns:1fr;}
+  }
 </style>
 </head>
 <body>
@@ -780,7 +858,7 @@
       <button class="nav-item" data-page="instrumentUsageLog"><span class="ic">🔧</span> 儀器使用登記</button>
       <button class="nav-item" data-page="dutyRoster"><span class="ic">🧹</span> 值週生</button>
       <button class="nav-item" data-page="todoList"><span class="ic">✅</span> 待辦事項</button>
-      <button class="nav-item" data-page="instrumentManual"><span class="ic">📖</span> 儀器使用步驟</button>
+      <button class="nav-item" data-page="instrumentManual"><span class="ic">📖</span> 儀器使用步驟</button><button class="nav-item" id="navSpectra" data-page="spectra"><span class="ic">📈</span> 圖譜分析</button><button class="nav-item" id="navSpectraGallery" data-page="spectraGallery"><span class="ic">🖼️</span> 圖譜</button>
       <button class="nav-item" data-page="chemPurchase"><span class="ic">🛒</span> 採買及報修</button>
       <div style="flex:1;"></div>
       <button class="nav-item" id="navSoftwareBackup" data-page="softwareBackup" style="display:none;"><span class="ic">💾</span> 軟體備份</button>
@@ -1237,6 +1315,144 @@
       </div>
       <div id="imGrid"></div>
     </section>
+
+    <!-- ============ 圖譜分析 ============ -->
+    <section class="page" id="page-spectra">
+      <div class="hdr">
+        <div><h1>圖譜分析</h1><div class="sub">SPECTRA ANALYSIS</div></div>
+      </div>
+      <div class="sp-tabs" id="spTabs">
+        <button class="sp-tab" data-sp="lc">LC</button>
+        <button class="sp-tab" data-sp="gc">GC</button>
+        <button class="sp-tab active" data-sp="ftir">FTIR</button>
+        <button class="sp-tab" data-sp="tga">TGA</button>
+        <button class="sp-tab" data-sp="dsc">DSC</button>
+      </div>
+
+      <!-- FTIR 完整工具 -->
+      <div class="sp-panel active" id="sp-ftir">
+        <div class="ftir-grid">
+          <div class="ftir-side">
+            <div class="ftir-card">
+              <h3>光譜庫<span class="cnt" id="ftirLibCount"></span></h3>
+              <div class="ftir-drop" id="ftirDrop">
+                <strong>拖曳或點擊上傳</strong>
+                <small>.asp 或 .spc,解析後可存入圖譜</small>
+              </div>
+              <input type="file" id="ftirFile" accept=".asp,.spc" multiple class="visually-hidden-file">
+              <div class="ftir-lib" id="ftirLib"></div>
+              <div class="ftir-libtools">
+                <button class="btn btn-ghost btn-sm" id="ftirSelAll">全選疊圖</button>
+                <button class="btn btn-ghost btn-sm" id="ftirClearSel">取消選取</button>
+                <button class="btn btn-ghost btn-sm" id="ftirWipe">清空暫存</button>
+              </div>
+              <div class="ftir-hint">勾選 1 條＝單譜;勾選 2 條以上＝自動位移疊圖比對。上傳的光譜只暫存在這台電腦,按「存入圖譜」才會上傳到全實驗室共用的圖譜庫。</div>
+            </div>
+
+            <div class="ftir-card">
+              <h3>標題與座標軸</h3>
+              <label class="ftir-chk"><input type="checkbox" id="ftirShowTitle" checked>顯示標題</label>
+              <div class="field" style="margin-bottom:10px;"><input type="text" id="ftirTitle" placeholder="輸入圖表標題"></div>
+              <label class="ftir-chk"><input type="checkbox" id="ftirShowAxisTitles" checked>顯示座標軸文字</label>
+              <label class="ftir-chk" style="margin-bottom:0;"><input type="checkbox" id="ftirShowTickLabels" checked>顯示刻度數字</label>
+            </div>
+
+            <div class="ftir-card">
+              <h3>圖例(疊圖時)</h3>
+              <label class="ftir-chk"><input type="checkbox" id="ftirShowLegend" checked>顯示圖例</label>
+              <div class="field" style="margin-bottom:10px;">
+                <select id="ftirLegendPos"><option value="tr">右上</option><option value="tl">左上</option><option value="br">右下</option><option value="bl">左下</option></select>
+              </div>
+              <label class="ftir-chk" style="margin-bottom:0;"><input type="checkbox" id="ftirLegendFrame">圖例外框</label>
+            </div>
+
+            <div class="ftir-card">
+              <h3>資料轉換</h3>
+              <div class="ftir-seg" id="ftirYmode">
+                <button data-v="abs" class="on">吸收度</button>
+                <button data-v="km">KM 轉換</button>
+                <button data-v="atr">ATR 校正</button>
+              </div>
+              <div class="ftir-parambox hide" id="ftirAtrBox">
+                <div class="field" style="margin:0;">
+                  <label style="font-size:12px;">ATR 校正參考波數 cm⁻¹</label>
+                  <input type="number" id="ftirAtrRef" value="2000" min="800" max="4000" step="100">
+                </div>
+                <div class="ftir-hint">A′ = A × 波數 / 參考波數,壓低被 ATR 放大的低波數帶。</div>
+              </div>
+              <div class="ftir-parambox hide" id="ftirKmBox">
+                <div class="ftir-hint">Kubelka–Munk:R = 10⁻ᴬ,F(R) = (1−R)² / 2R。適用漫反射(DRIFTS)。</div>
+              </div>
+            </div>
+
+            <div class="ftir-card">
+              <h3>找峰與標示</h3>
+              <div class="field"><label style="font-size:12px;">靈敏度(越低抓越多峰)</label>
+                <div class="ftir-rangerow"><input type="range" id="ftirProm" min="0.3" max="6" step="0.1" value="2"><output id="ftirPromOut">2.0%</output></div>
+              </div>
+              <div class="field"><label style="font-size:12px;">最多標示峰數</label>
+                <div class="ftir-rangerow"><input type="range" id="ftirTopn" min="5" max="40" step="1" value="14"><output id="ftirTopnOut">14</output></div>
+              </div>
+              <div class="field" style="margin-bottom:0;"><label style="font-size:12px;">標籤內容</label>
+                <div class="ftir-seg" id="ftirLabelmode"><button data-v="num" class="on">僅波數</button><button data-v="both">波數＋官能基</button></div>
+              </div>
+            </div>
+
+            <div class="ftir-card">
+              <h3>輸出</h3>
+              <div class="ftir-btnrow">
+                <button class="btn btn-primary btn-sm" id="ftirSave" disabled>存入圖譜</button>
+                <button class="btn btn-ghost btn-sm" id="ftirDlPng" disabled>PNG</button>
+                <button class="btn btn-ghost btn-sm" id="ftirDlSvg" disabled>SVG</button>
+                <button class="btn btn-ghost btn-sm" id="ftirDlCsv" disabled>峰表 CSV</button>
+              </div>
+              <div class="ftir-hint">「存入圖譜」會把目前這張圖與峰表存到全實驗室共用的「圖譜」頁;PNG 為 3× 高解析。</div>
+            </div>
+          </div>
+
+          <div class="ftir-main">
+            <div class="ftir-plotcard">
+              <div class="ftir-plotwrap" id="ftirPlotwrap">
+                <div class="ftir-empty" id="ftirEmpty">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="52" height="52"><path d="M3 3v18h18M7 15l3-4 3 3 4-6"/></svg>
+                  <div>上傳 .asp 或 .spc 光譜檔以開始</div>
+                </div>
+              </div>
+              <div id="ftirTablewrap"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 其餘四個佔位 -->
+      <div class="sp-panel" id="sp-lc"><div class="sp-placeholder"><div class="sp-ph-icon">🧪</div><b>LC 液相層析</b><span>這個模組還在規劃中,之後會加入資料上傳與圖譜分析。</span></div></div>
+      <div class="sp-panel" id="sp-gc"><div class="sp-placeholder"><div class="sp-ph-icon">🌫️</div><b>GC 氣相層析</b><span>這個模組還在規劃中,之後會加入資料上傳與圖譜分析。</span></div></div>
+      <div class="sp-panel" id="sp-tga"><div class="sp-placeholder"><div class="sp-ph-icon">🔥</div><b>TGA 熱重分析</b><span>這個模組還在規劃中,之後會加入資料上傳與圖譜分析。</span></div></div>
+      <div class="sp-panel" id="sp-dsc"><div class="sp-placeholder"><div class="sp-ph-icon">📉</div><b>DSC 示差掃描熱量</b><span>這個模組還在規劃中,之後會加入資料上傳與圖譜分析。</span></div></div>
+    </section>
+
+    <!-- ============ 圖譜(藝廊) ============ -->
+    <section class="page" id="page-spectraGallery">
+      <div class="hdr">
+        <div><h1>圖譜</h1><div class="sub">SAVED SPECTRA</div></div>
+      </div>
+      <div class="row" style="margin-bottom:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <input type="text" id="galSearch" placeholder="搜尋名稱 / 類型 / 綁定樣品" style="flex:1;min-width:180px;padding:8px 11px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--panel-soft);color:var(--ink);font-size:13px;">
+        <select id="galFilterType" style="padding:8px 11px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--panel-soft);color:var(--ink);font-size:13px;">
+          <option value="">所有類型</option><option value="ftir">FTIR</option><option value="lc">LC</option><option value="gc">GC</option><option value="tga">TGA</option><option value="dsc">DSC</option>
+        </select>
+      </div>
+      <div class="gal-grid" id="galGrid"></div>
+      <div class="slot-empty" id="galEmpty" style="display:none;">目前還沒有存入的圖譜。到「圖譜分析」做好圖後按「存入圖譜」即可。</div>
+    </section>
+
+    <!-- 圖譜詳細檢視 -->
+    <div class="overlay" id="galDetailOverlay">
+      <div class="modal" style="max-width:960px;">
+        <button class="close" id="galDetailClose">✕</button>
+        <div id="galDetailBody"></div>
+      </div>
+    </div>
 
     <!-- 新增儀器 -->
     <div class="overlay" id="imAddOverlay">
@@ -3352,6 +3568,8 @@ function switchPage(name){
   if(name==='adminTools') renderDutyAdminTools();
   if(name==='superAdminTools') renderSuperAdminTools();
   if(name==='library') renderLibraryAll();
+  if(name==='spectra') initFtirOnce();
+  if(name==='spectraGallery') renderGallery();
   closeDrawer();
 }
 /* 換頁時把還開著的詳細卡/表單一起收起來,避免彈窗蓋住新頁面造成畫面卡住 */
@@ -8120,6 +8338,444 @@ function renderDashboard(){
 }
 document.getElementById('navDashboard').addEventListener('click', renderDashboard);
 
+/* ===== 圖譜分析 + 圖譜藝廊(整合自 FTIR 工具) ===== */
+/* ==========================================================
+   圖譜分析(FTIR)＋ 圖譜藝廊
+   FTIR 核心演算法沿用原工具;資料層改接 Firestore
+   ========================================================== */
+
+/* ---- 子標籤切換 ---- */
+document.getElementById('spTabs').addEventListener('click', (e)=>{
+  const btn = e.target.closest('.sp-tab'); if(!btn) return;
+  const key = btn.dataset.sp;
+  document.querySelectorAll('#spTabs .sp-tab').forEach(b=>b.classList.toggle('active', b===btn));
+  document.querySelectorAll('#page-spectra .sp-panel').forEach(p=>p.classList.toggle('active', p.id==='sp-'+key));
+});
+
+/* ============ FTIR 讀檔 ============ */
+function ftirReadAsp(text){
+  const v=text.trim().split(/\s+/);const n=parseInt(v[0],10);
+  const first=parseFloat(v[1]),last=parseFloat(v[2]);
+  const y=v.slice(6,6+n).map(Number);
+  return {n,first,last,y};
+}
+function ftirReadSpc(buf){
+  const dv=new DataView(buf);const npts=dv.getUint32(4,true);
+  const first=dv.getFloat64(8,true),last=dv.getFloat64(16,true);
+  const y=new Array(npts);for(let i=0;i<npts;i++)y[i]=dv.getFloat32(544+i*4,true);
+  return {n:npts,first,last,y};
+}
+function ftirXAxis(s){const x=new Array(s.n);for(let i=0;i<s.n;i++)x[i]=s.first+(s.last-s.first)*i/(s.n-1);return x;}
+
+/* ============ 官能基對照 ============ */
+const FTIR_BANDS=[
+ [3200,3600,'O-H','O-H 伸縮，醇／酚／水',3],[3300,3500,'N-H','N-H 伸縮，胺或醯胺',2],
+ [3270,3310,'≡C-H','末端炔 ≡C-H 伸縮',2],[2500,3300,'COOH','羧酸 O-H，寬帶',1],
+ [3000,3100,'=C-H','烯／芳香 =C-H 伸縮',3],[2950,3000,'CH₃ as','CH₃ 反對稱伸縮',3],
+ [2915,2940,'CH₂ as','CH₂ 反對稱伸縮',3],[2860,2880,'CH₃ s','CH₃ 對稱伸縮',3],
+ [2840,2865,'CH₂ s','CH₂ 對稱伸縮',3],[2695,2830,'CHO','醛基 C-H，常見雙峰',2],
+ [2500,2600,'S-H','S-H 伸縮',2],[2200,2260,'C≡N','腈類 C≡N 伸縮',3],
+ [2100,2200,'C≡C','炔類 C≡C 伸縮',2],[1745,1765,'C=O 酯','酯類 C=O',3],
+ [1730,1750,'C=O 酯','飽和酯 C=O',3],[1720,1740,'C=O 醛','醛類 C=O',2],
+ [1700,1725,'C=O','酮／羧酸 C=O',3],[1680,1700,'C=O 共軛','共軛羰基',2],
+ [1630,1690,'醯胺 I','醯胺 I，C=O 伸縮',2],[1600,1680,'C=C','烯類 C=C 伸縮',2],
+ [1580,1620,'芳 C=C','芳香環骨架',2],[1540,1580,'COO⁻ as','羧酸鹽反對稱（皂化）',3],
+ [1515,1560,'醯胺 II','醯胺 II，N-H 彎曲',2],[1490,1520,'芳 C=C','芳香環骨架',2],
+ [1440,1480,'CH₂ 剪','CH₂ 剪式／CH₃ 反對稱彎曲',3],[1395,1440,'COO⁻ s','羧酸鹽對稱／O-H 面內彎曲',2],
+ [1365,1395,'CH₃ 彎','CH₃ 對稱彎曲',2],[1310,1365,'C-N','C-N 伸縮或酚 O-H 彎曲',1],
+ [1250,1310,'C-O','酯／芳醚 C-O，芳香胺 C-N',2],[1200,1255,'C-O-C','芳基烷基醚，酚 C-O',2],
+ [1150,1205,'C-O','二級醇或酯 C-O',2],[1050,1150,'C-O-C','醚／一級醇 C-O，糖苷鍵',2],
+ [1000,1060,'C-O','一級醇 C-O',2],[960,1000,'trans C-H','trans 雙鍵面外彎曲（共軛三烯）',3],
+ [880,925,'=CH₂','端烯 =CH₂ 面外彎曲',2],[855,885,'芳 H','芳香孤立氫面外彎曲',2],
+ [800,860,'芳 2H','對位取代芳香，或 C-Cl',2],[735,790,'芳 3H','間位取代芳香面外彎曲',2],
+ [715,740,'(CH₂)ₙ','CH₂ 搖擺，長碳鏈',3],[690,715,'單取代芳','單取代芳香，或 cis C-H',2],
+];
+function ftirAssign(wn){
+  const h=FTIR_BANDS.filter(b=>wn>=b[0]&&wn<=b[1]);
+  if(!h.length)return{tag:'',full:'未列於對照表'};
+  h.sort((a,b)=>(b[4]-a[4])||((a[1]-a[0])-(b[1]-b[0])));
+  const p=h[0],ex=h.slice(1).filter(z=>(z[1]-z[0])<=250).slice(0,1);
+  return{tag:p[2],full:[p[3]].concat(ex.map(z=>z[3])).join('  /  ')};
+}
+const FTIR_PLAIN={'₂':'2','₃':'3','ₙ':'n','⁻':'-','≡':'#'};
+const ftirPlain=s=>s.replace(/[₂₃ₙ⁻≡]/g,c=>FTIR_PLAIN[c]);
+
+/* ============ 轉換 ============ */
+function ftirTransform(x,y,mode,atrRef){
+  if(mode==='km') return y.map(A=>{const R=Math.min(1,Math.max(1e-3,Math.pow(10,-A)));return (1-R)*(1-R)/(2*R);});
+  if(mode==='atr') return y.map((A,i)=>A*x[i]/atrRef);
+  return y.slice();
+}
+const FTIR_YLABEL={abs:'Absorbance',km:'Kubelka\u2013Munk F(R)',atr:'Absorbance (ATR corrected)'};
+
+/* ============ 找峰 ============ */
+function ftirSavgol9(y){const c=[-21,14,39,54,59,54,39,14,-21],half=4,n=y.length,o=new Array(n);
+ for(let i=0;i<n;i++){let s=0,w=0;for(let k=-half;k<=half;k++){const j=i+k;if(j<0||j>=n)continue;s+=c[k+half]*y[j];w+=c[k+half];}o[i]=s/w;}return o;}
+function ftirProm(y,i){const h=y[i];let lm=h,j=i-1;while(j>=0&&y[j]<h){if(y[j]<lm)lm=y[j];j--;}
+ let rm=h;j=i+1;while(j<y.length&&y[j]<h){if(y[j]<rm)rm=y[j];j++;}return h-Math.max(lm,rm);}
+function ftirDetect(x,y,promFrac,topN){
+  const ys=ftirSavgol9(y);let mn=Infinity,mx=-Infinity;for(const v of ys){if(v<mn)mn=v;if(v>mx)mx=v;}
+  const minP=promFrac*(mx-mn);let pk=[];
+  for(let i=1;i<ys.length-1;i++)if(ys[i]>ys[i-1]&&ys[i]>=ys[i+1]){const p=ftirProm(ys,i);if(p>=minP)pk.push({i,p});}
+  if(topN&&pk.length>topN){pk.sort((a,b)=>b.p-a.p);pk=pk.slice(0,topN);}
+  pk.sort((a,b)=>x[b.i]-x[a.i]);
+  return pk.map(o=>({wn:x[o.i],abs:y[o.i]}));
+}
+
+/* ============ 繪圖 ============ */
+const FTIR_COLORS=['#1746c8','#c0392b','#127a4a','#8e44ad','#d35400'];
+function ftirNiceTicks(min,max,count){
+  const span=max-min,raw=span/count,mag=Math.pow(10,Math.floor(Math.log10(raw)));
+  const nrm=raw/mag,step=(nrm<1.5?1:nrm<3?2:nrm<7?5:10)*mag,t=[];
+  for(let v=Math.ceil(min/step)*step;v<=max+1e-9;v+=step)t.push(+v.toFixed(10));return t;
+}
+const ftirEscXml=s=>String(s).replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
+
+function ftirBuildSVG(spec){
+  const {traces,title,ylabel,labelMode,decimals,legend,showAxisTitles,showTickLabels,guides}=spec;
+  const m={l:22+(showTickLabels?30:0)+(showAxisTitles?18:0),r:22,t:(title?46:0)+16,b:16+(showTickLabels?22:0)+(showAxisTitles?20:0)};
+  const W=920, H=(title?520:494);
+  const pw=W-m.l-m.r, ph=H-m.t-m.b;
+  const XMAX=4000,XMIN=Math.min(...traces.map(t=>t.xmin),650);
+  let offset=0,gap=0.06,maxSingle=0;
+  for(const t of traces){
+    let ymn=Infinity,ymx=-Infinity;for(const v of t.y){if(v<ymn)ymn=v;if(v>ymx)ymx=v;}
+    t._base=offset;t._min=ymn;t._max=ymx;maxSingle=Math.max(maxSingle,ymx-ymn);offset+=(ymx-ymn)+gap;
+  }
+  const single=traces.length===1;
+  const yLo=single?(traces[0]._min-0.04*maxSingle):-0.03;
+  const yHi=single?(traces[0]._min+maxSingle*(labelMode==='both'?1.5:1.34)):(offset+0.18*maxSingle);
+  const X=wn=>m.l+(XMAX-wn)/(XMAX-XMIN)*pw;
+  const Y=a=>m.t+(yHi-a)/(yHi-yLo)*ph;
+  const S=[`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`];
+  S.push(`<rect width="${W}" height="${H}" fill="#fff"/>`);
+  for(let wn=4000;wn>=Math.ceil(XMIN/100)*100;wn-=100){
+    if(wn>XMAX)continue;const px=X(wn),M=(wn%500===0);
+    S.push(`<line x1="${px.toFixed(1)}" y1="${m.t+ph}" x2="${px.toFixed(1)}" y2="${(m.t+ph-(M?7:4)).toFixed(1)}" stroke="#111" stroke-width="1"/>`);
+    if(M&&showTickLabels)S.push(`<text x="${px.toFixed(1)}" y="${m.t+ph+18}" font-size="13" text-anchor="middle" fill="#111">${wn}</text>`);
+  }
+  const yt=ftirNiceTicks(yLo,yHi,7),ytm=ftirNiceTicks(yLo,yHi,14);
+  for(const v of ytm){if(v<yLo-1e-9||v>yHi+1e-9)continue;const py=Y(v),M=yt.some(t=>Math.abs(t-v)<1e-9);
+    S.push(`<line x1="${m.l}" y1="${py.toFixed(1)}" x2="${(m.l+(M?7:4)).toFixed(1)}" y2="${py.toFixed(1)}" stroke="#111" stroke-width="1"/>`);
+    if(M&&showTickLabels)S.push(`<text x="${m.l-9}" y="${(py+4).toFixed(1)}" font-size="12" text-anchor="end" fill="#111">${v.toFixed(2)}</text>`);}
+  (guides||[]).forEach(wn=>{
+    if(wn>XMAX||wn<XMIN)return;const px=X(wn);
+    S.push(`<line x1="${px.toFixed(1)}" y1="${m.t}" x2="${px.toFixed(1)}" y2="${m.t+ph}" stroke="#333" stroke-width="0.9" stroke-dasharray="5 3" opacity="0.75"/>`);
+    S.push(`<text x="${px.toFixed(1)}" y="${(m.t+11).toFixed(1)}" font-size="10" text-anchor="middle" fill="#333">${wn.toFixed(0)}</text>`);
+  });
+  const markers=[];
+  traces.forEach((t,ti)=>{
+    const c=FTIR_COLORS[ti%FTIR_COLORS.length];
+    let d='';for(let i=0;i<t.x.length;i++){if(t.x[i]>XMAX||t.x[i]<XMIN)continue;
+      const yy=t.y[i]-t._min+t._base;d+=(d?'L':'M')+X(t.x[i]).toFixed(2)+' '+Y(yy).toFixed(2)+' ';}
+    S.push(`<path d="${d}" fill="none" stroke="${c}" stroke-width="1.05" stroke-linejoin="round"/>`);
+    t.peaks.forEach((p,k)=>{
+      const yy=p.abs-t._min+t._base,px=X(p.wn),py=Y(yy);
+      let lab=p.wn.toFixed(decimals);
+      if(labelMode==='both'){const tg=ftirAssign(p.wn).tag;if(tg)lab+=' '+ftirPlain(tg);}
+      const lift=maxSingle*(0.03+0.05*(k%3)),ly=Y(yy+lift);
+      const pinned=(guides||[]).some(g=>Math.abs(g-p.wn)<0.51);
+      S.push(`<text class="pk" data-wn="${p.wn.toFixed(2)}" style="cursor:pointer" x="${px.toFixed(1)}" y="${ly.toFixed(1)}" font-size="9.5" font-weight="${pinned?'700':'400'}" fill="${c}" text-anchor="start" transform="rotate(-90 ${px.toFixed(1)} ${ly.toFixed(1)})">${lab}</text>`);
+      markers.push({px,py,ti});
+    });
+  });
+  S.push(`<g id="ftirHl"></g>`);
+  if(legend.show && traces.length>1){
+    const rows=traces.map((t,i)=>({c:FTIR_COLORS[i%FTIR_COLORS.length],name:t.name})).slice().reverse();
+    const lh=17,padx=10,pady=8,tw=Math.max(...rows.map(r=>r.name.length))*6.6+34;
+    const bw=tw,bh=rows.length*lh+pady*2;
+    let lx,ly;const pos=legend.pos;
+    lx=pos.includes('l')?m.l+12:m.l+pw-bw-12;
+    ly=pos.includes('t')?m.t+10:m.t+ph-bh-10;
+    if(legend.frame)S.push(`<rect x="${lx}" y="${ly}" width="${bw}" height="${bh}" fill="#fff" stroke="#999" stroke-width="0.8" rx="4"/>`);
+    rows.forEach((r,i)=>{const yy=ly+pady+lh*i+lh/2;
+      S.push(`<line x1="${lx+padx}" y1="${yy}" x2="${lx+padx+20}" y2="${yy}" stroke="${r.c}" stroke-width="2"/>`);
+      S.push(`<text x="${lx+padx+26}" y="${yy+4}" font-size="11.5" fill="#111">${ftirEscXml(r.name)}</text>`);});
+  }
+  S.push(`<rect x="${m.l}" y="${m.t}" width="${pw}" height="${ph}" fill="none" stroke="#111" stroke-width="1.1"/>`);
+  if(showAxisTitles){
+    S.push(`<text x="${m.l+pw/2}" y="${H-13}" font-size="14" text-anchor="middle" fill="#111">Wavenumber (cm<tspan dy="-5" font-size="10">-1</tspan><tspan dy="5">)</tspan></text>`);
+    S.push(`<text x="15" y="${m.t+ph/2}" font-size="14" text-anchor="middle" fill="#111" transform="rotate(-90 15 ${m.t+ph/2})">${ftirEscXml(ylabel)}</text>`);
+  }
+  if(title)S.push(`<text x="${m.l+pw/2}" y="26" font-size="16" text-anchor="middle" fill="#111">${ftirEscXml(title)}</text>`);
+  S.push(`</svg>`);
+  return {svg:S.join(''),markers,geom:{m,ph}};
+}
+
+/* ============ FTIR 狀態 ============ */
+let FTIR_LIB=[];   // {id,name,n,first,last,y} 僅暫存本機記憶體
+const ftirState={sel:[],ymode:'abs',atrRef:2000,prom:0.02,topN:14,
+  labelMode:'num',decimals:2,showTitle:true,title:'',
+  showAxisTitles:true,showTickLabels:true,guides:[],
+  legend:{show:true,pos:'tr',frame:false}};
+let ftirCurrent=null;
+let ftirInited=false;
+const fq=s=>document.querySelector(s);
+
+function initFtirOnce(){
+  if(ftirInited) return;
+  ftirInited=true;
+  const drop=fq('#ftirDrop'),fileInput=fq('#ftirFile');
+  drop.onclick=()=>fileInput.click();
+  ['dragover','dragenter'].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault();drop.classList.add('over');}));
+  ['dragleave','drop'].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault();drop.classList.remove('over');}));
+  drop.addEventListener('drop',ev=>ftirHandleFiles(ev.dataTransfer.files));
+  fileInput.onchange=()=>{ftirHandleFiles(fileInput.files);fileInput.value='';};
+
+  fq('#ftirSelAll').onclick=()=>{ftirState.sel=FTIR_LIB.map(x=>x.id);ftirRenderLib();ftirRender();};
+  fq('#ftirClearSel').onclick=()=>{ftirState.sel=[];ftirRenderLib();ftirRender();};
+  fq('#ftirWipe').onclick=()=>{if(confirm('確定清空這台電腦暫存的光譜?已存入圖譜的不受影響。')){FTIR_LIB=[];ftirState.sel=[];ftirState.guides=[];ftirRenderLib();ftirRender();}};
+  fq('#ftirShowTitle').onchange=e=>{ftirState.showTitle=e.target.checked;ftirRender();};
+  fq('#ftirTitle').oninput=e=>{ftirState.title=e.target.value;ftirRender();};
+  fq('#ftirShowAxisTitles').onchange=e=>{ftirState.showAxisTitles=e.target.checked;ftirRender();};
+  fq('#ftirShowTickLabels').onchange=e=>{ftirState.showTickLabels=e.target.checked;ftirRender();};
+  fq('#ftirShowLegend').onchange=e=>{ftirState.legend.show=e.target.checked;ftirRender();};
+  fq('#ftirLegendPos').onchange=e=>{ftirState.legend.pos=e.target.value;ftirRender();};
+  fq('#ftirLegendFrame').onchange=e=>{ftirState.legend.frame=e.target.checked;ftirRender();};
+  fq('#ftirAtrRef').oninput=e=>{ftirState.atrRef=+e.target.value||2000;ftirRender();};
+  ftirSeg('#ftirYmode',v=>{ftirState.ymode=v;fq('#ftirAtrBox').classList.toggle('hide',v!=='atr');fq('#ftirKmBox').classList.toggle('hide',v!=='km');ftirRender();});
+  ftirSeg('#ftirLabelmode',v=>{ftirState.labelMode=v;ftirRender();});
+  fq('#ftirProm').oninput=e=>{const v=+e.target.value;fq('#ftirPromOut').textContent=v.toFixed(1)+'%';ftirState.prom=v/100;ftirRender();};
+  fq('#ftirTopn').oninput=e=>{const v=+e.target.value;fq('#ftirTopnOut').textContent=v>=40?'全部':v;ftirState.topN=v>=40?null:v;ftirRender();};
+  fq('#ftirDlSvg').onclick=()=>{if(!ftirCurrent)return;ftirSaveBlob(new Blob([ftirCurrent.built.svg],{type:'image/svg+xml'}),ftirCurrent.name+'.svg');};
+  fq('#ftirDlPng').onclick=ftirDownloadPng;
+  fq('#ftirDlCsv').onclick=ftirDownloadCsv;
+  fq('#ftirSave').onclick=ftirSaveToGallery;
+  ftirRenderLib();ftirRender();
+}
+function ftirSeg(sel,cb){const s=fq(sel);s.querySelectorAll('button').forEach(b=>b.onclick=()=>{s.querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on');cb(b.dataset.v);});}
+
+function ftirHandleFiles(list){
+  const arr=[...list];let pending=arr.length;if(!pending)return;
+  arr.forEach(f=>{
+    const ext=f.name.toLowerCase().split('.').pop(),rd=new FileReader();
+    rd.onload=()=>{
+      try{
+        const s=ext==='asp'?ftirReadAsp(rd.result):ftirReadSpc(rd.result);
+        const id='s'+Date.now()+Math.random().toString(36).slice(2,6);
+        FTIR_LIB.push({id,name:f.name.replace(/\.[^.]+$/,''),n:s.n,first:s.first,last:s.last,y:s.y});
+        ftirState.sel=[id];ftirState.guides=[];
+      }catch(e){alert('無法解析 '+f.name+':'+e.message);}
+      if(--pending===0){ftirRenderLib();ftirRender();}
+    };
+    if(ext==='asp')rd.readAsText(f);else rd.readAsArrayBuffer(f);
+  });
+}
+
+function ftirRenderLib(){
+  const box=fq('#ftirLib');box.innerHTML='';
+  fq('#ftirLibCount').textContent=FTIR_LIB.length?FTIR_LIB.length+' 條':'';
+  FTIR_LIB.forEach(item=>{
+    const idx=ftirState.sel.indexOf(item.id);
+    const el=document.createElement('div');
+    el.className='ftir-row'+(idx>=0?' sel':'');
+    const color=idx>=0?FTIR_COLORS[idx%FTIR_COLORS.length]:'transparent';
+    const arrows=(idx>=0&&ftirState.sel.length>1)?`<span class="mv up" title="往圖上方移">▲</span><span class="mv dn" title="往圖下方移">▼</span>`:'';
+    el.innerHTML=`<input type="checkbox" ${idx>=0?'checked':''}>
+      <span class="swatch" style="background:${color}"></span>
+      <span class="nm" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</span>
+      ${arrows}<span class="rm" title="移除暫存">✕</span>`;
+    el.querySelector('input').onchange=e=>{
+      if(e.target.checked){if(!ftirState.sel.includes(item.id))ftirState.sel.push(item.id);}
+      else ftirState.sel=ftirState.sel.filter(x=>x!==item.id);
+      ftirRenderLib();ftirRender();};
+    el.querySelector('.nm').onclick=()=>{ftirState.sel=[item.id];ftirRenderLib();ftirRender();};
+    el.querySelector('.rm').onclick=()=>{FTIR_LIB=FTIR_LIB.filter(x=>x.id!==item.id);ftirState.sel=ftirState.sel.filter(x=>x!==item.id);ftirRenderLib();ftirRender();};
+    const up=el.querySelector('.up'),dn=el.querySelector('.dn');
+    if(up)up.onclick=()=>{const i=ftirState.sel.indexOf(item.id);if(i<ftirState.sel.length-1){[ftirState.sel[i],ftirState.sel[i+1]]=[ftirState.sel[i+1],ftirState.sel[i]];ftirRenderLib();ftirRender();}};
+    if(dn)dn.onclick=()=>{const i=ftirState.sel.indexOf(item.id);if(i>0){[ftirState.sel[i],ftirState.sel[i-1]]=[ftirState.sel[i-1],ftirState.sel[i]];ftirRenderLib();ftirRender();}};
+    box.appendChild(el);
+  });
+}
+
+function ftirToggleGuide(wn){
+  const i=ftirState.guides.findIndex(g=>Math.abs(g-wn)<0.51);
+  if(i>=0)ftirState.guides.splice(i,1);else ftirState.guides.push(wn);
+  ftirRender();
+}
+function ftirRender(){
+  const wrap=fq('#ftirPlotwrap'),tw=fq('#ftirTablewrap');
+  const chosen=ftirState.sel.map(id=>FTIR_LIB.find(x=>x.id===id)).filter(Boolean);
+  const multi=chosen.length>1;
+  if(!chosen.length){wrap.innerHTML='<div class="ftir-empty" id="ftirEmpty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="52" height="52"><path d="M3 3v18h18M7 15l3-4 3 3 4-6"/></svg><div>上傳 .asp 或 .spc 光譜檔以開始</div></div>';tw.innerHTML='';
+    ['#ftirDlPng','#ftirDlSvg','#ftirDlCsv','#ftirSave'].forEach(s=>fq(s).disabled=true);ftirCurrent=null;return;}
+  const traces=chosen.map(item=>{
+    const x=ftirXAxis(item);
+    let y=ftirTransform(x,item.y,ftirState.ymode,ftirState.atrRef);
+    const base=y.slice(0,40).sort((a,b)=>a-b)[20]||0;
+    if(multi)y=y.map(v=>v-base);
+    const peaks=ftirDetect(x,y,ftirState.prom,ftirState.topN);
+    return {name:item.name,x,y,xmin:Math.min(item.first,item.last),peaks};
+  });
+  const title=ftirState.showTitle?(ftirState.title||(chosen.length===1?chosen[0].name:'')):'';
+  const built=ftirBuildSVG({traces,title,ylabel:FTIR_YLABEL[ftirState.ymode],
+    labelMode:ftirState.labelMode,decimals:ftirState.decimals,legend:ftirState.legend,
+    showAxisTitles:ftirState.showAxisTitles,showTickLabels:ftirState.showTickLabels,
+    guides:multi?ftirState.guides:[]});
+  ftirCurrent={traces,built,name:chosen.length===1?chosen[0].name:'overlay',ymode:ftirState.ymode,multi};
+  wrap.innerHTML=built.svg;
+  ftirCurrent._svg=wrap.querySelector('svg');
+  if(multi)ftirCurrent._svg.querySelectorAll('.pk').forEach(t=>{t.onclick=()=>ftirToggleGuide(parseFloat(t.getAttribute('data-wn')));});
+  ftirRenderTable(traces,multi);
+  ['#ftirDlPng','#ftirDlSvg','#ftirDlCsv','#ftirSave'].forEach(s=>fq(s).disabled=false);
+}
+function ftirRenderTable(traces,multi){
+  let head=`<tr><th>樣品</th><th style="text-align:right">波數 cm⁻¹</th><th style="text-align:right">數值</th><th>短標</th><th>建議歸屬</th>${multi?'<th>比較線</th>':''}</tr>`;
+  let rows='';
+  traces.forEach((t,ti)=>{
+    t.peaks.forEach((p)=>{const a=ftirAssign(p.wn);
+      const pinned=ftirState.guides.some(g=>Math.abs(g-p.wn)<0.51);
+      rows+=`<tr data-wn="${p.wn.toFixed(2)}">
+        <td class="tag" style="color:${FTIR_COLORS[ti%FTIR_COLORS.length]}">${multi?escapeHtml(t.name):'—'}</td>
+        <td class="num">${p.wn.toFixed(2)}</td><td class="num">${p.abs.toFixed(4)}</td>
+        <td class="tag" style="color:${FTIR_COLORS[ti%FTIR_COLORS.length]}">${a.tag||'—'}</td>
+        <td>${a.full}</td>
+        ${multi?`<td style="text-align:center">${pinned?'●':'○'}</td>`:''}</tr>`;});
+  });
+  fq('#ftirTablewrap').innerHTML=`<table><thead>${head}</thead><tbody>${rows}</tbody></table>
+    <div class="note">${multi?'疊圖比對時,點圖上峰標籤或表格任一列,可在該波數釘選一條貫穿全圖的比較虛線(●＝已釘選);再點一次取消。':'建議歸屬由波數比對常見官能基區間,僅供初判。'}最終指認須配合樣品背景與其他分析。</div>`;
+  const trs=[...fq('#ftirTablewrap').querySelectorAll('tbody tr')];
+  trs.forEach((tr,i)=>{
+    tr.onmouseenter=()=>ftirHighlight(i);
+    tr.onmouseleave=()=>ftirHighlight(-1);
+    if(multi)tr.onclick=()=>ftirToggleGuide(parseFloat(tr.getAttribute('data-wn')));
+  });
+}
+function ftirHighlight(i){
+  if(!ftirCurrent||!ftirCurrent._svg)return;const g=ftirCurrent._svg.querySelector('#ftirHl');if(!g)return;
+  if(i<0){g.innerHTML='';return;}
+  const mk=ftirCurrent.built.markers[i];if(!mk)return;const {m,ph}=ftirCurrent.built.geom;
+  g.innerHTML=`<line x1="${mk.px}" y1="${m.t}" x2="${mk.px}" y2="${m.t+ph}" stroke="#c0392b" stroke-width="0.8" stroke-dasharray="4 3" opacity="0.6"/>
+    <circle cx="${mk.px}" cy="${mk.py}" r="4.5" fill="none" stroke="#c0392b" stroke-width="1.6"/>`;
+}
+function ftirSaveBlob(b,name){const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
+function ftirDownloadPng(){
+  if(!ftirCurrent)return;const scale=3,str=ftirCurrent.built.svg,vb=str.match(/viewBox="0 0 (\d+) (\d+)"/),W=+vb[1],H=+vb[2];
+  const img=new Image();img.onload=()=>{const c=document.createElement('canvas');c.width=W*scale;c.height=H*scale;
+    const ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);
+    ctx.drawImage(img,0,0,c.width,c.height);c.toBlob(b=>ftirSaveBlob(b,ftirCurrent.name+'.png'),'image/png');};
+  img.src='data:image/svg+xml;base64,'+btoa(unescape(encodeURIComponent(str)));
+}
+function ftirDownloadCsv(){
+  if(!ftirCurrent)return;let csv='\uFEFFsample,wavenumber_cm-1,value,tag,possible_assignment\n';
+  ftirCurrent.traces.forEach(t=>t.peaks.forEach(p=>{const a=ftirAssign(p.wn);
+    csv+=`"${t.name}",${p.wn.toFixed(2)},${p.abs.toFixed(4)},${a.tag},"${a.full}"\n`;}));
+  ftirSaveBlob(new Blob([csv],{type:'text/csv'}),ftirCurrent.name+'_peaks.csv');
+}
+
+/* ============ 存入圖譜(Firestore) ============ */
+async function ftirSaveToGallery(){
+  if(!ftirCurrent){alert('目前沒有可儲存的圖譜。');return;}
+  if(!currentUser){alert('尚未登入。');return;}
+  const defName=ftirCurrent.name==='overlay'?'疊圖':ftirCurrent.name;
+  const name=prompt('圖譜名稱',defName);
+  if(name===null)return;
+  const trimmed=name.trim();if(!trimmed){alert('名稱不可空白。');return;}
+
+  const svg=ftirCurrent.built.svg;
+  const peaks=[];
+  ftirCurrent.traces.forEach(t=>t.peaks.forEach(p=>{const a=ftirAssign(p.wn);
+    peaks.push({sample:t.name,wn:+p.wn.toFixed(2),val:+p.abs.toFixed(4),tag:a.tag,full:a.full});}));
+
+  const rec={
+    id:'spec-'+Date.now()+Math.random().toString(36).slice(2,6),
+    type:'ftir',
+    name:trimmed,
+    svg,
+    peaks,
+    ymode:ftirCurrent.ymode,
+    bind_type:'',      // 之後綁定用:mat / smp
+    bind_id:'',
+    bind_label:'',
+    created_by_uid:currentUser.uid,
+    created_by:currentUser.name||currentUser.email||'',
+    created_at:new Date().toISOString()
+  };
+  const btn=fq('#ftirSave');btn.disabled=true;const old=btn.textContent;btn.textContent='儲存中…';
+  const ok=await fsSetItem('spectra',rec);
+  btn.textContent=old;btn.disabled=false;
+  if(ok){showToast('✅ 已存入圖譜');}
+  else{alert('存入失敗,請檢查網路與 Firestore 權限。');}
+}
+
+/* ============ 圖譜藝廊 ============ */
+let spectraItems=[];
+const SPEC_TYPE_LABEL={ftir:'FTIR',lc:'LC',gc:'GC',tga:'TGA',dsc:'DSC'};
+function renderGallery(){
+  const grid=document.getElementById('galGrid');
+  const empty=document.getElementById('galEmpty');
+  if(!grid) return;
+  const search=(document.getElementById('galSearch').value||'').toLowerCase().trim();
+  const ftype=document.getElementById('galFilterType').value;
+  let list=spectraItems.slice();
+  if(ftype)list=list.filter(s=>s.type===ftype);
+  if(search)list=list.filter(s=>[s.name,s.type,s.bind_label,s.created_by].join(' ').toLowerCase().includes(search));
+  if(!list.length){grid.innerHTML='';empty.style.display=spectraItems.length?'block':'block';empty.textContent=spectraItems.length?'沒有符合條件的圖譜。':'目前還沒有存入的圖譜。到「圖譜分析」做好圖後按「存入圖譜」即可。';return;}
+  empty.style.display='none';
+  grid.innerHTML=list.map(s=>`
+    <div class="gal-card" data-gal-id="${escapeHtml(s.id)}">
+      <div class="gal-thumb">${s.svg||''}</div>
+      <div class="gal-meta">
+        <div class="gt" title="${escapeHtml(s.name)}">${escapeHtml(s.name)}</div>
+        <div class="gm"><span class="gal-type">${SPEC_TYPE_LABEL[s.type]||s.type}</span>${s.bind_label?'<span>'+escapeHtml(s.bind_label)+'</span>':''}<span>${(s.created_at||'').slice(0,10)}</span></div>
+      </div>
+    </div>`).join('');
+  grid.querySelectorAll('.gal-card').forEach(c=>c.onclick=()=>openGalDetail(c.dataset.galId));
+}
+document.getElementById('galSearch').addEventListener('input', renderGallery);
+document.getElementById('galFilterType').addEventListener('change', renderGallery);
+
+function galBindOptions(rec){
+  const mats=(typeof matItems!=='undefined'?matItems:[]).map(m=>({v:'mat:'+m.id,label:'試材 '+(m.name_zh||m.species||m.id)}));
+  const smps=(typeof smpItems!=='undefined'?smpItems:[]).map(m=>({v:'smp:'+m.id,label:'樣品 '+(m.name_zh||m.species||m.id)}));
+  const cur=rec.bind_type&&rec.bind_id?rec.bind_type+':'+rec.bind_id:'';
+  const opts=['<option value="">未綁定</option>']
+    .concat(mats.concat(smps).map(o=>`<option value="${escapeHtml(o.v)}" ${o.v===cur?'selected':''}>${escapeHtml(o.label)}</option>`));
+  return opts.join('');
+}
+function openGalDetail(id){
+  const rec=spectraItems.find(s=>s.id===id);if(!rec)return;
+  const canManage=currentUser&&(rec.created_by_uid===currentUser.uid||isAdmin());
+  const peakRows=(rec.peaks||[]).map(p=>`<tr><td class="tag">${escapeHtml(p.sample||'—')}</td><td class="num">${(+p.wn).toFixed(2)}</td><td class="num">${(+p.val).toFixed(4)}</td><td class="tag">${escapeHtml(p.tag||'—')}</td><td>${escapeHtml(p.full||'')}</td></tr>`).join('');
+  document.getElementById('galDetailBody').innerHTML=`
+    <h2 style="margin:0 18px 4px 0;">${escapeHtml(rec.name)}</h2>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-bottom:14px;">
+      ${SPEC_TYPE_LABEL[rec.type]||rec.type} · ${(rec.created_at||'').slice(0,16).replace('T',' ')} · ${escapeHtml(rec.created_by||'')}
+      ${rec.bind_label?' · '+escapeHtml(rec.bind_label):''}
+    </div>
+    <div class="gd-svg">${rec.svg||''}</div>
+    ${canManage?`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:14px;">
+      <label style="font-size:12px;color:var(--ink-soft);">綁定樣品/試材</label>
+      <select id="galBindSel" style="flex:1;min-width:180px;padding:7px 9px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--panel-soft);color:var(--ink);font-size:13px;">${galBindOptions(rec)}</select>
+      <button class="btn btn-ghost btn-sm" id="galBindSave">儲存綁定</button>
+      <button class="btn btn-ghost btn-sm btn-row-delete" id="galDelete">刪除圖譜</button>
+    </div>`:''}
+    ${peakRows?`<table style="margin-top:16px;"><thead><tr><th>樣品</th><th style="text-align:right">波數 cm⁻¹</th><th style="text-align:right">數值</th><th>短標</th><th>建議歸屬</th></tr></thead><tbody>${peakRows}</tbody></table>`:''}
+  `;
+  document.getElementById('galDetailOverlay').classList.add('show');
+  if(canManage){
+    document.getElementById('galBindSave').onclick=async()=>{
+      const val=document.getElementById('galBindSel').value;
+      let bt='',bi='',bl='';
+      if(val){const [t,i]=val.split(':');bt=t;bi=i;
+        const src=t==='mat'?(matItems||[]):(smpItems||[]);const found=src.find(x=>x.id===i);
+        bl=(t==='mat'?'試材 ':'樣品 ')+(found?(found.name_zh||found.species||found.id):i);}
+      const upd={...rec,bind_type:bt,bind_id:bi,bind_label:bl};
+      const ok=await fsSetItem('spectra',upd);
+      if(ok){showToast('✅ 已更新綁定');document.getElementById('galDetailOverlay').classList.remove('show');}
+      else alert('儲存失敗。');
+    };
+    document.getElementById('galDelete').onclick=async()=>{
+      if(!confirm('確定刪除這張圖譜?此動作無法復原。'))return;
+      const ok=await fsDeleteItem('spectra',rec.id,rec._doc_id);
+      if(ok){showToast('已刪除');document.getElementById('galDetailOverlay').classList.remove('show');}
+      else alert('刪除失敗。');
+    };
+  }
+}
+document.getElementById('galDetailClose').addEventListener('click',()=>document.getElementById('galDetailOverlay').classList.remove('show'));
+document.getElementById('galDetailOverlay').addEventListener('click',e=>{if(e.target.id==='galDetailOverlay')document.getElementById('galDetailOverlay').classList.remove('show');});
+
 let realtimeUnsubscribers = [];
 function snapshotItems(snap){ return snap.docs.map(d=>({ ...d.data(), _doc_id:d.id })); }
 function stopRealtimeSync(){
@@ -8172,6 +8828,7 @@ function startRealtimeSync(){
   watchCollection(db.collection('price-comparisons'), rows=>{ cmpItems=rows; renderCmpCardGrid(); renderCpKanban(); }, 'price-comparisons');
   watchCollection(db.collection('library-books'), rows=>{ libraryBooks=rows; renderLibraryAll(); }, 'library-books');
   watchCollection(db.collection('library-loans'), rows=>{ libraryLoans=rows; renderLibraryAll(); }, 'library-loans');
+  watchCollection(db.collection('spectra'), rows=>{ spectraItems=rows.slice().sort((a,b)=>(b.created_at||'').localeCompare(a.created_at||'')); renderGallery(); }, 'spectra');
 
   if(isAdmin()){
     watchCollection(db.collection('todo-items'), rows=>{ todoItems=rows; renderTodoAll(); renderDashboard(); }, 'todo-items');
