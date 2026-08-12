@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="app-version" content="2026.08.18.1">
+<meta name="app-version" content="2026.08.18.2">
 <meta name="theme-color" content="#1B4B43" id="metaThemeColor">
 <title>SFPLAB 實驗室管理系統</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>">
@@ -2469,6 +2469,7 @@
         <div class="item"><div class="v" id="mc_moisture_dry">-</div><div class="l">乾基含水率</div></div>
         <div class="item"><div class="v" id="mc_dry_net">-</div><div class="l">取樣乾重(g)</div></div>
       </div>
+      <div class="unknown-row" id="mc_incomplete_hint" style="margin-top:8px;display:none;">三個重量都填完才會算出含水率;現在可以先存起來,之後再回來補。</div>
       <div class="unknown-row" style="margin-top:10px;">下方是含水量「取樣」的乾重，不能直接當成整批試材絕乾重。請使用上方「由含水量換算」。</div>
     </div>
 
@@ -4386,6 +4387,7 @@ function renderSmpTable(){
 }
 function renderSmpAll(){ populateSmpFilters(); renderSmpStats(); renderSmpTable(); }
 
+const MOISTURE_INPUT_IDS = ['mc_fresh_gross','mc_dry_gross','mc_container'];
 function getMoistureRates(){
   const fresh = parseFloat(document.getElementById('mc_fresh_gross').value);
   const dry = parseFloat(document.getElementById('mc_dry_gross').value);
@@ -4406,8 +4408,11 @@ function updateMoistureCalc(){
   if(rates === null){ wetEl.textContent = '-'; dryEl.textContent = '-'; netEl.textContent = '-'; }
   else if(rates === 'error'){ wetEl.textContent = '數值有誤'; dryEl.textContent = '數值有誤'; netEl.textContent = '-'; }
   else{ wetEl.textContent = rates.wet.toFixed(2) + '%'; dryEl.textContent = rates.dry.toFixed(2) + '%'; netEl.textContent = rates.dryNet.toFixed(2); }
+  const filled = MOISTURE_INPUT_IDS.filter(id=>document.getElementById(id).value!=='').length;
+  document.getElementById('mc_incomplete_hint').style.display =
+    (filled > 0 && filled < MOISTURE_INPUT_IDS.length) ? 'block' : 'none';
 }
-['mc_fresh_gross','mc_dry_gross','mc_container'].forEach(id=>{
+MOISTURE_INPUT_IDS.forEach(id=>{
   document.getElementById(id).addEventListener('input', updateMoistureCalc);
 });
 bindPhotoUpload('mc_photoDrop','mc_photoInput','mc_photoPreview');
@@ -4698,9 +4703,7 @@ async function openSmpForm(id){
     document.getElementById('s_fraction_layer').value = '正己烷分離部';
     document.getElementById('s_extraction_rate').value = '';
     document.getElementById('s_extractor').value = (currentUser && currentUser.code) ? currentUser.code : ((currentUser && currentUser.name) || '');
-    document.getElementById('mc_moisture_wet').textContent = '-';
-    document.getElementById('mc_moisture_dry').textContent = '-';
-    document.getElementById('mc_dry_net').textContent = '-';
+    updateMoistureCalc();
     updateSampleId();
     const draft = await loadDraft(SMP_DRAFT_KEY);
     applySmpDraft(draft);
@@ -4719,10 +4722,10 @@ async function handleSmpSave(){
   if(nonNegativeIds.some(fid=>document.getElementById(fid).value!=='' && Number(document.getElementById(fid).value)<0)){
     alert('重量不能是負數。'); return;
   }
-  const moistureHasAny = ['mc_fresh_gross','mc_dry_gross','mc_container'].some(fid=>document.getElementById(fid).value!=='');
-  const moistureRates = getMoistureRates();
-  if(moistureHasAny && (!moistureRates || moistureRates==='error')){
-    alert('含水量三個重量欄位需完整填寫，且符合取樣鮮重 > 取樣乾重 > 容器重。'); return;
+  /* 含水量可以只填一部分先存起來;未填滿就不算含水率。
+     只有三個都填了卻互相矛盾才擋,避免存進不可能的數值。 */
+  if(getMoistureRates() === 'error'){
+    alert('含水量的三個重量互相矛盾,需符合取樣鮮重 > 取樣乾重 > 容器重。'); return;
   }
   const finalId = editingSmpId || computeSamplePrefix() + '_' + String(nextSeqForPrefix(computeSamplePrefix(), null)).padStart(2,'0');
   const uploadedNow=[];
@@ -4817,9 +4820,7 @@ function clearSmpForm(){
   document.getElementById('s_fraction_layer').value = '正己烷分離部';
   toggleSolventVsExtractType();
   document.getElementById('s_extraction_rate').value = '';
-  document.getElementById('mc_moisture_wet').textContent = '-';
-  document.getElementById('mc_moisture_dry').textContent = '-';
-  document.getElementById('mc_dry_net').textContent = '-';
+  updateMoistureCalc();
   ['s_photoExtractPreview','s_photoBottlePreview','mc_photoPreview'].forEach(pid=>{
     document.getElementById(pid).style.display = 'none';
     document.getElementById(pid).src = '';
