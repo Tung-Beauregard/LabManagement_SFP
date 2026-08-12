@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="app-version" content="2026.08.17.2">
+<meta name="app-version" content="2026.08.18.1">
 <meta name="theme-color" content="#1B4B43" id="metaThemeColor">
 <title>SFPLAB 實驗室管理系統</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>">
@@ -269,6 +269,7 @@
   .field input[readonly]{background:var(--readonly);color:var(--ink-soft);}
   .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
   .row3{display:grid;grid-template-columns:2fr 1fr;gap:12px;}
+  .row3eq{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;align-items:start;}
   .haz-picker{display:flex;flex-wrap:wrap;gap:6px;}
   .haz-chip{border:1px solid var(--line);border-radius:var(--pill);padding:5px 12px;font-size:12px;cursor:pointer;user-select:none;background:var(--panel);}
   .haz-chip.on{color:#fff;border-color:transparent;}
@@ -643,7 +644,7 @@
     .overlay{padding:0;align-items:stretch;overflow:hidden;}
     .modal{max-width:none;width:100%;height:100vh;height:100dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;border-radius:0;padding:20px 16px 130px;background:var(--panel);}
     .modal .close{position:fixed;top:14px;right:14px;font-size:18px;width:36px;height:36px;padding:0;background:var(--panel);border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,.18);z-index:60;}
-    .row2, .row3{grid-template-columns:1fr;}
+    .row2, .row3, .row3eq{grid-template-columns:1fr;}
     .field input, .field textarea, .field select{font-size:16px;padding:11px 12px;}
     .modal-actions{position:fixed;left:0;right:0;bottom:0;background:var(--panel);padding:12px 16px;border-top:1px solid var(--line);margin-top:0;}
     .btn{padding:11px 16px;font-size:14px;}
@@ -2368,17 +2369,15 @@
       <label>從試材匯入(選填)</label>
       <select id="s_import_material"><option value="">不匯入 / 手動填寫</option></select>
     </div>
-    <div class="field">
-      <label>物種 *</label><input type="text" id="s_species" list="speciesList">
-      <div style="font-size:11px;color:var(--ink-soft);margin-top:4px;">請填寫學名,例如 Acacia confusa;之前輸入過的物種會出現在下拉選單中</div>
-    </div>
-    <div class="field">
-      <label>中文名稱 *</label><input type="text" id="s_name_zh" placeholder="例如 相思樹">
-    </div>
     <div class="field row2">
+      <div>
+        <label>物種 *</label><input type="text" id="s_species" list="speciesList">
+        <div style="font-size:11px;color:var(--ink-soft);margin-top:4px;">請填寫學名,例如 Acacia confusa;之前輸入過的物種會出現在下拉選單中</div>
+      </div>
+      <div><label>中文名稱 *</label><input type="text" id="s_name_zh" placeholder="例如 相思樹"></div>
+    </div>
+    <div class="field row3eq">
       <div><label>來源</label><input type="text" id="s_source"></div>
-    </div>
-    <div class="field row2">
       <div>
         <label>取得日期</label>
         <input type="date" id="s_acquired_date">
@@ -2397,11 +2396,8 @@
         </select>
       </div>
     </div>
-    <div class="field">
-      <label>萃取者</label>
-      <input type="text" id="s_extractor" placeholder="預設帶入目前登入者">
-    </div>
     <div class="field row2">
+      <div><label>萃取者</label><input type="text" id="s_extractor" placeholder="預設帶入目前登入者"></div>
       <div id="s_solvent_wrap"><label>萃取溶劑</label>
         <select id="s_solvent"></select>
       </div>
@@ -2447,9 +2443,8 @@
       </div>
       <div class="unknown-row" style="margin-top:8px;">若試材已為絕乾狀態,可直接在此欄位輸入乾重,不需使用下方含水量測定區。</div>
     </div>
-    <div class="field">
-      <label>萃取率</label>
-      <input type="text" id="s_extraction_rate" readonly placeholder="自動計算">
+    <div class="field row2">
+      <div><label>萃取率</label><input type="text" id="s_extraction_rate" readonly placeholder="自動計算"></div>
     </div>
 
     <!-- 含水量計算區 -->
@@ -2478,17 +2473,19 @@
     </div>
 
     <div class="section-title">照片</div>
-    <div class="field">
-      <label>萃取材照片</label>
-      <div class="photo-btn-row"><button type="button" class="btn btn-ghost btn-sm" id="s_photoExtractDropCam">📷 拍照</button><button type="button" class="btn btn-ghost btn-sm" id="s_photoExtractDropGal">🖼️ 選擇照片</button></div>
-      <input type="file" id="s_photoExtractInput" accept="image/*" capture="environment" class="visually-hidden-file">
-      <img id="s_photoExtractPreview" class="photo-preview" style="display:none;">
-    </div>
-    <div class="field">
-      <label>樣品瓶照片</label>
-      <div class="photo-btn-row"><button type="button" class="btn btn-ghost btn-sm" id="s_photoBottleDropCam">📷 拍照</button><button type="button" class="btn btn-ghost btn-sm" id="s_photoBottleDropGal">🖼️ 選擇照片</button></div>
-      <input type="file" id="s_photoBottleInput" accept="image/*" capture="environment" class="visually-hidden-file">
-      <img id="s_photoBottlePreview" class="photo-preview" style="display:none;">
+    <div class="field row2">
+      <div>
+        <label>萃取材照片</label>
+        <div class="photo-btn-row"><button type="button" class="btn btn-ghost btn-sm" id="s_photoExtractDropCam">📷 拍照</button><button type="button" class="btn btn-ghost btn-sm" id="s_photoExtractDropGal">🖼️ 選擇照片</button></div>
+        <input type="file" id="s_photoExtractInput" accept="image/*" capture="environment" class="visually-hidden-file">
+        <img id="s_photoExtractPreview" class="photo-preview" style="display:none;">
+      </div>
+      <div>
+        <label>樣品瓶照片</label>
+        <div class="photo-btn-row"><button type="button" class="btn btn-ghost btn-sm" id="s_photoBottleDropCam">📷 拍照</button><button type="button" class="btn btn-ghost btn-sm" id="s_photoBottleDropGal">🖼️ 選擇照片</button></div>
+        <input type="file" id="s_photoBottleInput" accept="image/*" capture="environment" class="visually-hidden-file">
+        <img id="s_photoBottlePreview" class="photo-preview" style="display:none;">
+      </div>
     </div>
 
     <div class="modal-actions">
@@ -4466,6 +4463,7 @@ document.getElementById('s_import_material').addEventListener('change', (e)=>{
   const m = matItems.find(i=>i.id===mid);
   if(!m) return;
   document.getElementById('s_species').value = m.species||'';
+  document.getElementById('s_name_zh').value = m.name_zh||'';
   document.getElementById('s_source').value = m.source||'';
   document.getElementById('s_acquired_date').value = m.acquired_date||'';
   document.getElementById('s_acquired_unknown').checked = !!m.acquired_unknown;
