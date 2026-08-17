@@ -102,9 +102,30 @@
 - **用 iframe 完全隔離**。這個工具(TIC Bench)有大量 CSS class 與主系統撞名(drop、row、sp、card、lab、ctl…)。試過 scope 隔離(`.gcms-root` 前綴 + id 加 `gc_`),但主系統的全域規則(如 `.sp{flex:1}`)會反向洩漏到 GC 元素,造成版面錯亂、按鈕點不到。**iframe 是唯一乾淨解法**
 - iframe 內容是原封不動的 GC-MS 原始碼,以 base64 存在主檔的 `GC_IFRAME_B64` 常數,執行時 `atob` 解出寫入 `srcdoc`
 - 橋接:父窗用 postMessage 傳主題(日夜同步)、iframe 用 ResizeObserver 回報高度自動撐高
-- 資料層目前仍是 iframe 內的 localStorage(**第二階段才接 Firestore**:KI 資料庫、烷類組合改共用,待審核接權限系統,樣品可存進圖譜藝廊)
-- 功能:CSV 解析(Agilent/Shimadzu/Thermo)、ALS 基線、積分找峰、Kovats KI、萜類 KI 資料庫、成分表編輯、烷類 RT 組合、疊圖(樣品列多選)、局部放大插圖
+- **iframe 高度回報只量 `.top` + `.wrap`,不可量 `body`**。KI 候選選單這類浮層掛在 body 上會把 body 撐高,父層跟著加高 iframe,浮層又重新定位,形成無限來回跳動(踩過的坑)。另外底部固定多報 250px,因為選單是 `position:fixed`,不留空間會被 iframe 邊界切掉
+- 功能:CSV 解析(Agilent/Shimadzu/Thermo)、ALS 基線、積分找峰、Kovats KI、萜類 KI 資料庫、成分表編輯、烷類 RT 組合、疊圖(樣品列多選)、局部放大插圖、峰標籤拖曳、單檔完整匯出入(自帶 TIC 與所有設定)、存入圖譜藝廊
 - 修改 GC-MS 的流程:解出 base64 → 改 → 語法檢查 iframe 內 JS → 重新 base64 → 回填 `GC_IFRAME_B64`
+
+#### GC-MS 的資料層(分兩種,不要搞混)
+
+**共用資料**走 Firestore 的 `lab-data/` blob,由主系統代讀寫:
+
+| blob key | 內容 | 誰能改 |
+|---|---|---|
+| `gc-ki-database-data` | KI 資料庫 | 只有管理員 |
+| `gc-ki-pending-data` | 待審提案佇列 | 誰都能提案;只有管理員能核准/退回/移除 |
+| `gc-alkane-sets-data` | 烷類 RT 組合 | 誰都能新增;改與刪限建立者本人或管理員 |
+
+**本機資料**留在 iframe 的 localStorage(`tb.samples`、`tb.params`、`tb.cur`、`tb.overlaid`、`tb.kitol`)。
+樣品綁哪一組烷類(`alkSetId`)也是本機設定,不影響別人。
+
+橋接協定:iframe 碰不到 Firestore,所以**只送出意圖**(`{gcRequest:{op,payload}}`),
+主系統驗權限後套用到自己手上的最新內容再寫回,避免兩人同時編輯互相蓋掉;
+寫完由 `watchBlob` 推回 `{gcShared:{...}}`。身分與 role 由主系統用 `{gcIdentity:...}` 推進去。
+
+- **不要在 iframe 裡自己判斷權限就寫入**。iframe 端的隱藏按鈕只是 UI,真正的把關在主系統的 `gcDeny()` 與 `gcOwns()`
+- 雲端還沒有這幾份 blob 時會自動建立第一版(KI 資料庫限管理員建,烷類組合誰先開誰建)
+- 升級前留在各人瀏覽器的 `tb.kidb` 已凍結不再寫入,管理員可用 KI 面板的「併入本機舊清單」把它併上雲端
 
 ---
 
@@ -119,7 +140,6 @@
 
 ## 待辦 / 未實作(依規劃)
 
-- **GC-MS 第二階段**:KI 資料庫、烷類組合、待審核佇列從 localStorage 遷到 Firestore
 - 認證與權限的強化工作(內容不列在這裡,開工前問使用者)
 - 毒性化學品自動偵測(比對台灣法規 PDF 的 CAS 號,紅色警告標籤)
 - 藥品使用登記頁(選藥品→記錄用途與危害警告;管理員看完整記錄)
