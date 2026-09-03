@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="app-version" content="2026.08.18.2">
+<meta name="app-version" content="2026.08.18.3">
 <meta name="theme-color" content="#1B4B43" id="metaThemeColor">
 <title>SFPLAB 實驗室管理系統</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>">
@@ -1406,8 +1406,17 @@
               <div class="field"><label style="font-size:12px;">最多標示峰數</label>
                 <div class="ftir-rangerow"><input type="range" id="ftirTopn" min="5" max="40" step="1" value="14"><output id="ftirTopnOut">14</output></div>
               </div>
-              <div class="field" style="margin-bottom:0;"><label style="font-size:12px;">標籤內容</label>
-                <div class="ftir-seg" id="ftirLabelmode"><button data-v="num" class="on">僅波數</button><button data-v="both">波數＋官能基</button></div>
+              <label class="ftir-chk"><input type="checkbox" id="ftirShowPeakLabels" checked>顯示波數標籤</label>
+              <div id="ftirPeakLabelBox">
+                <div class="field"><label style="font-size:12px;">標籤內容</label>
+                  <div class="ftir-seg" id="ftirLabelmode"><button data-v="num" class="on">僅波數</button><button data-v="both">波數＋官能基</button></div>
+                </div>
+                <div class="field"><label style="font-size:12px;">標籤左右位移(＋往右)</label>
+                  <div class="ftir-rangerow"><input type="range" id="ftirLabelDx" min="-40" max="40" step="1" value="0"><output id="ftirLabelDxOut">0</output></div>
+                </div>
+                <div class="field" style="margin-bottom:0;"><label style="font-size:12px;">標籤上下位移(＋往上)</label>
+                  <div class="ftir-rangerow"><input type="range" id="ftirLabelDy" min="-60" max="60" step="1" value="0"><output id="ftirLabelDyOut">0</output></div>
+                </div>
               </div>
             </div>
 
@@ -8494,6 +8503,8 @@ const ftirEscXml=s=>String(s).replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'
 
 function ftirBuildSVG(spec){
   const {traces,title,ylabel,labelMode,decimals,legend,showAxisTitles,showTickLabels,guides}=spec;
+  const showPeakLabels=spec.showPeakLabels!==false;
+  const labelDx=spec.labelDx||0, labelDy=spec.labelDy||0;   // labelDy 正值代表往上
   const m={l:22+(showTickLabels?30:0)+(showAxisTitles?18:0),r:22,t:(title?46:0)+16,b:16+(showTickLabels?22:0)+(showAxisTitles?20:0)};
   const W=920, H=(title?520:494);
   const pw=W-m.l-m.r, ph=H-m.t-m.b;
@@ -8538,7 +8549,11 @@ function ftirBuildSVG(spec){
       const anchorY=Y(yy+gap);                         // 文字起點:峰尖上方
       const pinned=(guides||[]).some(g=>Math.abs(g-p.wn)<0.51);
       // 繞峰尖上方點 rotate(-90):text-anchor=end 讓文字往上延伸;middle baseline 使字幹中線落在峰尖 px 正上方
-      S.push(`<text class="pk" data-wn="${p.wn.toFixed(2)}" style="cursor:pointer" x="${px.toFixed(1)}" y="${anchorY.toFixed(1)}" font-size="9.5" font-weight="${pinned?'700':'400'}" fill="${c}" text-anchor="end" dominant-baseline="middle" transform="rotate(-90 ${px.toFixed(1)} ${anchorY.toFixed(1)})">${lab}</text>`);
+      // 位移同時套在座標與旋轉中心上,整個標籤平移,角度與對齊方式不變
+      if(showPeakLabels){
+        const lx=px+labelDx, ly=anchorY-labelDy;
+        S.push(`<text class="pk" data-wn="${p.wn.toFixed(2)}" style="cursor:pointer" x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" font-size="9.5" font-weight="${pinned?'700':'400'}" fill="${c}" text-anchor="end" dominant-baseline="middle" transform="rotate(-90 ${lx.toFixed(1)} ${ly.toFixed(1)})">${lab}</text>`);
+      }
       markers.push({px,py,ti});
     });
   });
@@ -8568,7 +8583,7 @@ function ftirBuildSVG(spec){
 /* ============ FTIR 狀態 ============ */
 let FTIR_LIB=[];   // {id,name,n,first,last,y} 僅暫存本機記憶體
 const ftirState={sel:[],ymode:'abs',atrRef:2000,prom:0.02,topN:14,
-  labelMode:'num',decimals:2,showTitle:true,title:'',
+  labelMode:'num',showPeakLabels:true,labelDx:0,labelDy:0,decimals:2,showTitle:true,title:'',
   showAxisTitles:true,showTickLabels:true,guides:[],
   legend:{show:true,pos:'tr',frame:false}};
 let ftirCurrent=null;
@@ -8599,6 +8614,9 @@ function initFtirOnce(){
   fq('#ftirAtrRef').oninput=e=>{ftirState.atrRef=+e.target.value||2000;ftirRender();};
   ftirSeg('#ftirYmode',v=>{ftirState.ymode=v;fq('#ftirAtrBox').classList.toggle('hide',v!=='atr');fq('#ftirKmBox').classList.toggle('hide',v!=='km');ftirRender();});
   ftirSeg('#ftirLabelmode',v=>{ftirState.labelMode=v;ftirRender();});
+  fq('#ftirShowPeakLabels').onchange=e=>{ftirState.showPeakLabels=e.target.checked;ftirSyncPeakLabelBox();ftirRender();};
+  fq('#ftirLabelDx').oninput=e=>{const v=+e.target.value;fq('#ftirLabelDxOut').textContent=v;ftirState.labelDx=v;ftirRender();};
+  fq('#ftirLabelDy').oninput=e=>{const v=+e.target.value;fq('#ftirLabelDyOut').textContent=v;ftirState.labelDy=v;ftirRender();};
   fq('#ftirProm').oninput=e=>{const v=+e.target.value;fq('#ftirPromOut').textContent=v.toFixed(1)+'%';ftirState.prom=v/100;ftirRender();};
   fq('#ftirTopn').oninput=e=>{const v=+e.target.value;fq('#ftirTopnOut').textContent=v>=40?'全部':v;ftirState.topN=v>=40?null:v;ftirRender();};
   fq('#ftirDlSvg').onclick=()=>{if(!ftirCurrent)return;ftirSaveBlob(new Blob([ftirCurrent.built.svg],{type:'image/svg+xml'}),ftirCurrent.name+'.svg');};
@@ -8608,6 +8626,8 @@ function initFtirOnce(){
   ftirRenderLib();ftirRender();
 }
 function ftirSeg(sel,cb){const s=fq(sel);s.querySelectorAll('button').forEach(b=>b.onclick=()=>{s.querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on');cb(b.dataset.v);});}
+/* 波數標籤關掉時,標籤內容與位移這些相依設定就沒有意義,一併收起來 */
+function ftirSyncPeakLabelBox(){fq('#ftirPeakLabelBox').classList.toggle('hide',!ftirState.showPeakLabels);}
 
 function ftirHandleFiles(list){
   const arr=[...list];let pending=arr.length;if(!pending)return;
@@ -8675,6 +8695,7 @@ function ftirRender(){
   const title=ftirState.showTitle?(ftirState.title||(chosen.length===1?chosen[0].name:'')):'';
   const built=ftirBuildSVG({traces,title,ylabel:FTIR_YLABEL[ftirState.ymode],
     labelMode:ftirState.labelMode,decimals:ftirState.decimals,legend:ftirState.legend,
+    showPeakLabels:ftirState.showPeakLabels,labelDx:ftirState.labelDx,labelDy:ftirState.labelDy,
     showAxisTitles:ftirState.showAxisTitles,showTickLabels:ftirState.showTickLabels,
     guides:multi?ftirState.guides:[]});
   ftirCurrent={traces,built,name:chosen.length===1?chosen[0].name:'overlay',ymode:ftirState.ymode,multi};
@@ -8771,6 +8792,7 @@ async function ftirSaveToGallery(){
       rec.source={ n:src.n, first:src.first, last:src.last, y:src.y, name:src.name };
       rec.settings={ ymode:ftirState.ymode, atrRef:ftirState.atrRef, prom:ftirState.prom,
         topN:ftirState.topN, labelMode:ftirState.labelMode,
+        showPeakLabels:ftirState.showPeakLabels, labelDx:ftirState.labelDx, labelDy:ftirState.labelDy,
         showTitle:ftirState.showTitle, title:ftirState.title,
         showAxisTitles:ftirState.showAxisTitles, showTickLabels:ftirState.showTickLabels };
     }
@@ -8923,6 +8945,10 @@ function loadSpectrumToEditor(rec){
   if(st.prom!=null){ftirState.prom=st.prom;fq('#ftirProm').value=st.prom*100;fq('#ftirPromOut').textContent=(st.prom*100).toFixed(1)+'%';}
   if(st.topN!==undefined){ftirState.topN=st.topN;const tv=st.topN==null?40:st.topN;fq('#ftirTopn').value=tv;fq('#ftirTopnOut').textContent=st.topN==null?'全部':st.topN;}
   if(st.labelMode){ftirState.labelMode=st.labelMode;document.querySelectorAll('#ftirLabelmode button').forEach(b=>b.classList.toggle('on',b.dataset.v===st.labelMode));}
+  if(st.showPeakLabels!=null){ftirState.showPeakLabels=st.showPeakLabels;fq('#ftirShowPeakLabels').checked=st.showPeakLabels;}
+  if(st.labelDx!=null){ftirState.labelDx=st.labelDx;fq('#ftirLabelDx').value=st.labelDx;fq('#ftirLabelDxOut').textContent=st.labelDx;}
+  if(st.labelDy!=null){ftirState.labelDy=st.labelDy;fq('#ftirLabelDy').value=st.labelDy;fq('#ftirLabelDyOut').textContent=st.labelDy;}
+  ftirSyncPeakLabelBox();
   if(st.title!=null){ftirState.title=st.title;fq('#ftirTitle').value=st.title;}
   if(st.showTitle!=null){ftirState.showTitle=st.showTitle;fq('#ftirShowTitle').checked=st.showTitle;}
   if(st.showAxisTitles!=null){ftirState.showAxisTitles=st.showAxisTitles;fq('#ftirShowAxisTitles').checked=st.showAxisTitles;}
