@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="app-version" content="2026.09.03.2">
+<meta name="app-version" content="2026.09.08.1">
 <meta name="theme-color" content="#1B4B43" id="metaThemeColor">
 <title>SFPLAB 實驗室管理系統</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>">
@@ -319,7 +319,7 @@
   .cp-card:hover{box-shadow:0 2px 6px rgba(0,0,0,.14);}
   .cp-col-empty{font-size:11px;color:var(--ink-soft);text-align:center;padding:10px 0;}
   @media (max-width: 900px){ .cp-kanban{grid-template-columns:1fr 1fr;} }
-  .im-card{border-radius:var(--radius);padding:8px 6px;text-align:center;cursor:pointer;min-height:56px;display:flex;flex-direction:column;justify-content:center;transition:transform .12s;}
+  .im-card{border-radius:var(--radius);padding:8px 6px;text-align:center;cursor:pointer;min-height:56px;display:flex;flex-direction:column;justify-content:center;transition:transform .12s;background:var(--im-room,var(--panel-soft));}
   .im-card:active{transform:scale(.96);}
   .im-card{color:#1E241F;}
   .im-card-name{font-size:11.5px;font-weight:700;color:inherit;line-height:1.25;word-break:break-word;}
@@ -665,6 +665,8 @@
   html[data-theme="night"] .im-card-photo,
   html[data-theme="night"] .thumb{filter:brightness(.9);}
   html[data-theme="night"] .skeleton-row{opacity:.7;}
+  /* 儀器卡片的房號色是日間用的淺色,夜間改成深底、左側留一條房號色,避免整片亮塊 */
+  html[data-theme="night"] .im-card{background:var(--panel-soft);border-left:4px solid var(--im-room,var(--line));}
   /* ============ 圖譜分析 ============ */
   .sp-tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:16px;flex-wrap:wrap;}
   .sp-tab{background:none;border:none;border-bottom:2px solid transparent;padding:9px 16px;font-size:13.5px;font-weight:600;color:var(--ink-soft);cursor:pointer;font-family:var(--sans);margin-bottom:-1px;}
@@ -2479,7 +2481,7 @@
         <div class="item"><div class="v" id="mc_dry_net">-</div><div class="l">取樣乾重(g)</div></div>
       </div>
       <div class="unknown-row" id="mc_incomplete_hint" style="margin-top:8px;display:none;">三個重量都填完才會算出含水率;現在可以先存起來,之後再回來補。</div>
-      <div class="unknown-row" style="margin-top:10px;">下方是含水量「取樣」的乾重，不能直接當成整批試材絕乾重。請使用上方「由含水量換算」。</div>
+      <div class="unknown-row" style="margin-top:10px;">上面的「取樣乾重」只是含水量測定用的小樣本,不能直接當成整批試材絕乾重;請用上方的「由含水量換算」按鈕。</div>
     </div>
 
     <div class="section-title">照片</div>
@@ -2595,9 +2597,35 @@ async function fsGetWhere(collectionName, field, op, value){
     throw new Error(`無法讀取 ${collectionName}`);
   }
 }
+/* 同一筆資料若已經在存檔中(例如手抖連點兩下),第二次直接共用第一次的 Promise,不重複寫入 */
+const fsInFlight = new Map();
+/* 顯示編號(CHEM-0012 這種)是前端從記憶體清單算出來的,兩個人同時新增會撞號。
+   新增前先查雲端有沒有同號;有的話把序號往後推到沒人用的為止,格式不變,既有資料完全不動。 */
+async function fsClaimFreeId(collectionName, item){
+  if(item._doc_id || !item.id) return;                       // 編輯既有資料不需要查
+  const m = /^(.*[-_])(\d+)$/.exec(String(item.id));        // CHEM-0012 與樣品的 W_Au_L_MeAcE_01 都適用
+  if(!m) return;                                             // 不是「前綴+序號」格式的 ID 不處理
+  const original = item.id;
+  let seq = parseInt(m[2],10), width = m[2].length, tries = 0;
+  while(tries++ < 50){
+    const snap = await db.collection(collectionName).where('id','==',item.id).limit(1).get();
+    if(snap.empty) break;
+    seq++; item.id = m[1] + String(seq).padStart(width,'0');
+  }
+  if(item.id !== original) showToast(`編號 ${original} 剛被別人用走了,已自動改為 ${item.id}`, null, 5000);
+}
 async function fsSetItem(collectionName, item){
+  const key = collectionName + '::' + (item._doc_id || item.id || '');
+  if(key.endsWith('::')) return fsSetItemRaw(collectionName, item);
+  if(fsInFlight.has(key)) return fsInFlight.get(key);
+  const p = fsSetItemRaw(collectionName, item).finally(()=>fsInFlight.delete(key));
+  fsInFlight.set(key, p);
+  return p;
+}
+async function fsSetItemRaw(collectionName, item){
   try{
     if(new TextEncoder().encode(JSON.stringify(item)).length > 900*1024) throw new Error('單筆資料超過 900 KB，請先移除 Base64 照片。');
+    await fsClaimFreeId(collectionName, item);
     const docId = item._doc_id || db.collection(collectionName).doc().id;
     item._doc_id = docId;
     await db.collection(collectionName).doc(docId).set(item);
@@ -2836,7 +2864,8 @@ function showToast(msg, kind, ms){
   t.textContent = msg;
   wrap.appendChild(t);
   requestAnimationFrame(()=> t.classList.add('show'));
-  setTimeout(()=>{ t.classList.remove('show'); setTimeout(()=> t.remove(), 300); }, ms || 2200);
+  // 錯誤訊息預設留久一點,2 秒多常常還沒看清楚就消失了
+  setTimeout(()=>{ t.classList.remove('show'); setTimeout(()=> t.remove(), 300); }, ms || (kind==='error' ? 5000 : 2200));
 }
 function localDateISO(date){
   const d = date || new Date();
@@ -3010,15 +3039,23 @@ let currentUser = null; // {uid, code, name, role, active}
 let appDataLoaded = false;
 const IDLE_LOGOUT_MS = 30 * 60 * 1000;
 const IDLE_LOGOUT_NOTICE_KEY = 'sfplab-idle-logout';
+const IDLE_WARN_BEFORE_MS = 2 * 60 * 1000;   // 登出前 2 分鐘先提醒,動一下就續期
 let idleLogoutTimer = null;
+let idleWarnTimer = null;
 let lastUserActivityAt = Date.now();
 let lastActivityResetAt = 0;
 const IDLE_ACTIVITY_EVENTS = ['pointerdown','keydown','touchstart','wheel','scroll'];
 function scheduleIdleLogout(){
   clearTimeout(idleLogoutTimer);
+  clearTimeout(idleWarnTimer);
   if(!currentUser) return;
   const remaining = Math.max(0, IDLE_LOGOUT_MS - (Date.now()-lastUserActivityAt));
   idleLogoutTimer = setTimeout(handleIdleLogout, remaining);
+  const warnIn = remaining - IDLE_WARN_BEFORE_MS;
+  if(warnIn > 0) idleWarnTimer = setTimeout(()=>{
+    if(!currentUser) return;
+    showToast('閒置快 30 分鐘了,再 2 分鐘沒有操作會自動登出;點一下畫面即可續期。', 'error', IDLE_WARN_BEFORE_MS);
+  }, warnIn);
 }
 function noteUserActivity(){
   const now = Date.now();
@@ -3035,7 +3072,9 @@ function startIdleLogoutTimer(){
 }
 function stopIdleLogoutTimer(){
   clearTimeout(idleLogoutTimer);
+  clearTimeout(idleWarnTimer);
   idleLogoutTimer = null;
+  idleWarnTimer = null;
   IDLE_ACTIVITY_EVENTS.forEach(evt=>document.removeEventListener(evt, noteUserActivity));
 }
 async function handleIdleLogout(){
@@ -3144,7 +3183,9 @@ async function establishCurrentUser(firebaseUser){
     role: profile.role || 'member',
     active: true
   };
-  await loadAccounts();
+  // 帳號清單讀不到(規則收緊或網路問題)不該擋住登入;之後 realtime 同步會再補
+  try{ await loadAccounts(); }
+  catch(err){ console.warn('loadAccounts failed, continue login:', err); accounts = []; }
   document.getElementById('loginOverlay').classList.remove('show');
   setAuthStatus('');
   renderUserBadge();
@@ -3879,7 +3920,8 @@ async function handleSave(){
 }
 async function handleDelete(){
   if(!editingId || !isAdmin()) return;
-  if(!confirm('確定要刪除此品項嗎?此動作無法復原。')) return;
+  const target = items.find(i=>i.id===editingId);
+  if(!confirm(`確定要刪除「${(target&&target.name_zh)||editingId}」嗎?此動作無法復原。`)) return;
   const idToDelete = editingId;
   const deletedItem = items.find(i=>i.id===idToDelete);
   const ok = await fsDeleteItem('chemicals', idToDelete, deletedItem&&deletedItem._doc_id);
@@ -3894,8 +3936,8 @@ document.getElementById('photoInput').addEventListener('change', ()=> setTimeout
 async function quickDeleteChem(id, ev){
   if(ev) ev.stopPropagation();
   if(!isAdmin()) return;
-  if(!confirm('確定要刪除此品項嗎?此動作無法復原。')) return;
   const deletedItem = items.find(i=>i.id===id);
+  if(!confirm(`確定要刪除「${(deletedItem&&deletedItem.name_zh)||id}」嗎?此動作無法復原。`)) return;
   const ok = await fsDeleteItem('chemicals', id, deletedItem&&deletedItem._doc_id);
   if(!ok){ alert('刪除失敗,請檢查網路連線後再試一次。'); return; }
   if(deletedItem&&deletedItem.photo_path) await deleteStoredPhoto(deletedItem.photo_path);
@@ -4234,7 +4276,8 @@ async function handleMatSave(){
 }
 async function handleMatDelete(){
   if(!editingMatId || !isAdmin()) return;
-  if(!confirm('確定要刪除此品項嗎?此動作無法復原。')) return;
+  const target = matItems.find(i=>i.id===editingMatId);
+  if(!confirm(`確定要刪除「${(target&&(target.name_zh||target.species))||editingMatId}」嗎?此動作無法復原。`)) return;
   const idToDelete = editingMatId;
   const deletedItem = matItems.find(i=>i.id===idToDelete);
   const ok = await fsDeleteItem('materials', idToDelete, deletedItem&&deletedItem._doc_id);
@@ -4263,8 +4306,8 @@ document.getElementById('matDeleteBtn').addEventListener('click', handleMatDelet
 async function quickDeleteMat(id, ev){
   if(ev) ev.stopPropagation();
   if(!isAdmin()) return;
-  if(!confirm('確定要刪除此品項嗎?此動作無法復原。')) return;
   const deletedItem = matItems.find(i=>i.id===id);
+  if(!confirm(`確定要刪除「${(deletedItem&&(deletedItem.name_zh||deletedItem.species))||id}」嗎?此動作無法復原。`)) return;
   const ok = await fsDeleteItem('materials', id, deletedItem&&deletedItem._doc_id);
   if(!ok){ alert('刪除失敗,請檢查網路連線後再試一次。'); return; }
   if(deletedItem&&deletedItem.photo_path) await deleteStoredPhoto(deletedItem.photo_path);
@@ -4801,7 +4844,8 @@ async function handleSmpSave(){
 }
 async function handleSmpDelete(){
   if(!editingSmpId || !isAdmin()) return;
-  if(!confirm('確定要刪除此品項嗎?此動作無法復原。')) return;
+  const target = smpItems.find(i=>i.id===editingSmpId);
+  if(!confirm(`確定要刪除「${(target&&target.name_zh)?target.name_zh+' '+editingSmpId:editingSmpId}」嗎?此動作無法復原。`)) return;
   const idToDelete = editingSmpId;
   const deletedItem = smpItems.find(i=>i.id===idToDelete);
   const ok = await fsDeleteItem('samples', idToDelete, deletedItem&&deletedItem._doc_id);
@@ -4853,8 +4897,8 @@ document.getElementById('smpDeleteBtn').addEventListener('click', handleSmpDelet
 async function quickDeleteSmp(id, ev){
   if(ev) ev.stopPropagation();
   if(!isAdmin()) return;
-  if(!confirm('確定要刪除此品項嗎?此動作無法復原。')) return;
   const deletedItem = smpItems.find(i=>i.id===id);
+  if(!confirm(`確定要刪除「${(deletedItem&&deletedItem.name_zh)?deletedItem.name_zh+' '+id:id}」嗎?此動作無法復原。`)) return;
   const ok = await fsDeleteItem('samples', id, deletedItem&&deletedItem._doc_id);
   if(!ok){ alert('刪除失敗,請檢查網路連線後再試一次。'); return; }
   if(deletedItem) await Promise.all([deletedItem.photo_extract_path,deletedItem.photo_bottle_path,deletedItem.moisture&&deletedItem.moisture.photo_path].filter(Boolean).map(deleteStoredPhoto));
@@ -5619,7 +5663,8 @@ async function loadSbData(){
   sbData = res && res.value ? JSON.parse(res.value) : {};
 }
 async function saveSbData(){
-  try{ await window.storage.set(SB_KEY, JSON.stringify(sbData), true); }catch(e){}
+  try{ await window.storage.set(SB_KEY, JSON.stringify(sbData), true); return true; }
+  catch(e){ console.error('saveSbData failed:', e); showToast('備份紀錄儲存失敗,請檢查網路連線後再試一次。', 'error'); return false; }
 }
 function addMonths(dateStr, months){
   const d = new Date(dateStr+'T00:00:00');
@@ -5660,7 +5705,7 @@ document.getElementById('sbFormSaveBtn').addEventListener('click', async ()=>{
   const entry = sbEnsureEntry(sbFormInstrument);
   entry.logs.push({ id: genId(entry.logs,'SBL'), date, filename: document.getElementById('sb_filename').value.trim(), includes, by:(currentUser&&currentUser.code)||null, by_uid:(currentUser&&currentUser.uid)||null });
   sbRecalcLast(sbFormInstrument);
-  await saveSbData();
+  if(!await saveSbData()) return;
   document.getElementById('sbFormOverlay').classList.remove('show');
   renderSbTable();
 });
@@ -5670,7 +5715,7 @@ async function undoBackupLog(instrument, logId){
   const entry = sbEnsureEntry(instrument);
   entry.logs = entry.logs.filter(l=>l.id!==logId);
   sbRecalcLast(instrument);
-  await saveSbData();
+  if(!await saveSbData()) return;
   renderSbTable();
 }
 function renderSbLogTable(){
@@ -6077,7 +6122,7 @@ function renderImGrid(){
     const hasNotes = entry && (entry.notes || (entry.photos&&entry.photos.length));
     const fileCount = entry && entry.files ? entry.files.length : 0;
     const maintCount = entry && entry.maintenance ? entry.maintenance.length : 0;
-    return `<div class="im-card" data-instrument-name="${escapeHtml(inst.name)}" style="background:${imRoomColor(inst.room)};">
+    return `<div class="im-card" data-instrument-name="${escapeHtml(inst.name)}" style="--im-room:${imRoomColor(inst.room)};">
       ${inst.photo ? `<img class="im-card-photo" src="${inst.photo}" alt="" loading="lazy">` : ''}
       <div class="im-card-name">${escapeHtml(inst.name)}</div>
       <div class="im-card-room">${roomLabel(inst.room)}</div>
@@ -6882,7 +6927,7 @@ async function cpStepBack(id){
   if(idx<=0) return;
   item.status = CP_STAGE_ORDER[idx-1];
   cpLogPush(item, '回上一步', CP_STAGE_LABEL[item.status]||'');
-  await fsSetItem('chem-purchases', item);
+  if(!await fsSetItem('chem-purchases', item)){ showToast('儲存失敗,請檢查網路連線後再試一次。', 'error'); return; }
   closeCpDetail();
   renderCpKanban();
 }
@@ -6894,7 +6939,7 @@ async function cpCancelItem(id){
   item.prev_status = item.status;
   item.status = 'cancelled';
   cpLogPush(item, '標記都不買', '');
-  await fsSetItem('chem-purchases', item);
+  if(!await fsSetItem('chem-purchases', item)){ showToast('儲存失敗,請檢查網路連線後再試一次。', 'error'); return; }
   closeCpDetail();
   renderCpKanban();
 }
@@ -6903,7 +6948,7 @@ async function cpRestoreItem(id){
   const item = cpItems.find(i=>i.id===id);
   if(!item) return;
   item.status = item.prev_status || 'pending';
-  await fsSetItem('chem-purchases', item);
+  if(!await fsSetItem('chem-purchases', item)){ showToast('儲存失敗,請檢查網路連線後再試一次。', 'error'); return; }
   renderCpKanban();
 }
 
@@ -6969,7 +7014,7 @@ async function cpMarkReady(id){
   item.ready_date = localDateISO();
   item.status = 'ready';
   cpLogPush(item, '確認可入庫', item.ready_date);
-  await fsSetItem('chem-purchases', item);
+  if(!await fsSetItem('chem-purchases', item)){ showToast('儲存失敗,請檢查網路連線後再試一次。', 'error'); return; }
   closeCpDetail();
   renderCpKanban();
 }
@@ -7432,7 +7477,7 @@ document.getElementById('cmpDetailSaveBtn').addEventListener('click', async ()=>
       cpItems.push(newItem);
       record.linked_cp_id = newItem.id;
       cpLogPush(record, '建立採買標籤', newItem.name_zh);
-      await fsSetItem('price-comparisons', record);
+      if(!await fsSetItem('price-comparisons', record)) showToast('採買標籤已建立,但比價紀錄的連結儲存失敗;請重新整理後確認。', 'error');
       cardCreated = true;
       renderCpKanban();
     }else{
@@ -7570,7 +7615,10 @@ document.getElementById('cmpSubmitDecisionBtn').addEventListener('click', async 
     };
     cpLogPush(newItem, '由比價工具建立', `${vendorLabel} ${packStr} $${entry.price}`);
     cpItems.push(newItem);
-    await fsSetItem('chem-purchases', newItem);
+    if(!await fsSetItem('chem-purchases', newItem)){
+      cpItems = cpItems.filter(i=>i!==newItem);
+      showToast('採買項目建立失敗,請檢查網路連線後再試一次。', 'error'); return;
+    }
   }
   document.getElementById('cmp_addedNote').textContent = `✅ 已送出審核:${record.decided_vendor},請到「已審核待訂購」欄位確認後標記已訂購。`;
   renderCmpResultTable(record);
@@ -7586,13 +7634,13 @@ document.getElementById('cmpCancelDecisionBtn').addEventListener('click', async 
   record.decided_vendor = '都不買';
   record.addedToList = true;
   cpLogPush(record, '標記都不買', '');
-  await fsSetItem('price-comparisons', record);
+  if(!await fsSetItem('price-comparisons', record)){ showToast('儲存失敗,請檢查網路連線後再試一次。', 'error'); return; }
   if(record.linked_cp_id){
     const item = cpItems.find(i=>i.id===record.linked_cp_id);
     if(item){
       item.prev_status = item.status; item.status = 'cancelled';
       cpLogPush(item, '標記都不買', '');
-      await fsSetItem('chem-purchases', item);
+      if(!await fsSetItem('chem-purchases', item)) showToast('比價已標記都不買,但連結的採買項目更新失敗;請重新整理後確認。', 'error');
     }
   }
   document.getElementById('cmp_addedNote').textContent = '已標記為都不買。';
@@ -7644,7 +7692,7 @@ async function cmpSendForReview(){
   cpLogPush(record, '送出審核', '等待選擇廠商');
   const ok = await fsSetItem('chem-purchases', item);
   if(!ok){ item.status='pending'; item.logs.pop(); alert('送出失敗,請檢查網路與權限後再試一次。'); return; }
-  await fsSetItem('price-comparisons', record);
+  if(!await fsSetItem('price-comparisons', record)) showToast('已送出審核,但比價紀錄狀態儲存失敗;請重新整理後確認。', 'error');
   renderCpKanban();
   cmpUpdateActionState(record);
   closeCmpDetail();
@@ -9270,10 +9318,17 @@ function stopRealtimeSync(){
   realtimeUnsubscribers.forEach(fn=>{ try{ fn(); }catch(_e){} });
   realtimeUnsubscribers = [];
 }
+/* 即時同步斷掉時只寫 console 沒人看得到;改成畫面提示,但多個監聽同時失敗只提示一次 */
+let realtimeErrorNotifiedAt = 0;
+function notifyRealtimeError(label, err){
+  console.error(`realtime ${label} failed:`, err);
+  const now = Date.now();
+  if(now - realtimeErrorNotifiedAt < 60*1000) return;
+  realtimeErrorNotifiedAt = now;
+  showToast('即時同步中斷,目前顯示的可能不是最新資料;請檢查網路後重新整理。', 'error', 8000);
+}
 function watchCollection(query, onData, label){
-  const unsubscribe = query.onSnapshot(snap=>onData(snapshotItems(snap)), err=>{
-    console.error(`realtime ${label} failed:`, err);
-  });
+  const unsubscribe = query.onSnapshot(snap=>onData(snapshotItems(snap)), err=>notifyRealtimeError(label, err));
   realtimeUnsubscribers.push(unsubscribe);
 }
 function watchBlob(key, onData, label){
@@ -9281,7 +9336,7 @@ function watchBlob(key, onData, label){
     if(!snap.exists){ onData(null); return; }
     try{ onData(JSON.parse(snap.data().value)); }
     catch(err){ console.error(`realtime ${label} parse failed:`, err); }
-  }, err=>console.error(`realtime ${label} failed:`, err));
+  }, err=>notifyRealtimeError(label, err));
   realtimeUnsubscribers.push(unsubscribe);
 }
 function startRealtimeSync(){
