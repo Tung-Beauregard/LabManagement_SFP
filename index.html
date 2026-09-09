@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="app-version" content="2026.09.08.1">
+<meta name="app-version" content="2026.09.09.1">
 <meta name="theme-color" content="#1B4B43" id="metaThemeColor">
 <title>SFPLAB 實驗室管理系統</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>">
@@ -122,9 +122,21 @@
 
   /* ---- toast 通知 ---- */
   #toastWrap{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:200;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;}
-  .toast{background:var(--pine);color:var(--on-pine);padding:10px 18px;border-radius:var(--pill);font-size:13px;box-shadow:var(--shadow-md);opacity:0;transform:translateY(8px);transition:opacity .25s ease, transform .25s ease;max-width:86vw;text-align:center;}
+  .toast{background:var(--pine);color:var(--on-pine);padding:10px 18px;border-radius:var(--pill);font-size:13px;box-shadow:var(--shadow-md);opacity:0;transform:translateY(8px);transition:opacity .25s ease, transform .25s ease;max-width:86vw;text-align:center;white-space:pre-line;}
   .toast.show{opacity:1;transform:translateY(0);}
   .toast.error{background:var(--danger);}
+  /* 站內對話框(取代原生 alert/confirm/prompt) */
+  .ui-dialog-overlay{position:fixed;inset:0;background:rgba(18,52,48,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:200;}
+  .ui-dialog{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow-md);width:min(440px,100%);padding:18px 18px 14px;}
+  .ui-dialog-msg{font-size:14px;line-height:1.65;white-space:pre-line;word-break:break-word;}
+  .ui-dialog-input{width:100%;margin-top:12px;border:1px solid var(--line);border-radius:var(--radius-sm);padding:9px 11px;font-size:13px;font-family:var(--sans);background:var(--panel-soft);color:var(--ink);}
+  .ui-dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;}
+  /* 可排序表格:點標題切換升冪/降冪 */
+  table.sortable thead th{cursor:pointer;user-select:none;white-space:nowrap;}
+  table.sortable thead th.sort-asc::after{content:" ▲";font-size:9px;opacity:.8;}
+  table.sortable thead th.sort-desc::after{content:" ▼";font-size:9px;opacity:.8;}
+  /* 資料還沒從雲端回來前,不要先閃出「目前沒有資料」 */
+  body:not(.app-ready) .empty{display:none !important;}
 
   /* ---- 載入骨架屏 ---- */
   .skeleton-row{height:46px;border-radius:var(--radius);background:linear-gradient(90deg,var(--skel-a) 25%,var(--skel-b) 50%,var(--skel-a) 75%);background-size:200% 100%;animation:shimmer 1.2s linear infinite;margin-bottom:8px;}
@@ -486,6 +498,16 @@
     body.printing-purchase-report #printRoot #purchasePrintArea{display:block !important;width:auto;max-width:none;margin:0;padding:0;}
     .print-report .rep-grid thead{display:table-header-group;}
     .print-report .rep-grid tr{page-break-inside:avoid;}
+    /* 其他頁面直接列印:只留主內容,側欄、按鈕、彈窗、提示都不印 */
+    body:not(.printing-purchase-report) .sidebar,
+    body:not(.printing-purchase-report) .hamburger-btn,
+    body:not(.printing-purchase-report) .overlay,
+    body:not(.printing-purchase-report) #toastWrap,
+    body:not(.printing-purchase-report) #updateBanner,
+    body:not(.printing-purchase-report) .btn,
+    body:not(.printing-purchase-report) .modal-actions{display:none !important;}
+    body:not(.printing-purchase-report){background:#fff;}
+    body:not(.printing-purchase-report) .main{margin:0;padding:0;max-width:none;}
   }
 
   /* ---- responsive: phones & narrow screens ---- */
@@ -831,7 +853,7 @@
         <label>再輸入一次密碼 *</label>
         <input type="password" id="reg_password2" autocomplete="new-password" placeholder="再輸入一次">
       </div>
-      <div style="font-size:11px;color:var(--amber);margin-bottom:10px;text-align:left;">註冊後需由管理員啟用帳號才能進入系統。密碼由 Firebase Authentication 保管，管理員無法查看。</div>
+      <div style="font-size:11px;color:var(--amber);margin-bottom:10px;text-align:left;">註冊後需由管理員啟用帳號才能進入系統。密碼由 Firebase Authentication 保管,管理員無法查看。</div>
       <button class="btn btn-primary" id="registerSubmitBtn" type="submit" style="width:100%;">建立帳號</button>
       <button class="btn btn-ghost" id="showLoginBtn" type="button" style="width:100%;margin-top:8px;">已經有帳號?返回登入</button>
     </form>
@@ -964,7 +986,7 @@
       </div>
 
       <div class="tablewrap">
-        <table>
+        <table class="sortable">
           <colgroup>
             <col style="width:40px;"><col style="width:26%;"><col style="width:11%;"><col style="width:9%;"><col style="width:9%;"><col style="width:22%;"><col style="width:7%;"><col style="width:44px;">
           </colgroup>
@@ -1009,7 +1031,7 @@
       </div>
 
       <div class="tablewrap">
-        <table>
+        <table class="sortable">
           <thead>
             <tr>
               <th></th><th>中文名稱</th><th>物種</th><th>來源</th><th>部位</th><th>存放位置</th><th>取得日期</th><th>預計用途</th><th></th>
@@ -1049,7 +1071,7 @@
       </div>
 
       <div class="tablewrap">
-        <table>
+        <table class="sortable">
           <thead>
             <tr>
               <th>中文名稱</th><th>編號</th><th>持有人</th><th>萃取日期</th><th>萃取物</th><th>分離部</th><th>萃取物重量</th><th>萃取率</th><th></th>
@@ -1085,7 +1107,7 @@
         <button class="btn btn-primary" id="libAddBtn" style="display:none;">＋ 新增圖書</button>
       </div>
       <div class="tablewrap">
-        <table>
+        <table class="sortable">
           <thead><tr><th>圖書</th><th>編號</th><th>分類</th><th>位置</th><th>狀態</th><th>借閱人 / 到期日</th><th></th></tr></thead>
           <tbody id="libTbody"></tbody>
         </table>
@@ -1097,10 +1119,10 @@
 
     <div class="overlay" id="libBookOverlay">
       <div class="modal" style="max-width:520px;">
-        <button class="close" id="libBookClose">✕</button>
+        <button class="close" aria-label="關閉" id="libBookClose">✕</button>
         <h2 id="libBookTitle">新增圖書</h2>
         <div class="field row2">
-          <div><label>圖書編號 *</label><input type="text" id="lib_code" placeholder="自動產生，可自行修改"></div>
+          <div><label>圖書編號 *</label><input type="text" id="lib_code" placeholder="自動產生,可自行修改"></div>
           <div><label>ISBN</label><input type="text" id="lib_isbn"></div>
         </div>
         <div class="field"><label>書名 *</label><input type="text" id="lib_title"></div>
@@ -1121,7 +1143,7 @@
 
     <div class="overlay" id="libBorrowOverlay">
       <div class="modal" style="max-width:400px;">
-        <button class="close" id="libBorrowClose">✕</button>
+        <button class="close" aria-label="關閉" id="libBorrowClose">✕</button>
         <h2>借閱圖書</h2>
         <div class="today-card" id="libBorrowBookLabel"></div>
         <div class="field"><label>預計歸還日 *</label><input type="date" id="lib_due_date"></div>
@@ -1153,7 +1175,7 @@
       </div>
       <div class="section-title">抽籤權重</div>
       <div class="tablewrap">
-        <table><thead><tr><th>使用者</th><th>角色</th><th>權重</th></tr></thead><tbody id="dutyWeightTbody"></tbody></table>
+        <table class="sortable"><thead><tr><th>使用者</th><th>角色</th><th>權重</th></tr></thead><tbody id="dutyWeightTbody"></tbody></table>
       </div>
       <div class="section-title">指派與抽籤紀錄</div>
       <div class="today-card" id="dutyDrawHistory"></div>
@@ -1178,7 +1200,7 @@
         </div>
         <div class="management-card">
           <h3>藥品存放位置</h3>
-          <div class="help">刪除後只會停止提供給新資料選擇，既有藥品的位置仍會保留顯示。</div>
+          <div class="help">刪除後只會停止提供給新資料選擇,既有藥品的位置仍會保留顯示。</div>
           <div class="toolbar" style="margin-bottom:0;"><input type="text" id="saChemLocationInput" placeholder="新增位置名稱"><button class="btn btn-primary btn-sm" id="saChemLocationAdd">新增</button></div>
           <div class="setting-list" id="saChemLocationList"></div>
         </div>
@@ -1195,7 +1217,7 @@
         </div>
         <div class="management-card">
           <h3>試材存放位置</h3>
-          <div class="help">可使用原本的 A0～G3，也可以新增冰箱、櫃位或其他自訂位置。</div>
+          <div class="help">可使用原本的 A0～G3,也可以新增冰箱、櫃位或其他自訂位置。</div>
           <div class="toolbar" style="margin-bottom:0;"><input type="text" id="saMatLocationInput" placeholder="新增位置名稱"><button class="btn btn-primary btn-sm" id="saMatLocationAdd">新增</button></div>
           <div class="setting-list" id="saMatLocationList"></div>
         </div>
@@ -1215,18 +1237,18 @@
         </div>
       </div>
       <div class="tablewrap">
-        <table>
+        <table class="sortable">
           <thead>
             <tr><th>姓名</th><th>名稱縮寫</th><th>狀態</th><th>角色</th><th></th></tr>
           </thead>
           <tbody id="adminTbody"></tbody>
         </table>
       </div>
-      <div style="font-size:11px;color:var(--ink-soft);margin-top:10px;">新註冊帳號預設為「待啟用」。密碼僅由 Firebase Authentication 處理，這裡不會顯示或儲存密碼。忘記密碼時，請在 Firebase Console 的 Authentication 頁面重設。</div>
+      <div style="font-size:11px;color:var(--ink-soft);margin-top:10px;">新註冊帳號預設為「待啟用」。密碼僅由 Firebase Authentication 處理,這裡不會顯示或儲存密碼。忘記密碼時,請在 Firebase Console 的 Authentication 頁面重設。</div>
 
       <div class="section-title" id="deletedAccountsTitle" style="display:none;">權限已刪除的帳號</div>
       <div class="tablewrap" id="deletedAccountsWrap" style="display:none;">
-        <table>
+        <table class="sortable">
           <thead><tr><th>姓名</th><th>名稱縮寫</th><th>刪除時間</th><th>原角色</th><th></th></tr></thead>
           <tbody id="deletedAdminTbody"></tbody>
         </table>
@@ -1234,7 +1256,7 @@
 
       <div class="section-title" id="fullBackupSectionTitle" style="display:none;">全部資料備份(僅總管理員)</div>
       <div class="today-card" id="fullBackupCard" style="display:none;">
-        <div style="font-size:12px;color:var(--ink-soft);margin-bottom:10px;">匯出會把藥品/試材/樣品/購買/比價/儀器使用步驟/值週生/待辦事項等資料打包成 JSON。Firebase Authentication 帳號與密碼不包含在內，需由 Firebase Console 管理。</div>
+        <div style="font-size:12px;color:var(--ink-soft);margin-bottom:10px;">匯出會把藥品/試材/樣品/購買/比價/儀器使用步驟/值週生/待辦事項等資料打包成 JSON。Firebase Authentication 帳號與密碼不包含在內,需由 Firebase Console 管理。</div>
         <button class="btn btn-primary btn-sm" id="fullExportBtn">⬇️ 匯出全部資料</button>
         <button class="btn btn-ghost btn-sm" id="fullImportBtn">⬆️ 匯入全部資料</button>
         <button class="btn btn-ghost btn-sm" id="migrateUidBtn">將舊資料建立者對應到 UID</button>
@@ -1259,7 +1281,7 @@
         <button class="btn btn-primary" id="culAddBtn">＋ 新增登記</button>
       </div>
       <div class="tablewrap">
-        <table>
+        <table class="sortable">
           <thead><tr><th>日期</th><th>藥品</th><th>使用量</th><th>用途</th><th>使用者</th><th>備註</th><th></th></tr></thead>
           <tbody id="culTbody"></tbody>
         </table>
@@ -1303,13 +1325,13 @@
     <!-- 儀器預約:完整清單 -->
     <div class="overlay" id="iulListOverlay">
       <div class="modal" style="max-width:760px;">
-        <button class="close" id="iulListClose">✕</button>
+        <button class="close" aria-label="關閉" id="iulListClose">✕</button>
         <h2>所有預約</h2>
         <div class="toolbar">
           <input type="text" id="iulSearch" placeholder="搜尋儀器名稱...">
         </div>
         <div class="tablewrap">
-          <table>
+          <table class="sortable">
             <thead><tr><th>日期</th><th>時段</th><th>儀器</th><th>實驗室</th><th>用途</th><th>預約人</th><th></th></tr></thead>
             <tbody id="iulTbody"></tbody>
           </table>
@@ -1478,7 +1500,7 @@
     <!-- 圖譜詳細檢視 -->
     <div class="overlay" id="galDetailOverlay">
       <div class="modal" style="max-width:960px;">
-        <button class="close" id="galDetailClose">✕</button>
+        <button class="close" aria-label="關閉" id="galDetailClose">✕</button>
         <div id="galDetailBody"></div>
       </div>
     </div>
@@ -1486,7 +1508,7 @@
     <!-- 新增儀器 -->
     <div class="overlay" id="imAddOverlay">
       <div class="modal" style="max-width:380px;">
-        <button class="close" id="imAddClose">✕</button>
+        <button class="close" aria-label="關閉" id="imAddClose">✕</button>
         <h2>新增儀器</h2>
         <div class="field">
           <label>儀器名稱 *</label>
@@ -1508,7 +1530,7 @@
     <!-- 編輯儀器(管理員) -->
     <div class="overlay" id="imEditOverlay">
       <div class="modal" style="max-width:380px;">
-        <button class="close" id="imEditClose">✕</button>
+        <button class="close" aria-label="關閉" id="imEditClose">✕</button>
         <h2>編輯儀器</h2>
         <div class="field">
           <label>儀器名稱 *</label>
@@ -1536,7 +1558,7 @@
     <!-- 儀器詳情:說明書+維修紀錄 -->
     <div class="overlay" id="imDetailOverlay">
       <div class="modal" style="max-width:520px;">
-        <button class="close" id="imDetailClose">✕</button>
+        <button class="close" aria-label="關閉" id="imDetailClose">✕</button>
         <div class="label-card">
           <div class="label-stripe" style="background:var(--pine);"></div>
           <div class="label-top">
@@ -1606,7 +1628,7 @@
         <select id="sbFilterRoom"><option value="">所有實驗室</option><option value="602">602室</option><option value="603室">603室</option></select>
       </div>
       <div class="tablewrap">
-        <table>
+        <table class="sortable">
           <thead><tr><th>儀器</th><th>實驗室</th><th>備份週期</th><th>上次備份</th><th>下次到期</th><th>狀態</th><th></th></tr></thead>
           <tbody id="sbTbody"></tbody>
         </table>
@@ -1614,7 +1636,7 @@
 
       <div class="section-title">備份紀錄(取消備份放在這裡,避免跟上面的按鈕誤觸)</div>
       <div class="tablewrap">
-        <table>
+        <table class="sortable">
           <thead><tr><th>儀器</th><th>日期</th><th>備份檔名/資料夾</th><th>內容</th><th></th></tr></thead>
           <tbody id="sbLogTbody"></tbody>
         </table>
@@ -1625,7 +1647,7 @@
     <!-- 新增備份紀錄 -->
     <div class="overlay" id="sbFormOverlay">
       <div class="modal" style="max-width:380px;">
-        <button class="close" id="sbFormClose">✕</button>
+        <button class="close" aria-label="關閉" id="sbFormClose">✕</button>
         <h2 id="sbFormTitle">標記已備份</h2>
         <div class="field">
           <label>備份檔名 / 資料夾名稱</label>
@@ -1681,7 +1703,7 @@
 
       <div class="section-title" style="margin-top:6px;padding-top:0;border-top:none;">每日工作</div>
       <div class="tablewrap">
-        <table>
+        <table class="sortable">
           <thead><tr id="drDailyHeadRow"><th style="width:30%;">工作項目</th><th>一</th><th>二</th><th>三</th><th>四</th><th>五</th></tr></thead>
           <tbody id="drDailyTbody"></tbody>
         </table>
@@ -1710,10 +1732,10 @@
       <div id="cpReviewList"></div>
     </section>
 
-    <!-- 比價紀錄：從主畫面收進按鈕，支援中英文名稱查詢 -->
+    <!-- 比價紀錄：從主畫面收進按鈕,支援中英文名稱查詢 -->
     <div class="overlay" id="cmpHistoryOverlay">
       <div class="modal" style="max-width:920px;">
-        <button class="close" id="cmpHistoryClose">✕</button>
+        <button class="close" aria-label="關閉" id="cmpHistoryClose">✕</button>
         <h2>比價紀錄</h2>
         <div class="toolbar">
           <input type="text" id="cmpHistorySearch" placeholder="搜尋中文名稱或英文名稱...">
@@ -1726,7 +1748,7 @@
     <!-- 採買待審核黑白列印報表 -->
     <div class="overlay" id="purchaseReportOverlay" style="z-index:80;">
       <div class="modal" style="max-width:1050px;">
-        <button class="close" id="purchaseReportClose">✕</button>
+        <button class="close" aria-label="關閉" id="purchaseReportClose">✕</button>
         <div class="toolbar" style="justify-content:flex-end;">
           <button class="btn btn-primary" id="purchaseReportPrintBtn">列印</button>
         </div>
@@ -1737,7 +1759,7 @@
     <!-- 待購買項目詳情 -->
     <div class="overlay" id="cpDetailOverlay">
       <div class="modal" style="max-width:420px;">
-        <button class="close" id="cpDetailClose">✕</button>
+        <button class="close" aria-label="關閉" id="cpDetailClose">✕</button>
         <div class="label-card">
           <div class="label-stripe" id="cpDetailStripe" style="background:var(--pine);"></div>
           <div class="label-top">
@@ -1758,7 +1780,7 @@
     <!-- 新增/編輯待購買項目 -->
     <div class="overlay" id="cpFormOverlay">
       <div class="modal">
-        <button class="close" id="cpFormClose">✕</button>
+        <button class="close" aria-label="關閉" id="cpFormClose">✕</button>
         <h2 id="cpFormTitle">新增待購買項目</h2>
         <div class="field" id="cp_type_wrap">
           <label>類型</label>
@@ -1823,7 +1845,7 @@
     <!-- 標記已訂購 -->
     <div class="overlay" id="cpOrderOverlay">
       <div class="modal" style="max-width:360px;">
-        <button class="close" id="cpOrderClose">✕</button>
+        <button class="close" aria-label="關閉" id="cpOrderClose">✕</button>
         <h2>標記已訂購</h2>
         <div class="field"><label>廠商</label>
           <select id="cpo_vendor"><option value="力方">力方</option><option value="友和">友和</option><option value="景明">景明</option><option value="鼎好">鼎好</option><option value="珂化">珂化</option><option value="其他">其他</option></select>
@@ -1841,7 +1863,7 @@
     <!-- 標記已到貨 -->
     <div class="overlay" id="cpReceiveOverlay">
       <div class="modal" style="max-width:360px;">
-        <button class="close" id="cpReceiveClose">✕</button>
+        <button class="close" aria-label="關閉" id="cpReceiveClose">✕</button>
         <h2>標記已到貨</h2>
         <div class="field"><label>收到貨日期 *</label><input type="date" id="cpr_date"></div>
         <div class="field"><label>SDS有效日期(選填,SDS上的發行/更新日期)</label><input type="date" id="cpr_sds_date"></div>
@@ -1852,7 +1874,7 @@
     <!-- 比價明細 -->
     <div class="overlay" id="cmpDetailOverlay">
       <div class="modal" style="max-width:760px;">
-        <button class="close" id="cmpDetailClose">✕</button>
+        <button class="close" aria-label="關閉" id="cmpDetailClose">✕</button>
         <h2 id="cmpDetailTitle">新增比價</h2>
         <div class="field row2">
           <div><label>中文名稱 *</label><input type="text" id="cmp_item_name"></div>
@@ -1935,7 +1957,7 @@
     <!-- 待辦事項:新增 -->
     <div class="overlay" id="todoFormOverlay">
       <div class="modal" style="max-width:420px;">
-        <button class="close" id="todoFormClose">✕</button>
+        <button class="close" aria-label="關閉" id="todoFormClose">✕</button>
         <h2>新增工作</h2>
         <div class="field">
           <label>工作內容 *</label>
@@ -1968,7 +1990,7 @@
     <!-- 待辦事項:完整清單 -->
     <div class="overlay" id="todoListOverlay">
       <div class="modal" style="max-width:560px;">
-        <button class="close" id="todoListClose">✕</button>
+        <button class="close" aria-label="關閉" id="todoListClose">✕</button>
         <h2>所有工作</h2>
         <div class="toolbar">
           <select id="todoFilterStatus"><option value="open">未完成</option><option value="done">已完成</option><option value="all">全部</option></select>
@@ -1980,7 +2002,7 @@
     <!-- 待辦事項:已完成工作 -->
     <div class="overlay" id="todoDoneOverlay">
       <div class="modal" style="max-width:620px;">
-        <button class="close" id="todoDoneClose">✕</button>
+        <button class="close" aria-label="關閉" id="todoDoneClose">✕</button>
         <h2>已完成工作</h2>
         <div class="field">
           <input type="text" id="todoDoneSearch" placeholder="搜尋工作內容、完成者、建立者">
@@ -2013,7 +2035,7 @@
 <!-- Add Modal: 藥品使用登記 -->
 <div class="overlay" id="culFormOverlay">
   <div class="modal">
-    <button class="close" id="culFormClose">✕</button>
+    <button class="close" aria-label="關閉" id="culFormClose">✕</button>
     <h2>新增藥品使用登記</h2>
     <div class="field">
       <label>選擇藥品 *</label>
@@ -2051,7 +2073,7 @@
 <!-- Add Modal: 儀器預約 -->
 <div class="overlay" id="iulFormOverlay">
   <div class="modal">
-    <button class="close" id="iulFormClose">✕</button>
+    <button class="close" aria-label="關閉" id="iulFormClose">✕</button>
     <h2>新增儀器預約</h2>
     <div class="field">
       <label>選擇儀器 *</label>
@@ -2077,7 +2099,7 @@
 
 <div class="overlay" id="editNameOverlay">
   <div class="modal" style="max-width:360px;">
-    <button class="close" id="editNameClose">✕</button>
+    <button class="close" aria-label="關閉" id="editNameClose">✕</button>
     <h2>編輯個人資料</h2>
     <div class="field" style="text-align:left;">
       <label>姓名</label>
@@ -2097,7 +2119,7 @@
 
 <div class="overlay" id="importModeOverlay">
   <div class="modal" style="max-width:400px;text-align:center;">
-    <button class="close" id="importModeCloseX">✕</button>
+    <button class="close" aria-label="關閉" id="importModeCloseX">✕</button>
     <h2 style="margin-bottom:8px;">選擇匯入方式</h2>
     <div style="font-size:12px;color:var(--ink-soft);margin-bottom:18px;" id="importModeDesc"></div>
     <button class="btn btn-primary" id="importModeAddBtn" style="width:100%;margin-bottom:8px;">新增(合併到現有清單)</button>
@@ -2109,7 +2131,7 @@
 <!-- Add/Edit Modal: 藥品 -->
 <div class="overlay" id="formOverlay">
   <div class="modal">
-    <button class="close" id="formClose">✕</button>
+    <button class="close" aria-label="關閉" id="formClose">✕</button>
     <h2 id="formTitle">新增藥品</h2>
     <div class="field row2">
       <div><label>中文名稱 *</label><input type="text" id="f_name_zh"></div>
@@ -2185,7 +2207,7 @@
 <!-- Detail / QR Modal: 藥品 -->
 <div class="overlay" id="detailOverlay">
   <div class="modal" style="max-width:460px;">
-    <button class="close" id="detailClose">✕</button>
+    <button class="close" aria-label="關閉" id="detailClose">✕</button>
     <div class="label-card">
       <div class="label-stripe" id="detailStripe"></div>
       <div class="label-top">
@@ -2226,7 +2248,7 @@
 <!-- Detail Modal: 試材 -->
 <div class="overlay" id="matDetailOverlay">
   <div class="modal" style="max-width:460px;">
-    <button class="close" id="matDetailClose">✕</button>
+    <button class="close" aria-label="關閉" id="matDetailClose">✕</button>
     <div class="label-card">
       <div class="label-stripe" style="background:var(--pine);"></div>
       <div class="label-top">
@@ -2260,7 +2282,7 @@
 <!-- Add/Edit Modal: 試材 -->
 <div class="overlay" id="matFormOverlay">
   <div class="modal">
-    <button class="close" id="matFormClose">✕</button>
+    <button class="close" aria-label="關閉" id="matFormClose">✕</button>
     <h2 id="matFormTitle">新增試材</h2>
     <div id="matCreatorBanner" style="display:none;font-size:12px;padding:8px 10px;border-radius:var(--radius-sm);margin-bottom:14px;"></div>
     <div class="field id-preview">
@@ -2321,7 +2343,7 @@
 <!-- Detail Modal: 樣品 -->
 <div class="overlay" id="smpDetailOverlay">
   <div class="modal" style="max-width:460px;">
-    <button class="close" id="smpDetailClose">✕</button>
+    <button class="close" aria-label="關閉" id="smpDetailClose">✕</button>
     <div class="label-card">
       <div class="label-stripe" style="background:var(--pine);"></div>
       <div class="label-top">
@@ -2362,7 +2384,7 @@
 <!-- Add/Edit Modal: 樣品 -->
 <div class="overlay" id="smpFormOverlay">
   <div class="modal">
-    <button class="close" id="smpFormClose">✕</button>
+    <button class="close" aria-label="關閉" id="smpFormClose">✕</button>
     <h2 id="smpFormTitle">新增樣品</h2>
     <div id="smpCreatorBanner" style="display:none;font-size:12px;padding:8px 10px;border-radius:var(--radius-sm);margin-bottom:14px;"></div>
     <div id="smpQrSection" style="display:none;text-align:center;margin-bottom:16px;padding:12px;background:var(--panel-soft);border-radius:var(--radius);">
@@ -2552,7 +2574,7 @@ window.storage = {
   async set(key, value, shared){
     if(shared){
       try{
-        if(new TextEncoder().encode(String(value)).length > 900*1024) throw new Error('資料超過 900 KB，請移除 Base64 照片或拆分資料後再儲存。');
+        if(new TextEncoder().encode(String(value)).length > 900*1024) throw new Error('資料超過 900 KB,請移除 Base64 照片或拆分資料後再儲存。');
         await db.collection(FS_COLLECTION).doc(key).set({ value: value, updated_at: Date.now() });
         return { key, value, shared: true };
       }catch(e){ console.error('storage.set(shared) failed:', e); throw e; }
@@ -2624,7 +2646,7 @@ async function fsSetItem(collectionName, item){
 }
 async function fsSetItemRaw(collectionName, item){
   try{
-    if(new TextEncoder().encode(JSON.stringify(item)).length > 900*1024) throw new Error('單筆資料超過 900 KB，請先移除 Base64 照片。');
+    if(new TextEncoder().encode(JSON.stringify(item)).length > 900*1024) throw new Error('單筆資料超過 900 KB,請先移除 Base64 照片。');
     await fsClaimFreeId(collectionName, item);
     const docId = item._doc_id || db.collection(collectionName).doc().id;
     item._doc_id = docId;
@@ -2817,7 +2839,7 @@ async function saveSystemSettings(){
     populateMatFilters();
     return true;
   }catch(err){
-    alert('系統清單儲存失敗，請檢查網路與 Firestore 權限。');
+    notify('系統清單儲存失敗,請檢查網路與 Firestore 權限。');
     return false;
   }
 }
@@ -2867,6 +2889,143 @@ function showToast(msg, kind, ms){
   // 錯誤訊息預設留久一點,2 秒多常常還沒看清楚就消失了
   setTimeout(()=>{ t.classList.remove('show'); setTimeout(()=> t.remove(), 300); }, ms || (kind==='error' ? 5000 : 2200));
 }
+/* ---- 站內對話框:取代原生 alert / confirm / await promptDialog(不卡整頁、可套主題、手機上不突兀) ---- */
+function notify(msg){
+  const t=String(msg);
+  const info=/^(✅|已|完成)/.test(t) && !/失敗|錯誤|無法/.test(t);
+  showToast(t, info?null:'error', info?3000:5000);
+}
+function uiDialog(o){
+  const message=o.message, okText=o.okText||'確定', cancelText=o.cancelText||'取消', input=(o.input===undefined?null:o.input), danger=!!o.danger;
+  return new Promise(resolve=>{
+    const ov=document.createElement('div'); ov.className='ui-dialog-overlay';
+    ov.innerHTML='<div class="ui-dialog" role="dialog" aria-modal="true"><div class="ui-dialog-msg"></div>'
+      +(input!==null?'<input type="text" class="ui-dialog-input">':'')
+      +'<div class="ui-dialog-actions"><button type="button" class="btn btn-ghost ui-dialog-cancel"></button>'
+      +'<button type="button" class="btn '+(danger?'btn-danger':'btn-primary')+' ui-dialog-ok"></button></div></div>';
+    ov.querySelector('.ui-dialog-msg').textContent=message;
+    const okBtn=ov.querySelector('.ui-dialog-ok'), cancelBtn=ov.querySelector('.ui-dialog-cancel'), inp=ov.querySelector('.ui-dialog-input');
+    okBtn.textContent=okText; cancelBtn.textContent=cancelText;
+    if(inp) inp.value=input||'';
+    const prevFocus=document.activeElement;
+    const cancelVal=input!==null?null:false;
+    const okVal=()=>input!==null?inp.value:true;
+    const done=(val)=>{ document.removeEventListener('keydown',onKey,true); ov.remove(); try{ if(prevFocus&&prevFocus.focus) prevFocus.focus(); }catch(_e){} resolve(val); };
+    const onKey=(e)=>{
+      if(e.key==='Escape'){ e.stopImmediatePropagation(); e.preventDefault(); done(cancelVal); }
+      else if(e.key==='Enter' && document.activeElement!==cancelBtn){ e.stopImmediatePropagation(); e.preventDefault(); done(okVal()); }
+    };
+    document.addEventListener('keydown',onKey,true);
+    okBtn.onclick=()=>done(okVal());
+    cancelBtn.onclick=()=>done(cancelVal);
+    ov.addEventListener('click',e=>{ if(e.target===ov) done(cancelVal); });
+    document.body.appendChild(ov);
+    setTimeout(()=>{ (inp||okBtn).focus(); if(inp) inp.select(); },20);
+  });
+}
+function confirmDialog(message, opts){ return uiDialog(Object.assign({message, danger:/刪除|清空|覆蓋|移除|不買/.test(String(message))}, opts||{})); }
+function promptDialog(message, defaultValue){ return uiDialog({message, input:defaultValue==null?'':String(defaultValue)}); }
+/* ---- 彈窗共通行為:Esc 關閉、開啟時自動聚焦第一個欄位 ---- */
+document.addEventListener('keydown', (e)=>{
+  if(e.key!=='Escape') return;
+  const open=[...document.querySelectorAll('.overlay.show')].pop();
+  if(!open) return;
+  const closeBtn=open.querySelector('.close');
+  if(closeBtn){ e.preventDefault(); closeBtn.click(); }
+});
+(function(){
+  const focusFirst=(ov)=>{
+    if(window.matchMedia('(max-width:680px)').matches) return;   // 手機不自動彈鍵盤
+    const el=ov.querySelector('.modal input:not([type=hidden]):not([type=file]):not([type=checkbox]):not([readonly]):not([disabled]), .modal select:not([disabled]), .modal textarea:not([disabled])');
+    if(el) setTimeout(()=>{ try{ el.focus({preventScroll:true}); }catch(_e){} }, 30);
+  };
+  const obs=new MutationObserver(ms=>ms.forEach(m=>{
+    const ov=m.target;
+    if(ov.classList.contains('show') && !ov._wasShown){ ov._wasShown=true; focusFirst(ov); }
+    else if(!ov.classList.contains('show')) ov._wasShown=false;
+  }));
+  document.querySelectorAll('.overlay').forEach(ov=>obs.observe(ov,{attributes:true,attributeFilter:['class']}));
+})();
+/* ---- 表單彈窗:有還沒儲存的修改時,關閉前先問一聲(草稿表單也適用) ---- */
+(function(){
+  const snap=(ov)=>[...ov.querySelectorAll('.modal input:not([type=file]):not([type=hidden]), .modal select, .modal textarea')]
+    .map(el=>(el.type==='checkbox'||el.type==='radio')?(el.checked?'1':'0'):el.value).join('\u0001');
+  document.querySelectorAll('.overlay').forEach(ov=>{
+    new MutationObserver(()=>{
+      if(ov.classList.contains('show')) setTimeout(()=>{ if(ov.classList.contains('show')) ov._formSnap=snap(ov); },200);
+      else ov._formSnap=null;
+    }).observe(ov,{attributes:true,attributeFilter:['class']});
+  });
+  document.addEventListener('click', async (e)=>{
+    const ov=e.target.closest('.overlay.show'); if(!ov||ov._formSnap==null) return;
+    const btn=e.target.closest('.modal .close, .modal button');
+    const isBackdrop=(e.target===ov);
+    const isClose=isBackdrop||(btn&&(btn.classList.contains('close')||/^(取消|關閉)$/.test(btn.textContent.trim())));
+    if(!isClose) return;
+    if(ov._dirtyOk){ ov._dirtyOk=false; return; }
+    if(snap(ov)===ov._formSnap) return;
+    e.stopImmediatePropagation(); e.preventDefault();
+    const leave=await confirmDialog('這個表單有還沒儲存的修改,確定要關閉嗎?',{okText:'放棄修改'});
+    if(!leave) return;
+    ov._dirtyOk=true;
+    if(isBackdrop) ov.dispatchEvent(new MouseEvent('click',{bubbles:true})); else btn.click();
+  }, true);
+})();
+/* ---- 表格排序:點標題切換升冪/降冪,資料重新渲染後維持排序 ---- */
+(function(){
+  const state=new Map();
+  const text=(tr,i)=>{const td=tr.children[i]; return td?td.textContent.trim():'';};
+  const numeric=v=>/^[\s\d.,%\-+]+$/.test(v)&&v!==''&&!isNaN(parseFloat(v.replace(/[^\d.\-]/g,'')));
+  const cmp=(a,b)=>{
+    if(a===''&&b!=='') return 1; if(b===''&&a!=='') return -1;   // 空值永遠排最後
+    if(numeric(a)&&numeric(b)) return parseFloat(a.replace(/[^\d.\-]/g,''))-parseFloat(b.replace(/[^\d.\-]/g,''));
+    return a.localeCompare(b,'zh-Hant',{numeric:true});
+  };
+  function apply(table){
+    const st=state.get(table), tb=table.tBodies[0]; if(!st||!tb) return;
+    const rows=[...tb.rows]; if(rows.length<2) return;
+    const sorted=rows.slice().sort((r1,r2)=>cmp(text(r1,st.col),text(r2,st.col))*st.dir);
+    if(sorted.every((r,i)=>r===rows[i])) return;                 // 已經排好就不動 DOM,避免和 observer 互相觸發
+    sorted.forEach(r=>tb.appendChild(r));
+  }
+  function mark(table){
+    const st=state.get(table)||{col:-1};
+    table.querySelectorAll('thead th').forEach((th,i)=>{th.classList.toggle('sort-asc',i===st.col&&st.dir===1);th.classList.toggle('sort-desc',i===st.col&&st.dir===-1);});
+  }
+  document.addEventListener('click',e=>{
+    const th=e.target.closest('table.sortable thead th'); if(!th||!th.textContent.trim()) return;
+    const table=th.closest('table'), col=[...th.parentNode.children].indexOf(th);
+    const st=state.get(table);
+    state.set(table, (st&&st.col===col)?{col,dir:-st.dir}:{col,dir:1});
+    mark(table); apply(table);
+  });
+  const obs=new MutationObserver(ms=>{
+    const seen=new Set();
+    ms.forEach(m=>{ const t=m.target.closest&&m.target.closest('table.sortable'); if(t) seen.add(t); });
+    seen.forEach(t=>{ mark(t); apply(t); });
+  });
+  document.querySelectorAll('table.sortable tbody').forEach(tb=>obs.observe(tb,{childList:true}));
+})();
+/* ---- 搜尋框記憶:切到別頁再回來,關鍵字還在(只保留到分頁關閉) ---- */
+(function(){
+  ['search','matSearch','smpSearch','libSearch','culSearch','iulSearch','galSearch','cmpHistorySearch','todoDoneSearch'].forEach(id=>{
+    const el=document.getElementById(id); if(!el) return;
+    try{ const v=sessionStorage.getItem('sfplab-search-'+id); if(v) el.value=v; }catch(_e){}
+    el.addEventListener('input',()=>{ try{ sessionStorage.setItem('sfplab-search-'+id, el.value); }catch(_e){} });
+  });
+})();
+/* ---- 時間顯示:ISO 字串轉成本地時間 YYYY/MM/DD HH:mm(原本直接切字串會顯示成 UTC) ---- */
+function fmtDateTime(iso){
+  if(!iso) return '-';
+  const d=new Date(iso); if(isNaN(d)) return String(iso).slice(0,16).replace('T',' ');
+  const p=n=>String(n).padStart(2,'0');
+  return `${d.getFullYear()}/${p(d.getMonth()+1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+/* 資料載入完成前不顯示空狀態;就算載入失敗,8 秒後也要讓畫面可用 */
+setTimeout(()=>document.body.classList.add('app-ready'), 8000);
+/* ---- 離線提示 ---- */
+window.addEventListener('offline', ()=>showToast('網路已中斷,現在的操作可能存不進去;連上後再試一次。', 'error', 8000));
+window.addEventListener('online', ()=>showToast('網路已恢復。'));
 function localDateISO(date){
   const d = date || new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -2944,10 +3103,10 @@ function storageSafeSegment(value){
 async function uploadPhotoSource(src, folder, recordId, slot, existingPath){
   if(!src) return { url:null, path:null, uploaded:false };
   if(!String(src).startsWith('data:')) return { url:src, path:existingPath||null, uploaded:false };
-  if(!currentUser || !currentUser.uid) throw new Error('尚未登入，無法上傳照片。');
+  if(!currentUser || !currentUser.uid) throw new Error('尚未登入,無法上傳照片。');
   const response = await fetch(src);
   const blob = await response.blob();
-  if(blob.size > 300*1024) throw new Error('照片壓縮後仍超過 300 KB，請改用較小的照片。');
+  if(blob.size > 300*1024) throw new Error('照片壓縮後仍超過 300 KB,請改用較小的照片。');
   const random = (crypto && crypto.getRandomValues)
     ? [...crypto.getRandomValues(new Uint8Array(6))].map(n=>n.toString(16).padStart(2,'0')).join('')
     : Math.random().toString(36).slice(2,14);
@@ -3037,7 +3196,8 @@ function debounce(fn, delay){
 let accounts = [];
 let currentUser = null; // {uid, code, name, role, active}
 let appDataLoaded = false;
-const IDLE_LOGOUT_MS = 30 * 60 * 1000;
+const IDLE_LOGOUT_MS = 45 * 60 * 1000;
+const IDLE_LOGOUT_MIN = IDLE_LOGOUT_MS / 60000;
 const IDLE_LOGOUT_NOTICE_KEY = 'sfplab-idle-logout';
 const IDLE_WARN_BEFORE_MS = 2 * 60 * 1000;   // 登出前 2 分鐘先提醒,動一下就續期
 let idleLogoutTimer = null;
@@ -3054,7 +3214,7 @@ function scheduleIdleLogout(){
   const warnIn = remaining - IDLE_WARN_BEFORE_MS;
   if(warnIn > 0) idleWarnTimer = setTimeout(()=>{
     if(!currentUser) return;
-    showToast('閒置快 30 分鐘了,再 2 分鐘沒有操作會自動登出;點一下畫面即可續期。', 'error', IDLE_WARN_BEFORE_MS);
+    showToast(`閒置快 ${IDLE_LOGOUT_MIN} 分鐘了,再 2 分鐘沒有操作會自動登出;點一下畫面即可續期。`, 'error', IDLE_WARN_BEFORE_MS);
   }, warnIn);
 }
 function noteUserActivity(){
@@ -3123,13 +3283,13 @@ function authErrorMessage(err){
     'auth/user-not-found':'找不到這個帳號。',
     'auth/wrong-password':'Email 或密碼不正確。',
     'auth/email-already-in-use':'這個 Email 已經註冊過了。',
-    'auth/weak-password':'密碼強度不足，請至少使用8個字元。',
-    'auth/too-many-requests':'嘗試次數過多，請稍後再試。',
-    'auth/network-request-failed':'無法連線到 Firebase，請檢查網路。',
-    'auth/popup-blocked':'瀏覽器擋下了登入視窗，請允許彈出視窗後再試一次。',
-    'auth/unauthorized-domain':'這個網域尚未加入 Firebase 授權清單，請通知管理員到 Authentication → Settings → Authorized domains 新增。',
-    'auth/account-exists-with-different-credential':'這個 Email 已用其他方式註冊過，請改用原本的登入方式。',
-    'auth/operation-not-allowed':'Google 登入尚未在 Firebase Console 啟用，請通知管理員。'
+    'auth/weak-password':'密碼強度不足,請至少使用8個字元。',
+    'auth/too-many-requests':'嘗試次數過多,請稍後再試。',
+    'auth/network-request-failed':'無法連線到 Firebase,請檢查網路。',
+    'auth/popup-blocked':'瀏覽器擋下了登入視窗,請允許彈出視窗後再試一次。',
+    'auth/unauthorized-domain':'這個網域尚未加入 Firebase 授權清單,請通知管理員到 Authentication → Settings → Authorized domains 新增。',
+    'auth/account-exists-with-different-credential':'這個 Email 已用其他方式註冊過,請改用原本的登入方式。',
+    'auth/operation-not-allowed':'Google 登入尚未在 Firebase Console 啟用,請通知管理員。'
   };
   return map[code] || ((err && err.message) ? `Firebase 錯誤：${err.message}` : '發生不明錯誤。');
 }
@@ -3165,14 +3325,14 @@ async function establishCurrentUser(firebaseUser){
       showLoginPane('googleReg');
       return false;
     }
-    setAuthStatus('這個 Authentication 帳號尚未建立 Firestore users/UID 資料。如果你是第一位管理員，請依設定教學在 Firebase Console 建立。', 'error');
+    setAuthStatus('這個 Authentication 帳號尚未建立 Firestore users/UID 資料。如果你是第一位管理員,請依設定教學在 Firebase Console 建立。', 'error');
     await auth.signOut();
     return false;
   }
   const profile = snap.data();
   if(profile.active !== true || profile.deleted===true){
     if(profile.deleted===true) setAuthStatus('這個帳號的使用權限已被總管理員刪除。', 'error');
-    else setAuthStatus('帳號已建立，但還在等待管理員啟用。', 'info');
+    else setAuthStatus('帳號已建立,但還在等待管理員啟用。', 'info');
     await auth.signOut();
     return false;
   }
@@ -3202,7 +3362,7 @@ async function loadCurrentUser(){
       document.getElementById('loginOverlay').classList.add('show');
       if(localStorage.getItem(IDLE_LOGOUT_NOTICE_KEY)==='1'){
         localStorage.removeItem(IDLE_LOGOUT_NOTICE_KEY);
-        setAuthStatus('已超過 30 分鐘未使用，系統已自動登出。', 'info');
+        setAuthStatus(`已超過 ${IDLE_LOGOUT_MIN} 分鐘未使用,系統已自動登出。`, 'info');
       }
       return false;
     }
@@ -3350,7 +3510,7 @@ document.getElementById('forgotPasswordBtn').addEventListener('click', async ()=
   if(!email){ setAuthStatus('請先在 Email 欄位輸入你的信箱。', 'error'); return; }
   try{
     await auth.sendPasswordResetEmail(email);
-    setAuthStatus('重設密碼信已寄出，請檢查收件匣與垃圾郵件。', 'ok');
+    setAuthStatus('重設密碼信已寄出,請檢查收件匣與垃圾郵件。', 'ok');
   }catch(err){ setAuthStatus(authErrorMessage(err), 'error'); }
 });
 
@@ -3419,11 +3579,11 @@ document.getElementById('editNameCancelBtn').addEventListener('click', ()=> docu
 document.getElementById('editNameSaveBtn').addEventListener('click', async ()=>{
   const newCode = document.getElementById('editCode_input').value.trim();
   const newName = document.getElementById('editName_input').value.trim();
-  if(!newCode){ alert('姓名不能空白。'); return; }
-  if(!/^[\u4e00-\u9fffA-Za-z0-9_-]{1,20}$/.test(newCode)){ alert('姓名限 1–20 個字(中英文、數字、底線或連字號,不含空白)。'); return; }
-  if(newName.length > 20){ alert('名稱縮寫最多20個字。'); return; }
-  if(newCode !== currentUser.code && isIdentifierTaken(newCode, currentUser.uid)){ alert('這個姓名已經有人使用了,換一個試試。'); return; }
-  if(newName && newName !== currentUser.name && isIdentifierTaken(newName, currentUser.uid)){ alert('這個名稱縮寫已經有人使用了,換一個試試。'); return; }
+  if(!newCode){ notify('姓名不能空白。'); return; }
+  if(!/^[\u4e00-\u9fffA-Za-z0-9_-]{1,20}$/.test(newCode)){ notify('姓名限 1–20 個字(中英文、數字、底線或連字號,不含空白)。'); return; }
+  if(newName.length > 20){ notify('名稱縮寫最多20個字。'); return; }
+  if(newCode !== currentUser.code && isIdentifierTaken(newCode, currentUser.uid)){ notify('這個姓名已經有人使用了,換一個試試。'); return; }
+  if(newName && newName !== currentUser.name && isIdentifierTaken(newName, currentUser.uid)){ notify('這個名稱縮寫已經有人使用了,換一個試試。'); return; }
   try{
     await db.collection('users').doc(currentUser.uid).update({ code:newCode, name:newName, updated_at:new Date().toISOString() });
     currentUser.code = newCode;
@@ -3433,7 +3593,7 @@ document.getElementById('editNameSaveBtn').addEventListener('click', async ()=>{
     if(isAdmin()) renderAdminTable();
     document.getElementById('editNameOverlay').classList.remove('show');
     showToast('✅ 個人資料已更新');
-  }catch(err){ alert('儲存失敗：' + authErrorMessage(err)); }
+  }catch(err){ notify('儲存失敗：' + authErrorMessage(err)); }
 });
 
 /* ---- 帳號管理(僅管理員可見) ---- */
@@ -3482,7 +3642,7 @@ function renderAdminTable(){
     <tr>
       <td data-label="姓名"><div class="name-zh">${escapeHtml(acc.code||'-')}</div><div class="name-en">UID ${escapeHtml((acc.uid||'').slice(0,8))}…</div></td>
       <td data-label="名稱縮寫">${escapeHtml(acc.name||'-')}</td>
-      <td data-label="刪除時間">${escapeHtml((acc.deleted_at||'').slice(0,16).replace('T',' ')||'-')}</td>
+      <td data-label="刪除時間">${escapeHtml(fmtDateTime(acc.deleted_at))}</td>
       <td data-label="原角色">${escapeHtml(roleLabel(acc.role))}</td>
       <td class="cell-actions"><button type="button" class="btn btn-primary btn-sm" data-action="restore-account" data-uid="${escapeHtml(acc.uid)}">復原權限</button></td>
     </tr>`).join('') : '<tr><td colspan="5" style="text-align:center;color:var(--ink-soft);">沒有已刪除權限的帳號</td></tr>';
@@ -3492,12 +3652,12 @@ document.getElementById('adminTbody').addEventListener('click', async (e)=>{
   if(!btn || !isSuperAdmin()) return;
   const acc = findAccount(btn.dataset.uid);
   if(!acc || acc.uid===currentUser.uid) return;
-  if(!confirm(`確定要刪除「${acc.code}」的系統使用權限嗎？帳號資料與歷史紀錄會保留，之後可復原。`)) return;
+  if(!await confirmDialog(`確定要刪除「${acc.code}」的系統使用權限嗎？帳號資料與歷史紀錄會保留,之後可復原。`)) return;
   try{
     await db.collection('users').doc(acc.uid).update({ deleted:true, active:false, deleted_at:new Date().toISOString(), deleted_by_uid:currentUser.uid, updated_at:new Date().toISOString() });
     acc.deleted = true; acc.active = false; acc.deleted_at = new Date().toISOString();
     renderAdminTable();
-  }catch(err){ alert('刪除權限失敗，請檢查 Firestore Security Rules。'); }
+  }catch(err){ notify('刪除權限失敗,請檢查 Firestore Security Rules。'); }
 });
 document.getElementById('deletedAdminTbody').addEventListener('click', async (e)=>{
   const btn = e.target.closest('button[data-action="restore-account"]');
@@ -3508,8 +3668,8 @@ document.getElementById('deletedAdminTbody').addEventListener('click', async (e)
     await db.collection('users').doc(acc.uid).update({ deleted:false, active:false, restored_at:new Date().toISOString(), restored_by_uid:currentUser.uid, updated_at:new Date().toISOString() });
     acc.deleted = false; acc.active = false;
     renderAdminTable();
-    showToast('帳號權限已復原，請確認角色後再將狀態改為已啟用。');
-  }catch(err){ alert('復原失敗，請檢查 Firestore Security Rules。'); }
+    showToast('帳號權限已復原,請確認角色後再將狀態改為已啟用。');
+  }catch(err){ notify('復原失敗,請檢查 Firestore Security Rules。'); }
 });
 document.getElementById('adminTbody').addEventListener('change', async (e)=>{
   const nameInput = e.target.closest('input.name-edit-input');
@@ -3519,13 +3679,13 @@ document.getElementById('adminTbody').addEventListener('change', async (e)=>{
     const acc = findAccount(uid);
     if(!acc) return;
     const newName = nameInput.value.trim();
-    if(newName.length>20){ alert('名稱縮寫最多20個字。'); renderAdminTable(); return; }
-    if(newName && isIdentifierTaken(newName, uid)){ alert('這個名稱縮寫已經有人使用了,換一個試試。'); renderAdminTable(); return; }
+    if(newName.length>20){ notify('名稱縮寫最多20個字。'); renderAdminTable(); return; }
+    if(newName && isIdentifierTaken(newName, uid)){ notify('這個名稱縮寫已經有人使用了,換一個試試。'); renderAdminTable(); return; }
     try{
       await db.collection('users').doc(uid).update({ name:newName, updated_at:new Date().toISOString() });
       acc.name = newName;
       renderAdminTable();
-    }catch(err){ alert('儲存失敗，請檢查權限與網路。'); renderAdminTable(); }
+    }catch(err){ notify('儲存失敗,請檢查權限與網路。'); renderAdminTable(); }
     return;
   }
   const statusSel = e.target.closest('select[data-action="status-select"]');
@@ -3533,13 +3693,13 @@ document.getElementById('adminTbody').addEventListener('change', async (e)=>{
     const acc = findAccount(statusSel.dataset.uid);
     if(!acc || acc.uid===currentUser.uid){ renderAdminTable(); return; }
     const allowed = isSuperAdmin() || (currentUser.role==='admin' && acc.role==='member');
-    if(!allowed){ alert('權限不足。'); renderAdminTable(); return; }
+    if(!allowed){ notify('權限不足。'); renderAdminTable(); return; }
     const active = statusSel.value==='active';
     try{
       await db.collection('users').doc(acc.uid).update({ active, updated_at:new Date().toISOString() });
       acc.active = active;
       renderAdminTable();
-    }catch(err){ alert('狀態儲存失敗，請檢查 Security Rules。'); renderAdminTable(); }
+    }catch(err){ notify('狀態儲存失敗,請檢查 Security Rules。'); renderAdminTable(); }
     return;
   }
   const sel = e.target.closest('select[data-action="role-select"]');
@@ -3547,16 +3707,16 @@ document.getElementById('adminTbody').addEventListener('change', async (e)=>{
   const uid = sel.dataset.uid;
   const acc = findAccount(uid);
   if(!acc) return;
-  if(uid===currentUser.uid){ alert('不能修改自己的角色。'); renderAdminTable(); return; }
+  if(uid===currentUser.uid){ notify('不能修改自己的角色。'); renderAdminTable(); return; }
   const canManageRole = isSuperAdmin() || (currentUser.role==='admin' && acc.role==='member');
-  if(!canManageRole){ alert('權限不足,無法修改這個帳號的角色。'); renderAdminTable(); return; }
+  if(!canManageRole){ notify('權限不足,無法修改這個帳號的角色。'); renderAdminTable(); return; }
   const newRole = sel.value;
-  if(!isSuperAdmin() && newRole==='super_admin'){ alert('只有總管理員能指派總管理員權限。'); renderAdminTable(); return; }
+  if(!isSuperAdmin() && newRole==='super_admin'){ notify('只有總管理員能指派總管理員權限。'); renderAdminTable(); return; }
   try{
     await db.collection('users').doc(uid).update({ role:newRole, updated_at:new Date().toISOString() });
     acc.role = newRole;
     renderAdminTable();
-  }catch(err){ alert('角色儲存失敗，請檢查 Security Rules。'); renderAdminTable(); }
+  }catch(err){ notify('角色儲存失敗,請檢查 Security Rules。'); renderAdminTable(); }
 });
 
 /* ======================================================
@@ -3614,11 +3774,11 @@ setTimeout(()=> checkForUpdate(false), 30*1000);
 
 function switchPage(name){
   if((name==='admin' || name==='softwareBackup' || name==='adminTools') && typeof isAdmin==='function' && !isAdmin()){
-    alert('這個頁面僅限管理員使用。');
+    notify('這個頁面僅限管理員使用。');
     return;
   }
   if(name==='superAdminTools' && !isSuperAdmin()){
-    alert('這個頁面僅限總管理員使用。');
+    notify('這個頁面僅限總管理員使用。');
     return;
   }
   document.querySelectorAll('nav .nav-item[data-page]').forEach(btn=>{
@@ -3698,7 +3858,7 @@ async function loadItems(){
 }
 async function saveItems(){
   const ok = await fsReplaceAll('chemicals', items);
-  if(!ok) alert('儲存失敗,請檢查網路連線後再試一次。');
+  if(!ok) notify('儲存失敗,請檢查網路連線後再試一次。');
   return ok;
 }
 function populateLocationSelect(currentValue){
@@ -3859,8 +4019,8 @@ function clearChemForm(){
   document.getElementById('photoPreview').src = '';
   clearDraft(CHEM_DRAFT_KEY);
 }
-document.getElementById('clearChemBtn').addEventListener('click', ()=>{
-  if(confirm('確定要清空目前表單所有已輸入的內容嗎?此動作無法復原。')) clearChemForm();
+document.getElementById('clearChemBtn').addEventListener('click', async ()=>{
+  if(await confirmDialog('確定要清空目前表單所有已輸入的內容嗎?此動作無法復原。')) clearChemForm();
 });
 CHEM_FIELD_IDS.forEach(fid=>{
   document.getElementById(fid).addEventListener('input', saveChemDraftDebounced);
@@ -3873,15 +4033,15 @@ document.querySelectorAll('input[name="f_state"]').forEach(r=>{
 async function handleSave(){
   const existingItem = editingId ? items.find(i=>i.id===editingId) : null;
   if(editingId){
-    if(!canEdit(existingItem)){ alert('只有建立者本人或管理員能編輯這筆資料。'); return; }
+    if(!canEdit(existingItem)){ notify('只有建立者本人或管理員能編輯這筆資料。'); return; }
   }
   const name_zh = document.getElementById('f_name_zh').value.trim();
   const location = document.getElementById('f_location').value;
-  if(!name_zh || !location){ alert('請至少填寫「中文名稱」與「存放位置」'); return; }
+  if(!name_zh || !location){ notify('請至少填寫「中文名稱」與「存放位置」'); return; }
   const recordId = editingId || genId(items, 'CHEM');
   let photoInfo;
   try{ photoInfo = await uploadPreviewPhoto('photoPreview','chemicals',recordId,'bottle',existingItem&&existingItem.photo_path); }
-  catch(err){ alert(err.message || '照片上傳失敗。'); return; }
+  catch(err){ notify(err.message || '照片上傳失敗。'); return; }
   const data = {
     id: recordId,
     _doc_id: existingItem ? existingItem._doc_id : null,
@@ -3908,7 +4068,7 @@ async function handleSave(){
     created_at: editingId ? (items.find(i=>i.id===editingId)?.created_at || new Date().toISOString()) : new Date().toISOString()
   };
   const ok = await fsSetItem('chemicals', data);
-  if(!ok){ if(photoInfo.uploaded) await deleteStoredPhoto(photoInfo.path); alert('儲存失敗,請檢查網路連線後再試一次。'); return; }
+  if(!ok){ if(photoInfo.uploaded) await deleteStoredPhoto(photoInfo.path); notify('儲存失敗,請檢查網路連線後再試一次。'); return; }
   if(editingId){ items[items.findIndex(i=>i.id===editingId)] = data; }
   else{ items.push(data); }
   if(existingItem && existingItem.photo_path && existingItem.photo_path!==photoInfo.path) await deleteStoredPhoto(existingItem.photo_path);
@@ -3921,11 +4081,11 @@ async function handleSave(){
 async function handleDelete(){
   if(!editingId || !isAdmin()) return;
   const target = items.find(i=>i.id===editingId);
-  if(!confirm(`確定要刪除「${(target&&target.name_zh)||editingId}」嗎?此動作無法復原。`)) return;
+  if(!await confirmDialog(`確定要刪除「${(target&&target.name_zh)||editingId}」嗎?此動作無法復原。`)) return;
   const idToDelete = editingId;
   const deletedItem = items.find(i=>i.id===idToDelete);
   const ok = await fsDeleteItem('chemicals', idToDelete, deletedItem&&deletedItem._doc_id);
-  if(!ok){ alert('刪除失敗,請檢查網路連線後再試一次。'); return; }
+  if(!ok){ notify('刪除失敗,請檢查網路連線後再試一次。'); return; }
   if(deletedItem&&deletedItem.photo_path) await deleteStoredPhoto(deletedItem.photo_path);
   items = items.filter(i=>i.id!==idToDelete);
   closeForm();
@@ -3937,9 +4097,9 @@ async function quickDeleteChem(id, ev){
   if(ev) ev.stopPropagation();
   if(!isAdmin()) return;
   const deletedItem = items.find(i=>i.id===id);
-  if(!confirm(`確定要刪除「${(deletedItem&&deletedItem.name_zh)||id}」嗎?此動作無法復原。`)) return;
+  if(!await confirmDialog(`確定要刪除「${(deletedItem&&deletedItem.name_zh)||id}」嗎?此動作無法復原。`)) return;
   const ok = await fsDeleteItem('chemicals', id, deletedItem&&deletedItem._doc_id);
-  if(!ok){ alert('刪除失敗,請檢查網路連線後再試一次。'); return; }
+  if(!ok){ notify('刪除失敗,請檢查網路連線後再試一次。'); return; }
   if(deletedItem&&deletedItem.photo_path) await deleteStoredPhoto(deletedItem.photo_path);
   items = items.filter(i=>i.id!==id);
   renderAll();
@@ -4033,7 +4193,7 @@ async function loadMatItems(){
 }
 async function saveMatItems(){
   const ok = await fsReplaceAll('materials', matItems);
-  if(!ok) alert('儲存失敗,請檢查網路連線後再試一次。');
+  if(!ok) notify('儲存失敗,請檢查網路連線後再試一次。');
   return ok;
 }
 function populateMatSelects(currentStorage){
@@ -4222,8 +4382,8 @@ function clearMatForm(){
   document.getElementById('m_photoPreview').src = '';
   clearDraft(MAT_DRAFT_KEY);
 }
-document.getElementById('clearMatBtn').addEventListener('click', ()=>{
-  if(confirm('確定要清空目前表單所有已輸入的內容嗎?此動作無法復原。')) clearMatForm();
+document.getElementById('clearMatBtn').addEventListener('click', async ()=>{
+  if(await confirmDialog('確定要清空目前表單所有已輸入的內容嗎?此動作無法復原。')) clearMatForm();
 });
 MAT_FIELD_IDS.forEach(fid=>{
   document.getElementById(fid).addEventListener('input', saveMatDraftDebounced);
@@ -4236,15 +4396,15 @@ document.getElementById('m_acquired_unknown').addEventListener('change', (e)=>{
 
 async function handleMatSave(){
   const existingItem = editingMatId ? matItems.find(i=>i.id===editingMatId) : null;
-  if(editingMatId && !canEdit(existingItem)){ alert('只有建立者本人或管理員能編輯這筆資料。'); return; }
+  if(editingMatId && !canEdit(existingItem)){ notify('只有建立者本人或管理員能編輯這筆資料。'); return; }
   const species = document.getElementById('m_species').value.trim();
   const part = document.getElementById('m_part').value;
   const storage_location = document.getElementById('m_storage').value;
-  if(!species || !part || !storage_location){ alert('請至少填寫「物種」「部位」與「存放位置」'); return; }
+  if(!species || !part || !storage_location){ notify('請至少填寫「物種」「部位」與「存放位置」'); return; }
   const recordId = editingMatId || pendingMatId || genId(matItems, 'MAT');
   let photoInfo;
   try{ photoInfo = await uploadPreviewPhoto('m_photoPreview','materials',recordId,'material',existingItem&&existingItem.photo_path); }
-  catch(err){ alert(err.message || '照片上傳失敗。'); return; }
+  catch(err){ notify(err.message || '照片上傳失敗。'); return; }
   const data = {
     id: recordId,
     _doc_id: existingItem ? existingItem._doc_id : null,
@@ -4266,7 +4426,7 @@ async function handleMatSave(){
     created_at: editingMatId ? (matItems.find(i=>i.id===editingMatId)?.created_at || new Date().toISOString()) : new Date().toISOString()
   };
   const ok = await fsSetItem('materials', data);
-  if(!ok){ if(photoInfo.uploaded) await deleteStoredPhoto(photoInfo.path); alert('儲存失敗,請檢查網路連線後再試一次。'); return; }
+  if(!ok){ if(photoInfo.uploaded) await deleteStoredPhoto(photoInfo.path); notify('儲存失敗,請檢查網路連線後再試一次。'); return; }
   if(editingMatId){ matItems[matItems.findIndex(i=>i.id===editingMatId)] = data; }
   else{ matItems.push(data); }
   if(existingItem && existingItem.photo_path && existingItem.photo_path!==photoInfo.path) await deleteStoredPhoto(existingItem.photo_path);
@@ -4277,11 +4437,11 @@ async function handleMatSave(){
 async function handleMatDelete(){
   if(!editingMatId || !isAdmin()) return;
   const target = matItems.find(i=>i.id===editingMatId);
-  if(!confirm(`確定要刪除「${(target&&(target.name_zh||target.species))||editingMatId}」嗎?此動作無法復原。`)) return;
+  if(!await confirmDialog(`確定要刪除「${(target&&(target.name_zh||target.species))||editingMatId}」嗎?此動作無法復原。`)) return;
   const idToDelete = editingMatId;
   const deletedItem = matItems.find(i=>i.id===idToDelete);
   const ok = await fsDeleteItem('materials', idToDelete, deletedItem&&deletedItem._doc_id);
-  if(!ok){ alert('刪除失敗,請檢查網路連線後再試一次。'); return; }
+  if(!ok){ notify('刪除失敗,請檢查網路連線後再試一次。'); return; }
   if(deletedItem&&deletedItem.photo_path) await deleteStoredPhoto(deletedItem.photo_path);
   matItems = matItems.filter(i=>i.id!==idToDelete);
   closeMatForm();
@@ -4307,9 +4467,9 @@ async function quickDeleteMat(id, ev){
   if(ev) ev.stopPropagation();
   if(!isAdmin()) return;
   const deletedItem = matItems.find(i=>i.id===id);
-  if(!confirm(`確定要刪除「${(deletedItem&&(deletedItem.name_zh||deletedItem.species))||id}」嗎?此動作無法復原。`)) return;
+  if(!await confirmDialog(`確定要刪除「${(deletedItem&&(deletedItem.name_zh||deletedItem.species))||id}」嗎?此動作無法復原。`)) return;
   const ok = await fsDeleteItem('materials', id, deletedItem&&deletedItem._doc_id);
-  if(!ok){ alert('刪除失敗,請檢查網路連線後再試一次。'); return; }
+  if(!ok){ notify('刪除失敗,請檢查網路連線後再試一次。'); return; }
   if(deletedItem&&deletedItem.photo_path) await deleteStoredPhoto(deletedItem.photo_path);
   matItems = matItems.filter(i=>i.id!==id);
   renderMatAll();
@@ -4336,7 +4496,7 @@ async function loadSmpItems(){
 }
 async function saveSmpItems(){
   const ok = await fsReplaceAll('samples', smpItems);
-  if(!ok) alert('儲存失敗,請檢查網路連線後再試一次。');
+  if(!ok) notify('儲存失敗,請檢查網路連線後再試一次。');
   return ok;
 }
 const SMP_FIELD_IDS = [
@@ -4472,8 +4632,8 @@ bindPhotoUpload('mc_photoDrop','mc_photoInput','mc_photoPreview');
 document.getElementById('calcDryFromMoistureBtn').addEventListener('click', ()=>{
   const freshMaterial = parseFloat(document.getElementById('s_material_fresh_weight').value);
   const rates = getMoistureRates();
-  if(isNaN(freshMaterial)){ alert('請先填寫「試材鮮重」'); return; }
-  if(!rates || rates === 'error'){ alert('請先完整填寫下方含水量測定區的三個重量欄位'); return; }
+  if(isNaN(freshMaterial)){ notify('請先填寫「試材鮮重」'); return; }
+  if(!rates || rates === 'error'){ notify('請先完整填寫下方含水量測定區的三個重量欄位'); return; }
   const absDryWeight = freshMaterial * (1 - rates.wet/100);
   document.getElementById('s_dry_weight').value = absDryWeight.toFixed(3);
   updateExtractionRate();
@@ -4650,7 +4810,7 @@ async function duplicateSmpItem(id){
   updateMoistureCalc();
   updateSampleId();
   saveSmpDraftDebounced();
-  alert('已複製這筆樣品的資料到新增表單,萃取物重量/絕乾重/萃取率留空讓你重新填,記得確認分離部等欄位後再儲存。');
+  notify('已複製這筆樣品的資料到新增表單,萃取物重量/絕乾重/萃取率留空讓你重新填,記得確認分離部等欄位後再儲存。');
 }
 async function openSmpForm(id){
   editingSmpId = id || null;
@@ -4766,18 +4926,18 @@ function closeSmpForm(){ document.getElementById('smpFormOverlay').classList.rem
 
 async function handleSmpSave(){
   const existingItem = editingSmpId ? smpItems.find(i=>i.id===editingSmpId) : null;
-  if(editingSmpId && !canEdit(existingItem)){ alert('只有建立者本人或管理員能編輯這筆資料。'); return; }
+  if(editingSmpId && !canEdit(existingItem)){ notify('只有建立者本人或管理員能編輯這筆資料。'); return; }
   const species = document.getElementById('s_species').value.trim();
   const nameZh = document.getElementById('s_name_zh').value.trim();
-  if(!species || !nameZh){ alert('請填寫「物種」與「中文名稱」'); return; }
+  if(!species || !nameZh){ notify('請填寫「物種」與「中文名稱」'); return; }
   const nonNegativeIds = ['s_material_fresh_weight','s_sample_weight','s_dry_weight','mc_fresh_gross','mc_dry_gross','mc_container'];
   if(nonNegativeIds.some(fid=>document.getElementById(fid).value!=='' && Number(document.getElementById(fid).value)<0)){
-    alert('重量不能是負數。'); return;
+    notify('重量不能是負數。'); return;
   }
   /* 含水量可以只填一部分先存起來;未填滿就不算含水率。
      只有三個都填了卻互相矛盾才擋,避免存進不可能的數值。 */
   if(getMoistureRates() === 'error'){
-    alert('含水量的三個重量互相矛盾,需符合取樣鮮重 > 取樣乾重 > 容器重。'); return;
+    notify('含水量的三個重量互相矛盾,需符合取樣鮮重 > 取樣乾重 > 容器重。'); return;
   }
   const finalId = editingSmpId || computeSamplePrefix() + '_' + String(nextSeqForPrefix(computeSamplePrefix(), null)).padStart(2,'0');
   const uploadedNow=[];
@@ -4788,7 +4948,7 @@ async function handleSmpSave(){
     moisturePhoto = await uploadPreviewPhoto('mc_photoPreview','samples',finalId,'moisture',existingItem&&existingItem.moisture&&existingItem.moisture.photo_path); if(moisturePhoto.uploaded) uploadedNow.push(moisturePhoto.path);
   }catch(err){
     await Promise.all(uploadedNow.map(deleteStoredPhoto));
-    alert(err.message || '照片上傳失敗。'); return;
+    notify(err.message || '照片上傳失敗。'); return;
   }
   const data = {
     id: finalId,
@@ -4830,7 +4990,7 @@ async function handleSmpSave(){
     created_at: editingSmpId ? (smpItems.find(i=>i.id===editingSmpId)?.created_at || new Date().toISOString()) : new Date().toISOString()
   };
   const ok = await fsSetItem('samples', data);
-  if(!ok){ await Promise.all(uploadedNow.map(deleteStoredPhoto)); alert('儲存失敗,請檢查網路連線後再試一次。'); return; }
+  if(!ok){ await Promise.all(uploadedNow.map(deleteStoredPhoto)); notify('儲存失敗,請檢查網路連線後再試一次。'); return; }
   if(editingSmpId){ smpItems[smpItems.findIndex(i=>i.id===editingSmpId)] = data; }
   else{ smpItems.push(data); }
   if(existingItem){
@@ -4845,11 +5005,11 @@ async function handleSmpSave(){
 async function handleSmpDelete(){
   if(!editingSmpId || !isAdmin()) return;
   const target = smpItems.find(i=>i.id===editingSmpId);
-  if(!confirm(`確定要刪除「${(target&&target.name_zh)?target.name_zh+' '+editingSmpId:editingSmpId}」嗎?此動作無法復原。`)) return;
+  if(!await confirmDialog(`確定要刪除「${(target&&target.name_zh)?target.name_zh+' '+editingSmpId:editingSmpId}」嗎?此動作無法復原。`)) return;
   const idToDelete = editingSmpId;
   const deletedItem = smpItems.find(i=>i.id===idToDelete);
   const ok = await fsDeleteItem('samples', idToDelete, deletedItem&&deletedItem._doc_id);
-  if(!ok){ alert('刪除失敗,請檢查網路連線後再試一次。'); return; }
+  if(!ok){ notify('刪除失敗,請檢查網路連線後再試一次。'); return; }
   if(deletedItem) await Promise.all([deletedItem.photo_extract_path,deletedItem.photo_bottle_path,deletedItem.moisture&&deletedItem.moisture.photo_path].filter(Boolean).map(deleteStoredPhoto));
   smpItems = smpItems.filter(i=>i.id!==idToDelete);
   closeSmpForm();
@@ -4881,8 +5041,8 @@ function clearSmpForm(){
   clearDraft(SMP_DRAFT_KEY);
   updateSampleId();
 }
-document.getElementById('clearSmpBtn').addEventListener('click', ()=>{
-  if(confirm('確定要清空目前表單所有已輸入的內容嗎?此動作無法復原。')) clearSmpForm();
+document.getElementById('clearSmpBtn').addEventListener('click', async ()=>{
+  if(await confirmDialog('確定要清空目前表單所有已輸入的內容嗎?此動作無法復原。')) clearSmpForm();
 });
 SMP_FIELD_IDS.forEach(fid=>{
   document.getElementById(fid).addEventListener('input', saveSmpDraftDebounced);
@@ -4898,9 +5058,9 @@ async function quickDeleteSmp(id, ev){
   if(ev) ev.stopPropagation();
   if(!isAdmin()) return;
   const deletedItem = smpItems.find(i=>i.id===id);
-  if(!confirm(`確定要刪除「${(deletedItem&&deletedItem.name_zh)?deletedItem.name_zh+' '+id:id}」嗎?此動作無法復原。`)) return;
+  if(!await confirmDialog(`確定要刪除「${(deletedItem&&deletedItem.name_zh)?deletedItem.name_zh+' '+id:id}」嗎?此動作無法復原。`)) return;
   const ok = await fsDeleteItem('samples', id, deletedItem&&deletedItem._doc_id);
-  if(!ok){ alert('刪除失敗,請檢查網路連線後再試一次。'); return; }
+  if(!ok){ notify('刪除失敗,請檢查網路連線後再試一次。'); return; }
   if(deletedItem) await Promise.all([deletedItem.photo_extract_path,deletedItem.photo_bottle_path,deletedItem.moisture&&deletedItem.moisture.photo_path].filter(Boolean).map(deleteStoredPhoto));
   smpItems = smpItems.filter(i=>i.id!==id);
   renderSmpAll();
@@ -4928,14 +5088,14 @@ function exportJsonFile(dataArr, filenamePrefix){
 }
 
 function handleImportFile(file, cfg){
-  if(file.size > 30*1024*1024){ alert('備份檔超過 30 MB，為避免瀏覽器無回應，請拆分後再匯入。'); return; }
+  if(file.size > 30*1024*1024){ notify('備份檔超過 30 MB,為避免瀏覽器無回應,請拆分後再匯入。'); return; }
   const reader = new FileReader();
   reader.onload = (e)=>{
     let parsed;
     try{ parsed = JSON.parse(e.target.result); }
-    catch(err){ alert('檔案格式錯誤,無法解析,請確認是本系統匯出的備份檔(.json)。'); return; }
-    if(!Array.isArray(parsed)){ alert('檔案格式不正確,需為本系統匯出的清單陣列。'); return; }
-    if(parsed.length>10000){ alert('單次最多匯入 10,000 筆。'); return; }
+    catch(err){ notify('檔案格式錯誤,無法解析,請確認是本系統匯出的備份檔(.json)。'); return; }
+    if(!Array.isArray(parsed)){ notify('檔案格式不正確,需為本系統匯出的清單陣列。'); return; }
+    if(parsed.length>10000){ notify('單次最多匯入 10,000 筆。'); return; }
     const safeId = /^[\p{L}\p{N}_.-]{1,160}$/u;
     const safePhoto = v=> v==null || (typeof v==='string' && (/^data:image\/(jpeg|png|webp);base64,/i.test(v) || /^https:\/\//i.test(v)));
     const invalidIndex = parsed.findIndex(item=>{
@@ -4945,7 +5105,7 @@ function handleImportFile(file, cfg){
       if(item.moisture && !safePhoto(item.moisture.photo)) return true;
       return false;
     });
-    if(invalidIndex>=0){ alert(`第 ${invalidIndex+1} 筆資料的 ID、照片或格式不符合規則，已取消匯入。`); return; }
+    if(invalidIndex>=0){ notify(`第 ${invalidIndex+1} 筆資料的 ID、照片或格式不符合規則,已取消匯入。`); return; }
     pendingImport = { data: parsed, cfg };
     document.getElementById('importModeDesc').textContent =
       `這個備份檔案裡有 ${parsed.length} 筆資料。「新增」會加進目前清單(編號重複的會自動略過);「覆蓋全部」會先自動下載目前資料的備份檔,再整個取代成這個檔案的內容。`;
@@ -4989,22 +5149,22 @@ document.getElementById('importModeAddBtn').addEventListener('click', async ()=>
     }
     cfg.render();
     closeImportModeDialog();
-    alert(`匯入完成:新增 ${added} 筆,略過 ${skipped} 筆編號重複的資料。`);
+    notify(`匯入完成:新增 ${added} 筆,略過 ${skipped} 筆編號重複的資料。`);
   }catch(err){
     console.error('import add failed:',err);
-    alert(`匯入中斷：已完成 ${added} 筆，其餘未匯入。請檢查網路後再試。`);
+    notify(`匯入中斷：已完成 ${added} 筆,其餘未匯入。請檢查網路後再試。`);
   }
 });
 
 document.getElementById('importModeReplaceBtn').addEventListener('click', async ()=>{
   if(!pendingImport) return;
-  if(!confirm('覆蓋全部會取代目前清單裡所有的資料。系統會先自動幫你下載目前資料的備份檔,確定要繼續嗎?')) return;
+  if(!await confirmDialog('覆蓋全部會取代目前清單裡所有的資料。系統會先自動幫你下載目前資料的備份檔,確定要繼續嗎?')) return;
   const { data, cfg } = pendingImport;
   exportJsonFile(cfg.getItems(), cfg.filenamePrefix + '_覆蓋前備份');
   const oldData = cfg.getItems().slice();
   cfg.setItems(data);
   const ok = await cfg.persist();
-  if(!ok){ cfg.setItems(oldData); cfg.render(); alert('覆蓋失敗，本機畫面已恢復原資料。請檢查網路與 Firestore 後再試。'); return; }
+  if(!ok){ cfg.setItems(oldData); cfg.render(); notify('覆蓋失敗,本機畫面已恢復原資料。請檢查網路與 Firestore 後再試。'); return; }
   cfg.render();
   closeImportModeDialog();
   showToast(`✅ 已覆蓋全部資料,共 ${data.length} 筆`, null, 3000);
@@ -5107,8 +5267,8 @@ document.getElementById('culSaveBtn').addEventListener('click', async ()=>{
   const chemId = document.getElementById('cul_chem').value;
   const chem = items.find(i=>i.id===chemId);
   const amount = Number(document.getElementById('cul_amount').value);
-  if(!chem){ alert('請選擇藥品'); return; }
-  if(!amount || amount<=0){ alert('請輸入正確的使用量'); return; }
+  if(!chem){ notify('請選擇藥品'); return; }
+  if(!amount || amount<=0){ notify('請輸入正確的使用量'); return; }
   const date = document.getElementById('cul_date').value || localDateISO();
   const log = {
     id: genId(culItems, 'CUL'),
@@ -5131,11 +5291,11 @@ document.getElementById('culSaveBtn').addEventListener('click', async ()=>{
     let committedQty = null;
     await db.runTransaction(async tx=>{
       const chemSnap = await tx.get(chemRef);
-      if(!chemSnap.exists) throw new Error('藥品資料已不存在，請重新整理頁面。');
+      if(!chemSnap.exists) throw new Error('藥品資料已不存在,請重新整理頁面。');
       const latest = chemSnap.data();
-      if(latest.quantity===null || latest.quantity===undefined || latest.quantity==='') throw new Error('這項藥品尚未設定庫存量，請先在藥品清單填寫。');
+      if(latest.quantity===null || latest.quantity===undefined || latest.quantity==='') throw new Error('這項藥品尚未設定庫存量,請先在藥品清單填寫。');
       const currentQty = Number(latest.quantity);
-      if(!Number.isFinite(currentQty) || amount > currentQty) throw new Error(`庫存不足，目前只有 ${latest.quantity} ${latest.unit||''}。`);
+      if(!Number.isFinite(currentQty) || amount > currentQty) throw new Error(`庫存不足,目前只有 ${latest.quantity} ${latest.unit||''}。`);
       committedQty = Math.round((currentQty-amount)*1000)/1000;
       tx.update(chemRef, { quantity:committedQty, updated_at:new Date().toISOString(), updated_by_uid:currentUser.uid });
       tx.set(logRef, log);
@@ -5147,15 +5307,15 @@ document.getElementById('culSaveBtn').addEventListener('click', async ()=>{
     renderCulAll();
   }catch(err){
     console.error('chemical usage transaction failed:', err);
-    alert(err.message || '儲存失敗，請檢查網路後再試一次。');
+    notify(err.message || '儲存失敗,請檢查網路後再試一次。');
   }
 });
 async function quickDeleteCul(id){
   if(!isAdmin()) return;
-  if(!confirm('確定要刪除這筆使用登記嗎?此動作不會自動恢復庫存,如需要請手動調整藥品存量。')) return;
+  if(!await confirmDialog('確定要刪除這筆使用登記嗎?此動作不會自動恢復庫存,如需要請手動調整藥品存量。')) return;
   const item = culItems.find(i=>i.id===id);
   const ok = await fsDeleteItem('chem-usage-logs', id, item&&item._doc_id);
-  if(!ok){ alert('刪除失敗。'); return; }
+  if(!ok){ notify('刪除失敗。'); return; }
   culItems = culItems.filter(i=>i.id!==id);
   renderCulAll();
 }
@@ -5195,7 +5355,7 @@ document.getElementById('culQueryBtn').addEventListener('click', ()=>{
   const from = document.getElementById('culQueryFrom').value;
   const to = document.getElementById('culQueryTo').value;
   const wrap = document.getElementById('culQueryResult');
-  if(!cas){ alert('請輸入CAS No.'); return; }
+  if(!cas){ notify('請輸入CAS No.'); return; }
   const matches = culItems.filter(l=>{
     if((l.cas||'').trim() !== cas) return false;
     if(from && l.date < from) return false;
@@ -5285,8 +5445,8 @@ document.getElementById('iulSaveBtn').addEventListener('click', async ()=>{
   const date = document.getElementById('iul_date').value;
   const start = document.getElementById('iul_start').value;
   const end = document.getElementById('iul_end').value;
-  if(!instrument || !date || !start || !end){ alert('請填寫儀器、日期與時間'); return; }
-  if(start >= end){ alert('結束時間必須晚於開始時間'); return; }
+  if(!instrument || !date || !start || !end){ notify('請填寫儀器、日期與時間'); return; }
+  if(start >= end){ notify('結束時間必須晚於開始時間'); return; }
   const conflict = iulItems.some(r=> r.instrument===instrument && r.date===date && timesOverlap(start,end,r.start_time,r.end_time));
   if(conflict){
     document.getElementById('iul_conflictWarning').style.display = 'block';
@@ -5302,7 +5462,7 @@ document.getElementById('iulSaveBtn').addEventListener('click', async ()=>{
     created_at: new Date().toISOString()
   };
   const ok = await fsSetItem('instrument-reservations', rec);
-  if(!ok){ alert('儲存失敗,請檢查網路連線後再試一次。'); return; }
+  if(!ok){ notify('儲存失敗,請檢查網路連線後再試一次。'); return; }
   iulItems.push(rec);
   closeIulForm();
   renderIulAll();
@@ -5311,10 +5471,10 @@ async function quickDeleteIul(id){
   const rec = iulItems.find(i=>i.id===id);
   if(!rec) return;
   const canCancel = isAdmin() || (currentUser && rec.user_uid===currentUser.uid);
-  if(!canCancel){ alert('只有本人或管理員能取消這筆預約。'); return; }
-  if(!confirm('確定要取消這筆預約嗎?')) return;
+  if(!canCancel){ notify('只有本人或管理員能取消這筆預約。'); return; }
+  if(!await confirmDialog('確定要取消這筆預約嗎?')) return;
   const ok = await fsDeleteItem('instrument-reservations', id, rec._doc_id);
-  if(!ok){ alert('取消失敗。'); return; }
+  if(!ok){ notify('取消失敗。'); return; }
   iulItems = iulItems.filter(i=>i.id!==id);
   renderIulAll();
 }
@@ -5477,7 +5637,7 @@ async function drApplyChange(weekKey, mutate){
     });
   }catch(e){
     console.error('duty roster save failed:', e);
-    alert('勾選儲存失敗,請檢查網路後再試一次。');
+    notify('勾選儲存失敗,請檢查網路後再試一次。');
   }
   renderDrAll();
   renderDashboard();
@@ -5515,7 +5675,7 @@ function renderDrAll(){
       const by = drByLabel(cell);
       return `<td class="dr-check-cell ${cell.checked?'done':'pending'}" data-day="${d}" data-label="${DR_DAY_LABELS[d]}">
         <input type="checkbox" data-day="${d}" data-ti="${ti}" class="dr-daily-check" ${cell.checked?'checked':''}>
-        ${by ? `<span class="dr-by" title="完成於 ${cell.at?escapeHtml(cell.at.slice(0,16).replace('T',' ')):''}">${escapeHtml(by)}</span>` : ''}
+        ${by ? `<span class="dr-by" title="完成於 ${cell.at?escapeHtml(fmtDateTime(cell.at)):''}">${escapeHtml(by)}</span>` : ''}
       </td>`;
     }).join('');
     return `<tr class="row">${nameCell}${cells}</tr>`;
@@ -5532,7 +5692,7 @@ function renderDrAll(){
         <div class="dr-w-name">${escapeHtml(task.name)}</div>
         ${task.detail ? `<div class="dr-w-detail">${escapeHtml(task.detail)}</div>` : ''}
       </div>
-      ${by ? `<span class="dr-by-tag" title="完成於 ${cell.at?escapeHtml(cell.at.slice(0,16).replace('T',' ')):''}">${escapeHtml(by)}</span>` : ''}
+      ${by ? `<span class="dr-by-tag" title="完成於 ${cell.at?escapeHtml(fmtDateTime(cell.at)):''}">${escapeHtml(by)}</span>` : ''}
     </label>`;
   }).join('');
 
@@ -5594,7 +5754,7 @@ async function loadDutyAdminData(){
 async function saveDutyAdminData(){
   if(!isAdmin()) return false;
   try{ await window.storage.set(DUTY_ADMIN_KEY,JSON.stringify(dutyAdminData),true); return true; }
-  catch(err){ alert('值週生設定儲存失敗，請檢查網路與 Firestore 權限。'); return false; }
+  catch(err){ notify('值週生設定儲存失敗,請檢查網路與 Firestore 權限。'); return false; }
 }
 function eligibleDutyAccounts(){ return accounts.filter(a=>a.active===true&&a.deleted!==true); }
 function dutyAccountOptionLabel(acc){ return `${acc.code||'-'}${acc.name?`（${acc.name}）`:''}`; }
@@ -5611,7 +5771,7 @@ function renderDutyAdminTools(){
     <tr><td data-label="使用者"><div class="name-zh">${escapeHtml(a.code||'-')}</div><div class="name-en">${escapeHtml(a.name||'')}</div></td><td data-label="角色">${escapeHtml(roleLabel(a.role))}</td><td data-label="權重"><input type="number" min="0" step="0.1" class="role-select duty-weight-input" data-uid="${escapeHtml(a.uid)}" value="${Number(dutyAdminData.weights[a.uid]??1)}" style="width:90px;"></td></tr>`).join('');
   renderDutyCurrentAssignment();
   const history=dutyAdminData.history.slice(0,100);
-  document.getElementById('dutyDrawHistory').innerHTML=history.length?history.map(h=>`<div class="history-row"><b>${escapeHtml(h.week_key||'-')}</b> · ${h.source==='draw'?'加權抽籤':'手動指派'} → <b>${escapeHtml(h.user_label||ownerLabel(h.user_uid))}</b><br><span style="color:var(--ink-soft);">${escapeHtml((h.at||'').slice(0,16).replace('T',' '))} · 操作者 ${escapeHtml(ownerLabel(h.by_uid))}${h.source==='draw'&&h.total_weight!=null?` · 總權重 ${h.total_weight}`:''}</span></div>`).join(''):'<div class="slot-empty">尚無指派或抽籤紀錄</div>';
+  document.getElementById('dutyDrawHistory').innerHTML=history.length?history.map(h=>`<div class="history-row"><b>${escapeHtml(h.week_key||'-')}</b> · ${h.source==='draw'?'加權抽籤':'手動指派'} → <b>${escapeHtml(h.user_label||ownerLabel(h.user_uid))}</b><br><span style="color:var(--ink-soft);">${escapeHtml(fmtDateTime(h.at))} · 操作者 ${escapeHtml(ownerLabel(h.by_uid))}${h.source==='draw'&&h.total_weight!=null?` · 總權重 ${h.total_weight}`:''}</span></div>`).join(''):'<div class="slot-empty">尚無指派或抽籤紀錄</div>';
 }
 function renderDutyCurrentAssignment(){
   const week=selectedDutyWeek(), a=dutyAdminData.assignments[week];
@@ -5620,7 +5780,7 @@ function renderDutyCurrentAssignment(){
 async function commitDutyAssignment(userUid, source){
   if(!isAdmin()) return;
   const acc=findAccount(userUid), week=selectedDutyWeek();
-  if(!acc||acc.deleted===true||acc.active!==true){ alert('請選擇有效的使用者。'); return; }
+  if(!acc||acc.deleted===true||acc.active!==true){ notify('請選擇有效的使用者。'); return; }
   const at=new Date().toISOString();
   dutyAdminData.assignments[week]={user_uid:acc.uid,user_code:acc.code,source,at,by_uid:currentUser.uid};
   const rec={id:`${Date.now()}-${Math.random().toString(36).slice(2,7)}`,week_key:week,user_uid:acc.uid,user_label:dutyAccountOptionLabel(acc),source,at,by_uid:currentUser.uid};
@@ -5642,11 +5802,11 @@ document.getElementById('dutyDrawBtn').addEventListener('click', async ()=>{
   if(!isAdmin()) return;
   const pool=eligibleDutyAccounts().map(a=>({acc:a,weight:Math.max(0,Number(dutyAdminData.weights[a.uid]??1))})).filter(x=>x.weight>0);
   const total=pool.reduce((sum,x)=>sum+x.weight,0);
-  if(!pool.length||total<=0){ alert('沒有可參加抽籤的使用者，請至少將一人的權重設為大於 0。'); return; }
+  if(!pool.length||total<=0){ notify('沒有可參加抽籤的使用者,請至少將一人的權重設為大於 0。'); return; }
   const bytes=new Uint32Array(1); crypto.getRandomValues(bytes);
   let target=(bytes[0]/4294967296)*total, picked=pool[pool.length-1].acc;
   for(const x of pool){ target-=x.weight; if(target<0){ picked=x.acc; break; } }
-  if(!confirm(`抽籤結果是「${dutyAccountOptionLabel(picked)}」。要將他指派為 ${selectedDutyWeek()} 的值週生嗎？`)) return;
+  if(!await confirmDialog(`抽籤結果是「${dutyAccountOptionLabel(picked)}」。要將他指派為 ${selectedDutyWeek()} 的值週生嗎？`)) return;
   await commitDutyAssignment(picked.uid,'draw');
 });
 
@@ -5699,9 +5859,9 @@ document.getElementById('sbFormClose').addEventListener('click', ()=> document.g
 document.getElementById('sbFormCancelBtn').addEventListener('click', ()=> document.getElementById('sbFormOverlay').classList.remove('show'));
 document.getElementById('sbFormSaveBtn').addEventListener('click', async ()=>{
   const date = document.getElementById('sb_date').value;
-  if(!date){ alert('請填寫備份日期'); return; }
+  if(!date){ notify('請填寫備份日期'); return; }
   const includes = [...document.querySelectorAll('.sb_include:checked')].map(cb=>cb.value);
-  if(!includes.length){ alert('請至少勾選一項備份內容(Ghost/VM/資料)'); return; }
+  if(!includes.length){ notify('請至少勾選一項備份內容(Ghost/VM/資料)'); return; }
   const entry = sbEnsureEntry(sbFormInstrument);
   entry.logs.push({ id: genId(entry.logs,'SBL'), date, filename: document.getElementById('sb_filename').value.trim(), includes, by:(currentUser&&currentUser.code)||null, by_uid:(currentUser&&currentUser.uid)||null });
   sbRecalcLast(sbFormInstrument);
@@ -5711,7 +5871,7 @@ document.getElementById('sbFormSaveBtn').addEventListener('click', async ()=>{
 });
 async function undoBackupLog(instrument, logId){
   if(!isAdmin()) return;
-  if(!confirm('確定要刪除這筆備份紀錄嗎?')) return;
+  if(!await confirmDialog('確定要刪除這筆備份紀錄嗎?')) return;
   const entry = sbEnsureEntry(instrument);
   entry.logs = entry.logs.filter(l=>l.id!==logId);
   sbRecalcLast(instrument);
@@ -5812,7 +5972,7 @@ document.getElementById('todo_visibility').addEventListener('change', (e)=>{
 });
 document.getElementById('todoSaveBtn').addEventListener('click', async ()=>{
   const title = document.getElementById('todo_title').value.trim();
-  if(!title){ alert('請輸入工作內容'); return; }
+  if(!title){ notify('請輸入工作內容'); return; }
   const visibility = document.getElementById('todo_visibility').value;
   const assigneeUid = visibility==='assigned' ? document.getElementById('todo_assignee').value : null;
   const assigneeAcc = assigneeUid ? findAccount(assigneeUid) : null;
@@ -5830,7 +5990,7 @@ document.getElementById('todoSaveBtn').addEventListener('click', async ()=>{
     done_at: null
   };
   const ok = await fsSetItem('todo-items', item);
-  if(!ok){ alert('儲存失敗,請檢查網路連線後再試一次。'); return; }
+  if(!ok){ notify('儲存失敗,請檢查網路連線後再試一次。'); return; }
   todoItems.push(item);
   closeTodoForm();
   renderTodoAll();
@@ -5840,7 +6000,7 @@ async function toggleTodoDone(id, done){
   if(!item) return;
   const isOwnerOrAdmin = isAdmin() || item.created_by_uid===(currentUser&&currentUser.uid);
   const canToggle = isOwnerOrAdmin || item.visibility==='shared' || item.assignee_uid===(currentUser&&currentUser.uid);
-  if(!canToggle){ alert('你沒有權限更新這項待辦。'); renderTodoAll(); return; }
+  if(!canToggle){ notify('你沒有權限更新這項待辦。'); renderTodoAll(); return; }
   const oldDone = item.done, oldDoneAt = item.done_at, oldDoneBy = item.done_by;
   item.done = done;
   item.done_at = done ? new Date().toISOString() : null;
@@ -5856,16 +6016,16 @@ async function toggleTodoDone(id, done){
       ok = true;
     }catch(e){ console.error('toggleTodoDone update failed:', e); ok = false; }
   }
-  if(!ok){ item.done=oldDone; item.done_at=oldDoneAt; item.done_by=oldDoneBy; alert('更新失敗。'); }
+  if(!ok){ item.done=oldDone; item.done_at=oldDoneAt; item.done_by=oldDoneBy; notify('更新失敗。'); }
   renderTodoAll();
 }
 async function quickDeleteTodo(id){
   const item = todoItems.find(i=>i.id===id);
   if(!item) return;
-  if(!isAdmin() && item.created_by_uid!==(currentUser&&currentUser.uid)){ alert('只有建立者或管理員能刪除這項待辦。'); return; }
-  if(!confirm('確定要刪除這項工作嗎?')) return;
+  if(!isAdmin() && item.created_by_uid!==(currentUser&&currentUser.uid)){ notify('只有建立者或管理員能刪除這項待辦。'); return; }
+  if(!await confirmDialog('確定要刪除這項工作嗎?')) return;
   const ok = await fsDeleteItem('todo-items', id, item._doc_id);
-  if(!ok){ alert('刪除失敗。'); return; }
+  if(!ok){ notify('刪除失敗。'); return; }
   todoItems = todoItems.filter(i=>i.id!==id);
   renderTodoAll();
 }
@@ -6201,7 +6361,7 @@ async function removeImPhoto(idx){
   entry.photos.splice(idx,1);
   entry.photo_paths.splice(idx,1);
   const ok=await saveImData();
-  if(!ok){ entry.photos.splice(idx,0,oldPhoto); entry.photo_paths.splice(idx,0,oldPath); alert('儲存失敗，請重新整理後再試。'); return; }
+  if(!ok){ entry.photos.splice(idx,0,oldPhoto); entry.photo_paths.splice(idx,0,oldPath); notify('儲存失敗,請重新整理後再試。'); return; }
   if(oldPath) await deleteStoredPhoto(oldPath);
   renderImPhotoGallery();
   renderImGrid();
@@ -6214,12 +6374,12 @@ document.getElementById('imSaveNotesBtn').addEventListener('click', async ()=>{
       const info=await uploadPhotoSource(entry.photos[i],'instrument-manuals',imCurrentName,`manual-${i}`,entry.photo_paths[i]);
       nextPhotos.push(info.url); nextPaths.push(info.path); if(info.uploaded) uploadedNow.push(info.path);
     }
-  }catch(err){ await Promise.all(uploadedNow.map(deleteStoredPhoto)); alert(err.message||'照片上傳失敗。'); return; }
+  }catch(err){ await Promise.all(uploadedNow.map(deleteStoredPhoto)); notify(err.message||'照片上傳失敗。'); return; }
   entry.notes = document.getElementById('im_notes').value;
   entry.photos = nextPhotos;
   entry.photo_paths = nextPaths;
   const ok = await saveImData();
-  if(!ok){ await Promise.all(uploadedNow.map(deleteStoredPhoto)); alert('儲存失敗,請檢查網路連線後再試一次。'); return; }
+  if(!ok){ await Promise.all(uploadedNow.map(deleteStoredPhoto)); notify('儲存失敗,請檢查網路連線後再試一次。'); return; }
   renderImGrid();
   showToast('✅ 已儲存說明書');
 });
@@ -6249,14 +6409,14 @@ document.getElementById('im_maint_photo').addEventListener('change', (e)=>{
 document.getElementById('imAddMaintBtn').addEventListener('click', async ()=>{
   const date = document.getElementById('im_maint_date').value;
   const desc = document.getElementById('im_maint_desc').value.trim();
-  if(!date || !desc){ alert('請填寫日期與說明'); return; }
+  if(!date || !desc){ notify('請填寫日期與說明'); return; }
   const file = document.getElementById('im_maint_photo').files[0];
   const entry = ensureImEntry(imCurrentName);
   const rec = { id: genId(entry.maintenance,'M'), date, desc, by:(currentUser&&currentUser.code)||null, by_uid:(currentUser&&currentUser.uid)||null, photo:null, photo_path:null };
   const finish = async ()=>{
     entry.maintenance.push(rec);
     const ok = await saveImData();
-    if(!ok){ entry.maintenance=entry.maintenance.filter(m=>m!==rec); if(rec.photo_path) await deleteStoredPhoto(rec.photo_path); alert('儲存失敗,請檢查網路連線後再試一次。'); return; }
+    if(!ok){ entry.maintenance=entry.maintenance.filter(m=>m!==rec); if(rec.photo_path) await deleteStoredPhoto(rec.photo_path); notify('儲存失敗,請檢查網路連線後再試一次。'); return; }
     document.getElementById('im_maint_date').value = '';
     document.getElementById('im_maint_desc').value = '';
     document.getElementById('im_maint_photo').value = '';
@@ -6269,7 +6429,7 @@ document.getElementById('imAddMaintBtn').addEventListener('click', async ()=>{
       const info=await uploadPhotoSource(dataUrl,'instrument-maintenance',imCurrentName,rec.id,null);
       rec.photo=info.url; rec.photo_path=info.path;
       await finish();
-    }catch(err){ alert(err.message||'照片上傳失敗。'); }
+    }catch(err){ notify(err.message||'照片上傳失敗。'); }
   }); }
   else{ await finish(); }
 });
@@ -6278,14 +6438,14 @@ async function removeImMaint(id){
   const removed=entry.maintenance.find(m=>m.id===id);
   entry.maintenance = entry.maintenance.filter(m=>m.id!==id);
   const ok=await saveImData();
-  if(!ok){ if(removed) entry.maintenance.push(removed); alert('刪除失敗。'); return; }
+  if(!ok){ if(removed) entry.maintenance.push(removed); notify('刪除失敗。'); return; }
   if(removed&&removed.photo_path) await deleteStoredPhoto(removed.photo_path);
   renderImMaintList();
   renderImGrid();
 }
 
 function openImAddForm(){
-  if(!isSuperAdmin()){ alert('只有總管理員才能新增儀器。'); return; }
+  if(!isSuperAdmin()){ notify('只有總管理員才能新增儀器。'); return; }
   document.getElementById('im_new_name').value = '';
   document.getElementById('im_new_room').value = '602';
   document.getElementById('imAddOverlay').classList.add('show');
@@ -6295,27 +6455,27 @@ document.getElementById('saAddInstrumentBtn').addEventListener('click', openImAd
 document.getElementById('imAddClose').addEventListener('click', ()=> document.getElementById('imAddOverlay').classList.remove('show'));
 document.getElementById('imAddCancelBtn').addEventListener('click', ()=> document.getElementById('imAddOverlay').classList.remove('show'));
 document.getElementById('imAddSaveBtn').addEventListener('click', async ()=>{
-  if(!isSuperAdmin()){ alert('只有總管理員才能新增儀器。'); return; }
+  if(!isSuperAdmin()){ notify('只有總管理員才能新增儀器。'); return; }
   const name = document.getElementById('im_new_name').value.trim();
   const room = document.getElementById('im_new_room').value;
-  if(!name){ alert('請輸入儀器名稱'); return; }
-  if(INSTRUMENTS_ALL().some(i=>i.name===name)){ alert('這個儀器名稱已經存在了。'); return; }
+  if(!name){ notify('請輸入儀器名稱'); return; }
+  if(INSTRUMENTS_ALL().some(i=>i.name===name)){ notify('這個儀器名稱已經存在了。'); return; }
   customInstruments.push({ name, room });
   const ok = await saveCustomInstruments();
-  if(!ok){ alert('儲存失敗,請檢查網路連線後再試一次。'); return; }
+  if(!ok){ notify('儲存失敗,請檢查網路連線後再試一次。'); return; }
   document.getElementById('imAddOverlay').classList.remove('show');
   renderImGrid();
   renderSuperAdminTools();
 });
 async function deleteInstrument(name){
-  if(!isSuperAdmin()){ alert('只有總管理員才能刪除儀器。'); return; }
-  if(!confirm(`確定要刪除「${name}」嗎?這台儀器的說明書、維修紀錄跟預約歷史都不會自動清除,但清單中會移除。`)) return;
+  if(!isSuperAdmin()){ notify('只有總管理員才能刪除儀器。'); return; }
+  if(!await confirmDialog(`確定要刪除「${name}」嗎?這台儀器的說明書、維修紀錄跟預約歷史都不會自動清除,但清單中會移除。`)) return;
   const inst = INSTRUMENTS_ALL().find(i=>i.name===name);
   if(!inst) return;
   if(inst._custom) customInstruments = customInstruments.filter(i=>i.name!==name);
   else instOverrides[inst._origName] = { ...(instOverrides[inst._origName]||{}), _deleted:true };
   const ok = await saveCustomInstruments();
-  if(!ok){ alert('刪除失敗，請檢查網路與權限。'); return; }
+  if(!ok){ notify('刪除失敗,請檢查網路與權限。'); return; }
   document.getElementById('imDetailOverlay').classList.remove('show');
   renderImGrid();
   renderSuperAdminTools();
@@ -6374,12 +6534,12 @@ document.getElementById('saQuotedSelectAll').addEventListener('change', (e)=>{
   document.getElementById('saQuotedDeleteBtn').disabled = !e.target.checked || !document.querySelectorAll('.sa-quoted-cb').length;
 });
 document.getElementById('saQuotedDeleteBtn').addEventListener('click', async ()=>{
-  if(!isSuperAdmin()){ alert('只有總管理員可以使用這個功能。'); return; }
+  if(!isSuperAdmin()){ notify('只有總管理員可以使用這個功能。'); return; }
   const ids = saQuotedChecked();
   if(!ids.length) return;
   const names = ids.map(id=>{ const it=cpItems.find(i=>i.id===id); return it?(it.name_zh||id):id; });
   const preview = names.slice(0,10).map(n=>'・'+n).join('\n') + (names.length>10?`\n…其他 ${names.length-10} 筆`:'');
-  if(!confirm(`確定要刪除這 ${ids.length} 筆待審核項目嗎?\n連同它們的比價資料一起刪除,無法復原。\n\n${preview}`)) return;
+  if(!await confirmDialog(`確定要刪除這 ${ids.length} 筆待審核項目嗎?\n連同它們的比價資料一起刪除,無法復原。\n\n${preview}`)) return;
 
   const btn = document.getElementById('saQuotedDeleteBtn');
   btn.disabled = true;
@@ -6426,43 +6586,43 @@ document.getElementById('saChemLocationAdd').addEventListener('click', async ()=
   if(!isSuperAdmin()) return;
   const input=document.getElementById('saChemLocationInput'), value=input.value.trim();
   if(!value) return;
-  if(CHEM_LOCATIONS.includes(value)){ alert('這個藥品位置已存在。'); return; }
+  if(CHEM_LOCATIONS.includes(value)){ notify('這個藥品位置已存在。'); return; }
   systemSettings.chem_locations.push(value); input.value=''; await saveSystemSettings();
 });
 document.getElementById('saMatLocationAdd').addEventListener('click', async ()=>{
   if(!isSuperAdmin()) return;
   const input=document.getElementById('saMatLocationInput'), value=input.value.trim();
   if(!value) return;
-  if(STORAGE_OPTIONS.some(o=>o.value===value)){ alert('這個試材位置已存在。'); return; }
+  if(STORAGE_OPTIONS.some(o=>o.value===value)){ notify('這個試材位置已存在。'); return; }
   systemSettings.material_locations.push({value,label:value}); input.value=''; await saveSystemSettings();
 });
 document.getElementById('saChemLocationList').addEventListener('click', async (e)=>{
   const editBtn=e.target.closest('[data-edit-chem-location]');
   if(editBtn && isSuperAdmin()){
     const oldValue=editBtn.dataset.editChemLocation;
-    const input=prompt('修改位置名稱(只會更新選單名稱,既有藥品資料仍會顯示原本填寫的位置)', oldValue);
+    const input=await promptDialog('修改位置名稱(只會更新選單名稱,既有藥品資料仍會顯示原本填寫的位置)', oldValue);
     if(input===null) return;
     const newValue=input.trim();
     if(!newValue || newValue===oldValue) return;
-    if(CHEM_LOCATIONS.includes(newValue)){ alert('這個藥品位置已存在。'); return; }
+    if(CHEM_LOCATIONS.includes(newValue)){ notify('這個藥品位置已存在。'); return; }
     systemSettings.chem_locations=systemSettings.chem_locations.map(v=>v===oldValue?newValue:v);
     await saveSystemSettings();
     return;
   }
   const btn=e.target.closest('[data-delete-chem-location]'); if(!btn||!isSuperAdmin()) return;
   const value=btn.dataset.deleteChemLocation;
-  if(!confirm(`確定從選單移除「${value}」嗎？既有藥品資料不會被修改。`)) return;
+  if(!await confirmDialog(`確定從選單移除「${value}」嗎？既有藥品資料不會被修改。`)) return;
   systemSettings.chem_locations=systemSettings.chem_locations.filter(v=>v!==value); await saveSystemSettings();
 });
 document.getElementById('saMatLocationList').addEventListener('click', async (e)=>{
   const editBtn=e.target.closest('[data-edit-mat-location]');
   if(editBtn && isSuperAdmin()){
     const value=editBtn.dataset.editMatLocation;
-    const input=prompt('修改位置名稱(既有試材會直接改用新名稱顯示)', storageLabel(value));
+    const input=await promptDialog('修改位置名稱(既有試材會直接改用新名稱顯示)', storageLabel(value));
     if(input===null) return;
     const newLabel=input.trim();
     if(!newLabel || newLabel===storageLabel(value)) return;
-    if(STORAGE_OPTIONS.some(o=>o.value!==value && o.label===newLabel)){ alert('這個試材位置名稱已存在。'); return; }
+    if(STORAGE_OPTIONS.some(o=>o.value!==value && o.label===newLabel)){ notify('這個試材位置名稱已存在。'); return; }
     systemSettings.material_locations=systemSettings.material_locations.map(o=>o.value===value?{...o,label:newLabel}:o);
     await saveSystemSettings();
     renderMatAll();
@@ -6470,14 +6630,14 @@ document.getElementById('saMatLocationList').addEventListener('click', async (e)
   }
   const btn=e.target.closest('[data-delete-mat-location]'); if(!btn||!isSuperAdmin()) return;
   const value=btn.dataset.deleteMatLocation;
-  if(!confirm(`確定從選單移除「${storageLabel(value)}」嗎？既有試材資料不會被修改。`)) return;
+  if(!await confirmDialog(`確定從選單移除「${storageLabel(value)}」嗎？既有試材資料不會被修改。`)) return;
   systemSettings.material_locations=systemSettings.material_locations.filter(o=>o.value!==value); await saveSystemSettings();
 });
 
 /* ====== 編輯儀器(管理員):改名 / 換實驗室 / 封面照片 ====== */
 let imEditPhotoPath = null;
 function openImEdit(){
-  if(!isSuperAdmin()){ alert('只有總管理員才能編輯儀器。'); return; }
+  if(!isSuperAdmin()){ notify('只有總管理員才能編輯儀器。'); return; }
   const inst = INSTRUMENTS_ALL().find(i=>i.name===imCurrentName);
   if(!inst) return;
   document.getElementById('im_edit_name').value = inst.name;
@@ -6510,13 +6670,13 @@ document.getElementById('imEditPhotoClear').addEventListener('click', ()=>{
   document.getElementById('imEditPhotoClear').style.display = 'none';
 });
 document.getElementById('imEditSaveBtn').addEventListener('click', async ()=>{
-  if(!isSuperAdmin()){ alert('只有總管理員才能編輯儀器。'); return; }
+  if(!isSuperAdmin()){ notify('只有總管理員才能編輯儀器。'); return; }
   const inst = INSTRUMENTS_ALL().find(i=>i.name===imCurrentName);
   if(!inst) return;
   const newName = document.getElementById('im_edit_name').value.trim();
   const newRoom = document.getElementById('im_edit_room').value;
-  if(!newName){ alert('請輸入儀器名稱'); return; }
-  if(newName !== inst.name && INSTRUMENTS_ALL().some(i=>i.name===newName)){ alert('這個儀器名稱已經存在了。'); return; }
+  if(!newName){ notify('請輸入儀器名稱'); return; }
+  if(newName !== inst.name && INSTRUMENTS_ALL().some(i=>i.name===newName)){ notify('這個儀器名稱已經存在了。'); return; }
 
   const btn = document.getElementById('imEditSaveBtn');
   btn.disabled = true;
@@ -6539,14 +6699,14 @@ document.getElementById('imEditSaveBtn').addEventListener('click', async ()=>{
       instOverrides[inst._origName] = { name:newName, room:newRoom, photo, photo_path };
     }
     const okInst = await saveCustomInstruments();
-    if(!okInst){ alert('儲存失敗,請檢查網路連線後再試一次。'); return; }
+    if(!okInst){ notify('儲存失敗,請檢查網路連線後再試一次。'); return; }
 
     // 改名:說明書/附件/維修紀錄跟著搬家
     if(newName !== oldName && imData[oldName]){
       imData[newName] = imData[oldName];
       delete imData[oldName];
       const okIm = await saveImData();
-      if(!okIm){ alert('儀器已更新,但說明書資料搬移失敗,請重新整理後再試一次。'); }
+      if(!okIm){ notify('儀器已更新,但說明書資料搬移失敗,請重新整理後再試一次。'); }
     }
     imCurrentName = newName;
     document.getElementById('imEditOverlay').classList.remove('show');
@@ -6555,7 +6715,7 @@ document.getElementById('imEditSaveBtn').addEventListener('click', async ()=>{
     if(isSuperAdmin()) renderSuperAdminTools();
     showToast('✅ 儀器已更新');
   }catch(err){
-    alert('儲存失敗:' + (err && err.message ? err.message : err));
+    notify('儲存失敗:' + (err && err.message ? err.message : err));
   }finally{ btn.disabled = false; }
 });
 
@@ -6587,9 +6747,9 @@ document.getElementById('imFileInput').addEventListener('change', async (e)=>{
   e.target.value = '';
   if(!file) return;
   const okType = /\.(pdf|docx?)$/i.test(file.name);
-  if(!okType){ alert('只支援 PDF 與 Word(.pdf / .doc / .docx)檔案。'); return; }
-  if(file.size > IM_FILE_MAX){ alert('檔案超過 20 MB 上限,請壓縮後再上傳。'); return; }
-  if(!currentUser || !currentUser.uid){ alert('尚未登入,無法上傳。'); return; }
+  if(!okType){ notify('只支援 PDF 與 Word(.pdf / .doc / .docx)檔案。'); return; }
+  if(file.size > IM_FILE_MAX){ notify('檔案超過 20 MB 上限,請壓縮後再上傳。'); return; }
+  if(!currentUser || !currentUser.uid){ notify('尚未登入,無法上傳。'); return; }
   const btn = document.getElementById('imFileUploadBtn');
   btn.disabled = true; btn.textContent = '⏳ 上傳中...';
   try{
@@ -6604,23 +6764,23 @@ document.getElementById('imFileInput').addEventListener('change', async (e)=>{
     const entry = ensureImEntry(imCurrentName);
     entry.files.push({ name:file.name, size:file.size, path, url, uploaded_at:new Date().toISOString(), by:(currentUser&&currentUser.code)||null, by_uid:currentUser.uid });
     const ok = await saveImData();
-    if(!ok){ entry.files.pop(); deleteStoredPhoto(path); alert('附件資訊儲存失敗,請重新整理後再試一次。'); return; }
+    if(!ok){ entry.files.pop(); deleteStoredPhoto(path); notify('附件資訊儲存失敗,請重新整理後再試一次。'); return; }
     renderImFileList(); renderImGrid();
     showToast('📎 附件已上傳');
   }catch(err){
     console.error('file upload failed:', err);
-    alert('上傳失敗:' + (err && err.message ? err.message : err) + '\n如果訊息是權限不足(unauthorized),請通知管理員檢查 Firebase Storage 規則。');
+    notify('上傳失敗:' + (err && err.message ? err.message : err) + '\n如果訊息是權限不足(unauthorized),請通知管理員檢查 Firebase Storage 規則。');
   }finally{ btn.disabled = false; btn.textContent = '📎 上傳檔案'; }
 });
 async function removeImFile(idx){
   const entry = ensureImEntry(imCurrentName);
   const f = entry.files[idx];
   if(!f) return;
-  if(!(isAdmin() || f.by_uid===(currentUser&&currentUser.uid))){ alert('只有上傳者或管理員能刪除附件。'); return; }
-  if(!confirm(`確定要刪除附件「${f.name}」嗎?`)) return;
+  if(!(isAdmin() || f.by_uid===(currentUser&&currentUser.uid))){ notify('只有上傳者或管理員能刪除附件。'); return; }
+  if(!await confirmDialog(`確定要刪除附件「${f.name}」嗎?`)) return;
   entry.files.splice(idx,1);
   const ok = await saveImData();
-  if(!ok){ entry.files.splice(idx,0,f); alert('刪除失敗,請重新整理後再試一次。'); return; }
+  if(!ok){ entry.files.splice(idx,0,f); notify('刪除失敗,請重新整理後再試一次。'); return; }
   if(f.path) deleteStoredPhoto(f.path);
   renderImFileList(); renderImGrid();
 }
@@ -6768,7 +6928,7 @@ async function cpSaveFormItem(keepOpen){
 
   if(type==='chemical'){
     name_zh = document.getElementById('cp_name_zh').value.trim();
-    if(!name_zh){ alert('請填寫藥品中文名稱'); return; }
+    if(!name_zh){ notify('請填寫藥品中文名稱'); return; }
     name_en = document.getElementById('cp_name_en').value.trim();
     cas = document.getElementById('cp_cas').value.trim();
     package_sizes = [...document.querySelectorAll('.cp_pkg:checked')].map(cb=>cb.value);
@@ -6776,12 +6936,12 @@ async function cpSaveFormItem(keepOpen){
     note = document.getElementById('cp_note').value.trim();
   }else if(type==='consumable'){
     name_zh = document.getElementById('cp_consumable_name').value.trim();
-    if(!name_zh){ alert('請填寫耗材名稱'); return; }
+    if(!name_zh){ notify('請填寫耗材名稱'); return; }
     pack = document.getElementById('cp_consumable_spec').value.trim();
     note = document.getElementById('cp_note').value.trim();
   }else{
     name_zh = document.getElementById('cp_instrument_select').value;
-    if(!name_zh){ alert('請選擇儀器'); return; }
+    if(!name_zh){ notify('請選擇儀器'); return; }
     note = document.getElementById('cp_instrument_issue').value.trim();
   }
 
@@ -6812,7 +6972,7 @@ async function cpSaveFormItem(keepOpen){
   saveBtn.disabled = true; saveAddBtn.disabled = true; // 避免手機雙擊送出兩次造成重複卡片
   const ok = await fsSetItem('chem-purchases', item);
   saveBtn.disabled = false; saveAddBtn.disabled = false;
-  if(!ok){ alert('儲存失敗,請檢查網路連線後再試一次。'); return; }
+  if(!ok){ notify('儲存失敗,請檢查網路連線後再試一次。'); return; }
   if(editingCpId){ cpItems = cpItems.map(i=>i.id===editingCpId?item:i); }
   else if(!cpItems.some(i=>i.id===item.id)){ cpItems.push(item); }
   renderCpKanban();
@@ -6829,21 +6989,21 @@ document.getElementById('cpSaveBtn').addEventListener('click', ()=> cpSaveFormIt
 document.getElementById('cpSaveAddBtn').addEventListener('click', ()=> cpSaveFormItem(true));
 document.getElementById('cpDeleteBtn').addEventListener('click', async ()=>{
   if(!editingCpId || !isAdmin()) return;
-  if(!confirm('確定要刪除這筆待購買項目嗎?此動作無法復原。')) return;
+  if(!await confirmDialog('確定要刪除這筆待購買項目嗎?此動作無法復原。')) return;
   const id = editingCpId;
   const item = cpItems.find(i=>i.id===id);
   const ok = await fsDeleteItem('chem-purchases', id, item&&item._doc_id);
-  if(!ok){ alert('刪除失敗。'); return; }
+  if(!ok){ notify('刪除失敗。'); return; }
   cpItems = cpItems.filter(i=>i.id!==id);
   closeCpForm();
   renderCpKanban();
 });
 async function quickDeleteCp(id){
   if(!isAdmin()) return;
-  if(!confirm('確定要刪除這筆待購買項目嗎?此動作無法復原。')) return;
+  if(!await confirmDialog('確定要刪除這筆待購買項目嗎?此動作無法復原。')) return;
   const item = cpItems.find(i=>i.id===id);
   const ok = await fsDeleteItem('chem-purchases', id, item&&item._doc_id);
-  if(!ok){ alert('刪除失敗。'); return; }
+  if(!ok){ notify('刪除失敗。'); return; }
   cpItems = cpItems.filter(i=>i.id!==id);
   closeCpDetail();
   renderCpKanban();
@@ -6933,7 +7093,7 @@ async function cpStepBack(id){
 }
 async function cpCancelItem(id){
   if(!isAdmin()) return;
-  if(!confirm('確定這項不買了嗎?會移到「都不買」清單,之後還可以復原。')) return;
+  if(!await confirmDialog('確定這項不買了嗎?會移到「都不買」清單,之後還可以復原。')) return;
   const item = cpItems.find(i=>i.id===id);
   if(!item) return;
   item.prev_status = item.status;
@@ -6972,7 +7132,7 @@ document.getElementById('cpOrderSaveBtn').addEventListener('click', async ()=>{
   const item = cpItems.find(i=>i.id===cpActionId);
   if(!item) return;
   const date = document.getElementById('cpo_date').value;
-  if(!date){ alert('請填寫訊息送出日期'); return; }
+  if(!date){ notify('請填寫訊息送出日期'); return; }
   const vendorSel = document.getElementById('cpo_vendor').value;
   item.vendor = vendorSel==='其他' ? (document.getElementById('cpo_vendor_other').value.trim()||'其他') : vendorSel;
   item.price = document.getElementById('cpo_price').value ? Number(document.getElementById('cpo_price').value) : null;
@@ -6981,7 +7141,7 @@ document.getElementById('cpOrderSaveBtn').addEventListener('click', async ()=>{
   item.status = 'ordered';
   cpLogPush(item, '標記已訂購', `${item.vendor||''} ${item.pack||''} ${item.price!=null?'$'+item.price:''} 送出日 ${date}`.trim());
   const ok = await fsSetItem('chem-purchases', item);
-  if(!ok){ alert('儲存失敗,請檢查網路連線後再試一次。'); }
+  if(!ok){ notify('儲存失敗,請檢查網路連線後再試一次。'); }
   document.getElementById('cpOrderOverlay').classList.remove('show');
   renderCpKanban();
 });
@@ -6998,13 +7158,13 @@ document.getElementById('cpReceiveSaveBtn').addEventListener('click', async ()=>
   const item = cpItems.find(i=>i.id===cpActionId);
   if(!item) return;
   const date = document.getElementById('cpr_date').value;
-  if(!date){ alert('請填寫收到貨日期'); return; }
+  if(!date){ notify('請填寫收到貨日期'); return; }
   item.received_date = date;
   item.sds_date = document.getElementById('cpr_sds_date').value || null;
   item.status = 'delivered';
   cpLogPush(item, '標記已到貨', `到貨日 ${date}`);
   const ok = await fsSetItem('chem-purchases', item);
-  if(!ok){ alert('儲存失敗,請檢查網路連線後再試一次。'); }
+  if(!ok){ notify('儲存失敗,請檢查網路連線後再試一次。'); }
   document.getElementById('cpReceiveOverlay').classList.remove('show');
   renderCpKanban();
 });
@@ -7034,12 +7194,12 @@ function quickAddCpToChem(id){
     document.getElementById('f_grade').value = item.purity;
   }
   saveChemDraftDebounced();
-  alert('已將這筆待購買項目的資料帶入新增藥品表單,填完存量/位置等欄位後儲存即可。儲存成功後,這筆項目才會從「購買」佇列移除,請記得回來確認。');
+  notify('已將這筆待購買項目的資料帶入新增藥品表單,填完存量/位置等欄位後儲存即可。儲存成功後,這筆項目才會從「購買」佇列移除,請記得回來確認。');
 }
 async function cpLogMaintenance(id){
   const item = cpItems.find(i=>i.id===id);
   if(!item) return;
-  if(!confirm(`確定要把這筆登記成「${item.name_zh}」的維修紀錄嗎?完成後會從購買清單移除。`)) return;
+  if(!await confirmDialog(`確定要把這筆登記成「${item.name_zh}」的維修紀錄嗎?完成後會從購買清單移除。`)) return;
   const entry = ensureImEntry(item.name_zh);
   const maintenanceRecord = {
     id: genId(entry.maintenance, 'M'),
@@ -7051,9 +7211,9 @@ async function cpLogMaintenance(id){
   };
   entry.maintenance.push(maintenanceRecord);
   const manualSaved = await saveImData();
-  if(!manualSaved){ entry.maintenance=entry.maintenance.filter(m=>m!==maintenanceRecord); alert('維修紀錄儲存失敗。'); return; }
+  if(!manualSaved){ entry.maintenance=entry.maintenance.filter(m=>m!==maintenanceRecord); notify('維修紀錄儲存失敗。'); return; }
   const deleted = await fsDeleteItem('chem-purchases', id, item._doc_id);
-  if(!deleted){ entry.maintenance=entry.maintenance.filter(m=>m!==maintenanceRecord); await saveImData(); alert('購買項目移除失敗，已撤回維修紀錄。'); return; }
+  if(!deleted){ entry.maintenance=entry.maintenance.filter(m=>m!==maintenanceRecord); await saveImData(); notify('購買項目移除失敗,已撤回維修紀錄。'); return; }
   cpItems = cpItems.filter(i=>i.id!==id);
   closeCpDetail();
   renderCpKanban();
@@ -7061,10 +7221,10 @@ async function cpLogMaintenance(id){
   showToast('✅ 已登記維修紀錄');
 }
 async function cpArchiveConsumable(id){
-  if(!confirm('確定這筆耗材已經入庫完成了嗎?這會把它從清單移除。')) return;
+  if(!await confirmDialog('確定這筆耗材已經入庫完成了嗎?這會把它從清單移除。')) return;
   const item = cpItems.find(i=>i.id===id);
   const ok = await fsDeleteItem('chem-purchases', id, item&&item._doc_id);
-  if(!ok){ alert('移除失敗。'); return; }
+  if(!ok){ notify('移除失敗。'); return; }
   cpItems = cpItems.filter(i=>i.id!==id);
   closeCpDetail();
   renderCpKanban();
@@ -7073,7 +7233,7 @@ async function removeCpAfterAdd(id){
   if(!id) return;
   const item = cpItems.find(i=>i.id===id);
   const ok = await fsDeleteItem('chem-purchases', id, item&&item._doc_id);
-  if(!ok){ alert('藥品已新增，但原待購買項目未能自動移除，請稍後重試。'); return; }
+  if(!ok){ notify('藥品已新增,但原待購買項目未能自動移除,請稍後重試。'); return; }
   cpItems = cpItems.filter(i=>i.id!==id);
   renderCpKanban();
 }
@@ -7201,15 +7361,15 @@ document.getElementById('cmpCardGrid').addEventListener('click',(e)=>{
 async function deletePriceComparison(id){
   if(!isSuperAdmin()) return;
   const record=cmpItems.find(c=>c.id===id); if(!record) return;
-  if(!confirm(`確定刪除「${cmpNameZh(record)||'未命名'}」的比價紀錄嗎？這個動作無法復原。`)) return;
+  if(!await confirmDialog(`確定刪除「${cmpNameZh(record)||'未命名'}」的比價紀錄嗎？這個動作無法復原。`)) return;
   const linked=record.linked_cp_id?cpItems.find(i=>i.id===record.linked_cp_id):null;
   if(linked&&linked.comparison_id===record.id){
     linked.comparison_id=null;
     if(linked.status==='quoted') linked.status='pending';
     const okLinked=await fsSetItem('chem-purchases',linked);
-    if(!okLinked){ alert('無法解除採買項目的比價關聯，因此尚未刪除。'); return; }
+    if(!okLinked){ notify('無法解除採買項目的比價關聯,因此尚未刪除。'); return; }
   }
-  if(!await fsDeleteItem('price-comparisons',record.id,record._doc_id)){ alert('比價紀錄刪除失敗。'); return; }
+  if(!await fsDeleteItem('price-comparisons',record.id,record._doc_id)){ notify('比價紀錄刪除失敗。'); return; }
   cmpItems=cmpItems.filter(c=>c.id!==record.id);
   if(cmpCurrentId===record.id) closeCmpDetail();
   renderCmpCardGrid(); renderCpKanban();
@@ -7301,7 +7461,7 @@ function buildPurchaseReviewReport(){
 }
 function openPurchaseReviewReport(){
   const count=cpItems.filter(i=>i.status==='quoted').length;
-  if(!count){ alert('目前沒有「已詢價待審核」的項目。'); return; }
+  if(!count){ notify('目前沒有「已詢價待審核」的項目。'); return; }
   document.getElementById('purchasePrintArea').innerHTML=buildPurchaseReviewReport();
   document.getElementById('purchaseReportOverlay').classList.add('show');
 }
@@ -7426,7 +7586,7 @@ function openCmpDetail(id){
 document.getElementById('cmpDetailSaveBtn').addEventListener('click', async ()=>{
   const name_zh = document.getElementById('cmp_item_name').value.trim();
   const name_en = document.getElementById('cmp_item_name_en').value.trim();
-  if(!name_zh){ alert('請填寫中文名稱'); return; }
+  if(!name_zh){ notify('請填寫中文名稱'); return; }
   const vendors = gatherCmpVendorsFromDOM();
   const existing = cmpCurrentId ? cmpItems.find(c=>c.id===cmpCurrentId) : null;
   const record = {
@@ -7449,7 +7609,7 @@ document.getElementById('cmpDetailSaveBtn').addEventListener('click', async ()=>
   };
   cpLogPush(record, existing ? '編輯比價資料' : '建立比價', name_zh);
   const ok = await fsSetItem('price-comparisons', record);
-  if(!ok){ alert('儲存失敗,請檢查網路連線後再試一次。'); return; }
+  if(!ok){ notify('儲存失敗,請檢查網路連線後再試一次。'); return; }
   if(cmpCurrentId){ cmpItems = cmpItems.map(c=>c.id===cmpCurrentId?record:c); }
   else{ cmpItems.push(record); cmpCurrentId = record.id; }
 
@@ -7481,7 +7641,7 @@ document.getElementById('cmpDetailSaveBtn').addEventListener('click', async ()=>
       cardCreated = true;
       renderCpKanban();
     }else{
-      alert('比價已儲存,但建立採買標籤失敗,請檢查網路與權限。');
+      notify('比價已儲存,但建立採買標籤失敗,請檢查網路與權限。');
     }
   }
 
@@ -7571,15 +7731,15 @@ document.getElementById('cmpSubmitDecisionBtn').addEventListener('click', async 
   const record = cmpItems.find(c=>c.id===cmpCurrentId);
   if(!record) return;
   const checked = document.querySelector('input[name="cmp_decision"]:checked');
-  if(!checked){ alert('請先勾選要採用的廠商規格'); return; }
+  if(!checked){ notify('請先勾選要採用的廠商規格'); return; }
   const [vendorKey, idxStr] = checked.value.split('::');
   const idx = Number(idxStr);
   const entryList = vendorKey==='其他' ? record.vendors['其他'].entries : record.vendors[vendorKey];
   const entry = entryList[idx];
-  if(!entry){ alert('找不到這筆規格資料'); return; }
+  if(!entry){ notify('找不到這筆規格資料'); return; }
   const vendorLabel = vendorKey==='其他' ? (record.vendors['其他'].name||'其他') : vendorKey;
   const packStr = `${entry.amount}${entry.unit}`;
-  if(!confirm(`確定要送出審核:「${vendorLabel} ${packStr} · $${entry.price}」嗎?送出後會進入「已審核待訂購」,還沒有實際下單。`)) return;
+  if(!await confirmDialog(`確定要送出審核:「${vendorLabel} ${packStr} · $${entry.price}」嗎?送出後會進入「已審核待訂購」,還沒有實際下單。`)) return;
 
   record.decided_vendor = `${vendorLabel} ${packStr}`;
   record.decided_vendor_key = vendorKey;
@@ -7587,7 +7747,7 @@ document.getElementById('cmpSubmitDecisionBtn').addEventListener('click', async 
   record.addedToList = true;
   cpLogPush(record, '決定廠商', `${vendorLabel} ${packStr} $${entry.price}`);
   const okRec = await fsSetItem('price-comparisons', record);
-  if(!okRec){ alert('儲存比價決定失敗,請檢查網路與權限(只有建立者或管理員能修改這份比價)。'); return; }
+  if(!okRec){ notify('儲存比價決定失敗,請檢查網路與權限(只有建立者或管理員能修改這份比價)。'); return; }
 
   if(record.linked_cp_id){
     const item = cpItems.find(i=>i.id===record.linked_cp_id);
@@ -7599,7 +7759,7 @@ document.getElementById('cmpSubmitDecisionBtn').addEventListener('click', async 
       item.status = 'reviewed';
       cpLogPush(item, '決定廠商', `${vendorLabel} ${packStr} $${entry.price}`);
       const okItem = await fsSetItem('chem-purchases', item);
-      if(!okItem){ alert('比價決定已儲存,但更新採購狀態失敗(可能只有建立者或管理員能更新這筆採購)。'); }
+      if(!okItem){ notify('比價決定已儲存,但更新採購狀態失敗(可能只有建立者或管理員能更新這筆採購)。'); }
     }
   }else{
     const newItem = {
@@ -7630,7 +7790,7 @@ document.getElementById('cmpSubmitDecisionBtn').addEventListener('click', async 
 document.getElementById('cmpCancelDecisionBtn').addEventListener('click', async ()=>{
   const record = cmpItems.find(c=>c.id===cmpCurrentId);
   if(!record) return;
-  if(!confirm('確定這項不買了嗎?')) return;
+  if(!await confirmDialog('確定這項不買了嗎?')) return;
   record.decided_vendor = '都不買';
   record.addedToList = true;
   cpLogPush(record, '標記都不買', '');
@@ -7668,13 +7828,13 @@ async function cpStartComparison(id){
   const okCmp = await fsSetItem('price-comparisons', record);
   if(!okCmp){
     cmpItems.pop();
-    alert('建立比價資料失敗,請檢查網路與權限後再試一次。');
+    notify('建立比價資料失敗,請檢查網路與權限後再試一次。');
     return;
   }
   // 只記錄關聯,狀態留在「待購買」;填完價格按「確定,送出審核」才會進入已詢價待審核
   item.comparison_id = record.id;
   const okCp = await fsSetItem('chem-purchases', item);
-  if(!okCp){ alert('比價資料已建立,但更新採購資料失敗(可能只有建立者或管理員能更新這筆採購)。'); }
+  if(!okCp){ notify('比價資料已建立,但更新採購資料失敗(可能只有建立者或管理員能更新這筆採購)。'); }
   renderCpKanban();
   renderCmpCardGrid();
   openCmpDetail(record.id);
@@ -7683,15 +7843,15 @@ async function cpStartComparison(id){
 async function cmpSendForReview(){
   const record = cmpItems.find(c=>c.id===cmpCurrentId);
   if(!record) return;
-  if(!cmpAllEntries(record).length){ alert('還沒有任何規格價格,請先按「修改」填寫比價資料。'); return; }
+  if(!cmpAllEntries(record).length){ notify('還沒有任何規格價格,請先按「修改」填寫比價資料。'); return; }
   const item = record.linked_cp_id ? cpItems.find(i=>i.id===record.linked_cp_id) : null;
-  if(!item){ alert('找不到對應的採購項目。'); return; }
-  if(item.status!=='pending'){ alert('這筆採購已經送出審核了。'); return; }
+  if(!item){ notify('找不到對應的採購項目。'); return; }
+  if(item.status!=='pending'){ notify('這筆採購已經送出審核了。'); return; }
   item.status = 'quoted';
   cpLogPush(item, '送出審核', cmpNameZh(record));
   cpLogPush(record, '送出審核', '等待選擇廠商');
   const ok = await fsSetItem('chem-purchases', item);
-  if(!ok){ item.status='pending'; item.logs.pop(); alert('送出失敗,請檢查網路與權限後再試一次。'); return; }
+  if(!ok){ item.status='pending'; item.logs.pop(); notify('送出失敗,請檢查網路與權限後再試一次。'); return; }
   if(!await fsSetItem('price-comparisons', record)) showToast('已送出審核,但比價紀錄狀態儲存失敗;請重新整理後確認。', 'error');
   renderCpKanban();
   cmpUpdateActionState(record);
@@ -7794,21 +7954,21 @@ document.getElementById('cmpImportInput').addEventListener('change', (e)=>{
   const file = e.target.files[0];
   if(!file) return;
   const reader = new FileReader();
-  reader.onload = (ev)=>{
+  reader.onload = async (ev)=>{
     let rows;
     try{
       const data = new Uint8Array(ev.target.result);
       const wb = XLSX.read(data, {type:'array'});
       const ws = wb.Sheets[wb.SheetNames[0]];
       rows = XLSX.utils.sheet_to_json(ws, {header:1, blankrows:false});
-    }catch(err){ alert('無法讀取這個檔案,請確認是Excel或CSV格式。'); return; }
-    if(!rows || rows.length<2){ alert('檔案內容看起來是空的'); return; }
+    }catch(err){ notify('無法讀取這個檔案,請確認是Excel或CSV格式。'); return; }
+    if(!rows || rows.length<2){ notify('檔案內容看起來是空的'); return; }
 
     const headerIdx = cmpFindHeaderRow(rows);
     const map = headerIdx>=0 ? cmpMapColumns(rows[headerIdx])
                              : {vendor:0, purity:1, amount:2, unit:3, price:4, note:5};
     if(map.vendor==null || map.amount==null || map.price==null){
-      alert('找不到「廠商」「包裝量」「價格」這幾欄,請確認標題列是否與範本一致。');
+      notify('找不到「廠商」「包裝量」「價格」這幾欄,請確認標題列是否與範本一致。');
       return;
     }
     let dataRows = rows.slice(headerIdx>=0 ? headerIdx+1 : 1);
@@ -7831,15 +7991,15 @@ document.getElementById('cmpImportInput').addEventListener('change', (e)=>{
                        document.getElementById('cmp_item_name_en').value.trim()].filter(Boolean);
         let picked = targets.length ? keys.filter(k=>cmpNameMatches(groups.get(k).label, targets)) : [];
         if(!picked.length){
-          const ans = window.prompt('這個檔案包含多個品項,請輸入要匯入的編號(可用逗號選多個,0 = 全部匯入):\n'
+          const ans = await promptDialog('這個檔案包含多個品項,請輸入要匯入的編號(可用逗號選多個,0 = 全部匯入):\n'
             + keys.map((k,i)=>`${i+1}. ${groups.get(k).label}`).join('\n'), '0');
           if(ans===null) return;
           const nums = String(ans).split(/[,,、\s]+/).map(s=>parseInt(s,10)).filter(n=>!isNaN(n));
-          if(!nums.length){ alert('編號不正確,已取消匯入。'); return; }
+          if(!nums.length){ notify('編號不正確,已取消匯入。'); return; }
           if(nums.includes(0)) picked = keys;
           else{
             picked = nums.filter(n=>n>=1&&n<=keys.length).map(n=>keys[n-1]);
-            if(!picked.length){ alert('編號不正確,已取消匯入。'); return; }
+            if(!picked.length){ notify('編號不正確,已取消匯入。'); return; }
           }
         }
         const keepRaw = new Set();
@@ -7884,7 +8044,7 @@ document.getElementById('cmpImportInput').addEventListener('change', (e)=>{
       });
     });
 
-    if(!imported){ alert('沒有可匯入的資料,請確認廠商、包裝量、價格三欄都有填。'); return; }
+    if(!imported){ notify('沒有可匯入的資料,請確認廠商、包裝量、價格三欄都有填。'); return; }
     showToast(`📥 已匯入 ${imported} 筆規格${skipped?`,略過 ${skipped} 筆資料不完整的列`:''},記得按「儲存比價資料」`, null, 3500);
   };
   reader.readAsArrayBuffer(file);
@@ -7902,14 +8062,14 @@ function cpCleanItemName(text){
 }
 async function cpImportQuoteRows(rows){
   const headerIdx = cmpFindHeaderRow(rows);
-  if(headerIdx<0){ alert('找不到標題列,請確認檔案第一列有「廠商」「價格」等欄位名稱。'); return; }
+  if(headerIdx<0){ notify('找不到標題列,請確認檔案第一列有「廠商」「價格」等欄位名稱。'); return; }
   const map = cmpMapColumns(rows[headerIdx]);
   if(map.name==null){
-    alert('這個檔案沒有「品名」欄。\n在採買頁匯入時需要品名欄才知道要建立哪些項目,\n如果只有單一品項,請改在比價視窗裡匯入。');
+    notify('這個檔案沒有「品名」欄。\n在採買頁匯入時需要品名欄才知道要建立哪些項目,\n如果只有單一品項,請改在比價視窗裡匯入。');
     return;
   }
   if(map.vendor==null || map.amount==null || map.price==null){
-    alert('找不到「廠商」「包裝量」「價格」這幾欄,請確認標題列是否與範本一致。');
+    notify('找不到「廠商」「包裝量」「價格」這幾欄,請確認標題列是否與範本一致。');
     return;
   }
   const dataRows = rows.slice(headerIdx+1);
@@ -7933,7 +8093,7 @@ async function cpImportQuoteRows(rows){
       note: map.note!=null && r[map.note]!=null ? String(r[map.note]).trim() : ''
     });
   });
-  if(!groups.size){ alert('沒有可匯入的資料,請確認品名、廠商、包裝量、價格都有填。'); return; }
+  if(!groups.size){ notify('沒有可匯入的資料,請確認品名、廠商、包裝量、價格都有填。'); return; }
 
   const list = [...groups.values()];
   const total = list.reduce((n,g)=>n+g.entries.length,0);
@@ -7942,7 +8102,7 @@ async function cpImportQuoteRows(rows){
   const dupNames = list.filter(g=> cpItems.some(i=> i.name_zh && cmpNameKey(i.name_zh)===cmpNameKey(cpCleanItemName(g.label)) && !['ready','cancelled'].includes(i.status)))
                        .map(g=>g.label);
   const dupText = dupNames.length ? '\n\n注意:採買看板裡已經有同名的項目('+dupNames.length+' 項),繼續匯入會另外建立新標籤。' : '';
-  if(!confirm('準備建立 '+list.length+' 個品項、共 '+total+' 筆報價。\n每個品項會產生一張採買標籤,狀態直接是「已詢價待審核」,並附上比價資料。\n\n'+preview+dupText+'\n\n要繼續嗎?')) return;
+  if(!await confirmDialog('準備建立 '+list.length+' 個品項、共 '+total+' 筆報價。\n每個品項會產生一張採買標籤,狀態直接是「已詢價待審核」,並附上比價資料。\n\n'+preview+dupText+'\n\n要繼續嗎?')) return;
 
   let okCount = 0, failCount = 0;
   for(const g of list){
@@ -8024,8 +8184,8 @@ document.getElementById('cpImportQuoteInput').addEventListener('change', (e)=>{
       const wb = XLSX.read(data, {type:'array'});
       const ws = wb.Sheets[wb.SheetNames[0]];
       rows = XLSX.utils.sheet_to_json(ws, {header:1, blankrows:false});
-    }catch(err){ alert('無法讀取這個檔案,請確認是Excel或CSV格式。'); return; }
-    if(!rows || rows.length<2){ alert('檔案內容看起來是空的'); return; }
+    }catch(err){ notify('無法讀取這個檔案,請確認是Excel或CSV格式。'); return; }
+    if(!rows || rows.length<2){ notify('檔案內容看起來是空的'); return; }
     await cpImportQuoteRows(rows);
   };
   reader.readAsArrayBuffer(file);
@@ -8117,8 +8277,8 @@ document.getElementById('libBookCancel').addEventListener('click',closeLibraryBo
 document.getElementById('libBookSave').addEventListener('click',async()=>{
   if(!isAdmin()) return;
   const code=document.getElementById('lib_code').value.trim(), title=document.getElementById('lib_title').value.trim();
-  if(!code||!title){ alert('請填寫圖書編號與書名。'); return; }
-  if(libraryBooks.some(b=>b.id!==editingLibraryBookId&&(b.code||b.id).toLowerCase()===code.toLowerCase())){ alert('這個圖書編號已存在。'); return; }
+  if(!code||!title){ notify('請填寫圖書編號與書名。'); return; }
+  if(libraryBooks.some(b=>b.id!==editingLibraryBookId&&(b.code||b.id).toLowerCase()===code.toLowerCase())){ notify('這個圖書編號已存在。'); return; }
   const old=editingLibraryBookId?libraryBooks.find(b=>b.id===editingLibraryBookId):null;
   const book={
     id:old?old.id:genId(libraryBooks,'BOOK'), _doc_id:old?old._doc_id:null, code,title,
@@ -8128,16 +8288,16 @@ document.getElementById('libBookSave').addEventListener('click',async()=>{
     created_at:old?old.created_at:new Date().toISOString(), created_by_uid:old?old.created_by_uid:currentUser.uid,
     updated_at:new Date().toISOString(), updated_by_uid:currentUser.uid
   };
-  if(!await fsSetItem('library-books',book)){ alert('圖書儲存失敗。'); return; }
+  if(!await fsSetItem('library-books',book)){ notify('圖書儲存失敗。'); return; }
   if(old) libraryBooks[libraryBooks.findIndex(b=>b.id===old.id)]=book; else libraryBooks.push(book);
   closeLibraryBookForm(); renderLibraryAll();
 });
 document.getElementById('libDeleteBtn').addEventListener('click',async()=>{
   if(!isAdmin()||!editingLibraryBookId) return;
   const book=libraryBooks.find(b=>b.id===editingLibraryBookId); if(!book) return;
-  if(activeLoanForBook(book.id)){ alert('這本書目前借閱中，歸還後才能刪除。'); return; }
-  if(!confirm(`確定刪除「${book.title}」嗎？既有借閱歷史仍會保留。`)) return;
-  if(!await fsDeleteItem('library-books',book.id,book._doc_id)){ alert('刪除失敗。'); return; }
+  if(activeLoanForBook(book.id)){ notify('這本書目前借閱中,歸還後才能刪除。'); return; }
+  if(!await confirmDialog(`確定刪除「${book.title}」嗎？既有借閱歷史仍會保留。`)) return;
+  if(!await fsDeleteItem('library-books',book.id,book._doc_id)){ notify('刪除失敗。'); return; }
   libraryBooks=libraryBooks.filter(b=>b.id!==book.id); closeLibraryBookForm(); renderLibraryAll();
 });
 function openLibraryBorrow(bookId){
@@ -8163,13 +8323,13 @@ document.getElementById('libBorrowConfirm').addEventListener('click',async()=>{
       tx.update(bookRef,{current_loan_id:loanRef.id,updated_at:new Date().toISOString()});
       tx.set(loanRef,loan);
     });
-  }catch(err){ alert(err&&err.message==='already-borrowed'?'這本書剛剛已被其他人借走。':'借閱失敗，請檢查網路與權限。'); return; }
+  }catch(err){ notify(err&&err.message==='already-borrowed'?'這本書剛剛已被其他人借走。':'借閱失敗,請檢查網路與權限。'); return; }
   book.current_loan_id=loanRef.id; libraryLoans.push(loan); closeLibraryBorrow(); renderLibraryAll(); showToast('借閱完成');
 });
 async function returnLibraryLoan(loanId){
   const loan=libraryLoans.find(l=>l.id===loanId), book=loan&&libraryBooks.find(b=>b.id===loan.book_id);
   if(!loan||!book||(!isAdmin()&&loan.borrower_uid!==currentUser.uid)) return;
-  if(!confirm(`確定歸還「${book.title}」嗎？`)) return;
+  if(!await confirmDialog(`確定歸還「${book.title}」嗎？`)) return;
   const loanRef=db.collection('library-loans').doc(loan._doc_id), bookRef=db.collection('library-books').doc(book._doc_id), returnedAt=new Date().toISOString();
   try{
     await db.runTransaction(async tx=>{
@@ -8177,7 +8337,7 @@ async function returnLibraryLoan(loanId){
       tx.update(loanRef,{status:'returned',returned_at:returnedAt,returned_by_uid:currentUser.uid});
       tx.update(bookRef,{current_loan_id:null,updated_at:returnedAt});
     });
-  }catch(err){ alert('歸還失敗，請檢查網路與權限。'); return; }
+  }catch(err){ notify('歸還失敗,請檢查網路與權限。'); return; }
   loan.status='returned'; loan.returned_at=returnedAt; book.current_loan_id=null; renderLibraryAll(); showToast('已完成歸還');
 }
 document.getElementById('libTbody').addEventListener('click',(e)=>{
@@ -8206,7 +8366,7 @@ const FULL_BACKUP_BLOBS = {
 };
 document.getElementById('migrateUidBtn').addEventListener('click', async ()=>{
   if(!isSuperAdmin()) return;
-  if(!confirm('這會依舊資料的帳號代號，對應目前 users 集合的 UID。執行前請確認新帳號的姓名與舊版一致。')) return;
+  if(!await confirmDialog('這會依舊資料的帳號代號,對應目前 users 集合的 UID。執行前請確認新帳號的姓名與舊版一致。')) return;
   const btn = document.getElementById('migrateUidBtn');
   const status = document.getElementById('fullBackupStatus');
   btn.disabled = true;
@@ -8243,10 +8403,10 @@ document.getElementById('migrateUidBtn').addEventListener('click', async ()=>{
       if(todoCount===400){ await todoBatch.commit(); todoBatch=db.batch(); todoCount=0; }
     }
     if(todoCount) await todoBatch.commit();
-    status.textContent = `UID 對應完成：更新 ${updated} 筆，無法對應 ${skipped} 筆。無法對應的資料需手動確認建立者。`;
+    status.textContent = `UID 對應完成：更新 ${updated} 筆,無法對應 ${skipped} 筆。無法對應的資料需手動確認建立者。`;
   }catch(err){
     console.error('UID migration failed:',err);
-    status.textContent = 'UID 對應失敗，請檢查 Security Rules 與網路。可在問題排除後重新執行。';
+    status.textContent = 'UID 對應失敗,請檢查 Security Rules 與網路。可在問題排除後重新執行。';
   }finally{ btn.disabled=false; }
 });
 document.getElementById('fullExportBtn').addEventListener('click', ()=>{
@@ -8268,9 +8428,9 @@ document.getElementById('fullImportInput').addEventListener('change', (e)=>{
   reader.onload = async (ev)=>{
     let payload;
     try{ payload = JSON.parse(ev.target.result); }
-    catch(err){ alert('檔案格式錯誤,無法解析JSON。'); return; }
-    if(!payload.collections || !payload.blobs){ alert('這個檔案看起來不是全部資料備份檔。'); return; }
-    if(!confirm('確定要匯入嗎?這會完全覆蓋備份檔內的藥品、試材、樣品、採買、圖書與值週等資料；帳號不在匯入範圍。此動作無法復原,建議先另外備份現有資料。')) return;
+    catch(err){ notify('檔案格式錯誤,無法解析JSON。'); return; }
+    if(!payload.collections || !payload.blobs){ notify('這個檔案看起來不是全部資料備份檔。'); return; }
+    if(!await confirmDialog('確定要匯入嗎?這會完全覆蓋備份檔內的藥品、試材、樣品、採買、圖書與值週等資料；帳號不在匯入範圍。此動作無法復原,建議先另外備份現有資料。')) return;
     const status = document.getElementById('fullBackupStatus');
     status.textContent = '匯入中,請稍候...';
     try{
@@ -8651,7 +8811,7 @@ function initFtirOnce(){
 
   fq('#ftirSelAll').onclick=()=>{ftirState.sel=FTIR_LIB.map(x=>x.id);ftirRenderLib();ftirRender();};
   fq('#ftirClearSel').onclick=()=>{ftirState.sel=[];ftirRenderLib();ftirRender();};
-  fq('#ftirWipe').onclick=()=>{if(confirm('確定清空這台電腦暫存的光譜?已存入圖譜的不受影響。')){FTIR_LIB=[];ftirState.sel=[];ftirState.guides=[];ftirEditingId=null;ftirUpdateSaveLabel();ftirRenderLib();ftirRender();}};
+  fq('#ftirWipe').onclick=async()=>{if(await confirmDialog('確定清空這台電腦暫存的光譜?已存入圖譜的不受影響。')){FTIR_LIB=[];ftirState.sel=[];ftirState.guides=[];ftirEditingId=null;ftirUpdateSaveLabel();ftirRenderLib();ftirRender();}};
   fq('#ftirShowTitle').onchange=e=>{ftirState.showTitle=e.target.checked;ftirRender();};
   fq('#ftirTitle').oninput=e=>{ftirState.title=e.target.value;ftirRender();};
   fq('#ftirShowAxisTitles').onchange=e=>{ftirState.showAxisTitles=e.target.checked;ftirRender();};
@@ -8688,7 +8848,7 @@ function ftirHandleFiles(list){
         const id='s'+Date.now()+Math.random().toString(36).slice(2,6);
         FTIR_LIB.push({id,name:f.name.replace(/\.[^.]+$/,''),n:s.n,first:s.first,last:s.last,y:s.y});
         ftirState.sel=[id];ftirState.guides=[];
-      }catch(e){alert('無法解析 '+f.name+':'+e.message);}
+      }catch(e){notify('無法解析 '+f.name+':'+e.message);}
       if(--pending===0){ftirRenderLib();ftirRender();}
     };
     if(ext==='asp')rd.readAsText(f);else rd.readAsArrayBuffer(f);
@@ -8799,13 +8959,13 @@ function ftirDownloadCsv(){
 
 /* ============ 存入圖譜(Firestore) ============ */
 async function ftirSaveToGallery(){
-  if(!ftirCurrent){alert('目前沒有可儲存的圖譜。');return;}
-  if(!currentUser){alert('尚未登入。');return;}
+  if(!ftirCurrent){notify('目前沒有可儲存的圖譜。');return;}
+  if(!currentUser){notify('尚未登入。');return;}
   const single=!ftirCurrent.multi;
   const defName=ftirCurrent.name==='overlay'?'疊圖':ftirCurrent.name;
-  const name=prompt(single?'圖譜名稱':'圖譜名稱(疊圖存檔後不可再進圖譜分析編輯)',defName);
+  const name=await promptDialog(single?'圖譜名稱':'圖譜名稱(疊圖存檔後不可再進圖譜分析編輯)',defName);
   if(name===null)return;
-  const trimmed=name.trim();if(!trimmed){alert('名稱不可空白。');return;}
+  const trimmed=name.trim();if(!trimmed){notify('名稱不可空白。');return;}
 
   const svg=ftirCurrent.built.svg;
   const peaks=[];
@@ -8849,7 +9009,7 @@ async function ftirSaveToGallery(){
   const ok=await fsSetItem('spectra',rec);
   btn.textContent=old;btn.disabled=false;
   if(ok){ showToast(ftirEditingId?'✅ 已更新圖譜':'✅ 已存入圖譜'); ftirEditingId=null; ftirUpdateSaveLabel(); }
-  else{alert('存入失敗,請檢查網路與 Firestore 權限。');}
+  else{notify('存入失敗,請檢查網路與 Firestore 權限。');}
 }
 function ftirUpdateSaveLabel(){
   const b=fq('#ftirSave'); if(!b) return;
@@ -8968,7 +9128,7 @@ function openGalDetail(id){
   document.getElementById('galDetailBody').innerHTML=`
     <h2 style="margin:0 18px 4px 0;">${escapeHtml(rec.name)}</h2>
     <div style="font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-bottom:14px;">
-      ${SPEC_TYPE_LABEL[rec.type]||rec.type} · ${(rec.created_at||'').slice(0,16).replace('T',' ')} · ${escapeHtml(rec.created_by||'')}
+      ${SPEC_TYPE_LABEL[rec.type]||rec.type} · ${fmtDateTime(rec.created_at)} · ${escapeHtml(rec.created_by||'')}
       ${rec.bind_label?' · '+escapeHtml(rec.bind_label):''}
     </div>
     ${rec.svg?`<div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
@@ -9002,22 +9162,22 @@ function openGalDetail(id){
       const upd={...rec,bind_type:bt,bind_id:bi,bind_label:bl};
       const ok=await fsSetItem('spectra',upd);
       if(ok){showToast('✅ 已更新綁定');document.getElementById('galDetailOverlay').classList.remove('show');}
-      else alert('儲存失敗。');
+      else notify('儲存失敗。');
     };
     const editBtn=document.getElementById('galEdit');
     if(editBtn)editBtn.onclick=()=>loadSpectrumToEditor(rec);
     document.getElementById('galDelete').onclick=async()=>{
-      if(!confirm('確定刪除這張圖譜?此動作無法復原。'))return;
+      if(!await confirmDialog('確定刪除這張圖譜?此動作無法復原。'))return;
       const ok=await fsDeleteItem('spectra',rec.id,rec._doc_id);
       if(ok){showToast('已刪除');document.getElementById('galDetailOverlay').classList.remove('show');}
-      else alert('刪除失敗。');
+      else notify('刪除失敗。');
     };
   }
 }
 
 /* 把已存的單譜載回圖譜分析,還原設定供重新編輯 */
 function loadSpectrumToEditor(rec){
-  if(!rec.editable||!rec.source){alert('這張圖譜沒有可編輯的原始數據。');return;}
+  if(!rec.editable||!rec.source){notify('這張圖譜沒有可編輯的原始數據。');return;}
   document.getElementById('galDetailOverlay').classList.remove('show');
   // 切到圖譜分析頁
   document.querySelectorAll('.sidebar nav .nav-item').forEach(b=>b.classList.remove('active'));
@@ -9097,10 +9257,10 @@ window.addEventListener('message',(ev)=>{
   if(ev.data && ev.data.gcSaveSpectrum) saveGcSpectrum(ev.data);
 });
 async function saveGcSpectrum(d){
-  if(!currentUser){ alert('尚未登入,無法存入圖譜。'); return; }
-  const name=prompt('圖譜名稱', d.name||'GC 圖譜');
+  if(!currentUser){ notify('尚未登入,無法存入圖譜。'); return; }
+  const name=await promptDialog('圖譜名稱', d.name||'GC 圖譜');
   if(name===null) return;
-  const trimmed=name.trim(); if(!trimmed){ alert('名稱不可空白。'); return; }
+  const trimmed=name.trim(); if(!trimmed){ notify('名稱不可空白。'); return; }
   // wn/val/tag/full 是與 FTIR 共用的欄位(縮圖與舊版詳細頁靠它);
   // no/ki/rki/ident 另外存,讓詳細頁能排出完整的期刊式成分表
   const peaks=(d.peaks||[]).map((p,i)=>({
@@ -9119,7 +9279,7 @@ async function saveGcSpectrum(d){
   };
   const ok=await fsSetItem('spectra',rec);
   if(ok) showToast('✅ 已存入圖譜');
-  else alert('存入失敗,請檢查網路與 Firestore 權限。');
+  else notify('存入失敗,請檢查網路與 Firestore 權限。');
 }
 
 /* =========================================================
@@ -9414,10 +9574,11 @@ async function loadAllAppData(){
       loadImData(), loadCpItems(), loadCmpItems(), loadDutyAdminData(), loadLibraryData()
     ]);
     appDataLoaded = true;
+    document.body.classList.add('app-ready');
     startRealtimeSync();
   }catch(err){
     console.error('loadAllAppData failed:', err);
-    alert('部分資料讀取失敗。系統不會把它當成空清單，請檢查網路與 Firestore Security Rules 後重新整理。');
+    notify('部分資料讀取失敗。系統不會把它當成空清單,請檢查網路與 Firestore Security Rules 後重新整理。');
     return;
   }
   renderCulAll();
