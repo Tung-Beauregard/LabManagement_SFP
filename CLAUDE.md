@@ -105,6 +105,8 @@
 - **iframe 高度回報只量 `.top` + `.wrap`,不可量 `body`**。KI 候選選單這類浮層掛在 body 上會把 body 撐高,父層跟著加高 iframe,浮層又重新定位,形成無限來回跳動(踩過的坑)。另外底部固定多報 250px,因為選單是 `position:fixed`,不留空間會被 iframe 邊界切掉
 - 功能:CSV 解析(Agilent/Shimadzu/Thermo)、ALS 基線、積分找峰、Kovats KI、萜類 KI 資料庫、成分表編輯、烷類 RT 組合、疊圖(樣品列多選)、局部放大插圖、峰標籤拖曳、單檔完整匯出入(自帶 TIC 與所有設定)、存入圖譜藝廊
 - 修改 GC-MS 的流程:解出 base64 → 改 → 語法檢查 iframe 內 JS → 重新 base64 → 回填 `GC_IFRAME_B64`
+- **匯出 Word(期刊格式)**:iframe 的「匯出 Word」只送 `{gcExportDocx, rows, svg, title}` 給主系統,主系統用 JSZip(cdnjs)直接組 OOXML(`gcExportDocx` / `gdxBuildParts`):A4、字 12pt、中文標楷體英數 Times New Roman、三線表 0.75pt、E-/Z- 斜體、Area% 前二高差距 <5 兩列紅粗否則只標最高、≥10 未標紅整列紫、右下「精油量/鮮重/萃取率」註記。重量可從樣品清單帶入
+- 圖上標題框字體為 Times New Roman + 標楷體(依字元自動落字),`s.showTitle` 可整個關掉(含 PNG 與存入圖譜)
 
 #### GC-MS 的資料層(分兩種,不要搞混)
 
