@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="app-version" content="2026.09.11.3">
+<meta name="app-version" content="2026.09.15.1">
 <meta name="theme-color" content="#1B4B43" id="metaThemeColor">
 <title>SFPLAB 實驗室管理系統</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>">
@@ -19,6 +19,7 @@
     var mode = (saved==='night'||saved==='day') ? saved
              : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'night' : 'day');
     document.documentElement.setAttribute('data-theme', mode);
+    if(localStorage.getItem('ui-skin')==='botanic') document.documentElement.setAttribute('data-skin','botanic');
   }catch(e){ document.documentElement.setAttribute('data-theme','day'); }
 })();
 </script>
@@ -780,6 +781,102 @@
     .ftir-grid{grid-template-columns:1fr;}
   }
 
+
+  /* ============ 介面風格「標本館」:日間 = 植物標本館,夜間 = 實驗室儀表 ============
+     用 html[data-skin="botanic"] 疊在原本的日夜主題之上;沒有這個屬性就是原本的經典版,一行都不動 */
+  html[data-skin="botanic"]{
+    --radius:3px;--radius-sm:3px;--radius-lg:4px;--pill:3px;
+    --serif:"Noto Serif TC","PMingLiU","Songti TC",serif;
+    --bg:#EFE9DC;--panel:#FBF8F1;--panel-soft:#F6F1E6;--readonly:#EFE9DC;
+    --ink:#23301F;--ink-soft:#8A8574;--pine:#2F5D3A;--pine-deep:#1E3F27;--on-pine:#FBF8F1;
+    --line:#D9CFB8;--line-soft:#E6DFCD;--tint:#EDE6D4;--hover:#F3EEE0;--head:#F6F1E6;
+    --amber:#B78A2E;--amber-bg:#F3E8CC;--amber-soft:#F5EDD8;--amber-ink:#7A5A12;
+    --danger:#B23A2E;--danger-bg:#F3E1DC;--danger-ink:#7A2A22;--ok:#2F5D3A;--ok-bg:#E4EBDB;--warn-bg:#F5EDD8;
+    --skel-a:#E6DFCD;--skel-b:#F3EEE0;--stripe-a:#F6F1E6;--stripe-b:#FBF8F1;
+    --shadow-sm:none;--shadow-md:0 6px 18px rgba(47,93,58,.14);
+    --nav-ind:var(--pine);--nav-ind-ink:var(--on-pine);
+  }
+  html[data-skin="botanic"][data-theme="night"]{
+    --radius:2px;--radius-sm:2px;--radius-lg:2px;--pill:2px;
+    --bg:#0F1A16;--panel:#15231E;--panel-soft:#182720;--readonly:#1B2B25;
+    --ink:#DCE8E1;--ink-soft:#6E8C7F;--pine:#7FE3B2;--pine-deep:#A9F0CC;--on-pine:#0F1A16;
+    --line:#23362F;--line-soft:#1E2F29;--tint:#1B2E27;--hover:#1A2A24;--head:#15231E;
+    --amber:#E0B15B;--amber-bg:#33291B;--amber-soft:#2C2418;--amber-ink:#E0B15B;
+    --danger:#F08C7C;--danger-bg:#3A2320;--danger-ink:#F0A9A2;--ok:#7FE3B2;--ok-bg:#1B2E27;--warn-bg:#2C2418;
+    --skel-a:#1B2E27;--skel-b:#23362F;--stripe-a:#15231E;--stripe-b:#182720;
+    --shadow-md:0 8px 24px rgba(0,0,0,.5);
+    --nav-ind:rgba(127,227,178,.16);--nav-ind-ink:#7FE3B2;
+  }
+  /* 背景:日間是實驗紀錄紙的細橫線,夜間是儀器面板的方格 */
+  html[data-skin="botanic"] body{background-image:repeating-linear-gradient(0deg,rgba(47,93,58,.045) 0,rgba(47,93,58,.045) 1px,transparent 1px,transparent 28px);}
+  html[data-skin="botanic"][data-theme="night"] body{background-image:linear-gradient(rgba(127,227,178,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(127,227,178,.05) 1px,transparent 1px);background-size:28px 28px;}
+  /* 字體:日間標題用襯線,夜間卡片標題用等寬 */
+  html[data-skin="botanic"] .hdr h1,html[data-skin="botanic"] .modal h2,html[data-skin="botanic"] .dash-card-title,html[data-skin="botanic"] .stat .n,html[data-skin="botanic"] .brand{font-family:var(--serif);}
+  html[data-skin="botanic"] .hdr{border-bottom:1.5px solid var(--pine);padding-bottom:12px;}
+  html[data-skin="botanic"] .hdr h1{border-left:none;padding-left:0;font-weight:700;font-size:24px;letter-spacing:.3px;}
+  html[data-skin="botanic"] .hdr .sub{letter-spacing:2px;font-size:11px;}
+  html[data-skin="botanic"] .dash-card-title{font-size:15px;font-weight:600;border-bottom:1px solid var(--line);padding-bottom:8px;}
+  html[data-skin="botanic"] .brand{font-size:17px;letter-spacing:1px;color:var(--pine);font-weight:700;}
+  html[data-skin="botanic"] .brand::after{content:"HERBARIUM";display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:1.5px;color:var(--ink-soft);font-weight:600;margin-top:2px;}
+  html[data-skin="botanic"][data-theme="night"] .hdr h1,html[data-skin="botanic"][data-theme="night"] .modal h2{font-family:var(--sans);font-weight:700;color:#FFFFFF;}
+  html[data-skin="botanic"][data-theme="night"] .hdr{border-bottom:1px solid var(--line);}
+  html[data-skin="botanic"][data-theme="night"] .dash-card-title{font-family:var(--mono);font-size:11px;letter-spacing:1.6px;color:var(--pine);font-weight:500;}
+  html[data-skin="botanic"][data-theme="night"] .stat .n{font-family:var(--mono);}
+  html[data-skin="botanic"][data-theme="night"] .brand{font-family:var(--mono);font-size:13px;letter-spacing:2px;}
+  html[data-skin="botanic"][data-theme="night"] .brand::after{content:"INSTRUMENT";}
+  html[data-skin="botanic"][data-theme="night"] th{font-family:var(--mono);color:var(--pine);}
+  /* 日間首頁右上角的植物線稿浮水印 */
+  html[data-skin="botanic"] #page-dashboard{position:relative;}
+  html[data-skin="botanic"]:not([data-theme="night"]) #page-dashboard::before{content:"";position:absolute;right:0;top:-10px;width:300px;height:300px;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300' fill='none' stroke='%232F5D3A' stroke-width='1.4' stroke-linecap='round'><path d='M40 270 C90 210 150 150 250 40'/><path d='M120 180 C110 140 130 110 170 100 C170 140 150 170 120 180 Z'/><path d='M120 180 C140 150 155 130 170 100'/><path d='M170 132 C165 100 185 75 225 68 C222 105 200 128 170 132 Z'/><path d='M170 132 C185 110 205 90 225 68'/><path d='M85 225 C70 200 80 170 110 158 C115 190 105 215 85 225 Z'/><path d='M85 225 C95 200 102 180 110 158'/></svg>") center/contain no-repeat;opacity:.11;pointer-events:none;}
+  /* 側欄:線條圖示取代 emoji;選中底塊滑動 */
+  html[data-skin="botanic"] .nav-item .ic,html[data-skin="botanic"] #themeToggleIcon,html[data-skin="botanic"] #skinToggleIcon{font-size:0;width:16px;height:16px;display:inline-block;flex-shrink:0;background:currentColor;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:center;mask-position:center;-webkit-mask-size:contain;mask-size:contain;}
+  html[data-skin="botanic"] .nav-item[data-page="dashboard"] .ic{-webkit-mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M3 11 L12 4 L21 11 M5 10 V20 H19 V10'/></svg>");mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M3 11 L12 4 L21 11 M5 10 V20 H19 V10'/></svg>");}
+  html[data-skin="botanic"] .nav-item[data-page="chemicals"] .ic{-webkit-mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M9 3 H15 M10 3 V9 L4 20 H20 L14 9 V3'/></svg>");mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M9 3 H15 M10 3 V9 L4 20 H20 L14 9 V3'/></svg>");}
+  html[data-skin="botanic"] .nav-item[data-page="materials"] .ic{-webkit-mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M4 20 C6 12 12 6 20 4 C19 12 14 18 4 20 Z M4 20 C9 14 13 10 20 4'/></svg>");mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M4 20 C6 12 12 6 20 4 C19 12 14 18 4 20 Z M4 20 C9 14 13 10 20 4'/></svg>");}
+  html[data-skin="botanic"] .nav-item[data-page="samples"] .ic{-webkit-mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M3 8 L12 3 L21 8 L12 13 Z M3 8 V16 L12 21 L21 16 V8 M12 13 V21'/></svg>");mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M3 8 L12 3 L21 8 L12 13 Z M3 8 V16 L12 21 L21 16 V8 M12 13 V21'/></svg>");}
+  html[data-skin="botanic"] .nav-item[data-page="library"] .ic{-webkit-mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M4 4 H10 C11 4 12 5 12 6 V20 C12 19 11 18 10 18 H4 Z M20 4 H14 C13 4 12 5 12 6 V20 C12 19 13 18 14 18 H20 Z'/></svg>");mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M4 4 H10 C11 4 12 5 12 6 V20 C12 19 11 18 10 18 H4 Z M20 4 H14 C13 4 12 5 12 6 V20 C12 19 13 18 14 18 H20 Z'/></svg>");}
+  html[data-skin="botanic"] .nav-item[data-page="chemUsageLog"] .ic{-webkit-mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M6 3 H18 V21 H6 Z M9 8 H15 M9 12 H15 M9 16 H13'/></svg>");mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M6 3 H18 V21 H6 Z M9 8 H15 M9 12 H15 M9 16 H13'/></svg>");}
+  html[data-skin="botanic"] .nav-item[data-page="instrumentUsageLog"] .ic{-webkit-mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M14 4 L20 10 L10 20 L4 20 L4 14 Z M12 6 L18 12'/></svg>");mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M14 4 L20 10 L10 20 L4 20 L4 14 Z M12 6 L18 12'/></svg>");}
+  html[data-skin="botanic"] .nav-item[data-page="dutyRoster"] .ic{-webkit-mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M4 6 H20 V20 H4 Z M4 10 H20 M8 3 V7 M16 3 V7 M9 15 L11 17 L15 13'/></svg>");mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M4 6 H20 V20 H4 Z M4 10 H20 M8 3 V7 M16 3 V7 M9 15 L11 17 L15 13'/></svg>");}
+  html[data-skin="botanic"] .nav-item[data-page="todoList"] .ic{-webkit-mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M4 4 H20 V20 H4 Z M8 12 L11 15 L16 9'/></svg>");mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M4 4 H20 V20 H4 Z M8 12 L11 15 L16 9'/></svg>");}
+  html[data-skin="botanic"] .nav-item[data-page="instrumentManual"] .ic{-webkit-mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M8 6 H20 M8 12 H20 M8 18 H20 M4 6 L4 6 M4 12 L4 12 M4 18 L4 18'/></svg>");mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M8 6 H20 M8 12 H20 M8 18 H20 M4 6 L4 6 M4 12 L4 12 M4 18 L4 18'/></svg>");}
+  html[data-skin="botanic"] .nav-item[data-page="spectra"] .ic{-webkit-mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M4 20 V4 M4 20 H20 M7 15 L11 10 L14 13 L19 6'/></svg>");mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M4 20 V4 M4 20 H20 M7 15 L11 10 L14 13 L19 6'/></svg>");}
+  html[data-skin="botanic"] .nav-item[data-page="spectraGallery"] .ic{-webkit-mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M4 5 H20 V19 H4 Z M4 16 L9 11 L13 15 L16 12 L20 16 M16 9 L16 9'/></svg>");mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M4 5 H20 V19 H4 Z M4 16 L9 11 L13 15 L16 12 L20 16 M16 9 L16 9'/></svg>");}
+  html[data-skin="botanic"] .nav-item[data-page="chemPurchase"] .ic{-webkit-mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M3 4 H6 L8 15 H19 L21 8 H7 M9 19 L9 19 M18 19 L18 19'/></svg>");mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M3 4 H6 L8 15 H19 L21 8 H7 M9 19 L9 19 M18 19 L18 19'/></svg>");}
+  html[data-skin="botanic"] .nav-item[data-page="softwareBackup"] .ic{-webkit-mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M4 4 H16 L20 8 V20 H4 Z M8 4 V9 H15 V4 M8 20 V14 H16 V20'/></svg>");mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M4 4 H16 L20 8 V20 H4 Z M8 4 V9 H15 V4 M8 20 V14 H16 V20'/></svg>");}
+  html[data-skin="botanic"] .nav-item[data-page="adminTools"] .ic{-webkit-mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M3 9 H21 V19 H3 Z M8 9 V6 H16 V9 M3 13 H21'/></svg>");mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M3 9 H21 V19 H3 Z M8 9 V6 H16 V9 M3 13 H21'/></svg>");}
+  html[data-skin="botanic"] .nav-item[data-page="superAdminTools"] .ic{-webkit-mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M12 3 L20 6 V12 C20 16 16 19 12 21 C8 19 4 16 4 12 V6 Z M9 12 L11 14 L15 10'/></svg>");mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M12 3 L20 6 V12 C20 16 16 19 12 21 C8 19 4 16 4 12 V6 Z M9 12 L11 14 L15 10'/></svg>");}
+  html[data-skin="botanic"] .nav-item[data-page="admin"] .ic{-webkit-mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M12 12 A4 4 0 1 0 12 4 A4 4 0 1 0 12 12 Z M4 21 C4 16 8 14 12 14 C16 14 20 16 20 21'/></svg>");mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M12 12 A4 4 0 1 0 12 4 A4 4 0 1 0 12 12 Z M4 21 C4 16 8 14 12 14 C16 14 20 16 20 21'/></svg>");}
+  html[data-skin="botanic"] #themeToggleIcon{-webkit-mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M20 14 A8 8 0 1 1 10 4 A6 6 0 0 0 20 14 Z'/></svg>");mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M20 14 A8 8 0 1 1 10 4 A6 6 0 0 0 20 14 Z'/></svg>");}
+  html[data-skin="botanic"][data-theme="night"] #themeToggleIcon{-webkit-mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M12 8 A4 4 0 1 0 12 16 A4 4 0 1 0 12 8 Z M12 2 V4 M12 20 V22 M2 12 H4 M20 12 H22 M5 5 L6.5 6.5 M17.5 17.5 L19 19 M5 19 L6.5 17.5 M17.5 6.5 L19 5'/></svg>");mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M12 8 A4 4 0 1 0 12 16 A4 4 0 1 0 12 8 Z M12 2 V4 M12 20 V22 M2 12 H4 M20 12 H22 M5 5 L6.5 6.5 M17.5 17.5 L19 19 M5 19 L6.5 17.5 M17.5 6.5 L19 5'/></svg>");}
+  html[data-skin="botanic"] #skinToggleIcon{-webkit-mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M5 19 C6 12 11 7 19 5 C18 13 13 18 5 19 Z M5 19 C9 14 13 10 19 5'/></svg>");mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M5 19 C6 12 11 7 19 5 C18 13 13 18 5 19 Z M5 19 C9 14 13 10 19 5'/></svg>");}
+  html[data-skin="botanic"] nav{position:relative;}
+  html[data-skin="botanic"] nav::before{content:"";position:absolute;left:0;right:0;top:0;height:var(--nav-ind-h,0px);transform:translateY(var(--nav-ind-y,0px));background:var(--nav-ind);border-radius:var(--radius-sm);transition:transform .28s cubic-bezier(.2,.8,.2,1),height .2s ease;pointer-events:none;z-index:0;}
+  html[data-skin="botanic"] .nav-item{position:relative;z-index:1;transition:color .18s ease,background-color .18s ease;}
+  html[data-skin="botanic"] .nav-item.active,html[data-skin="botanic"] .nav-item-admin-pinned.active{background:transparent;color:var(--nav-ind-ink);}
+  html[data-skin="botanic"] .nav-item.active:hover{background:transparent;}
+  html[data-skin="botanic"] .nav-skin{margin-top:0;padding-top:10px;border-top:none;}
+  html[data-skin="botanic"] .nav-item-admin-pinned{background:var(--tint);color:var(--amber-ink);}
+  /* 動態:按鍵浮起與按下回彈、主要按鈕擴散光暈、頁面淡入、彈窗放大 */
+  html[data-skin="botanic"] .btn{position:relative;overflow:hidden;transition:transform .15s ease,box-shadow .15s ease,background-color .15s ease,opacity .15s ease;}
+  html[data-skin="botanic"] .btn:hover{opacity:1;transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.14);}
+  html[data-skin="botanic"] .btn:active{transform:translateY(0) scale(.97);box-shadow:none;}
+  html[data-skin="botanic"] .btn-primary::after{content:"";position:absolute;left:50%;top:50%;width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,.5);transform:translate(-50%,-50%) scale(0);opacity:0;pointer-events:none;}
+  html[data-skin="botanic"][data-theme="night"] .btn-primary::after{background:rgba(15,26,22,.35);}
+  html[data-skin="botanic"] .btn-primary:active::after{animation:btnRipple .5s ease-out;}
+  @keyframes btnRipple{0%{transform:translate(-50%,-50%) scale(0);opacity:.7;}100%{transform:translate(-50%,-50%) scale(28);opacity:0;}}
+  html[data-skin="botanic"] .dash-quick button,html[data-skin="botanic"] .im-card,html[data-skin="botanic"] .gal-card{transition:transform .15s ease,box-shadow .15s ease;}
+  html[data-skin="botanic"] .dash-quick button:hover,html[data-skin="botanic"] .im-card:hover,html[data-skin="botanic"] .gal-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);}
+  html[data-skin="botanic"] .page.active{animation:pageIn .22s ease-out;}
+  @keyframes pageIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+  html[data-skin="botanic"] .overlay.show .modal,html[data-skin="botanic"] .ui-dialog{animation:modalIn .18s ease-out;}
+  @keyframes modalIn{from{opacity:0;transform:scale(.96);}to{opacity:1;transform:none;}}
+  html[data-skin="botanic"] tbody tr{transition:background-color .15s ease;}
+  html[data-skin="botanic"] .field input,html[data-skin="botanic"] .field select,html[data-skin="botanic"] .field textarea,html[data-skin="botanic"] .toolbar input,html[data-skin="botanic"] .toolbar select{transition:border-color .15s ease,box-shadow .15s ease;}
+  html[data-skin="botanic"] .field input:focus,html[data-skin="botanic"] .field select:focus,html[data-skin="botanic"] .field textarea:focus,html[data-skin="botanic"] .toolbar input:focus{border-color:var(--pine);box-shadow:0 0 0 3px color-mix(in srgb,var(--pine) 18%,transparent);outline:none;}
+  @media (prefers-reduced-motion:reduce){
+    html[data-skin="botanic"] *,html[data-skin="botanic"] *::before,html[data-skin="botanic"] *::after{animation:none !important;transition:none !important;}
+  }
 </style>
 </head>
 <body>
@@ -905,6 +1002,9 @@
       <button class="nav-item nav-item-admin-pinned" id="navAdmin" data-page="admin" style="display:none;"><span class="ic">👤</span> 帳號管理</button>
       <button class="nav-item nav-theme" id="themeToggleBtn" type="button" aria-pressed="false">
         <span class="ic" id="themeToggleIcon">🌙</span> <span id="themeToggleLabel">夜間模式</span>
+      </button>
+      <button class="nav-item nav-theme nav-skin" id="skinToggleBtn" type="button" aria-pressed="false">
+        <span class="ic" id="skinToggleIcon">🌿</span> <span id="skinToggleLabel">標本館風格</span>
       </button>
       <div class="app-version">v<span id="appVersionText">-</span><button type="button" id="checkUpdateBtn">檢查更新</button></div>
     </nav>
@@ -3796,6 +3896,7 @@ function switchPage(name){
   if(name==='library') renderLibraryAll();
   if(name==='spectra') initFtirOnce();
   if(name==='spectraGallery') renderGallery();
+  updateNavIndicator();
   closeDrawer();
 }
 /* 換頁時把還開著的詳細卡/表單一起收起來,避免彈窗蓋住新頁面造成畫面卡住 */
@@ -3835,7 +3936,8 @@ function applyTheme(mode){
   if(label) label.textContent = night ? '日間模式' : '夜間模式';
   if(btn) btn.setAttribute('aria-pressed', night ? 'true' : 'false');
   const meta = document.getElementById('metaThemeColor');
-  if(meta) meta.setAttribute('content', night ? '#141C1A' : '#1B4B43');
+  const botanic = document.documentElement.getAttribute('data-skin')==='botanic';
+  if(meta) meta.setAttribute('content', botanic ? (night ? '#0F1A16' : '#2F5D3A') : (night ? '#141C1A' : '#1B4B43'));
 }
 document.getElementById('themeToggleBtn').addEventListener('click', ()=>{
   const next = currentTheme() === 'night' ? 'day' : 'night';
@@ -3843,6 +3945,35 @@ document.getElementById('themeToggleBtn').addEventListener('click', ()=>{
   try{ localStorage.setItem(THEME_KEY, next); }catch(e){}
 });
 applyTheme(currentTheme());
+
+/* ---- 介面風格:經典 / 標本館(日間植物標本館、夜間實驗室儀表)。只存在這台裝置 ---- */
+const SKIN_KEY = 'ui-skin';
+function applySkin(on){
+  if(on) document.documentElement.setAttribute('data-skin','botanic');
+  else document.documentElement.removeAttribute('data-skin');
+  const label = document.getElementById('skinToggleLabel');
+  const btn = document.getElementById('skinToggleBtn');
+  if(label) label.textContent = on ? '經典風格' : '標本館風格';
+  if(btn) btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  applyTheme(currentTheme());
+  updateNavIndicator();
+}
+document.getElementById('skinToggleBtn').addEventListener('click', ()=>{
+  const on = document.documentElement.getAttribute('data-skin') !== 'botanic';
+  applySkin(on);
+  try{ localStorage.setItem(SKIN_KEY, on ? 'botanic' : 'classic'); }catch(e){}
+});
+/* 側欄選中底塊:量出目前 active 項目的位置,CSS 讓它滑過去 */
+function updateNavIndicator(){
+  const nav = document.querySelector('.sidebar nav'); if(!nav) return;
+  const act = nav.querySelector('.nav-item.active[data-page]');
+  if(!act){ nav.style.setProperty('--nav-ind-h','0px'); return; }
+  nav.style.setProperty('--nav-ind-y', act.offsetTop+'px');
+  nav.style.setProperty('--nav-ind-h', act.offsetHeight+'px');
+}
+window.addEventListener('resize', updateNavIndicator);
+(function(){ const nav=document.querySelector('.sidebar nav'); if(nav) new MutationObserver(()=>updateNavIndicator()).observe(nav,{childList:true,attributes:true,attributeFilter:['style','class']}); })();
+applySkin(document.documentElement.getAttribute('data-skin')==='botanic');
 
 /* ======================================================
    藥品清單

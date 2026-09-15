@@ -57,6 +57,7 @@
 - 切換靠 `<html data-theme="day|night">`,設定存在該裝置的 localStorage(不共用、不佔 Firestore)
 - 主題在 `<head>` 最前面用一小段 script 先套用,避免夜間模式先閃白底
 - 所有顏色都走 CSS 變數(`--panel`, `--ink`, `--pine`, `--line` 等),日夜兩套變數對稱定義。新增 UI 時**務必用變數,不要硬編碼顏色**,否則夜間模式會出現亮塊
+- **第二個軸:介面風格**。`<html data-skin="botanic">` 是「標本館」風格(日間 = 植物標本館:羊皮紙底、深林綠、襯線標題;夜間 = 實驗室儀表:深墨綠底、螢光薄荷、等寬字標題),同樣存 localStorage(`ui-skin`),與日夜獨立。所有規則都以 `html[data-skin="botanic"]` 為前綴疊在經典版之上,沒有這個屬性就是原本的經典日夜版,不能動到經典版的規則。側欄 emoji 圖示在這個風格下由 CSS mask 的 SVG 線條圖示取代(以 `data-page` 選擇),按鍵浮起、主要按鈕光暈、頁面淡入、彈窗放大、側欄底塊滑動這些動態也只在這個風格下啟用,並尊重 `prefers-reduced-motion`
 
 ---
 
