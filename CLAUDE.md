@@ -101,6 +101,12 @@
 - 密集峰的標籤仍會與鄰峰交疊,這是垂直標籤的空間限制;若要徹底解決需做引線法(標籤拉到圖頂 + 細線接回峰尖),尚未實作
 - **存圖譜**:存繪好的 SVG + 峰表(不是原始數據),因為原始數千點會逼近 1MB。單譜額外存原始數據與設定供「回圖譜分析編輯」;疊圖不存原始數據(不可回編輯)
 
+### UV-Vis(圖譜分析頁的 UV-Vis 子標籤)
+- 讀 Analytik Jena SPECORD 50 PLUS(WinASPECT)的 `.dat`:ASCII 標頭(NPOINTS、XUNITS、YUNITS…)後接 `XDATA=` / `YDATA=` 各 NPOINTS 個小端序 float32(另有內容相同的 OrgXData / OrgYData);也收兩欄「波長,數值」的 .csv / .txt
+- 匯入時一律換算成吸光度保存(%T、%R 用 −log₁₀(v/100)),三種顯示模式(吸收度、%T、KM)都從吸光度算;KM 與 FTIR 共用 `ftirTransform(x,y,'km')`,找峰共用 `ftirDetect`(%T 模式先反相找谷)
+- 同軸疊圖(不像 FTIR 會位移堆疊)、λmax 標籤水平放在峰上並高低錯開、可設顯示波長範圍;存入圖譜的 type 是 `uv`,peaks 用 `{sample,wn,val}`,藝廊詳細頁對 uv 顯示「λmax / 數值 / 樣品」欄
+- 模組函式全部以 `uv` 開頭,狀態在 `uvState`,暫存光譜在 `UV_LIB`(只在本機記憶體)
+
 ### GC-MS(圖譜分析頁的 GC 子標籤)
 - **用 iframe 完全隔離**。這個工具(TIC Bench)有大量 CSS class 與主系統撞名(drop、row、sp、card、lab、ctl…)。試過 scope 隔離(`.gcms-root` 前綴 + id 加 `gc_`),但主系統的全域規則(如 `.sp{flex:1}`)會反向洩漏到 GC 元素,造成版面錯亂、按鈕點不到。**iframe 是唯一乾淨解法**
 - iframe 內容是原封不動的 GC-MS 原始碼,以 base64 存在主檔的 `GC_IFRAME_B64` 常數,執行時 `atob` 解出寫入 `srcdoc`

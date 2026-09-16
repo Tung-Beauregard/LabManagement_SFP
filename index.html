@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="app-version" content="2026.09.16.3">
+<meta name="app-version" content="2026.09.16.4">
 <meta name="theme-color" content="#1B4B43" id="metaThemeColor">
 <title>SFPLAB 實驗室管理系統</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>">
@@ -744,6 +744,10 @@
   .ftir-plotwrap svg{display:block;width:100%;height:auto;background:#fff;font-family:"Times New Roman",Georgia,serif;border-radius:var(--radius-sm);}
   .ftir-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:360px;color:var(--ink-soft);text-align:center;gap:8px;}
   .ftir-empty svg{background:none;opacity:.5;}
+  #uvTablewrap table{width:100%;border-collapse:collapse;margin-top:14px;font-size:13px;}
+  #uvTablewrap th,#uvTablewrap td{text-align:left;padding:6px 9px;border-bottom:1px solid var(--line);}
+  #uvTablewrap th{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);font-weight:700;}
+  #uvTablewrap td.num{font-family:var(--mono);text-align:right;white-space:nowrap;}
   #ftirTablewrap table,#galDetailBody table{width:100%;border-collapse:collapse;margin-top:14px;font-size:13px;}
   #ftirTablewrap th,#ftirTablewrap td,#galDetailBody th,#galDetailBody td{text-align:left;padding:6px 9px;border-bottom:1px solid var(--line);}
   #ftirTablewrap th,#galDetailBody th{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);font-weight:700;}
@@ -1513,6 +1517,7 @@
         <button class="sp-tab" data-sp="lc">LC</button>
         <button class="sp-tab" data-sp="gc">GC</button>
         <button class="sp-tab active" data-sp="ftir">FTIR</button>
+        <button class="sp-tab" data-sp="uv">UV-Vis</button>
         <button class="sp-tab" data-sp="tga">TGA</button>
         <button class="sp-tab" data-sp="dsc">DSC</button>
       </div>
@@ -1622,6 +1627,98 @@
       </div>
 
       <!-- 其餘四個佔位 -->
+      <div class="sp-panel" id="sp-uv">
+        <div class="ftir-grid">
+          <div class="ftir-side">
+            <div class="ftir-card">
+              <h3>光譜庫<span class="cnt" id="uvLibCount"></span></h3>
+              <div class="ftir-drop" id="uvDrop">
+                <strong>拖曳或點擊上傳</strong>
+                <small>SPECORD .dat,或兩欄 .csv / .txt(波長,數值)</small>
+              </div>
+              <input type="file" id="uvFile" accept=".dat,.csv,.txt" multiple class="visually-hidden-file">
+              <div class="ftir-lib" id="uvLib"></div>
+              <div class="ftir-libtools">
+                <button class="btn btn-ghost btn-sm" id="uvSelAll">全選疊圖</button>
+                <button class="btn btn-ghost btn-sm" id="uvClearSel">取消選取</button>
+                <button class="btn btn-ghost btn-sm" id="uvWipe">清空暫存</button>
+              </div>
+              <div class="ftir-hint">勾選 1 條＝單譜;勾選多條＝同軸疊圖比對。名稱點兩下可改。上傳的光譜只暫存在這台電腦,按「存入圖譜」才會存進全實驗室共用的圖譜頁。</div>
+            </div>
+
+            <div class="ftir-card">
+              <h3>標題與座標軸</h3>
+              <label class="ftir-chk"><input type="checkbox" id="uvShowTitle" checked>顯示標題</label>
+              <div class="field" style="margin-bottom:10px;"><input type="text" id="uvTitle" placeholder="輸入圖表標題"></div>
+              <label class="ftir-chk"><input type="checkbox" id="uvShowAxisTitles" checked>顯示座標軸文字</label>
+              <label class="ftir-chk"><input type="checkbox" id="uvShowTickLabels" checked>顯示刻度數字</label>
+              <div class="field row2" style="margin-bottom:0;">
+                <div><label style="font-size:12px;">顯示起(nm)</label><input type="number" id="uvXmin" placeholder="自動"></div>
+                <div><label style="font-size:12px;">顯示迄(nm)</label><input type="number" id="uvXmax" placeholder="自動"></div>
+              </div>
+            </div>
+
+            <div class="ftir-card">
+              <h3>圖例(疊圖時)</h3>
+              <label class="ftir-chk"><input type="checkbox" id="uvShowLegend" checked>顯示圖例</label>
+              <div class="field" style="margin-bottom:10px;">
+                <select id="uvLegendPos"><option value="tr">右上</option><option value="tl">左上</option><option value="br">右下</option><option value="bl">左下</option></select>
+              </div>
+              <label class="ftir-chk" style="margin-bottom:0;"><input type="checkbox" id="uvLegendFrame">圖例外框</label>
+            </div>
+
+            <div class="ftir-card">
+              <h3>資料轉換</h3>
+              <div class="ftir-seg" id="uvYmode">
+                <button data-v="abs" class="on">吸收度</button>
+                <button data-v="trans">穿透率 %T</button>
+                <button data-v="km">KM 轉換</button>
+              </div>
+              <div class="ftir-hint">Kubelka–Munk:R = 10⁻ᴬ,F(R) = (1−R)² / 2R,與 FTIR 相同作法,適用固體漫反射;溶液吸光度請維持「吸收度」。%T 或 %R 的檔案匯入時會先換算成吸光度。</div>
+            </div>
+
+            <div class="ftir-card">
+              <h3>找峰與標示</h3>
+              <div class="field"><label style="font-size:12px;">靈敏度(越低抓越多峰)</label>
+                <div class="ftir-rangerow"><input type="range" id="uvProm" min="0.5" max="20" step="0.5" value="1"><output id="uvPromOut">1.0%</output></div>
+              </div>
+              <div class="field"><label style="font-size:12px;">最多標示峰數</label>
+                <div class="ftir-rangerow"><input type="range" id="uvTopn" min="1" max="12" step="1" value="6"><output id="uvTopnOut">6</output></div>
+              </div>
+              <label class="ftir-chk"><input type="checkbox" id="uvShowLabels" checked>顯示 λmax 標籤</label>
+              <div class="field"><label style="font-size:12px;">標籤左右位移(＋往右)</label>
+                <div class="ftir-rangerow"><input type="range" id="uvLabelDx" min="-40" max="40" step="1" value="0"><output id="uvLabelDxOut">0</output></div>
+              </div>
+              <div class="field" style="margin-bottom:0;"><label style="font-size:12px;">標籤上下位移(＋往上)</label>
+                <div class="ftir-rangerow"><input type="range" id="uvLabelDy" min="-60" max="60" step="1" value="0"><output id="uvLabelDyOut">0</output></div>
+              </div>
+            </div>
+
+            <div class="ftir-card">
+              <h3>輸出</h3>
+              <div class="ftir-btnrow">
+                <button class="btn btn-primary btn-sm" id="uvSave" disabled>存入圖譜</button>
+                <button class="btn btn-ghost btn-sm" id="uvDlPng" disabled>PNG</button>
+                <button class="btn btn-ghost btn-sm" id="uvDlSvg" disabled>SVG</button>
+                <button class="btn btn-ghost btn-sm" id="uvDlCsv" disabled>峰表 CSV</button>
+              </div>
+              <div class="ftir-hint">「存入圖譜」會把目前這張圖與 λmax 表存到全實驗室共用的「圖譜」頁;PNG 為 3× 高解析。</div>
+            </div>
+          </div>
+
+          <div class="ftir-main">
+            <div class="ftir-plotcard">
+              <div class="ftir-plotwrap" id="uvPlotwrap">
+                <div class="ftir-empty" id="uvEmpty">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="52" height="52"><path d="M3 3v18h18M7 15l3-4 3 3 4-6"/></svg>
+                  <div>上傳 SPECORD .dat 或兩欄 csv / txt 以開始</div>
+                </div>
+              </div>
+              <div id="uvTablewrap"></div>
+            </div>
+          </div>
+        </div>
+      </div>
       <div class="sp-panel" id="sp-lc"><div class="sp-placeholder"><div class="sp-ph-icon">🧪</div><b>LC 液相層析</b><span>這個模組還在規劃中,之後會加入資料上傳與圖譜分析。</span></div></div>
       <div class="sp-panel" id="sp-gc">
         <iframe id="gcFrame" title="GC-MS TIC Bench" style="width:100%;border:0;display:block;min-height:640px;background:var(--panel);"></iframe>
@@ -8870,6 +8967,7 @@ document.getElementById('spTabs').addEventListener('click', (e)=>{
   document.querySelectorAll('#spTabs .sp-tab').forEach(b=>b.classList.toggle('active', b===btn));
   document.querySelectorAll('#page-spectra .sp-panel').forEach(p=>p.classList.toggle('active', p.id==='sp-'+key));
   if(key==='gc') loadGcFrame();
+  if(key==='uv') initUvOnce();
 });
 
 /* ============ FTIR 讀檔 ============ */
@@ -9304,7 +9402,195 @@ function ftirUpdateSaveLabel(){
 
 /* ============ 圖譜藝廊 ============ */
 let spectraItems=[];
-const SPEC_TYPE_LABEL={ftir:'FTIR',lc:'LC',gc:'GC',tga:'TGA',dsc:'DSC'};
+
+/* ============ UV-Vis(SPECORD .dat / 兩欄文字檔) ============
+   找峰、KM 轉換、刻度、下載與存入圖譜都沿用 FTIR 的共用函式;
+   所有檔案匯入時一律換算成吸光度保存,三種顯示模式再由吸光度算出 */
+let UV_LIB=[];
+const UV_COLORS=FTIR_COLORS.concat(['#0e8074','#b4436c','#5b6770','#c98a00','#1b4b43']);   // 疊圖常超過 5 條,多備幾色
+const uvState={sel:[],ymode:'abs',prom:0.01,topN:6,showLabels:true,labelDx:0,labelDy:0,showTitle:true,title:'',
+  showAxisTitles:true,showTickLabels:true,legend:{show:true,pos:'tr',frame:false},xmin:null,xmax:null};
+let uvCurrent=null, uvInited=false;
+const UV_YLABEL={abs:'Absorbance',trans:'Transmittance (%)',km:'Kubelka\u2013Munk F(R)'};
+/* Analytik Jena SPECORD(WinASPECT).dat:ASCII 標頭 + XDATA= / YDATA= 各接 NPOINTS 個小端序 float32 */
+function uvParseSpecord(buf){
+  const bytes=new Uint8Array(buf); let bin=''; for(let i=0;i<bytes.length;i++) bin+=String.fromCharCode(bytes[i]);
+  const head=k=>{ const m=bin.match(new RegExp('^'+k+'=(.*)$','m')); return m?m[1].trim():''; };
+  const n=parseInt(head('NPOINTS'),10); if(!(n>0)) throw new Error('不是 SPECORD 格式(找不到 NPOINTS)');
+  const dv=new DataView(buf);
+  const arr=tag=>{ let i=bin.indexOf(tag); if(i<0) throw new Error('找不到 '+tag); i+=tag.length;
+    while(bin.charCodeAt(i)===13||bin.charCodeAt(i)===10) i++;
+    if(i+4*n>bytes.length) throw new Error('資料長度不足');
+    const out=new Array(n); for(let k=0;k<n;k++) out[k]=dv.getFloat32(i+4*k,true); return out; };
+  return {x:arr('XDATA='),y:arr('YDATA='),xunits:head('XUNITS')||'nm',yunits:head('YUNITS')||'A',time:head('TIME'),origin:head('ORIGIN')};
+}
+function uvParseText(text){
+  const x=[],y=[];
+  text.split(/\r?\n/).forEach(line=>{ const m=line.trim().split(/[,\t; ]+/); if(m.length<2) return;
+    const a=parseFloat(m[0]), b=parseFloat(m[1]); if(isFinite(a)&&isFinite(b)){ x.push(a); y.push(b); } });
+  if(x.length<3) throw new Error('沒有找到「波長,數值」兩欄資料');
+  return {x,y,xunits:'nm',yunits:'A',time:'',origin:''};
+}
+/* %T 與 %R 的檔案先換成吸光度;KM 再從吸光度反推 R,與 FTIR 一致 */
+function uvToAbsorbance(d){
+  const u=String(d.yunits||'A').toUpperCase();
+  if(u.includes('%T')||u==='T'||u.includes('TRANS')||u.includes('%R')||u==='R'||u.includes('REFL')) return d.y.map(v=>-Math.log10(Math.max(1e-6,v/100)));
+  return d.y.slice();
+}
+function uvHandleFiles(list){
+  [...list].forEach(f=>{
+    const rd=new FileReader();
+    rd.onload=()=>{ try{
+        const d=/\.dat$/i.test(f.name)?uvParseSpecord(rd.result):uvParseText(new TextDecoder('utf-8').decode(rd.result));
+        const order=d.x.map((v,i)=>i).sort((a,b)=>d.x[a]-d.x[b]);        // 波長一律遞增
+        const A=uvToAbsorbance(d);
+        const id='u'+Date.now()+Math.random().toString(36).slice(2,6);
+        UV_LIB.push({id,name:f.name.replace(/\.(dat|csv|txt)$/i,''),x:order.map(i=>d.x[i]),y:order.map(i=>A[i]),yunits:d.yunits,time:d.time,origin:d.origin});
+        if(!uvState.sel.length) uvState.sel=[id];
+        uvRenderLib(); uvRender();
+      }catch(e){ notify(f.name+':'+(e&&e.message?e.message:'讀取失敗')); } };
+    rd.readAsArrayBuffer(f);
+  });
+}
+function uvRenderLib(){
+  const box=fq('#uvLib'); box.innerHTML='';
+  fq('#uvLibCount').textContent=UV_LIB.length?UV_LIB.length+' 條':'';
+  UV_LIB.forEach(item=>{
+    const idx=uvState.sel.indexOf(item.id);
+    const el=document.createElement('div'); el.className='ftir-row'+(idx>=0?' sel':'');
+    const color=idx>=0?UV_COLORS[idx%FTIR_COLORS.length]:'transparent';
+    el.innerHTML=`<input type="checkbox" ${idx>=0?'checked':''}><span class="swatch" style="background:${color}"></span><span class="nm" title="點兩下改名">${escapeHtml(item.name)}</span><span class="rm" title="移除暫存">✕</span>`;
+    el.querySelector('input').onchange=e=>{
+      if(e.target.checked){ if(!uvState.sel.includes(item.id)) uvState.sel.push(item.id); }
+      else uvState.sel=uvState.sel.filter(x=>x!==item.id);
+      uvRenderLib(); uvRender(); };
+    el.querySelector('.nm').ondblclick=async()=>{ const nm=await promptDialog('光譜名稱', item.name); if(nm===null) return; const t=nm.trim(); if(!t) return; item.name=t; uvRenderLib(); uvRender(); };
+    el.querySelector('.rm').onclick=()=>{ UV_LIB=UV_LIB.filter(x=>x.id!==item.id); uvState.sel=uvState.sel.filter(x=>x!==item.id); uvRenderLib(); uvRender(); };
+    box.appendChild(el);
+  });
+}
+function uvFmtTick(v,range){ const d=range>50?0:range>5?1:range>0.5?2:3; return v.toFixed(d); }
+function uvBuildSVG(spec){
+  const {traces,title,ylabel,mode}=spec;
+  const W=1240,H=430,m={l:84,r:24,t:title?46:26,b:60},pw=W-m.l-m.r,ph=H-m.t-m.b;
+  let xmin=uvState.xmin, xmax=uvState.xmax;
+  const dataMin=Math.min(...traces.map(t=>t.x[0])), dataMax=Math.max(...traces.map(t=>t.x[t.x.length-1]));
+  if(xmin==null||!isFinite(xmin)) xmin=dataMin;
+  if(xmax==null||!isFinite(xmax)) xmax=dataMax;
+  if(xmax<=xmin){ xmin=dataMin; xmax=dataMax; }
+  let ymin=Infinity,ymax=-Infinity;
+  traces.forEach(t=>t.x.forEach((xv,i)=>{ if(xv<xmin||xv>xmax) return; const v=t.y[i]; if(v<ymin) ymin=v; if(v>ymax) ymax=v; }));
+  if(!isFinite(ymin)){ ymin=0; ymax=1; }
+  const pad=(ymax-ymin)*0.12||0.1;
+  let yLo=Math.min(0,ymin-(ymin<0?pad:0)), yHi=ymax+pad*(uvState.showLabels?2.4:1);
+  if(mode==='trans'){ yLo=0; yHi=Math.max(100,ymax+pad); }
+  const X=v=>m.l+(v-xmin)/(xmax-xmin)*pw, Y=v=>m.t+(yHi-v)/(yHi-yLo)*ph;
+  const S=[`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`,`<rect width="${W}" height="${H}" fill="#fff"/>`];
+  const span=xmax-xmin, step=span<=120?10:span<=300?25:span<=700?50:100;
+  for(let v=Math.ceil(xmin/step)*step; v<=xmax+1e-9; v+=step){ const px=X(v), M=(Math.round(v)%(step*2)===0);
+    S.push(`<line x1="${px.toFixed(1)}" y1="${m.t+ph}" x2="${px.toFixed(1)}" y2="${(m.t+ph-(M?7:4)).toFixed(1)}" stroke="#111" stroke-width="1"/>`);
+    if(M&&uvState.showTickLabels) S.push(`<text x="${px.toFixed(1)}" y="${m.t+ph+18}" font-size="13" text-anchor="middle" fill="#111">${Math.round(v)}</text>`); }
+  ftirNiceTicks(yLo,yHi,7).forEach(v=>{ if(v<yLo-1e-9||v>yHi+1e-9) return; const py=Y(v);
+    S.push(`<line x1="${m.l}" y1="${py.toFixed(1)}" x2="${m.l+7}" y2="${py.toFixed(1)}" stroke="#111" stroke-width="1"/>`);
+    if(uvState.showTickLabels) S.push(`<text x="${m.l-9}" y="${(py+4).toFixed(1)}" font-size="12" text-anchor="end" fill="#111">${uvFmtTick(v,yHi-yLo)}</text>`); });
+  traces.forEach((t,ti)=>{
+    const c=UV_COLORS[ti%FTIR_COLORS.length]; let d='';
+    for(let i=0;i<t.x.length;i++){ if(t.x[i]<xmin||t.x[i]>xmax) continue; d+=(d?'L':'M')+X(t.x[i]).toFixed(2)+' '+Y(t.y[i]).toFixed(2)+' '; }
+    S.push(`<path d="${d}" fill="none" stroke="${c}" stroke-width="1.2" stroke-linejoin="round"/>`);
+    if(uvState.showLabels) t.peaks.forEach((p,k)=>{ if(p.wn<xmin||p.wn>xmax) return;
+      const px=X(p.wn)+uvState.labelDx, py=Y(p.abs);
+      const ly=(mode==='trans'?py+16+(k%2)*11:py-9-(k%2)*11)-uvState.labelDy;   // 相鄰標籤高低錯開
+      S.push(`<text x="${px.toFixed(1)}" y="${ly.toFixed(1)}" font-size="10.5" fill="${c}" text-anchor="middle" font-family="Times New Roman,serif">${p.wn.toFixed(0)}</text>`); });
+  });
+  if(uvState.legend.show && traces.length>1){
+    const rows=traces.map((t,i)=>({c:UV_COLORS[i%FTIR_COLORS.length],name:t.name}));
+    const lh=17,padx=10,pady=8,bw=Math.max(...rows.map(r=>[...r.name].reduce((w,ch)=>w+(/[\u2E80-\u9FFF\uF900-\uFAFF\uFF00-\uFFEF\u3000-\u303F]/.test(ch)?12:6.6),0)))+padx*2+26, bh=rows.length*lh+pady*2;
+    const pos=uvState.legend.pos, lx=pos.includes('l')?m.l+12:m.l+pw-bw-12, ly=pos.includes('t')?m.t+10:m.t+ph-bh-10;
+    if(uvState.legend.frame) S.push(`<rect x="${lx}" y="${ly}" width="${bw}" height="${bh}" fill="#fff" stroke="#999" stroke-width="0.8" rx="4"/>`);
+    rows.forEach((r,i)=>{ const yy=ly+pady+lh*i+lh/2;
+      S.push(`<line x1="${lx+padx}" y1="${yy}" x2="${lx+padx+20}" y2="${yy}" stroke="${r.c}" stroke-width="2"/>`);
+      S.push(`<text x="${lx+padx+26}" y="${yy+4}" font-size="11.5" fill="#111">${ftirEscXml(r.name)}</text>`); });
+  }
+  S.push(`<rect x="${m.l}" y="${m.t}" width="${pw}" height="${ph}" fill="none" stroke="#111" stroke-width="1.1"/>`);
+  if(uvState.showAxisTitles){
+    S.push(`<text x="${m.l+pw/2}" y="${H-13}" font-size="14" text-anchor="middle" fill="#111">Wavelength (nm)</text>`);
+    S.push(`<text x="15" y="${m.t+ph/2}" font-size="14" text-anchor="middle" fill="#111" transform="rotate(-90 15 ${m.t+ph/2})">${ftirEscXml(ylabel)}</text>`);
+  }
+  if(title) S.push(`<text x="${m.l+pw/2}" y="26" font-size="16" text-anchor="middle" fill="#111">${ftirEscXml(title)}</text>`);
+  S.push('</svg>');
+  return {svg:S.join('')};
+}
+function uvRenderTable(traces,multi){
+  const rows=traces.map((t,ti)=>t.peaks.map(p=>`<tr>${multi?`<td style="color:${UV_COLORS[ti%FTIR_COLORS.length]}">${escapeHtml(t.name)}</td>`:''}<td class="num">${p.wn.toFixed(0)}</td><td class="num">${p.abs.toFixed(3)}</td></tr>`).join('')).join('');
+  fq('#uvTablewrap').innerHTML=rows?`<table><thead><tr>${multi?'<th>樣品</th>':''}<th style="text-align:right">λmax (nm)</th><th style="text-align:right">${escapeHtml(UV_YLABEL[uvState.ymode])}</th></tr></thead><tbody>${rows}</tbody></table>`:'';
+}
+function uvRender(){
+  const wrap=fq('#uvPlotwrap'), tw=fq('#uvTablewrap'); if(!wrap) return;
+  const chosen=uvState.sel.map(id=>UV_LIB.find(x=>x.id===id)).filter(Boolean);
+  const btns=['#uvDlPng','#uvDlSvg','#uvDlCsv','#uvSave'];
+  if(!chosen.length){
+    wrap.innerHTML='<div class="ftir-empty" id="uvEmpty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="52" height="52"><path d="M3 3v18h18M7 15l3-4 3 3 4-6"/></svg><div>上傳 SPECORD .dat 或兩欄 csv / txt 以開始</div></div>';
+    tw.innerHTML=''; btns.forEach(sel=>fq(sel).disabled=true); uvCurrent=null; return; }
+  const traces=chosen.map(item=>{
+    let y; if(uvState.ymode==='trans') y=item.y.map(A=>100*Math.pow(10,-A)); else if(uvState.ymode==='km') y=ftirTransform(item.x,item.y,'km'); else y=item.y.slice();
+    // %T 的峰是谷:先反相找峰再翻回來
+    const peaks=uvState.ymode==='trans'?ftirDetect(item.x,y.map(v=>-v),uvState.prom,uvState.topN).map(p=>({wn:p.wn,abs:-p.abs})):ftirDetect(item.x,y,uvState.prom,uvState.topN);
+    return {name:item.name,x:item.x,y,peaks};
+  });
+  const title=uvState.showTitle?(uvState.title||(chosen.length===1?chosen[0].name:'')):'';
+  const built=uvBuildSVG({traces,title,ylabel:UV_YLABEL[uvState.ymode],mode:uvState.ymode});
+  uvCurrent={traces,built,name:chosen.length===1?chosen[0].name:'overlay',multi:chosen.length>1};
+  wrap.innerHTML=built.svg; uvRenderTable(traces,chosen.length>1); btns.forEach(sel=>fq(sel).disabled=false);
+}
+async function uvSaveToGallery(){
+  if(!uvCurrent){ notify('目前沒有可儲存的圖譜。'); return; }
+  if(!currentUser){ notify('尚未登入。'); return; }
+  const name=await promptDialog('圖譜名稱', uvCurrent.name==='overlay'?'UV-Vis 疊圖':uvCurrent.name); if(name===null) return;
+  const trimmed=name.trim(); if(!trimmed){ notify('名稱不可空白。'); return; }
+  const peaks=[]; uvCurrent.traces.forEach(t=>t.peaks.forEach(p=>peaks.push({sample:t.name,wn:+p.wn.toFixed(1),val:+p.abs.toFixed(4),tag:'',full:''})));
+  const rec={id:'spec-'+Date.now()+Math.random().toString(36).slice(2,6),type:'uv',name:trimmed,svg:uvCurrent.built.svg,peaks,ymode:uvState.ymode,
+    bind_type:'',bind_id:'',bind_label:'',editable:false,
+    created_by_uid:currentUser.uid,created_by:currentUser.name||currentUser.email||'',created_at:new Date().toISOString()};
+  const btn=fq('#uvSave'); btn.disabled=true; const old=btn.textContent; btn.textContent='儲存中…';
+  const ok=await fsSetItem('spectra',rec);
+  btn.textContent=old; btn.disabled=false;
+  if(ok){ upsertLocal(spectraItems,rec); showToast('✅ 已存入圖譜'); } else notify('存入失敗,請檢查網路與 Firestore 權限。');
+}
+function initUvOnce(){
+  if(uvInited) return; uvInited=true;
+  const drop=fq('#uvDrop'), fileInput=fq('#uvFile');
+  drop.onclick=()=>fileInput.click();
+  ['dragover','dragenter'].forEach(e=>drop.addEventListener(e,ev=>{ ev.preventDefault(); drop.classList.add('over'); }));
+  ['dragleave','drop'].forEach(e=>drop.addEventListener(e,ev=>{ ev.preventDefault(); drop.classList.remove('over'); }));
+  drop.addEventListener('drop',ev=>uvHandleFiles(ev.dataTransfer.files));
+  fileInput.onchange=()=>{ uvHandleFiles(fileInput.files); fileInput.value=''; };
+  fq('#uvSelAll').onclick=()=>{ uvState.sel=UV_LIB.map(x=>x.id); uvRenderLib(); uvRender(); };
+  fq('#uvClearSel').onclick=()=>{ uvState.sel=[]; uvRenderLib(); uvRender(); };
+  fq('#uvWipe').onclick=async()=>{ if(await confirmDialog('確定清空這台電腦暫存的 UV-Vis 光譜?已存入圖譜的不受影響。')){ UV_LIB=[]; uvState.sel=[]; uvRenderLib(); uvRender(); } };
+  fq('#uvShowTitle').onchange=e=>{ uvState.showTitle=e.target.checked; uvRender(); };
+  fq('#uvTitle').oninput=e=>{ uvState.title=e.target.value; uvRender(); };
+  fq('#uvShowAxisTitles').onchange=e=>{ uvState.showAxisTitles=e.target.checked; uvRender(); };
+  fq('#uvShowTickLabels').onchange=e=>{ uvState.showTickLabels=e.target.checked; uvRender(); };
+  fq('#uvXmin').oninput=e=>{ const v=parseFloat(e.target.value); uvState.xmin=isFinite(v)?v:null; uvRender(); };
+  fq('#uvXmax').oninput=e=>{ const v=parseFloat(e.target.value); uvState.xmax=isFinite(v)?v:null; uvRender(); };
+  fq('#uvShowLegend').onchange=e=>{ uvState.legend.show=e.target.checked; uvRender(); };
+  fq('#uvLegendPos').onchange=e=>{ uvState.legend.pos=e.target.value; uvRender(); };
+  fq('#uvLegendFrame').onchange=e=>{ uvState.legend.frame=e.target.checked; uvRender(); };
+  ftirSeg('#uvYmode',v=>{ uvState.ymode=v; uvRender(); });
+  fq('#uvProm').oninput=e=>{ const v=+e.target.value; fq('#uvPromOut').textContent=v.toFixed(1)+'%'; uvState.prom=v/100; uvRender(); };
+  fq('#uvTopn').oninput=e=>{ const v=+e.target.value; fq('#uvTopnOut').textContent=v; uvState.topN=v; uvRender(); };
+  fq('#uvShowLabels').onchange=e=>{ uvState.showLabels=e.target.checked; uvRender(); };
+  fq('#uvLabelDx').oninput=e=>{ const v=+e.target.value; fq('#uvLabelDxOut').textContent=v; uvState.labelDx=v; uvRender(); };
+  fq('#uvLabelDy').oninput=e=>{ const v=+e.target.value; fq('#uvLabelDyOut').textContent=v; uvState.labelDy=v; uvRender(); };
+  fq('#uvDlSvg').onclick=()=>{ if(!uvCurrent) return; ftirSaveBlob(new Blob([uvCurrent.built.svg],{type:'image/svg+xml'}),uvCurrent.name+'.svg'); };
+  fq('#uvDlPng').onclick=async()=>{ if(!uvCurrent) return; try{ const b=await galSvgToPngBlob(uvCurrent.built.svg,3); ftirSaveBlob(b,uvCurrent.name+'.png'); }catch(e){ notify('PNG 產生失敗:'+(e&&e.message?e.message:'')); } };
+  fq('#uvDlCsv').onclick=()=>{ if(!uvCurrent) return; let csv='\uFEFFsample,wavelength_nm,value,mode\n';
+    uvCurrent.traces.forEach(t=>t.peaks.forEach(p=>{ csv+=`"${t.name}",${p.wn.toFixed(1)},${p.abs.toFixed(4)},${uvState.ymode}\n`; }));
+    ftirSaveBlob(new Blob([csv],{type:'text/csv'}),uvCurrent.name+'_peaks.csv'); };
+  fq('#uvSave').onclick=uvSaveToGallery;
+  uvRenderLib(); uvRender();
+}
+const SPEC_TYPE_LABEL={ftir:'FTIR',uv:'UV-Vis',lc:'LC',gc:'GC',tga:'TGA',dsc:'DSC'};
 function renderGallery(){
   const grid=document.getElementById('galGrid');
   const empty=document.getElementById('galEmpty');
@@ -9410,6 +9696,7 @@ function openGalDetail(id){
       +cell(ident)+'</tr>';
   };
   const peakRows=(rec.peaks||[]).map((p,i)=>isGc?gcRow(p,i)
+    :rec.type==='uv'?`<tr><td class="num">${(+p.wn).toFixed(1)}</td><td class="num">${isFinite(+p.val)?(+p.val).toFixed(3):''}</td><td>${escapeHtml(p.sample||'')}</td></tr>`
     :`<tr><td class="num">${(+p.wn).toFixed(2)}</td><td class="tag">${escapeHtml(p.tag||'—')}</td><td>${escapeHtml(p.full||'')}</td></tr>`).join('');
   document.getElementById('galDetailBody').innerHTML=`
     <h2 style="margin:0 18px 4px 0;">${escapeHtml(rec.name)}</h2>
@@ -9433,7 +9720,7 @@ function openGalDetail(id){
           <th>Peak #</th><th>Compound</th><th>Retention time (min)</th><th>KI</th>
           <th>rKI</th><th>Area(%)</th><th>Identification</th>
         </tr></thead><tbody>${peakRows}</tbody></table></div>`
-      :`<table style="margin-top:16px;"><thead><tr><th style="text-align:right">波數 cm⁻¹</th><th>官能基</th><th>建議歸屬(中文)</th></tr></thead><tbody>${peakRows}</tbody></table>`):''}
+      :`<table style="margin-top:16px;"><thead><tr>${rec.type==='uv'?'<th style="text-align:right">λmax (nm)</th><th style="text-align:right">數值</th><th>樣品</th>':'<th style="text-align:right">波數 cm⁻¹</th><th>官能基</th><th>建議歸屬(中文)</th>'}</tr></thead><tbody>${peakRows}</tbody></table>`):''}
   `;
   document.getElementById('galDetailOverlay').classList.add('show');
   const copyBtn=document.getElementById('galCopyImg');
