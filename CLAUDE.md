@@ -108,6 +108,12 @@
 - 同軸疊圖(不像 FTIR 會位移堆疊)、λmax 標籤水平放在峰上並高低錯開、可設顯示波長範圍;存入圖譜的 type 是 `uv`,peaks 用 `{sample,wn,val}`,藝廊詳細頁對 uv 顯示「λmax / 數值 / 樣品」欄
 - 模組函式全部以 `uv` 開頭,狀態在 `uvState`,暫存光譜在 `UV_LIB`(只在本機記憶體)
 
+### 比色計算(圖譜分析頁的「比色計算」子標籤)
+- 對應實驗室的 Excel 檢量線表:Test = RAW − Blank(各濃度各自的 Blank);檢量線用各濃度 Test 平均值做最小平方回歸,圖上標 y = mx + b 與 R²,誤差棒是三重複 SD
+- 樣品當量 = ((Test − b) / m) ÷ (樣品濃度/1000),單位 mg 標準品當量 / g 樣品;SE = SD/√n(原 Excel 的 `STDEV/(3*(1/2))` 是 `^` 打成 `*` 的手誤,已改正)
+- 支援直接貼上 Excel 區塊(檢量線:RAW1–3 加 Blank 四列;樣品:名稱、濃度、RAW1–3、Blank 六列,欄為樣品),前導標籤自動略過;結果可複製成 TSV 貼回 Excel、匯出 CSV、檢量線 PNG/SVG
+- 狀態在 `assayState`,存在 localStorage(`assay-calc`),只在本機
+
 ### GC-MS(圖譜分析頁的 GC 子標籤)
 - **用 iframe 完全隔離**。這個工具(TIC Bench)有大量 CSS class 與主系統撞名(drop、row、sp、card、lab、ctl…)。試過 scope 隔離(`.gcms-root` 前綴 + id 加 `gc_`),但主系統的全域規則(如 `.sp{flex:1}`)會反向洩漏到 GC 元素,造成版面錯亂、按鈕點不到。**iframe 是唯一乾淨解法**
 - iframe 內容是原封不動的 GC-MS 原始碼,以 base64 存在主檔的 `GC_IFRAME_B64` 常數,執行時 `atob` 解出寫入 `srcdoc`

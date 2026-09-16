@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="app-version" content="2026.09.16.7">
+<meta name="app-version" content="2026.09.16.8">
 <meta name="theme-color" content="#1B4B43" id="metaThemeColor">
 <title>SFPLAB 實驗室管理系統</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>">
@@ -744,6 +744,35 @@
   .ftir-plotwrap svg{display:block;width:100%;height:auto;background:#fff;font-family:"Times New Roman",Georgia,serif;border-radius:var(--radius-sm);}
   .ftir-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:360px;color:var(--ink-soft);text-align:center;gap:8px;}
   .ftir-empty svg{background:none;opacity:.5;}
+  #assayResults,#assayStdTable,#asStdGrid,#asSmpGrid{overflow-x:auto;}
+  #sp-assay .ftir-main,#sp-assay .ftir-side,#sp-assay .ftir-plotcard,#sp-assay .ftir-card{min-width:0;max-width:100%;}
+  #assayResults table,#assayStdTable table{width:max-content;min-width:100%;table-layout:auto;border-collapse:collapse;margin-top:10px;font-size:12.5px;}
+  #assayResults th,#assayResults td,#assayStdTable th,#assayStdTable td{text-align:right;padding:5px 7px;border-bottom:1px solid var(--line);white-space:nowrap;}
+  #assayResults th,#assayStdTable th{font-size:10.5px;letter-spacing:.05em;color:var(--ink-soft);font-weight:700;}
+  #assayResults td:first-child,#assayResults th:first-child,#assayStdTable td:first-child,#assayStdTable th:first-child{text-align:left;}
+  #assayResults td.num,#assayStdTable td.num{font-family:var(--mono);}
+  #assayResults td.key,#assayStdTable td.key{font-family:var(--mono);font-weight:700;color:var(--pine);}
+  .assay-paste{width:100%;min-height:74px;font-family:var(--mono);font-size:12px;border:1px solid var(--line);border-radius:var(--radius-sm);padding:8px 10px;background:var(--panel-soft);color:var(--ink);resize:vertical;box-sizing:border-box;}
+  .assay-grid{width:100%;border-collapse:collapse;margin-top:8px;font-size:12px;}
+  .assay-grid th{font-size:10.5px;color:var(--ink-soft);font-weight:700;padding:3px 4px;text-align:center;}
+  .assay-grid td{padding:2px 3px;}
+  .assay-grid td.lab{font-size:11.5px;color:var(--ink-soft);white-space:nowrap;padding-right:6px;}
+  .assay-grid input{width:100%;min-width:50px;box-sizing:border-box;border:1px solid var(--line);border-radius:var(--radius-sm);padding:5px 4px;font-family:var(--mono);font-size:11.5px;background:var(--panel-soft);color:var(--ink);text-align:right;}
+  .assay-grid input.txt{text-align:left;font-family:var(--sans);}
+  .assay-grid .rm{cursor:pointer;color:var(--ink-soft);padding:0 4px;}
+  .assay-eq{font-family:var(--mono);font-size:12.5px;color:var(--ink);margin-top:10px;display:flex;gap:16px;flex-wrap:wrap;}
+  .assay-eq b{color:var(--pine);}
+  #sp-assay .ftir-grid{grid-template-columns:minmax(400px,36%) 1fr;}
+  @media (max-width:880px){ #sp-assay .ftir-grid{grid-template-columns:1fr;} }
+  @media (max-width: 680px){
+    .assay-grid{display:table;width:100%;}
+    #assayResults table,#assayStdTable table{display:table;width:max-content;min-width:100%;}
+    .assay-grid thead,#assayResults thead,#assayStdTable thead{display:table-header-group;}
+    .assay-grid tbody,#assayResults tbody,#assayStdTable tbody{display:table-row-group;}
+    .assay-grid tr,#assayResults tr,#assayStdTable tr{display:table-row;width:auto;}
+    .assay-grid td,.assay-grid th,#assayResults td,#assayResults th,#assayStdTable td,#assayStdTable th{display:table-cell;width:auto;}
+    .assay-grid input{min-width:64px;}
+  }
   #uvTablewrap table{width:100%;border-collapse:collapse;margin-top:14px;font-size:13px;}
   #uvTablewrap th,#uvTablewrap td{text-align:left;padding:6px 9px;border-bottom:1px solid var(--line);}
   #uvTablewrap th{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);font-weight:700;}
@@ -1522,6 +1551,7 @@
         <button class="sp-tab" data-sp="gc">GC</button>
         <button class="sp-tab active" data-sp="ftir">FTIR</button>
         <button class="sp-tab" data-sp="uv">UV-Vis</button>
+        <button class="sp-tab" data-sp="assay">比色計算</button>
         <button class="sp-tab" data-sp="tga">TGA</button>
         <button class="sp-tab" data-sp="dsc">DSC</button>
       </div>
@@ -1721,6 +1751,47 @@
                 </div>
               </div>
               <div id="uvTablewrap"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="sp-panel" id="sp-assay">
+        <div class="ftir-grid">
+          <div class="ftir-side">
+            <div class="ftir-card">
+              <h3>標準品與檢量線</h3>
+              <div class="field row2" style="margin-bottom:8px;">
+                <div><label style="font-size:12px;">標準品</label><input type="text" id="asStdName" placeholder="例如 Naringenin"></div>
+                <div><label style="font-size:12px;">波長(nm)</label><input type="number" id="asWl" placeholder="495"></div>
+              </div>
+              <div class="field row2" style="margin-bottom:8px;">
+                <div><label style="font-size:12px;">標準品濃度單位</label><input type="text" id="asUnit" placeholder="mg/mL"></div>
+                <div><label style="font-size:12px;">樣品濃度單位</label><input type="text" id="asSampleUnit" placeholder="mg/mL"></div>
+              </div>
+              <label style="font-size:12px;color:var(--ink-soft);font-weight:600;display:block;margin:6px 0 4px;">濃度(由高到低,逗號或空白分隔)</label>
+              <input type="text" id="asConc" placeholder="0.5 0.25 0.125 0.0625 0.03125" style="width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:var(--radius-sm);padding:7px 9px;font-family:var(--mono);font-size:12.5px;background:var(--panel-soft);color:var(--ink);">
+              <label style="font-size:12px;color:var(--ink-soft);font-weight:600;display:block;margin:10px 0 4px;">貼上吸光值(從 Excel 複製 RAW1、RAW2、RAW3、Blank 四列;前面帶標籤也可以)</label>
+              <textarea class="assay-paste" id="asStdPaste" placeholder="RAW1&#9;0.9085&#9;0.5212&#9;0.3464&#9;0.2668&#9;0.2266&#10;RAW2&#9;…&#10;RAW3&#9;…&#10;Blank&#9;…"></textarea>
+              <div class="ftir-btnrow" style="margin-top:8px;"><button class="btn btn-ghost btn-sm" id="asStdApply">套用貼上內容</button><button class="btn btn-ghost btn-sm" id="asStdClear">清空檢量線</button></div>
+              <div id="asStdGrid"></div>
+              <div class="ftir-hint">Test = RAW − Blank(各濃度用自己的 Blank);回歸用各濃度 Test 的平均值,最小平方法;SD 是三重複的樣本標準差。</div>
+            </div>
+            <div class="ftir-card">
+              <h3>樣品</h3>
+              <label style="font-size:12px;color:var(--ink-soft);font-weight:600;display:block;margin:0 0 4px;">貼上樣品區塊(列:名稱、濃度、RAW1、RAW2、RAW3、Blank;欄:各樣品)</label>
+              <textarea class="assay-paste" id="asSmpPaste" placeholder="&#9;HWE&#9;EAHW&#9;BuHW&#10;&#9;1&#9;1&#9;1&#10;RAW1&#9;0.3102&#9;0.3125&#9;0.2139&#10;RAW2&#9;…&#10;RAW3&#9;…&#10;Blank&#9;…"></textarea>
+              <div class="ftir-btnrow" style="margin-top:8px;"><button class="btn btn-ghost btn-sm" id="asSmpApply">套用貼上內容</button><button class="btn btn-ghost btn-sm" id="asSmpAdd">＋ 新增一列</button><button class="btn btn-ghost btn-sm" id="asSmpClear">清空樣品</button></div>
+              <div id="asSmpGrid"></div>
+              <div class="ftir-hint">當量 = ((Test − 截距) ÷ 斜率) ÷ (樣品濃度 ÷ 1000),單位 mg 標準品當量 / g 樣品;SE = SD ÷ √n(n = 有效重複數)。</div>
+            </div>
+          </div>
+          <div class="ftir-main">
+            <div class="ftir-plotcard">
+              <div class="ftir-plotwrap" id="asPlotwrap"><div class="ftir-empty" id="asEmpty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="52" height="52"><path d="M3 3v18h18M7 15l3-4 3 3 4-6"/></svg><div>輸入檢量線濃度與吸光值後,檢量線會畫在這裡</div></div></div>
+              <div class="assay-eq" id="asEq"></div>
+              <div id="assayStdTable"></div>
+              <div class="ftir-btnrow" style="margin-top:14px;"><button class="btn btn-ghost btn-sm" id="asDlPng" disabled>檢量線 PNG</button><button class="btn btn-ghost btn-sm" id="asDlSvg" disabled>SVG</button><button class="btn btn-ghost btn-sm" id="asCopy" disabled>複製結果表</button><button class="btn btn-ghost btn-sm" id="asDlCsv" disabled>結果 CSV</button></div>
+              <div id="assayResults"></div>
             </div>
           </div>
         </div>
@@ -9001,6 +9072,7 @@ document.getElementById('spTabs').addEventListener('click', (e)=>{
   document.querySelectorAll('#page-spectra .sp-panel').forEach(p=>p.classList.toggle('active', p.id==='sp-'+key));
   if(key==='gc') loadGcFrame();
   if(key==='uv') initUvOnce();
+  if(key==='assay') initAssayOnce();
 });
 
 /* ============ FTIR 讀檔 ============ */
@@ -9636,6 +9708,153 @@ function initUvOnce(){
     ftirSaveBlob(new Blob([csv],{type:'text/csv'}),uvCurrent.name+'_peaks.csv'); };
   fq('#uvSave').onclick=uvSaveToGallery;
   uvRenderLib(); uvRender();
+}
+
+/* ============ 比色計算(檢量線 → 當量濃度) ============
+   對應實驗室原本的 Excel:Test = RAW − Blank;檢量線用各濃度 Test 平均值做最小平方回歸;
+   當量 = ((Test − b) / m) / (樣品濃度/1000),單位 mg/g;SE = SD/√n。內容存在本機 localStorage */
+const ASSAY_KEY='assay-calc';
+const assayState={std:{name:'',unit:'mg/mL',sampleUnit:'mg/mL',wl:''},conc:[],raw:[[],[],[]],blank:[],samples:[]};
+let assayInited=false, assayCurrent=null;
+function assaySave(){ try{ localStorage.setItem(ASSAY_KEY,JSON.stringify(assayState)); }catch(_e){} }
+function assayLoad(){ try{ const d=JSON.parse(localStorage.getItem(ASSAY_KEY)||'null'); if(d&&d.std){ Object.assign(assayState,d); } }catch(_e){} }
+const asNum=v=>{ const n=parseFloat(String(v==null?'':v).replace(/,/g,'')); return isFinite(n)?n:null; };
+/* 貼上內容:每列以 tab / 逗號 / 空白分隔;開頭若是文字標籤(RAW1、Blank…)就丟掉 */
+function assayParseBlock(text){
+  return String(text||'').split(/\r?\n/).map(l=>l.trim()).filter(Boolean).map(l=>{
+    const cells=l.split(/\t|,|\s{2,}|\s/).map(c=>c.trim()).filter(c=>c!=='');
+    return cells;
+  });
+}
+function assayNumRow(cells){ const c=cells.slice(); if(c.length&&asNum(c[0])===null) c.shift(); return c.map(asNum); }
+function assayFit(){
+  const pts=[];
+  assayState.conc.forEach((x,j)=>{ if(x==null) return;
+    const tests=[0,1,2].map(r=>{ const a=assayState.raw[r][j], b=assayState.blank[j]; return (a==null||b==null)?null:a-b; }).filter(v=>v!==null);
+    if(!tests.length) return;
+    const mean=tests.reduce((a,b)=>a+b,0)/tests.length;
+    const sd=tests.length>1?Math.sqrt(tests.reduce((a,b)=>a+(b-mean)*(b-mean),0)/(tests.length-1)):0;
+    pts.push({x,tests,mean,sd}); });
+  if(pts.length<2) return {pts,ok:false};
+  const n=pts.length, sx=pts.reduce((a,p)=>a+p.x,0), sy=pts.reduce((a,p)=>a+p.mean,0);
+  const sxx=pts.reduce((a,p)=>a+p.x*p.x,0), sxy=pts.reduce((a,p)=>a+p.x*p.mean,0);
+  const den=n*sxx-sx*sx; if(Math.abs(den)<1e-12) return {pts,ok:false};
+  const m=(n*sxy-sx*sy)/den, b=(sy-m*sx)/n, ybar=sy/n;
+  const ssres=pts.reduce((a,p)=>a+Math.pow(p.mean-(m*p.x+b),2),0), sstot=pts.reduce((a,p)=>a+Math.pow(p.mean-ybar,2),0);
+  return {pts,ok:true,m,b,r2:sstot>0?1-ssres/sstot:1,n};
+}
+function assayChartSVG(fit){
+  const W=900,H=460,m={l:78,r:26,t:40,b:62},pw=W-m.l-m.r,ph=H-m.t-m.b;
+  const xmax=Math.max(...fit.pts.map(p=>p.x))*1.08||1, ymax=Math.max(...fit.pts.map(p=>p.mean+p.sd))*1.15||1;
+  const X=v=>m.l+v/xmax*pw, Y=v=>m.t+ph-v/ymax*ph;
+  const S=[`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" font-family="Times New Roman,serif">`,`<rect width="${W}" height="${H}" fill="#fff"/>`];
+  ftirNiceTicks(0,xmax,6).forEach(v=>{ if(v>xmax) return; S.push(`<line x1="${X(v).toFixed(1)}" y1="${m.t+ph}" x2="${X(v).toFixed(1)}" y2="${m.t+ph-6}" stroke="#111"/>`);
+    S.push(`<text x="${X(v).toFixed(1)}" y="${m.t+ph+18}" font-size="13" text-anchor="middle" fill="#111">${+v.toFixed(4)}</text>`); });
+  ftirNiceTicks(0,ymax,6).forEach(v=>{ if(v>ymax) return; S.push(`<line x1="${m.l}" y1="${Y(v).toFixed(1)}" x2="${m.l+6}" y2="${Y(v).toFixed(1)}" stroke="#111"/>`);
+    S.push(`<text x="${m.l-9}" y="${(Y(v)+4).toFixed(1)}" font-size="12" text-anchor="end" fill="#111">${v.toFixed(2)}</text>`); });
+  if(fit.ok){ const x1=0,x2=xmax; S.push(`<line x1="${X(x1).toFixed(1)}" y1="${Y(fit.m*x1+fit.b).toFixed(1)}" x2="${X(x2).toFixed(1)}" y2="${Y(fit.m*x2+fit.b).toFixed(1)}" stroke="#1746c8" stroke-width="1.4" stroke-dasharray="6 4"/>`); }
+  fit.pts.forEach(p=>{ const cx=X(p.x), cy=Y(p.mean);
+    if(p.sd>0){ S.push(`<line x1="${cx.toFixed(1)}" y1="${Y(p.mean+p.sd).toFixed(1)}" x2="${cx.toFixed(1)}" y2="${Y(p.mean-p.sd).toFixed(1)}" stroke="#111" stroke-width="1"/>`);
+      [p.mean+p.sd,p.mean-p.sd].forEach(v=>S.push(`<line x1="${(cx-4).toFixed(1)}" y1="${Y(v).toFixed(1)}" x2="${(cx+4).toFixed(1)}" y2="${Y(v).toFixed(1)}" stroke="#111" stroke-width="1"/>`)); }
+    S.push(`<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="4.5" fill="#fff" stroke="#c0392b" stroke-width="1.6"/>`); });
+  S.push(`<rect x="${m.l}" y="${m.t}" width="${pw}" height="${ph}" fill="none" stroke="#111" stroke-width="1.1"/>`);
+  if(fit.ok){ S.push(`<text x="${m.l+16}" y="${m.t+24}" font-size="14" fill="#111">y = ${fit.m.toFixed(4)}x ${fit.b<0?'−':'+'} ${Math.abs(fit.b).toFixed(4)}</text>`);
+    S.push(`<text x="${m.l+16}" y="${m.t+44}" font-size="14" fill="#111">R² = ${fit.r2.toFixed(4)}</text>`); }
+  const st=assayState.std;
+  S.push(`<text x="${m.l+pw/2}" y="${H-14}" font-size="14" text-anchor="middle" fill="#111">${ftirEscXml((st.name||'Standard')+' ('+(st.unit||'mg/mL')+')')}</text>`);
+  S.push(`<text x="16" y="${m.t+ph/2}" font-size="14" text-anchor="middle" fill="#111" transform="rotate(-90 16 ${m.t+ph/2})">${ftirEscXml('Absorbance'+(st.wl?' ('+st.wl+' nm)':''))}</text>`);
+  S.push('</svg>'); return S.join('');
+}
+function assayResults(fit){
+  return assayState.samples.map(sm=>{
+    const conc=asNum(sm.conc);
+    const tests=[0,1,2].map(r=>{ const a=asNum(sm.raw[r]), b=asNum(sm.blank); return (a==null||b==null)?null:a-b; });
+    const eqs=tests.map(t=>(t==null||!fit.ok||conc==null||conc<=0)?null:((t-fit.b)/fit.m)/(conc/1000));
+    const valid=eqs.filter(v=>v!==null); const n=valid.length;
+    const mean=n?valid.reduce((a,b)=>a+b,0)/n:null;
+    const sd=n>1?Math.sqrt(valid.reduce((a,b)=>a+(b-mean)*(b-mean),0)/(n-1)):null;
+    const tv=tests.filter(v=>v!==null); const meanA=tv.length?tv.reduce((a,b)=>a+b,0)/tv.length:null;
+    return {name:sm.name||'',conc,tests,meanA,eqs,n,mean,sd,se:(sd!=null&&n>0)?sd/Math.sqrt(n):null};
+  });
+}
+const asF=(v,d)=>v==null||!isFinite(v)?'':(+v).toFixed(d);
+function assayRenderGrids(){
+  let h='<table class="assay-grid"><tr><th></th>'+assayState.conc.map((c,j)=>`<th>${escapeHtml(c==null?'':String(c))}</th>`).join('')+'</tr>';
+  [['RAW1',0],['RAW2',1],['RAW3',2]].forEach(([lab,r])=>{ h+=`<tr><td class="lab">${lab}</td>`+assayState.conc.map((c,j)=>`<td><input type="text" data-k="raw" data-r="${r}" data-j="${j}" value="${assayState.raw[r][j]==null?'':assayState.raw[r][j]}"></td>`).join('')+'</tr>'; });
+  h+='<tr><td class="lab">Blank</td>'+assayState.conc.map((c,j)=>`<td><input type="text" data-k="blank" data-j="${j}" value="${assayState.blank[j]==null?'':assayState.blank[j]}"></td>`).join('')+'</tr></table>';
+  fq('#asStdGrid').innerHTML=assayState.conc.length?h:'';
+  let g='<table class="assay-grid"><tr><th>樣品</th><th>濃度</th><th>RAW1</th><th>RAW2</th><th>RAW3</th><th>Blank</th><th></th></tr>';
+  assayState.samples.forEach((sm,i)=>{ g+=`<tr><td><input type="text" class="txt" data-k="name" data-i="${i}" value="${escapeHtml(sm.name||'')}"></td><td><input type="text" data-k="conc" data-i="${i}" value="${sm.conc==null?'':sm.conc}"></td>`
+    +[0,1,2].map(r=>`<td><input type="text" data-k="sraw" data-i="${i}" data-r="${r}" value="${sm.raw[r]==null?'':sm.raw[r]}"></td>`).join('')+`<td><input type="text" data-k="sblank" data-i="${i}" value="${sm.blank==null?'':sm.blank}"></td><td><span class="rm" data-rm="${i}" title="移除">✕</span></td></tr>`; });
+  g+='</table>'; fq('#asSmpGrid').innerHTML=assayState.samples.length?g:'';
+  document.querySelectorAll('#asStdGrid input, #asSmpGrid input').forEach(inp=>{ inp.onchange=()=>{ const k=inp.dataset.k, v=inp.value.trim();
+    if(k==='raw') assayState.raw[+inp.dataset.r][+inp.dataset.j]=asNum(v);
+    else if(k==='blank') assayState.blank[+inp.dataset.j]=asNum(v);
+    else if(k==='name') assayState.samples[+inp.dataset.i].name=v;
+    else if(k==='conc') assayState.samples[+inp.dataset.i].conc=asNum(v);
+    else if(k==='sraw') assayState.samples[+inp.dataset.i].raw[+inp.dataset.r]=asNum(v);
+    else if(k==='sblank') assayState.samples[+inp.dataset.i].blank=asNum(v);
+    assaySave(); assayRender(false); }; });
+  document.querySelectorAll('#asSmpGrid .rm').forEach(x=>x.onclick=()=>{ assayState.samples.splice(+x.dataset.rm,1); assaySave(); assayRender(true); });
+}
+function assayRender(withGrids){
+  if(withGrids!==false) assayRenderGrids();
+  const fit=assayFit(); const st=assayState.std;
+  const wrap=fq('#asPlotwrap');
+  if(!fit.pts.length){ wrap.innerHTML='<div class="ftir-empty" id="asEmpty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="52" height="52"><path d="M3 3v18h18M7 15l3-4 3 3 4-6"/></svg><div>輸入檢量線濃度與吸光值後,檢量線會畫在這裡</div></div>'; fq('#asEq').innerHTML=''; fq('#assayStdTable').innerHTML=''; }
+  else{ const svg=assayChartSVG(fit); wrap.innerHTML=svg;
+    fq('#asEq').innerHTML=fit.ok?`<span>y = <b>${fit.m.toFixed(4)}</b>x ${fit.b<0?'−':'+'} <b>${Math.abs(fit.b).toFixed(4)}</b></span><span>R² = <b>${fit.r2.toFixed(4)}</b></span><span>n = ${fit.n} 點</span>`:'<span>至少需要兩個濃度點才能回歸</span>';
+    fq('#assayStdTable').innerHTML=`<table><thead><tr><th>${escapeHtml(st.unit||'濃度')}</th><th>Test1</th><th>Test2</th><th>Test3</th><th>Mean</th><th>SD</th></tr></thead><tbody>${fit.pts.map(p=>`<tr><td class="key">${+p.x.toFixed(6)}</td>${[0,1,2].map(i=>`<td class="num">${asF(p.tests[i],4)}</td>`).join('')}<td class="num">${asF(p.mean,4)}</td><td class="num">${asF(p.sd,4)}</td></tr>`).join('')}</tbody></table>`; }
+  const rows=assayResults(fit); const unitS=st.sampleUnit||'mg/mL';
+  fq('#assayResults').innerHTML=rows.length?`<table><thead><tr><th>樣品</th><th>濃度 (${escapeHtml(unitS)})</th><th>Test1</th><th>Test2</th><th>Test3</th><th>Mean A</th><th>當量1</th><th>當量2</th><th>當量3</th><th>Mean (mg/g)</th><th>SD</th><th>SE</th></tr></thead><tbody>${rows.map(r=>`<tr><td class="key">${escapeHtml(r.name)}</td><td class="num">${asF(r.conc,4)}</td>${r.tests.map(t=>`<td class="num">${asF(t,4)}</td>`).join('')}<td class="num">${asF(r.meanA,4)}</td>${r.eqs.map(e=>`<td class="num">${asF(e,2)}</td>`).join('')}<td class="num"><b>${asF(r.mean,2)}</b></td><td class="num">${asF(r.sd,2)}</td><td class="num">${asF(r.se,2)}</td></tr>`).join('')}</tbody></table>`:'';
+  assayCurrent={fit,rows,svg:fit.pts.length?wrap.innerHTML:''};
+  fq('#asDlPng').disabled=fq('#asDlSvg').disabled=!fit.pts.length; fq('#asCopy').disabled=fq('#asDlCsv').disabled=!rows.length;
+}
+function assayApplyStdPaste(){
+  const rows=assayParseBlock(fq('#asStdPaste').value).map(assayNumRow).filter(r=>r.some(v=>v!==null));
+  if(rows.length<2){ notify('至少要有 RAW1 與 Blank 兩列'); return; }
+  let concRow=null;
+  if(rows.length>=5) concRow=rows.shift();   // 多貼一列濃度也接受
+  const nC=Math.max(...rows.map(r=>r.length));
+  if(concRow){ assayState.conc=concRow.slice(0,nC).map(v=>v==null?null:v); fq('#asConc').value=assayState.conc.map(c=>c==null?'':c).join(' '); }
+  if(!assayState.conc.length) assayState.conc=Array.from({length:nC},()=>null);
+  const blank=rows[rows.length-1], raws=rows.slice(0,rows.length-1).slice(0,3);
+  assayState.raw=[0,1,2].map(r=>Array.from({length:assayState.conc.length},(_,j)=>(raws[r]&&raws[r][j]!=null)?raws[r][j]:null));
+  assayState.blank=Array.from({length:assayState.conc.length},(_,j)=>blank[j]!=null?blank[j]:null);
+  assaySave(); assayRender(true); showToast('檢量線資料已套用');
+}
+function assayApplySmpPaste(){
+  const raw=assayParseBlock(fq('#asSmpPaste').value); if(raw.length<6){ notify('樣品區塊需要六列:名稱、濃度、RAW1、RAW2、RAW3、Blank'); return; }
+  const names=raw[0].slice(), rest=raw.slice(1,6).map(assayNumRow);
+  // 名稱列若第一格是「名稱」之類的標籤,對齊數值列的長度後從尾端取
+  const nS=Math.max(...rest.map(r=>r.length)); const nm=names.slice(-nS);
+  const list=[]; for(let i=0;i<nS;i++){ list.push({name:nm[i]||('樣品'+(i+1)),conc:rest[0][i]??null,raw:[rest[1][i]??null,rest[2][i]??null,rest[3][i]??null],blank:rest[4][i]??null}); }
+  assayState.samples=list; assaySave(); assayRender(true); showToast('已套用 '+list.length+' 個樣品');
+}
+function assayResultsTSV(){
+  const st=assayState.std; const head=['樣品','濃度 ('+(st.sampleUnit||'mg/mL')+')','Test1','Test2','Test3','Mean A','當量1 (mg/g)','當量2','當量3','Mean (mg/g)','SD','SE'];
+  const lines=[head.join('\t')]; (assayCurrent?assayCurrent.rows:[]).forEach(r=>lines.push([r.name,asF(r.conc,4),...r.tests.map(t=>asF(t,4)),asF(r.meanA,4),...r.eqs.map(e=>asF(e,4)),asF(r.mean,4),asF(r.sd,4),asF(r.se,4)].join('\t')));
+  if(assayCurrent&&assayCurrent.fit.ok){ const f=assayCurrent.fit; lines.push(''); lines.push(['檢量線','y = '+f.m.toFixed(4)+'x + '+f.b.toFixed(4),'R² = '+f.r2.toFixed(4)].join('\t')); }
+  return lines.join('\n');
+}
+function initAssayOnce(){
+  if(assayInited) return; assayInited=true;
+  assayLoad();
+  fq('#asStdName').value=assayState.std.name||''; fq('#asUnit').value=assayState.std.unit||'mg/mL'; fq('#asSampleUnit').value=assayState.std.sampleUnit||'mg/mL'; fq('#asWl').value=assayState.std.wl||'';
+  fq('#asConc').value=assayState.conc.map(c=>c==null?'':c).join(' ');
+  [['#asStdName','name'],['#asUnit','unit'],['#asSampleUnit','sampleUnit'],['#asWl','wl']].forEach(([sel,k])=>{ fq(sel).oninput=e=>{ assayState.std[k]=e.target.value.trim(); assaySave(); assayRender(false); }; });
+  fq('#asConc').onchange=e=>{ const c=e.target.value.split(/[,\s]+/).map(asNum).filter(v=>v!==null); assayState.conc=c;
+    assayState.raw=[0,1,2].map(r=>c.map((_,j)=>assayState.raw[r][j]??null)); assayState.blank=c.map((_,j)=>assayState.blank[j]??null); assaySave(); assayRender(true); };
+  fq('#asStdApply').onclick=assayApplyStdPaste;
+  fq('#asStdClear').onclick=async()=>{ if(!await confirmDialog('清空檢量線的濃度與吸光值?')) return; assayState.conc=[]; assayState.raw=[[],[],[]]; assayState.blank=[]; fq('#asConc').value=''; fq('#asStdPaste').value=''; assaySave(); assayRender(true); };
+  fq('#asSmpApply').onclick=assayApplySmpPaste;
+  fq('#asSmpAdd').onclick=()=>{ assayState.samples.push({name:'',conc:null,raw:[null,null,null],blank:null}); assaySave(); assayRender(true); };
+  fq('#asSmpClear').onclick=async()=>{ if(!await confirmDialog('清空所有樣品?')) return; assayState.samples=[]; fq('#asSmpPaste').value=''; assaySave(); assayRender(true); };
+  fq('#asDlSvg').onclick=()=>{ if(!assayCurrent||!assayCurrent.svg) return; ftirSaveBlob(new Blob([assayCurrent.svg],{type:'image/svg+xml'}),(assayState.std.name||'standard')+'_curve.svg'); };
+  fq('#asDlPng').onclick=async()=>{ if(!assayCurrent||!assayCurrent.svg) return; try{ const b=await galSvgToPngBlob(assayCurrent.svg,3); ftirSaveBlob(b,(assayState.std.name||'standard')+'_curve.png'); }catch(e){ notify('PNG 產生失敗:'+(e&&e.message?e.message:'')); } };
+  fq('#asCopy').onclick=async()=>{ try{ await navigator.clipboard.writeText(assayResultsTSV()); showToast('✅ 已複製,可直接貼到 Excel'); }catch(e){ notify('複製失敗:'+(e&&e.message?e.message:'')); } };
+  fq('#asDlCsv').onclick=()=>{ ftirSaveBlob(new Blob(['\uFEFF'+assayResultsTSV().replace(/\t/g,',')],{type:'text/csv'}),(assayState.std.name||'assay')+'_results.csv'); };
+  assayRender(true);
 }
 const SPEC_TYPE_LABEL={ftir:'FTIR',uv:'UV-Vis',lc:'LC',gc:'GC',tga:'TGA',dsc:'DSC'};
 function renderGallery(){
