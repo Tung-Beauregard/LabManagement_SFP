@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="app-version" content="2026.09.16.9">
+<meta name="app-version" content="2026.09.16.10">
 <meta name="theme-color" content="#1B4B43" id="metaThemeColor">
 <title>SFPLAB 實驗室管理系統</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>">
@@ -766,6 +766,11 @@
   table.as-sheet tr.calc td.num{font-family:var(--mono);padding:0 8px;background:var(--panel-soft);color:var(--ink);}
   table.as-sheet tr.calc td.num.b{font-weight:700;color:var(--pine);}
   table.as-sheet tr.sep th,table.as-sheet tr.sep td{border-top:2px solid var(--line);}
+  table.as-sheet{user-select:none;}
+  table.as-sheet input{user-select:text;}
+  table.as-sheet th.rl,table.as-sheet th.ch{cursor:pointer;}
+  table.as-sheet td.sel{background:rgba(76,150,110,.22);}
+  table.as-sheet tr.calc td.num.sel{background:rgba(76,150,110,.30);}
   .assay-eq{font-family:var(--mono);font-size:12.5px;color:var(--ink);margin-top:12px;display:flex;gap:16px;flex-wrap:wrap;}
   .assay-eq b{color:var(--pine);}
   @media (max-width:1100px){ .as-two{grid-template-columns:1fr;} }
@@ -1775,7 +1780,7 @@
             <div class="as-sheetwrap" id="asStdSheet"></div>
             <div class="assay-eq" id="asEq"></div>
             <div class="ftir-btnrow" style="margin-top:10px;"><button class="btn btn-ghost btn-sm" id="asStdClear">清空檢量線</button></div>
-            <div class="ftir-hint">白格可直接打字,Enter 往下一格;點一格後 Ctrl+V 可把 Excel 複製的整塊範圍貼進來(連左邊的 RAW1、Blank 標籤一起複製也可以,會自動略過)。Test = RAW − Blank(各濃度用自己的 Blank),回歸用各濃度 Test 的平均值。</div>
+            <div class="ftir-hint">白格可直接打字,Enter 往下一格;點一格後 Ctrl+V 可把 Excel 複製的整塊範圍貼進來(連左邊的 RAW1、Blank 標籤一起複製也可以,會自動略過)。滑鼠拖曳可框選多格,點列名選整列、點欄號選整欄,Delete 一次清空,Ctrl+C 複製框選範圍。Test = RAW − Blank(各濃度用自己的 Blank),回歸用各濃度 Test 的平均值。</div>
           </div>
           <div class="ftir-plotcard">
             <div class="ftir-plotwrap" id="asPlotwrap"><div class="ftir-empty" id="asEmpty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="52" height="52"><path d="M3 3v18h18M7 15l3-4 3 3 4-6"/></svg><div>填入濃度與吸光值後,檢量線會畫在這裡</div></div></div>
@@ -1785,8 +1790,8 @@
         <div class="ftir-card">
           <h3>樣品</h3>
           <div class="as-sheetwrap" id="asSmpSheet"></div>
-          <div class="ftir-btnrow" style="margin-top:12px;"><button class="btn btn-ghost btn-sm" id="asCopy" disabled>複製結果(Excel 排列)</button><button class="btn btn-ghost btn-sm" id="asDlCsv" disabled>結果 CSV(每列一個樣品)</button><button class="btn btn-ghost btn-sm" id="asSmpClear">清空樣品</button></div>
-          <div class="ftir-hint">當量 = ((Test − 截距) ÷ 斜率) ÷ (樣品濃度 ÷ 1000),單位 mg 標準品當量 / g 樣品;SE = SD ÷ √n(n = 有效重複數)。</div>
+          <div class="ftir-btnrow" style="margin-top:12px;"><button class="btn btn-primary btn-sm" id="asXlsx">匯出 Excel</button><button class="btn btn-ghost btn-sm" id="asCopy" disabled>複製結果(Excel 排列)</button><button class="btn btn-ghost btn-sm" id="asDlCsv" disabled>結果 CSV(每列一個樣品)</button><button class="btn btn-ghost btn-sm" id="asSmpClear">清空樣品</button></div>
+          <div class="ftir-hint">當量 = ((Test − 截距) ÷ 斜率) ÷ (樣品濃度 ÷ 1000),單位 mg 標準品當量 / g 樣品;SE = SD ÷ √n(n = 有效重複數)。「匯出 Excel」會產生跟原本範本同樣排法的 .xlsx,格子裡是活的公式並附檢量線圖,之後在 Excel 改數字會自己重算。</div>
         </div>
       </div>
       <div class="sp-panel" id="sp-lc"><div class="sp-placeholder"><div class="sp-ph-icon">🧪</div><b>LC 液相層析</b><span>這個模組還在規劃中,之後會加入資料上傳與圖譜分析。</span></div></div>
@@ -9806,8 +9811,9 @@ function assayRecalc(){
   const has=rows.some(r=>r.hasA);
   assayCurrent={fit,rows,svg:fit.pts.length?wrap.innerHTML:''};
   fq('#asDlPng').disabled=fq('#asDlSvg').disabled=!fit.pts.length; fq('#asCopy').disabled=fq('#asDlCsv').disabled=!has;
+  asSelApply();
 }
-function assayRender(){ assayRenderSheets(); assayRecalc(); }
+function assayRender(){ asSelClear(); asSelAnchor=null; assayRenderSheets(); assayRecalc(); }
 function assaySetCell(s,r,j,v){
   if(s==='std'){ if(r==='conc') assayState.conc[j]=asNum(v); else if(r==='blank') assayState.blank[j]=asNum(v); else assayState.raw[+r.slice(3)][j]=asNum(v); }
   else{ const sm=assayState.samples[j]; if(!sm) return; if(r==='name') sm.name=String(v==null?'':v).trim(); else if(r==='conc') sm.conc=asNum(v); else if(r==='blank') sm.blank=asNum(v); else sm.raw[+r.slice(3)]=asNum(v); }
@@ -9832,6 +9838,18 @@ function assayPasteAt(s,r0,j0,text){
   rows.forEach((cells,i)=>{ const rk=ROWS[i0+i]; if(!rk) return; cells.forEach((c,k)=>{ assayEnsureCol(s,j0+k); assaySetCell(s,rk,j0+k,c); filled++; }); });
   return filled;
 }
+/* ---- 框選:拖曳或 Shift+點選矩形範圍;點列名選整列、欄號選整欄;Delete 清空、Ctrl+C 複製成表格文字 ---- */
+let asSel=null, asSelAnchor=null, asDragging=false;
+function asCellPos(td){ const tr=td&&td.parentElement; if(!tr||tr.parentElement.tagName!=='TBODY') return null; const c=td.cellIndex-1; if(c<0||c>=tr.cells.length-2) return null; return {r:tr.sectionRowIndex,c}; }
+function asSelCells(){ if(!asSel) return []; const rows=asSel.root.querySelectorAll('tbody tr'), out=[];
+  for(let r=asSel.r1;r<=asSel.r2;r++){ const tr=rows[r]; if(!tr) continue; const line=[]; for(let c=asSel.c1;c<=asSel.c2;c++){ const td=tr.cells[c+1]; line.push((td&&c<tr.cells.length-2)?td:null); } out.push(line); } return out; }
+function asSelApply(){ document.querySelectorAll('#asStdSheet td.sel,#asSmpSheet td.sel').forEach(td=>td.classList.remove('sel')); if(!asSel) return; asSelCells().forEach(line=>line.forEach(td=>{ if(td) td.classList.add('sel'); })); }
+function asSelSet(root,a,b){ asSel={root,r1:Math.min(a.r,b.r),r2:Math.max(a.r,b.r),c1:Math.min(a.c,b.c),c2:Math.max(a.c,b.c)}; asSelApply(); }
+function asSelClear(){ if(!asSel) return; asSel=null; asSelApply(); }
+const asSelMulti=()=>!!asSel&&(asSel.r1!==asSel.r2||asSel.c1!==asSel.c2);
+const asSelCount=()=>asSel?(asSel.r2-asSel.r1+1)*(asSel.c2-asSel.c1+1):0;
+function asSelTSV(){ return asSelCells().map(line=>line.map(td=>{ if(!td) return ''; const inp=td.querySelector('input'); return inp?inp.value:td.textContent.trim(); }).join('\t')).join('\n'); }
+function asSelDelete(){ let n=0; asSelCells().flat().forEach(td=>{ const inp=td&&td.querySelector('input[data-s]'); if(!inp) return; if(inp.value!=='') n++; inp.value=''; assaySetCell(inp.dataset.s,inp.dataset.r,+inp.dataset.j,''); }); assaySave(); assayRecalc(); showToast('已清空 '+n+' 格'); }
 function assayBindSheets(){
   ['#asStdSheet','#asSmpSheet'].forEach(sel=>{ const root=fq(sel);
     root.addEventListener('input',ev=>{ const inp=ev.target.closest('input[data-s]'); if(!inp) return; assaySetCell(inp.dataset.s,inp.dataset.r,+inp.dataset.j,inp.value); assaySave(); assayRecalc(); });
@@ -9847,7 +9865,26 @@ function assayBindSheets(){
       const rm=ev.target.closest('.rmc'); if(rm){ assayRemoveCol(rm.dataset.s,+rm.dataset.j); assaySave(); assayRender(); return; }
       const ad=ev.target.closest('.addc'); if(ad){ const s=ad.dataset.s; assayEnsureCol(s,s==='std'?assayState.conc.length:assayState.samples.length); assaySave(); assayRender();
         const list=root.querySelectorAll(`input[data-r="${s==='std'?'conc':'name'}"]`); if(list.length) list[list.length-1].focus(); } });
+    /* 框選 */
+    root.addEventListener('mousedown',ev=>{ if(ev.button!==0) return;
+      const th=ev.target.closest('th');
+      if(th){ if(ev.target.closest('.rmc,.addc')) return; const tr=th.parentElement, nCols=tr.cells.length-2, nRows=root.querySelectorAll('tbody tr').length;
+        if(th.classList.contains('rl')&&tr.parentElement.tagName==='TBODY'&&nCols>0){ const r=tr.sectionRowIndex; asSelAnchor={r,c:0}; asSelSet(root,{r,c:0},{r,c:nCols-1}); ev.preventDefault(); }
+        else if(th.classList.contains('ch')&&!th.classList.contains('add')&&nRows>0){ const c=th.cellIndex-1; asSelAnchor={r:0,c}; asSelSet(root,{r:0,c},{r:nRows-1,c}); ev.preventDefault(); }
+        return; }
+      const pos=asCellPos(ev.target.closest('td')); if(!pos){ asSelClear(); return; }
+      if(ev.shiftKey&&asSel&&asSel.root===root&&asSelAnchor){ asSelSet(root,asSelAnchor,pos); ev.preventDefault(); return; }
+      asSelAnchor=pos; asDragging=true; asSelSet(root,pos,pos); });
+    root.addEventListener('mousemove',ev=>{ if(!asDragging||ev.buttons!==1||!asSel||asSel.root!==root||!asSelAnchor) return; const pos=asCellPos(ev.target.closest('td')); if(!pos) return;
+      if(pos.r!==asSelAnchor.r||pos.c!==asSelAnchor.c||asSelMulti()){ asSelSet(root,asSelAnchor,pos); ev.preventDefault(); } });
   });
+  document.addEventListener('mouseup',()=>{ asDragging=false; });
+  document.addEventListener('mousedown',ev=>{ if(asSel&&!ev.target.closest('#asStdSheet,#asSmpSheet')) asSelClear(); });
+  document.addEventListener('keydown',ev=>{ if(!asSel) return;
+    if(ev.key==='Escape'){ asSelClear(); return; }
+    if((ev.key==='Delete'||ev.key==='Backspace')&&asSelMulti()){ const ae=document.activeElement; if(ae&&ae.matches('input,textarea,select')&&!asSel.root.contains(ae)) return; ev.preventDefault(); asSelDelete(); } });
+  document.addEventListener('copy',ev=>{ if(!asSelMulti()) return; const ae=document.activeElement; if(ae&&ae.matches('input,textarea')&&!asSel.root.contains(ae)) return;
+    ev.clipboardData.setData('text/plain',asSelTSV()); ev.preventDefault(); showToast('已複製 '+asSelCount()+' 格'); });
 }
 /* 複製:跟 Excel 一樣直式排列(欄是樣品),貼回試算表就對位 */
 function assayCopyTSV(){
@@ -9866,6 +9903,72 @@ function assayCsv(){
   const f=assayCurrent&&assayCurrent.fit; if(f&&f.ok){ L.push(''); L.push(['檢量線',assayEqText(f),'R² = '+f.r2.toFixed(4)].map(q).join(',')); }
   return '\uFEFF'+L.join('\n');
 }
+/* ---- 匯出 Excel:跟原本範本同排法(Con.、RAW1–3、Blank、Test、Mean、STDEV;樣品區塊 QT/Mean/STD/SE),
+   格子放活的公式,斜率截距用 SLOPE/INTERCEPT/RSQ,並用 JSZip 直接組 OOXML 附一張原生散佈圖(線性趨勢線顯示方程式與 R²) ---- */
+function assayXlsxParts(){
+  const st=assayState.std, X=ftirEscXml, N=assayState.conc.length, SM=assayState.samples, M=SM.length;
+  const sheet=((st.name||'比色計算').replace(/[\[\]\*\?\/\\:']/g,'').trim().slice(0,31))||'比色計算';
+  const col=n=>{ let t=''; n+=1; while(n>0){ const m=(n-1)%26; t=String.fromCharCode(65+m)+t; n=Math.floor((n-1)/26); } return t; };
+  const rows={}; const put=(r,c,o)=>{ (rows[r]=rows[r]||[]).push(Object.assign({c},o)); };
+  const T=(r,c,t,s)=>put(r,c,{t,s:s||0}), V=(r,c,v,s)=>{ if(v!=null&&isFinite(v)) put(r,c,{v,s:s||0}); }, F=(r,c,f,s)=>put(r,c,{f,s:s||0});
+  const L=j=>col(j+1), last=col(N);
+  T(1,0,(st.name||'標準品')+' 檢量線'+(st.wl?' ('+st.wl+' nm)':''),4); T(1,3,'匯出 '+new Date().toLocaleString('zh-TW',{hour12:false}));
+  T(2,0,'Con. ('+(st.unit||'mg/mL')+')',1); assayState.conc.forEach((v,j)=>V(2,j+1,v));
+  [0,1,2].forEach(r=>{ T(3+r,0,'RAW'+(r+1),1); for(let j=0;j<N;j++) V(3+r,j+1,assayState.raw[r][j]); });
+  T(6,0,'Blank',1); for(let j=0;j<N;j++) V(6,j+1,assayState.blank[j]);
+  [0,1,2].forEach(r=>{ T(7+r,0,'Test'+(r+1),1); for(let j=0;j<N;j++) F(7+r,j+1,`IF(COUNT(${L(j)}${3+r},${L(j)}6)=2,${L(j)}${3+r}-${L(j)}6,"")`,2); });
+  T(10,0,'Mean',1); for(let j=0;j<N;j++) F(10,j+1,`IFERROR(AVERAGE(${L(j)}7:${L(j)}9),"")`,2);
+  T(11,0,'STDEV',1); for(let j=0;j<N;j++) F(11,j+1,`IFERROR(STDEV(${L(j)}7:${L(j)}9),"")`,2);
+  const fc=N+2, FC=col(fc+1), SL='$'+FC+'$2', IC='$'+FC+'$3';
+  T(2,fc,'Slope',1); F(2,fc+1,`SLOPE(B10:${last}10,B2:${last}2)`,2);
+  T(3,fc,'Intercept',1); F(3,fc+1,`INTERCEPT(B10:${last}10,B2:${last}2)`,2);
+  T(4,fc,'R²',1); F(4,fc+1,`RSQ(B10:${last}10,B2:${last}2)`,2);
+  T(13,0,'樣品',1); SM.forEach((sm,j)=>{ if(sm.name) T(13,j+1,sm.name,1); });
+  T(14,0,'Con. ('+(st.sampleUnit||'mg/mL')+')',1); SM.forEach((sm,j)=>V(14,j+1,asNum(sm.conc)));
+  [0,1,2].forEach(r=>{ T(15+r,0,'RAW'+(r+1),1); SM.forEach((sm,j)=>V(15+r,j+1,asNum(sm.raw[r]))); });
+  T(18,0,'Blank',1); SM.forEach((sm,j)=>V(18,j+1,asNum(sm.blank)));
+  [0,1,2].forEach(r=>{ T(19+r,0,'Test'+(r+1),1); for(let j=0;j<M;j++) F(19+r,j+1,`IF(COUNT(${L(j)}${15+r},${L(j)}18)=2,${L(j)}${15+r}-${L(j)}18,"")`,2); });
+  T(22,0,'Mean',1); for(let j=0;j<M;j++) F(22,j+1,`IFERROR(AVERAGE(${L(j)}19:${L(j)}21),"")`,2);
+  T(23,0,'STDEV',1); for(let j=0;j<M;j++) F(23,j+1,`IFERROR(STDEV(${L(j)}19:${L(j)}21),"")`,2);
+  [0,1,2].forEach(r=>{ T(24+r,0,'QT mg/g '+(r+1),1); for(let j=0;j<M;j++) F(24+r,j+1,`IF(OR(${L(j)}${19+r}="",${L(j)}$14=""),"",((${L(j)}${19+r}-${IC})/${SL})/(${L(j)}$14/1000))`,3); });
+  T(27,0,'Mean',1); for(let j=0;j<M;j++) F(27,j+1,`IFERROR(AVERAGE(${L(j)}24:${L(j)}26),"")`,3);
+  T(28,0,'STD',1); for(let j=0;j<M;j++) F(28,j+1,`IFERROR(STDEV(${L(j)}24:${L(j)}26),"")`,3);
+  T(29,0,'SE',1); for(let j=0;j<M;j++) F(29,j+1,`IFERROR(${L(j)}28/SQRT(COUNT(${L(j)}24:${L(j)}26)),"")`,3);
+  T(31,0,'Test = RAW − Blank;QT = ((Test − Intercept) / Slope) / (Con. / 1000),單位 mg 標準品當量 / g 樣品;SE = STD / √n');
+  let maxC=0,maxR=0;
+  const sd=Object.keys(rows).map(Number).sort((a,b)=>a-b).map(r=>{ maxR=Math.max(maxR,r); const cs=rows[r].sort((a,b)=>a.c-b.c).map(o=>{ maxC=Math.max(maxC,o.c); const ref=col(o.c)+r, s=o.s?` s="${o.s}"`:'';
+    if(o.t!=null) return `<c r="${ref}" t="inlineStr"${s}><is><t xml:space="preserve">${X(String(o.t))}</t></is></c>`;
+    if(o.f!=null) return `<c r="${ref}"${s}><f>${X(o.f)}</f></c>`;
+    return `<c r="${ref}"${s}><v>${o.v}</v></c>`; }).join(''); return `<row r="${r}">${cs}</row>`; }).join('');
+  const hd='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+  const sheetXml=`${hd}<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><dimension ref="A1:${col(maxC)}${maxR}"/><sheetViews><sheetView workbookViewId="0"/></sheetViews><sheetFormatPr defaultRowHeight="15"/><cols><col min="1" max="1" width="15" customWidth="1"/><col min="2" max="60" width="10.5" customWidth="1"/></cols><sheetData>${sd}</sheetData><pageMargins left="0.7" right="0.7" top="0.75" bottom="0.75" header="0.3" footer="0.3"/><drawing r:id="rId1"/></worksheet>`;
+  const sref=`'${sheet.replace(/'/g,"''")}'`;
+  const title=t=>`<c:title><c:tx><c:rich><a:bodyPr/><a:lstStyle/><a:p><a:pPr><a:defRPr sz="1000" b="0"/></a:pPr><a:r><a:rPr lang="en-US" sz="1000" b="0"/><a:t>${X(t)}</a:t></a:r></a:p></c:rich></c:tx><c:overlay val="0"/></c:title>`;
+  const chart=`${hd}<c:chartSpace xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><c:roundedCorners val="0"/><c:chart><c:autoTitleDeleted val="1"/><c:plotArea><c:layout/><c:scatterChart><c:scatterStyle val="lineMarker"/><c:varyColors val="0"/><c:ser><c:idx val="0"/><c:order val="0"/><c:tx><c:v>Mean</c:v></c:tx><c:spPr><a:ln w="19050"><a:noFill/></a:ln></c:spPr><c:marker><c:symbol val="circle"/><c:size val="6"/><c:spPr><a:noFill/><a:ln w="12700"><a:solidFill><a:srgbClr val="C0392B"/></a:solidFill></a:ln></c:spPr></c:marker><c:trendline><c:spPr><a:ln w="12700"><a:solidFill><a:srgbClr val="1746C8"/></a:solidFill><a:prstDash val="dash"/></a:ln></c:spPr><c:trendlineType val="linear"/><c:dispRSqr val="1"/><c:dispEq val="1"/></c:trendline><c:xVal><c:numRef><c:f>${X(sref)}!$B$2:$${last}$2</c:f></c:numRef></c:xVal><c:yVal><c:numRef><c:f>${X(sref)}!$B$10:$${last}$10</c:f></c:numRef></c:yVal><c:smooth val="0"/></c:ser><c:axId val="10001"/><c:axId val="10002"/></c:scatterChart><c:valAx><c:axId val="10001"/><c:scaling><c:orientation val="minMax"/><c:min val="0"/></c:scaling><c:delete val="0"/><c:axPos val="b"/>${title((st.name||'Standard')+' ('+(st.unit||'mg/mL')+')')}<c:numFmt formatCode="General" sourceLinked="1"/><c:majorTickMark val="out"/><c:minorTickMark val="none"/><c:tickLblPos val="nextTo"/><c:crossAx val="10002"/><c:crosses val="autoZero"/><c:crossBetween val="midCat"/></c:valAx><c:valAx><c:axId val="10002"/><c:scaling><c:orientation val="minMax"/><c:min val="0"/></c:scaling><c:delete val="0"/><c:axPos val="l"/><c:majorGridlines/>${title('Absorbance'+(st.wl?' ('+st.wl+' nm)':''))}<c:numFmt formatCode="0.00" sourceLinked="0"/><c:majorTickMark val="out"/><c:minorTickMark val="none"/><c:tickLblPos val="nextTo"/><c:crossAx val="10001"/><c:crosses val="autoZero"/><c:crossBetween val="midCat"/></c:valAx></c:plotArea><c:plotVisOnly val="1"/><c:dispBlanksAs val="gap"/></c:chart></c:chartSpace>`;
+  const drawing=`${hd}<xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><xdr:twoCellAnchor><xdr:from><xdr:col>${fc}</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>6</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:from><xdr:to><xdr:col>${fc+8}</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>24</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:to><xdr:graphicFrame macro=""><xdr:nvGraphicFramePr><xdr:cNvPr id="2" name="檢量線"/><xdr:cNvGraphicFramePr/></xdr:nvGraphicFramePr><xdr:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/></xdr:xfrm><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/chart"><c:chart xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="rId1"/></a:graphicData></a:graphic></xdr:graphicFrame><xdr:clientData/></xdr:twoCellAnchor></xdr:wsDr>`;
+  const styles=`${hd}<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="2"><numFmt numFmtId="164" formatCode="0.0000"/><numFmt numFmtId="165" formatCode="0.00"/></numFmts><fonts count="3"><font><sz val="11"/><name val="Calibri"/><family val="2"/></font><font><b/><sz val="11"/><name val="Calibri"/><family val="2"/></font><font><b/><sz val="12"/><name val="Calibri"/><family val="2"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="5"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/><xf numFmtId="165" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/><xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
+  const R='http://schemas.openxmlformats.org/officeDocument/2006/relationships/';
+  const relsOf=list=>`${hd}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${list.map(([id,type,target])=>`<Relationship Id="${id}" Type="${R}${type}" Target="${target}"/>`).join('')}</Relationships>`;
+  return {
+    '[Content_Types].xml':`${hd}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/><Override PartName="/xl/drawings/drawing1.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/><Override PartName="/xl/charts/chart1.xml" ContentType="application/vnd.openxmlformats-officedocument.drawingml.chart+xml"/></Types>`,
+    '_rels/.rels':relsOf([['rId1','officeDocument','xl/workbook.xml']]),
+    'xl/workbook.xml':`${hd}<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="${X(sheet)}" sheetId="1" r:id="rId1"/></sheets><calcPr calcId="191029" fullCalcOnLoad="1"/></workbook>`,
+    'xl/_rels/workbook.xml.rels':relsOf([['rId1','worksheet','worksheets/sheet1.xml'],['rId2','styles','styles.xml']]),
+    'xl/styles.xml':styles,
+    'xl/worksheets/sheet1.xml':sheetXml,
+    'xl/worksheets/_rels/sheet1.xml.rels':relsOf([['rId1','drawing','../drawings/drawing1.xml']]),
+    'xl/drawings/drawing1.xml':drawing,
+    'xl/drawings/_rels/drawing1.xml.rels':relsOf([['rId1','chart','../charts/chart1.xml']]),
+    'xl/charts/chart1.xml':chart
+  };
+}
+async function assayExportXlsx(){
+  if(typeof JSZip==='undefined'){ notify('Excel 產生元件尚未載入,請確認網路後重新整理。'); return; }
+  try{ const parts=assayXlsxParts(); const zip=new JSZip(); Object.entries(parts).forEach(([k,v])=>zip.file(k,v));
+    const blob=await zip.generateAsync({type:'blob',mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',compression:'DEFLATE'});
+    ftirSaveBlob(blob,(assayState.std.name||'assay')+'_'+new Date().toISOString().slice(0,10)+'.xlsx'); showToast('已匯出 Excel');
+  }catch(e){ notify('Excel 產生失敗:'+(e&&e.message?e.message:'')); }
+}
 function initAssayOnce(){
   if(assayInited) return; assayInited=true;
   assayLoad();
@@ -9878,6 +9981,7 @@ function initAssayOnce(){
   fq('#asDlPng').onclick=async()=>{ if(!assayCurrent||!assayCurrent.svg) return; try{ const b=await galSvgToPngBlob(assayCurrent.svg,3); ftirSaveBlob(b,(assayState.std.name||'standard')+'_curve.png'); }catch(e){ notify('PNG 產生失敗:'+(e&&e.message?e.message:'')); } };
   fq('#asCopy').onclick=async()=>{ try{ await navigator.clipboard.writeText(assayCopyTSV()); showToast('✅ 已複製,貼到 Excel 會跟原本的表一樣直式排列'); }catch(e){ notify('複製失敗:'+(e&&e.message?e.message:'')); } };
   fq('#asDlCsv').onclick=()=>{ ftirSaveBlob(new Blob([assayCsv()],{type:'text/csv'}),(assayState.std.name||'assay')+'_results.csv'); };
+  fq('#asXlsx').onclick=assayExportXlsx;
   assayRender();
 }
 const SPEC_TYPE_LABEL={ftir:'FTIR',uv:'UV-Vis',lc:'LC',gc:'GC',tga:'TGA',dsc:'DSC'};

@@ -112,7 +112,9 @@
 - 對應實驗室的 Excel 檢量線表:Test = RAW − Blank(各濃度各自的 Blank);檢量線用各濃度 Test 平均值做最小平方回歸,圖上標 y = mx + b 與 R²,誤差棒是三重複 SD
 - 樣品當量 = ((Test − b) / m) ÷ (樣品濃度/1000),單位 mg 標準品當量 / g 樣品;SE = SD/√n(原 Excel 的 `STDEV/(3*(1/2))` 是 `^` 打成 `*` 的手誤,已改正)
 - 版面照原本的 Excel 做成試算表格(`table.as-sheet`):欄是濃度點 / 樣品,列是濃度、RAW1–3、Blank,底下接自動算的 Test、Mean、SD、當量列。白格直接打字(`input` 事件只重算計算列,不重畫輸入格,焦點不會跑掉),Enter / 上下鍵換列,點一格 Ctrl+V 可貼整塊 Excel 範圍(`assayPasteAt`,左側整欄都不是數字就當標籤欄略過),欄可加減
+- 框選:拖曳或 Shift+點選矩形範圍、點列名選整列、點欄號選整欄(`asSel`),Delete 清空、Ctrl+C 以 `copy` 事件寫成 TSV;計算列只換 `tr.calc` 所以框選在重算後仍保留,整張重畫時才清掉
 - 輸出:複製結果(跟 Excel 同樣直式排列的 TSV)、CSV(每列一個樣品)、檢量線 PNG/SVG
+- **匯出 Excel**(`assayXlsxParts` / `assayExportXlsx`):用 JSZip 直接組 OOXML,不經 SheetJS(社群版不能寫圖表與樣式)。排法與原本範本相同(列 2–11 檢量線、13–29 樣品),格子放活的公式(IF/COUNT 保護空格、AVERAGE、STDEV、SLOPE/INTERCEPT/RSQ 放在資料右邊兩欄外、QT 與 SE 參照斜率截距格),`fullCalcOnLoad` 讓 Excel 開檔即重算;另附原生散佈圖(`xl/charts/chart1.xml`,線性趨勢線顯示方程式與 R²)錨在檢量線右側
 - 狀態在 `assayState`,存在 localStorage(`assay-calc`),只在本機
 
 ### GC-MS(圖譜分析頁的 GC 子標籤)
