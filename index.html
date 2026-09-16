@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="app-version" content="2026.09.16.5">
+<meta name="app-version" content="2026.09.16.6">
 <meta name="theme-color" content="#1B4B43" id="metaThemeColor">
 <title>SFPLAB 實驗室管理系統</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>">
@@ -1652,6 +1652,7 @@
               <div class="field" style="margin-bottom:10px;"><input type="text" id="uvTitle" placeholder="輸入圖表標題"></div>
               <label class="ftir-chk"><input type="checkbox" id="uvShowAxisTitles" checked>顯示座標軸文字</label>
               <label class="ftir-chk"><input type="checkbox" id="uvShowTickLabels" checked>顯示刻度數字</label>
+              <label class="ftir-chk"><input type="checkbox" id="uvShowBands" checked>標示 UVA / UVB / UVC 波段(網底)</label>
               <div class="field row2" style="margin-bottom:0;">
                 <div><label style="font-size:12px;">顯示起(nm)</label><input type="number" id="uvXmin" placeholder="自動"></div>
                 <div><label style="font-size:12px;">顯示迄(nm)</label><input type="number" id="uvXmax" placeholder="自動"></div>
@@ -9409,7 +9410,7 @@ let spectraItems=[];
    所有檔案匯入時一律換算成吸光度保存,三種顯示模式再由吸光度算出 */
 let UV_LIB=[];
 const UV_COLORS=FTIR_COLORS.concat(['#0e8074','#b4436c','#5b6770','#c98a00','#1b4b43']);   // 疊圖常超過 5 條,多備幾色
-const uvState={sel:[],ymode:'abs',prom:0.01,topN:6,showLabels:true,labelDx:0,labelDy:0,showTitle:true,title:'',
+const uvState={sel:[],ymode:'abs',prom:0.01,topN:6,showLabels:true,showBands:true,labelDx:0,labelDy:0,showTitle:true,title:'',
   showAxisTitles:true,showTickLabels:true,legend:{show:true,pos:'tr',frame:false},xmin:null,xmax:null};
 let uvCurrent=null, uvInited=false;
 const UV_YLABEL={abs:'Absorbance (a.u.)',trans:'Transmittance (%T)',refl:'Reflectance (%R)',km:'Kubelka\u2013Munk F(R) (a.u.)'};
@@ -9487,6 +9488,14 @@ function uvBuildSVG(spec){
   if(mode==='trans'||mode==='refl'){ yLo=0; yHi=Math.max(100,ymax+pad); }
   const X=v=>m.l+(v-xmin)/(xmax-xmin)*pw, Y=v=>m.t+(yHi-v)/(yHi-yLo)*ph;
   const S=[`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`,`<rect width="${W}" height="${H}" fill="#fff"/>`];
+  // 紫外波段網底(ISO 21348):UVC 100–280、UVB 280–315、UVA 315–400 nm;超出顯示範圍的部分裁掉
+  if(uvState.showBands){
+    const bands=[['UVC',100,280,'rgba(142,68,173,.10)'],['UVB',280,315,'rgba(211,84,0,.11)'],['UVA',315,400,'rgba(23,70,200,.09)']];
+    bands.forEach(([nm,a,b,fill])=>{ const x1=Math.max(a,xmin), x2=Math.min(b,xmax); if(x2<=x1) return;
+      S.push(`<rect x="${X(x1).toFixed(1)}" y="${m.t}" width="${(X(x2)-X(x1)).toFixed(1)}" height="${ph}" fill="${fill}"/>`);
+      if(X(x2)-X(x1)>=26) S.push(`<text x="${((X(x1)+X(x2))/2).toFixed(1)}" y="${m.t+14}" font-size="11" text-anchor="middle" fill="#555" font-family="Times New Roman,serif">${nm}</text>`); });
+    [280,315,400].forEach(v=>{ if(v>xmin&&v<xmax) S.push(`<line x1="${X(v).toFixed(1)}" y1="${m.t}" x2="${X(v).toFixed(1)}" y2="${m.t+ph}" stroke="#777" stroke-width="0.7" stroke-dasharray="4 3"/>`); });
+  }
   const span=xmax-xmin, step=span<=120?10:span<=300?25:span<=700?50:100;
   for(let v=Math.ceil(xmin/step)*step; v<=xmax+1e-9; v+=step){ const px=X(v), M=(Math.round(v)%(step*2)===0);
     S.push(`<line x1="${px.toFixed(1)}" y1="${m.t+ph}" x2="${px.toFixed(1)}" y2="${(m.t+ph-(M?7:4)).toFixed(1)}" stroke="#111" stroke-width="1"/>`);
@@ -9572,6 +9581,7 @@ function initUvOnce(){
   fq('#uvTitle').oninput=e=>{ uvState.title=e.target.value; uvRender(); };
   fq('#uvShowAxisTitles').onchange=e=>{ uvState.showAxisTitles=e.target.checked; uvRender(); };
   fq('#uvShowTickLabels').onchange=e=>{ uvState.showTickLabels=e.target.checked; uvRender(); };
+  fq('#uvShowBands').onchange=e=>{ uvState.showBands=e.target.checked; uvRender(); };
   fq('#uvXmin').oninput=e=>{ const v=parseFloat(e.target.value); uvState.xmin=isFinite(v)?v:null; uvRender(); };
   fq('#uvXmax').oninput=e=>{ const v=parseFloat(e.target.value); uvState.xmax=isFinite(v)?v:null; uvRender(); };
   fq('#uvShowLegend').onchange=e=>{ uvState.legend.show=e.target.checked; uvRender(); };
