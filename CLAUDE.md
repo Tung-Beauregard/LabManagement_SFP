@@ -100,6 +100,7 @@
 - **峰標籤對齊**:垂直排列(rotate -90)、`text-anchor="end"` + `dominant-baseline="middle"`,x 對齊峰尖。**不要用 `dominant-baseline="central"`**,那會讓標籤系統性偏左(踩過的坑)
 - 密集峰的標籤仍會與鄰峰交疊,這是垂直標籤的空間限制;若要徹底解決需做引線法(標籤拉到圖頂 + 細線接回峰尖),尚未實作
 - **存圖譜**:存繪好的 SVG + 峰表(不是原始數據),因為原始數千點會逼近 1MB。單譜額外存原始數據與設定供「回圖譜分析編輯」;疊圖不存原始數據(不可回編輯)
+- **原始檔跟圖綁在一起**:存入圖譜時,FTIR 與 UV-Vis 把上傳的原始檔、GC 把每個樣品的完整匯出 CSV,用 `uploadSpectrumFiles()` 存到 Storage 的 `lab-photos/spectra-files/{uid}/{specId}/…`(與照片、儀器附件同根目錄、同規則),清單記在文件的 `files` 欄位;詳細頁列出可下載,刪圖譜時一併刪檔。舊文件沒有 `files`,讀取端要容忍
 
 ### UV-Vis(圖譜分析頁的 UV-Vis 子標籤)
 - 讀 Analytik Jena SPECORD 50 PLUS(WinASPECT)的 `.dat`:ASCII 標頭(NPOINTS、XUNITS、YUNITS…)後接 `XDATA=` / `YDATA=` 各 NPOINTS 個小端序 float32(另有內容相同的 OrgXData / OrgYData);也收兩欄「波長,數值」的 .csv / .txt
