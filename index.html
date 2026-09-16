@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="app-version" content="2026.09.16.4">
+<meta name="app-version" content="2026.09.16.5">
 <meta name="theme-color" content="#1B4B43" id="metaThemeColor">
 <title>SFPLAB 實驗室管理系統</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>">
@@ -1672,9 +1672,10 @@
               <div class="ftir-seg" id="uvYmode">
                 <button data-v="abs" class="on">吸收度</button>
                 <button data-v="trans">穿透率 %T</button>
+                <button data-v="refl">反射率 %R</button>
                 <button data-v="km">KM 轉換</button>
               </div>
-              <div class="ftir-hint">Kubelka–Munk:R = 10⁻ᴬ,F(R) = (1−R)² / 2R,與 FTIR 相同作法,適用固體漫反射;溶液吸光度請維持「吸收度」。%T 或 %R 的檔案匯入時會先換算成吸光度。</div>
+              <div class="ftir-hint">Kubelka–Munk:R = 10⁻ᴬ,F(R) = (1−R)² / 2R,與 FTIR 相同作法,適用固體漫反射;溶液吸光度請維持「吸收度」。%T 或 %R 的檔案匯入時會先換算成吸光度;穿透率與反射率模式由吸光度反推(T = R = 10⁻ᴬ)。</div>
             </div>
 
             <div class="ftir-card">
@@ -9411,7 +9412,7 @@ const UV_COLORS=FTIR_COLORS.concat(['#0e8074','#b4436c','#5b6770','#c98a00','#1b
 const uvState={sel:[],ymode:'abs',prom:0.01,topN:6,showLabels:true,labelDx:0,labelDy:0,showTitle:true,title:'',
   showAxisTitles:true,showTickLabels:true,legend:{show:true,pos:'tr',frame:false},xmin:null,xmax:null};
 let uvCurrent=null, uvInited=false;
-const UV_YLABEL={abs:'Absorbance',trans:'Transmittance (%)',km:'Kubelka\u2013Munk F(R)'};
+const UV_YLABEL={abs:'Absorbance (a.u.)',trans:'Transmittance (%T)',refl:'Reflectance (%R)',km:'Kubelka\u2013Munk F(R) (a.u.)'};
 /* Analytik Jena SPECORD(WinASPECT).dat:ASCII 標頭 + XDATA= / YDATA= 各接 NPOINTS 個小端序 float32 */
 function uvParseSpecord(buf){
   const bytes=new Uint8Array(buf); let bin=''; for(let i=0;i<bytes.length;i++) bin+=String.fromCharCode(bytes[i]);
@@ -9483,7 +9484,7 @@ function uvBuildSVG(spec){
   if(!isFinite(ymin)){ ymin=0; ymax=1; }
   const pad=(ymax-ymin)*0.12||0.1;
   let yLo=Math.min(0,ymin-(ymin<0?pad:0)), yHi=ymax+pad*(uvState.showLabels?2.4:1);
-  if(mode==='trans'){ yLo=0; yHi=Math.max(100,ymax+pad); }
+  if(mode==='trans'||mode==='refl'){ yLo=0; yHi=Math.max(100,ymax+pad); }
   const X=v=>m.l+(v-xmin)/(xmax-xmin)*pw, Y=v=>m.t+(yHi-v)/(yHi-yLo)*ph;
   const S=[`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`,`<rect width="${W}" height="${H}" fill="#fff"/>`];
   const span=xmax-xmin, step=span<=120?10:span<=300?25:span<=700?50:100;
@@ -9499,7 +9500,7 @@ function uvBuildSVG(spec){
     S.push(`<path d="${d}" fill="none" stroke="${c}" stroke-width="1.2" stroke-linejoin="round"/>`);
     if(uvState.showLabels) t.peaks.forEach((p,k)=>{ if(p.wn<xmin||p.wn>xmax) return;
       const px=X(p.wn)+uvState.labelDx, py=Y(p.abs);
-      const ly=(mode==='trans'?py+16+(k%2)*11:py-9-(k%2)*11)-uvState.labelDy;   // 相鄰標籤高低錯開
+      const ly=((mode==='trans'||mode==='refl')?py+16+(k%2)*11:py-9-(k%2)*11)-uvState.labelDy;   // 相鄰標籤高低錯開
       S.push(`<text x="${px.toFixed(1)}" y="${ly.toFixed(1)}" font-size="10.5" fill="${c}" text-anchor="middle" font-family="Times New Roman,serif">${p.wn.toFixed(0)}</text>`); });
   });
   if(uvState.legend.show && traces.length>1){
@@ -9532,9 +9533,9 @@ function uvRender(){
     wrap.innerHTML='<div class="ftir-empty" id="uvEmpty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="52" height="52"><path d="M3 3v18h18M7 15l3-4 3 3 4-6"/></svg><div>上傳 SPECORD .dat 或兩欄 csv / txt 以開始</div></div>';
     tw.innerHTML=''; btns.forEach(sel=>fq(sel).disabled=true); uvCurrent=null; return; }
   const traces=chosen.map(item=>{
-    let y; if(uvState.ymode==='trans') y=item.y.map(A=>100*Math.pow(10,-A)); else if(uvState.ymode==='km') y=ftirTransform(item.x,item.y,'km'); else y=item.y.slice();
+    let y; if(uvState.ymode==='trans'||uvState.ymode==='refl') y=item.y.map(A=>100*Math.pow(10,-A)); else if(uvState.ymode==='km') y=ftirTransform(item.x,item.y,'km'); else y=item.y.slice();
     // %T 的峰是谷:先反相找峰再翻回來
-    const peaks=uvState.ymode==='trans'?ftirDetect(item.x,y.map(v=>-v),uvState.prom,uvState.topN).map(p=>({wn:p.wn,abs:-p.abs})):ftirDetect(item.x,y,uvState.prom,uvState.topN);
+    const peaks=(uvState.ymode==='trans'||uvState.ymode==='refl')?ftirDetect(item.x,y.map(v=>-v),uvState.prom,uvState.topN).map(p=>({wn:p.wn,abs:-p.abs})):ftirDetect(item.x,y,uvState.prom,uvState.topN);
     return {name:item.name,x:item.x,y,peaks};
   });
   const title=uvState.showTitle?(uvState.title||(chosen.length===1?chosen[0].name:'')):'';
