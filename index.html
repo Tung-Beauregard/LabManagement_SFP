@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="app-version" content="2026.09.16.8">
+<meta name="app-version" content="2026.09.16.9">
 <meta name="theme-color" content="#1B4B43" id="metaThemeColor">
 <title>SFPLAB 實驗室管理系統</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>">
@@ -744,34 +744,38 @@
   .ftir-plotwrap svg{display:block;width:100%;height:auto;background:#fff;font-family:"Times New Roman",Georgia,serif;border-radius:var(--radius-sm);}
   .ftir-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:360px;color:var(--ink-soft);text-align:center;gap:8px;}
   .ftir-empty svg{background:none;opacity:.5;}
-  #assayResults,#assayStdTable,#asStdGrid,#asSmpGrid{overflow-x:auto;}
-  #sp-assay .ftir-main,#sp-assay .ftir-side,#sp-assay .ftir-plotcard,#sp-assay .ftir-card{min-width:0;max-width:100%;}
-  #assayResults table,#assayStdTable table{width:max-content;min-width:100%;table-layout:auto;border-collapse:collapse;margin-top:10px;font-size:12.5px;}
-  #assayResults th,#assayResults td,#assayStdTable th,#assayStdTable td{text-align:right;padding:5px 7px;border-bottom:1px solid var(--line);white-space:nowrap;}
-  #assayResults th,#assayStdTable th{font-size:10.5px;letter-spacing:.05em;color:var(--ink-soft);font-weight:700;}
-  #assayResults td:first-child,#assayResults th:first-child,#assayStdTable td:first-child,#assayStdTable th:first-child{text-align:left;}
-  #assayResults td.num,#assayStdTable td.num{font-family:var(--mono);}
-  #assayResults td.key,#assayStdTable td.key{font-family:var(--mono);font-weight:700;color:var(--pine);}
-  .assay-paste{width:100%;min-height:74px;font-family:var(--mono);font-size:12px;border:1px solid var(--line);border-radius:var(--radius-sm);padding:8px 10px;background:var(--panel-soft);color:var(--ink);resize:vertical;box-sizing:border-box;}
-  .assay-grid{width:100%;border-collapse:collapse;margin-top:8px;font-size:12px;}
-  .assay-grid th{font-size:10.5px;color:var(--ink-soft);font-weight:700;padding:3px 4px;text-align:center;}
-  .assay-grid td{padding:2px 3px;}
-  .assay-grid td.lab{font-size:11.5px;color:var(--ink-soft);white-space:nowrap;padding-right:6px;}
-  .assay-grid input{width:100%;min-width:50px;box-sizing:border-box;border:1px solid var(--line);border-radius:var(--radius-sm);padding:5px 4px;font-family:var(--mono);font-size:11.5px;background:var(--panel-soft);color:var(--ink);text-align:right;}
-  .assay-grid input.txt{text-align:left;font-family:var(--sans);}
-  .assay-grid .rm{cursor:pointer;color:var(--ink-soft);padding:0 4px;}
-  .assay-eq{font-family:var(--mono);font-size:12.5px;color:var(--ink);margin-top:10px;display:flex;gap:16px;flex-wrap:wrap;}
+  /* 比色計算:照 Excel 排法的試算表格 */
+  #sp-assay .ftir-card,#sp-assay .ftir-plotcard{min-width:0;max-width:100%;}
+  .as-head{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px 14px;}
+  .as-head .field{margin-bottom:0;}
+  .as-two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start;}
+  .as-sheetwrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--panel);}
+  table.as-sheet{border-collapse:separate;border-spacing:0;table-layout:auto;width:auto;min-width:100%;font-size:12.5px;margin:0;}
+  table.as-sheet th,table.as-sheet td{border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:0;height:30px;white-space:nowrap;text-align:right;box-sizing:border-box;text-transform:none;letter-spacing:0;}
+  table.as-sheet tr>:last-child{border-right:0;}
+  table.as-sheet tbody tr:last-child th,table.as-sheet tbody tr:last-child td{border-bottom:0;}
+  table.as-sheet th.rl{position:sticky;left:0;z-index:1;background:var(--panel-soft);color:var(--ink-soft);font-size:11.5px;font-weight:600;text-align:left;padding:0 10px;min-width:118px;}
+  table.as-sheet th.ch{background:var(--panel-soft);color:var(--ink-soft);font-size:10.5px;font-weight:600;text-align:center;padding:0 6px;min-width:92px;height:24px;}
+  table.as-sheet th.ch .rmc{margin-left:6px;cursor:pointer;opacity:.4;font-size:11px;}
+  table.as-sheet th.ch .rmc:hover{opacity:1;color:var(--danger);}
+  table.as-sheet th.ch.add{min-width:36px;}
+  table.as-sheet .addc{cursor:pointer;font-size:14px;color:var(--pine);}
+  table.as-sheet td.ed input{width:100%;height:30px;border:0;border-radius:0;background:transparent;color:var(--ink);font-family:var(--mono);font-size:12.5px;text-align:right;padding:0 8px;margin:0;box-sizing:border-box;outline:none;box-shadow:none;}
+  table.as-sheet td.ed input.txt{font-family:inherit;text-align:left;font-weight:600;}
+  table.as-sheet td.ed input:focus{box-shadow:inset 0 0 0 2px var(--pine);background:var(--panel);}
+  table.as-sheet tr.calc td.num{font-family:var(--mono);padding:0 8px;background:var(--panel-soft);color:var(--ink);}
+  table.as-sheet tr.calc td.num.b{font-weight:700;color:var(--pine);}
+  table.as-sheet tr.sep th,table.as-sheet tr.sep td{border-top:2px solid var(--line);}
+  .assay-eq{font-family:var(--mono);font-size:12.5px;color:var(--ink);margin-top:12px;display:flex;gap:16px;flex-wrap:wrap;}
   .assay-eq b{color:var(--pine);}
-  #sp-assay .ftir-grid{grid-template-columns:minmax(400px,36%) 1fr;}
-  @media (max-width:880px){ #sp-assay .ftir-grid{grid-template-columns:1fr;} }
+  @media (max-width:1100px){ .as-two{grid-template-columns:1fr;} }
   @media (max-width: 680px){
-    .assay-grid{display:table;width:100%;}
-    #assayResults table,#assayStdTable table{display:table;width:max-content;min-width:100%;}
-    .assay-grid thead,#assayResults thead,#assayStdTable thead{display:table-header-group;}
-    .assay-grid tbody,#assayResults tbody,#assayStdTable tbody{display:table-row-group;}
-    .assay-grid tr,#assayResults tr,#assayStdTable tr{display:table-row;width:auto;}
-    .assay-grid td,.assay-grid th,#assayResults td,#assayResults th,#assayStdTable td,#assayStdTable th{display:table-cell;width:auto;}
-    .assay-grid input{min-width:64px;}
+    .as-head{grid-template-columns:1fr 1fr;}
+    table.as-sheet{display:table;width:auto;min-width:100%;}
+    table.as-sheet thead{display:table-header-group;}
+    table.as-sheet tbody{display:table-row-group;}
+    table.as-sheet tr{display:table-row;width:auto;}
+    table.as-sheet td,table.as-sheet th{display:table-cell;width:auto;}
   }
   #uvTablewrap table{width:100%;border-collapse:collapse;margin-top:14px;font-size:13px;}
   #uvTablewrap th,#uvTablewrap td{text-align:left;padding:6px 9px;border-bottom:1px solid var(--line);}
@@ -1756,44 +1760,33 @@
         </div>
       </div>
       <div class="sp-panel" id="sp-assay">
-        <div class="ftir-grid">
-          <div class="ftir-side">
-            <div class="ftir-card">
-              <h3>標準品與檢量線</h3>
-              <div class="field row2" style="margin-bottom:8px;">
-                <div><label style="font-size:12px;">標準品</label><input type="text" id="asStdName" placeholder="例如 Naringenin"></div>
-                <div><label style="font-size:12px;">波長(nm)</label><input type="number" id="asWl" placeholder="495"></div>
-              </div>
-              <div class="field row2" style="margin-bottom:8px;">
-                <div><label style="font-size:12px;">標準品濃度單位</label><input type="text" id="asUnit" placeholder="mg/mL"></div>
-                <div><label style="font-size:12px;">樣品濃度單位</label><input type="text" id="asSampleUnit" placeholder="mg/mL"></div>
-              </div>
-              <label style="font-size:12px;color:var(--ink-soft);font-weight:600;display:block;margin:6px 0 4px;">濃度(由高到低,逗號或空白分隔)</label>
-              <input type="text" id="asConc" placeholder="0.5 0.25 0.125 0.0625 0.03125" style="width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:var(--radius-sm);padding:7px 9px;font-family:var(--mono);font-size:12.5px;background:var(--panel-soft);color:var(--ink);">
-              <label style="font-size:12px;color:var(--ink-soft);font-weight:600;display:block;margin:10px 0 4px;">貼上吸光值(從 Excel 複製 RAW1、RAW2、RAW3、Blank 四列;前面帶標籤也可以)</label>
-              <textarea class="assay-paste" id="asStdPaste" placeholder="RAW1&#9;0.9085&#9;0.5212&#9;0.3464&#9;0.2668&#9;0.2266&#10;RAW2&#9;…&#10;RAW3&#9;…&#10;Blank&#9;…"></textarea>
-              <div class="ftir-btnrow" style="margin-top:8px;"><button class="btn btn-ghost btn-sm" id="asStdApply">套用貼上內容</button><button class="btn btn-ghost btn-sm" id="asStdClear">清空檢量線</button></div>
-              <div id="asStdGrid"></div>
-              <div class="ftir-hint">Test = RAW − Blank(各濃度用自己的 Blank);回歸用各濃度 Test 的平均值,最小平方法;SD 是三重複的樣本標準差。</div>
-            </div>
-            <div class="ftir-card">
-              <h3>樣品</h3>
-              <label style="font-size:12px;color:var(--ink-soft);font-weight:600;display:block;margin:0 0 4px;">貼上樣品區塊(列:名稱、濃度、RAW1、RAW2、RAW3、Blank;欄:各樣品)</label>
-              <textarea class="assay-paste" id="asSmpPaste" placeholder="&#9;HWE&#9;EAHW&#9;BuHW&#10;&#9;1&#9;1&#9;1&#10;RAW1&#9;0.3102&#9;0.3125&#9;0.2139&#10;RAW2&#9;…&#10;RAW3&#9;…&#10;Blank&#9;…"></textarea>
-              <div class="ftir-btnrow" style="margin-top:8px;"><button class="btn btn-ghost btn-sm" id="asSmpApply">套用貼上內容</button><button class="btn btn-ghost btn-sm" id="asSmpAdd">＋ 新增一列</button><button class="btn btn-ghost btn-sm" id="asSmpClear">清空樣品</button></div>
-              <div id="asSmpGrid"></div>
-              <div class="ftir-hint">當量 = ((Test − 截距) ÷ 斜率) ÷ (樣品濃度 ÷ 1000),單位 mg 標準品當量 / g 樣品;SE = SD ÷ √n(n = 有效重複數)。</div>
-            </div>
+        <div class="ftir-card" style="margin-bottom:16px;">
+          <h3>標準品設定</h3>
+          <div class="as-head">
+            <div class="field"><label style="font-size:12px;">標準品</label><input type="text" id="asStdName" placeholder="例如 Naringenin"></div>
+            <div class="field"><label style="font-size:12px;">波長(nm)</label><input type="number" id="asWl" placeholder="495"></div>
+            <div class="field"><label style="font-size:12px;">標準品濃度單位</label><input type="text" id="asUnit" placeholder="mg/mL"></div>
+            <div class="field"><label style="font-size:12px;">樣品濃度單位</label><input type="text" id="asSampleUnit" placeholder="mg/mL"></div>
           </div>
-          <div class="ftir-main">
-            <div class="ftir-plotcard">
-              <div class="ftir-plotwrap" id="asPlotwrap"><div class="ftir-empty" id="asEmpty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="52" height="52"><path d="M3 3v18h18M7 15l3-4 3 3 4-6"/></svg><div>輸入檢量線濃度與吸光值後,檢量線會畫在這裡</div></div></div>
-              <div class="assay-eq" id="asEq"></div>
-              <div id="assayStdTable"></div>
-              <div class="ftir-btnrow" style="margin-top:14px;"><button class="btn btn-ghost btn-sm" id="asDlPng" disabled>檢量線 PNG</button><button class="btn btn-ghost btn-sm" id="asDlSvg" disabled>SVG</button><button class="btn btn-ghost btn-sm" id="asCopy" disabled>複製結果表</button><button class="btn btn-ghost btn-sm" id="asDlCsv" disabled>結果 CSV</button></div>
-              <div id="assayResults"></div>
-            </div>
+        </div>
+        <div class="as-two" style="margin-bottom:16px;">
+          <div class="ftir-card">
+            <h3>檢量線</h3>
+            <div class="as-sheetwrap" id="asStdSheet"></div>
+            <div class="assay-eq" id="asEq"></div>
+            <div class="ftir-btnrow" style="margin-top:10px;"><button class="btn btn-ghost btn-sm" id="asStdClear">清空檢量線</button></div>
+            <div class="ftir-hint">白格可直接打字,Enter 往下一格;點一格後 Ctrl+V 可把 Excel 複製的整塊範圍貼進來(連左邊的 RAW1、Blank 標籤一起複製也可以,會自動略過)。Test = RAW − Blank(各濃度用自己的 Blank),回歸用各濃度 Test 的平均值。</div>
           </div>
+          <div class="ftir-plotcard">
+            <div class="ftir-plotwrap" id="asPlotwrap"><div class="ftir-empty" id="asEmpty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="52" height="52"><path d="M3 3v18h18M7 15l3-4 3 3 4-6"/></svg><div>填入濃度與吸光值後,檢量線會畫在這裡</div></div></div>
+            <div class="ftir-btnrow" style="margin-top:14px;"><button class="btn btn-ghost btn-sm" id="asDlPng" disabled>檢量線 PNG</button><button class="btn btn-ghost btn-sm" id="asDlSvg" disabled>SVG</button></div>
+          </div>
+        </div>
+        <div class="ftir-card">
+          <h3>樣品</h3>
+          <div class="as-sheetwrap" id="asSmpSheet"></div>
+          <div class="ftir-btnrow" style="margin-top:12px;"><button class="btn btn-ghost btn-sm" id="asCopy" disabled>複製結果(Excel 排列)</button><button class="btn btn-ghost btn-sm" id="asDlCsv" disabled>結果 CSV(每列一個樣品)</button><button class="btn btn-ghost btn-sm" id="asSmpClear">清空樣品</button></div>
+          <div class="ftir-hint">當量 = ((Test − 截距) ÷ 斜率) ÷ (樣品濃度 ÷ 1000),單位 mg 標準品當量 / g 樣品;SE = SD ÷ √n(n = 有效重複數)。</div>
         </div>
       </div>
       <div class="sp-panel" id="sp-lc"><div class="sp-placeholder"><div class="sp-ph-icon">🧪</div><b>LC 液相層析</b><span>這個模組還在規劃中,之後會加入資料上傳與圖譜分析。</span></div></div>
@@ -9711,30 +9704,31 @@ function initUvOnce(){
 }
 
 /* ============ 比色計算(檢量線 → 當量濃度) ============
-   對應實驗室原本的 Excel:Test = RAW − Blank;檢量線用各濃度 Test 平均值做最小平方回歸;
-   當量 = ((Test − b) / m) / (樣品濃度/1000),單位 mg/g;SE = SD/√n。內容存在本機 localStorage */
+   照實驗室原本的 Excel 排法做成試算表格:欄是濃度點 / 樣品,列是 RAW1–3、Blank,底下接自動算的 Test、Mean、SD 與當量。
+   Test = RAW − Blank;檢量線用各濃度 Test 平均值做最小平方回歸;當量 = ((Test − b) / m) / (樣品濃度/1000) mg/g;SE = SD/√n。
+   內容只存在本機 localStorage。輸入格打字時只重算計算列,不重畫輸入格,焦點才不會跑掉 */
 const ASSAY_KEY='assay-calc';
 const assayState={std:{name:'',unit:'mg/mL',sampleUnit:'mg/mL',wl:''},conc:[],raw:[[],[],[]],blank:[],samples:[]};
+const AS_STD_ROWS=['conc','raw0','raw1','raw2','blank'], AS_SMP_ROWS=['name','conc','raw0','raw1','raw2','blank'];
+const AS_EMPTY='<div class="ftir-empty" id="asEmpty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="52" height="52"><path d="M3 3v18h18M7 15l3-4 3 3 4-6"/></svg><div>填入濃度與吸光值後,檢量線會畫在這裡</div></div>';
 let assayInited=false, assayCurrent=null;
+function assayEmptySample(){ return {name:'',conc:null,raw:[null,null,null],blank:null}; }
 function assaySave(){ try{ localStorage.setItem(ASSAY_KEY,JSON.stringify(assayState)); }catch(_e){} }
-function assayLoad(){ try{ const d=JSON.parse(localStorage.getItem(ASSAY_KEY)||'null'); if(d&&d.std){ Object.assign(assayState,d); } }catch(_e){} }
-const asNum=v=>{ const n=parseFloat(String(v==null?'':v).replace(/,/g,'')); return isFinite(n)?n:null; };
-/* 貼上內容:每列以 tab / 逗號 / 空白分隔;開頭若是文字標籤(RAW1、Blank…)就丟掉 */
-function assayParseBlock(text){
-  return String(text||'').split(/\r?\n/).map(l=>l.trim()).filter(Boolean).map(l=>{
-    const cells=l.split(/\t|,|\s{2,}|\s/).map(c=>c.trim()).filter(c=>c!=='');
-    return cells;
-  });
+function assayLoad(){
+  try{ const d=JSON.parse(localStorage.getItem(ASSAY_KEY)||'null'); if(d&&d.std) Object.assign(assayState,d); }catch(_e){}
+  if(!Array.isArray(assayState.raw)||assayState.raw.length!==3) assayState.raw=[[],[],[]];
+  if(!Array.isArray(assayState.conc)||!assayState.conc.length) assayState.conc=[null,null,null,null,null];
+  if(!Array.isArray(assayState.samples)||!assayState.samples.length) assayState.samples=[0,1,2].map(assayEmptySample);
 }
-function assayNumRow(cells){ const c=cells.slice(); if(c.length&&asNum(c[0])===null) c.shift(); return c.map(asNum); }
+const asNum=v=>{ const n=parseFloat(String(v==null?'':v).replace(/,/g,'')); return isFinite(n)?n:null; };
+const asF=(v,d)=>v==null||!isFinite(v)?'':(+v).toFixed(d);
+function asStats(vals){ const v=vals.filter(x=>x!==null&&isFinite(x)); const n=v.length; const mean=n?v.reduce((a,b)=>a+b,0)/n:null;
+  const sd=n>1?Math.sqrt(v.reduce((a,b)=>a+(b-mean)*(b-mean),0)/(n-1)):null; return {n,mean,sd}; }
+/* 檢量線每一欄的 Test / Mean / SD */
+function assayStdCols(){ return assayState.conc.map((x,j)=>{ const b=assayState.blank[j];
+  const tests=[0,1,2].map(r=>{ const a=assayState.raw[r][j]; return (a==null||b==null)?null:a-b; }); const st=asStats(tests); return {x,tests,mean:st.mean,sd:st.sd,n:st.n}; }); }
 function assayFit(){
-  const pts=[];
-  assayState.conc.forEach((x,j)=>{ if(x==null) return;
-    const tests=[0,1,2].map(r=>{ const a=assayState.raw[r][j], b=assayState.blank[j]; return (a==null||b==null)?null:a-b; }).filter(v=>v!==null);
-    if(!tests.length) return;
-    const mean=tests.reduce((a,b)=>a+b,0)/tests.length;
-    const sd=tests.length>1?Math.sqrt(tests.reduce((a,b)=>a+(b-mean)*(b-mean),0)/(tests.length-1)):0;
-    pts.push({x,tests,mean,sd}); });
+  const pts=assayStdCols().filter(c=>c.x!=null&&c.n>0);
   if(pts.length<2) return {pts,ok:false};
   const n=pts.length, sx=pts.reduce((a,p)=>a+p.x,0), sy=pts.reduce((a,p)=>a+p.mean,0);
   const sxx=pts.reduce((a,p)=>a+p.x*p.x,0), sxy=pts.reduce((a,p)=>a+p.x*p.mean,0);
@@ -9743,9 +9737,10 @@ function assayFit(){
   const ssres=pts.reduce((a,p)=>a+Math.pow(p.mean-(m*p.x+b),2),0), sstot=pts.reduce((a,p)=>a+Math.pow(p.mean-ybar,2),0);
   return {pts,ok:true,m,b,r2:sstot>0?1-ssres/sstot:1,n};
 }
+const assayEqText=f=>`y = ${f.m.toFixed(4)}x ${f.b<0?'−':'+'} ${Math.abs(f.b).toFixed(4)}`;
 function assayChartSVG(fit){
   const W=900,H=460,m={l:78,r:26,t:40,b:62},pw=W-m.l-m.r,ph=H-m.t-m.b;
-  const xmax=Math.max(...fit.pts.map(p=>p.x))*1.08||1, ymax=Math.max(...fit.pts.map(p=>p.mean+p.sd))*1.15||1;
+  const xmax=Math.max(...fit.pts.map(p=>p.x))*1.08||1, ymax=Math.max(...fit.pts.map(p=>p.mean+(p.sd||0)))*1.15||1;
   const X=v=>m.l+v/xmax*pw, Y=v=>m.t+ph-v/ymax*ph;
   const S=[`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" font-family="Times New Roman,serif">`,`<rect width="${W}" height="${H}" fill="#fff"/>`];
   ftirNiceTicks(0,xmax,6).forEach(v=>{ if(v>xmax) return; S.push(`<line x1="${X(v).toFixed(1)}" y1="${m.t+ph}" x2="${X(v).toFixed(1)}" y2="${m.t+ph-6}" stroke="#111"/>`);
@@ -9758,7 +9753,7 @@ function assayChartSVG(fit){
       [p.mean+p.sd,p.mean-p.sd].forEach(v=>S.push(`<line x1="${(cx-4).toFixed(1)}" y1="${Y(v).toFixed(1)}" x2="${(cx+4).toFixed(1)}" y2="${Y(v).toFixed(1)}" stroke="#111" stroke-width="1"/>`)); }
     S.push(`<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="4.5" fill="#fff" stroke="#c0392b" stroke-width="1.6"/>`); });
   S.push(`<rect x="${m.l}" y="${m.t}" width="${pw}" height="${ph}" fill="none" stroke="#111" stroke-width="1.1"/>`);
-  if(fit.ok){ S.push(`<text x="${m.l+16}" y="${m.t+24}" font-size="14" fill="#111">y = ${fit.m.toFixed(4)}x ${fit.b<0?'−':'+'} ${Math.abs(fit.b).toFixed(4)}</text>`);
+  if(fit.ok){ S.push(`<text x="${m.l+16}" y="${m.t+24}" font-size="14" fill="#111">${assayEqText(fit)}</text>`);
     S.push(`<text x="${m.l+16}" y="${m.t+44}" font-size="14" fill="#111">R² = ${fit.r2.toFixed(4)}</text>`); }
   const st=assayState.std;
   S.push(`<text x="${m.l+pw/2}" y="${H-14}" font-size="14" text-anchor="middle" fill="#111">${ftirEscXml((st.name||'Standard')+' ('+(st.unit||'mg/mL')+')')}</text>`);
@@ -9770,91 +9765,120 @@ function assayResults(fit){
     const conc=asNum(sm.conc);
     const tests=[0,1,2].map(r=>{ const a=asNum(sm.raw[r]), b=asNum(sm.blank); return (a==null||b==null)?null:a-b; });
     const eqs=tests.map(t=>(t==null||!fit.ok||conc==null||conc<=0)?null:((t-fit.b)/fit.m)/(conc/1000));
-    const valid=eqs.filter(v=>v!==null); const n=valid.length;
-    const mean=n?valid.reduce((a,b)=>a+b,0)/n:null;
-    const sd=n>1?Math.sqrt(valid.reduce((a,b)=>a+(b-mean)*(b-mean),0)/(n-1)):null;
-    const tv=tests.filter(v=>v!==null); const meanA=tv.length?tv.reduce((a,b)=>a+b,0)/tv.length:null;
-    return {name:sm.name||'',conc,tests,meanA,eqs,n,mean,sd,se:(sd!=null&&n>0)?sd/Math.sqrt(n):null};
+    const a=asStats(tests), e=asStats(eqs);
+    return {name:sm.name||'',conc,tests,meanA:a.mean,sdA:a.sd,eqs,n:e.n,mean:e.mean,sd:e.sd,se:(e.sd!=null&&e.n>0)?e.sd/Math.sqrt(e.n):null,hasA:a.n>0};
   });
 }
-const asF=(v,d)=>v==null||!isFinite(v)?'':(+v).toFixed(d);
-function assayRenderGrids(){
-  let h='<table class="assay-grid"><tr><th></th>'+assayState.conc.map((c,j)=>`<th>${escapeHtml(c==null?'':String(c))}</th>`).join('')+'</tr>';
-  [['RAW1',0],['RAW2',1],['RAW3',2]].forEach(([lab,r])=>{ h+=`<tr><td class="lab">${lab}</td>`+assayState.conc.map((c,j)=>`<td><input type="text" data-k="raw" data-r="${r}" data-j="${j}" value="${assayState.raw[r][j]==null?'':assayState.raw[r][j]}"></td>`).join('')+'</tr>'; });
-  h+='<tr><td class="lab">Blank</td>'+assayState.conc.map((c,j)=>`<td><input type="text" data-k="blank" data-j="${j}" value="${assayState.blank[j]==null?'':assayState.blank[j]}"></td>`).join('')+'</tr></table>';
-  fq('#asStdGrid').innerHTML=assayState.conc.length?h:'';
-  let g='<table class="assay-grid"><tr><th>樣品</th><th>濃度</th><th>RAW1</th><th>RAW2</th><th>RAW3</th><th>Blank</th><th></th></tr>';
-  assayState.samples.forEach((sm,i)=>{ g+=`<tr><td><input type="text" class="txt" data-k="name" data-i="${i}" value="${escapeHtml(sm.name||'')}"></td><td><input type="text" data-k="conc" data-i="${i}" value="${sm.conc==null?'':sm.conc}"></td>`
-    +[0,1,2].map(r=>`<td><input type="text" data-k="sraw" data-i="${i}" data-r="${r}" value="${sm.raw[r]==null?'':sm.raw[r]}"></td>`).join('')+`<td><input type="text" data-k="sblank" data-i="${i}" value="${sm.blank==null?'':sm.blank}"></td><td><span class="rm" data-rm="${i}" title="移除">✕</span></td></tr>`; });
-  g+='</table>'; fq('#asSmpGrid').innerHTML=assayState.samples.length?g:'';
-  document.querySelectorAll('#asStdGrid input, #asSmpGrid input').forEach(inp=>{ inp.onchange=()=>{ const k=inp.dataset.k, v=inp.value.trim();
-    if(k==='raw') assayState.raw[+inp.dataset.r][+inp.dataset.j]=asNum(v);
-    else if(k==='blank') assayState.blank[+inp.dataset.j]=asNum(v);
-    else if(k==='name') assayState.samples[+inp.dataset.i].name=v;
-    else if(k==='conc') assayState.samples[+inp.dataset.i].conc=asNum(v);
-    else if(k==='sraw') assayState.samples[+inp.dataset.i].raw[+inp.dataset.r]=asNum(v);
-    else if(k==='sblank') assayState.samples[+inp.dataset.i].blank=asNum(v);
-    assaySave(); assayRender(false); }; });
-  document.querySelectorAll('#asSmpGrid .rm').forEach(x=>x.onclick=()=>{ assayState.samples.splice(+x.dataset.rm,1); assaySave(); assayRender(true); });
+/* ---- 試算表格 ---- */
+const asCell=(s,r,j,val,cls)=>`<td class="ed"><input type="text"${cls?' class="'+cls+'"':''} data-s="${s}" data-r="${r}" data-j="${j}" value="${escapeHtml(val==null?'':String(val))}" autocomplete="off" spellcheck="false"></td>`;
+const asCalcRow=(lab,vals,d,o)=>`<tr class="calc${o&&o.sep?' sep':''}"><th class="rl">${lab}</th>${vals.map(v=>`<td class="num${o&&o.bold?' b':''}">${asF(v,d)}</td>`).join('')}<td></td></tr>`;
+function assayStdCalcRows(){ const c=assayStdCols();
+  return [0,1,2].map(r=>asCalcRow('Test'+(r+1),c.map(x=>x.tests[r]),4,{sep:r===0})).join('')+asCalcRow('Mean',c.map(x=>x.mean),4)+asCalcRow('SD',c.map(x=>x.sd),4); }
+function assaySmpCalcRows(rows){
+  return [0,1,2].map(r=>asCalcRow('Test'+(r+1),rows.map(x=>x.tests[r]),4,{sep:r===0})).join('')+asCalcRow('Mean',rows.map(x=>x.meanA),4)+asCalcRow('SD',rows.map(x=>x.sdA),4)
+    +[0,1,2].map(r=>asCalcRow('當量'+(r+1)+' (mg/g)',rows.map(x=>x.eqs[r]),2,{sep:r===0})).join('')
+    +asCalcRow('Mean (mg/g)',rows.map(x=>x.mean),2,{bold:true})+asCalcRow('SD',rows.map(x=>x.sd),2)+asCalcRow('SE',rows.map(x=>x.se),2); }
+function assayRenderSheets(){
+  const st=assayState.std, nC=assayState.conc.length, nS=assayState.samples.length;
+  const head=(s,n)=>`<thead><tr><th class="rl"></th>${Array.from({length:n},(_,j)=>`<th class="ch">${j+1}<span class="rmc" data-s="${s}" data-j="${j}" title="移除這一欄">✕</span></th>`).join('')}<th class="ch add"><span class="addc" data-s="${s}" title="加一欄">＋</span></th></tr></thead>`;
+  const inRow=(lab,s,r,n,get,cls)=>`<tr><th class="rl">${lab}</th>${Array.from({length:n},(_,j)=>asCell(s,r,j,get(j),cls)).join('')}<td></td></tr>`;
+  let h=`<table class="as-sheet">${head('std',nC)}<tbody>`;
+  h+=inRow('濃度 ('+escapeHtml(st.unit||'mg/mL')+')','std','conc',nC,j=>assayState.conc[j]);
+  [0,1,2].forEach(r=>{ h+=inRow('RAW'+(r+1),'std','raw'+r,nC,j=>assayState.raw[r][j]); });
+  h+=inRow('Blank','std','blank',nC,j=>assayState.blank[j]);
+  fq('#asStdSheet').innerHTML=h+assayStdCalcRows()+'</tbody></table>';
+  let g=`<table class="as-sheet">${head('smp',nS)}<tbody>`;
+  g+=inRow('樣品名稱','smp','name',nS,j=>assayState.samples[j].name,'txt');
+  g+=inRow('濃度 ('+escapeHtml(st.sampleUnit||'mg/mL')+')','smp','conc',nS,j=>assayState.samples[j].conc);
+  [0,1,2].forEach(r=>{ g+=inRow('RAW'+(r+1),'smp','raw'+r,nS,j=>assayState.samples[j].raw[r]); });
+  g+=inRow('Blank','smp','blank',nS,j=>assayState.samples[j].blank);
+  fq('#asSmpSheet').innerHTML=g+assaySmpCalcRows(assayResults(assayFit()))+'</tbody></table>';
 }
-function assayRender(withGrids){
-  if(withGrids!==false) assayRenderGrids();
-  const fit=assayFit(); const st=assayState.std;
+/* 只換計算列與圖,輸入格保持原樣 */
+function assayRecalc(){
+  const fit=assayFit(), rows=assayResults(fit);
+  const swap=(sel,html)=>{ const tb=fq(sel+' tbody'); if(!tb) return; tb.querySelectorAll('tr.calc').forEach(tr=>tr.remove()); tb.insertAdjacentHTML('beforeend',html); };
+  swap('#asStdSheet',assayStdCalcRows()); swap('#asSmpSheet',assaySmpCalcRows(rows));
   const wrap=fq('#asPlotwrap');
-  if(!fit.pts.length){ wrap.innerHTML='<div class="ftir-empty" id="asEmpty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="52" height="52"><path d="M3 3v18h18M7 15l3-4 3 3 4-6"/></svg><div>輸入檢量線濃度與吸光值後,檢量線會畫在這裡</div></div>'; fq('#asEq').innerHTML=''; fq('#assayStdTable').innerHTML=''; }
-  else{ const svg=assayChartSVG(fit); wrap.innerHTML=svg;
-    fq('#asEq').innerHTML=fit.ok?`<span>y = <b>${fit.m.toFixed(4)}</b>x ${fit.b<0?'−':'+'} <b>${Math.abs(fit.b).toFixed(4)}</b></span><span>R² = <b>${fit.r2.toFixed(4)}</b></span><span>n = ${fit.n} 點</span>`:'<span>至少需要兩個濃度點才能回歸</span>';
-    fq('#assayStdTable').innerHTML=`<table><thead><tr><th>${escapeHtml(st.unit||'濃度')}</th><th>Test1</th><th>Test2</th><th>Test3</th><th>Mean</th><th>SD</th></tr></thead><tbody>${fit.pts.map(p=>`<tr><td class="key">${+p.x.toFixed(6)}</td>${[0,1,2].map(i=>`<td class="num">${asF(p.tests[i],4)}</td>`).join('')}<td class="num">${asF(p.mean,4)}</td><td class="num">${asF(p.sd,4)}</td></tr>`).join('')}</tbody></table>`; }
-  const rows=assayResults(fit); const unitS=st.sampleUnit||'mg/mL';
-  fq('#assayResults').innerHTML=rows.length?`<table><thead><tr><th>樣品</th><th>濃度 (${escapeHtml(unitS)})</th><th>Test1</th><th>Test2</th><th>Test3</th><th>Mean A</th><th>當量1</th><th>當量2</th><th>當量3</th><th>Mean (mg/g)</th><th>SD</th><th>SE</th></tr></thead><tbody>${rows.map(r=>`<tr><td class="key">${escapeHtml(r.name)}</td><td class="num">${asF(r.conc,4)}</td>${r.tests.map(t=>`<td class="num">${asF(t,4)}</td>`).join('')}<td class="num">${asF(r.meanA,4)}</td>${r.eqs.map(e=>`<td class="num">${asF(e,2)}</td>`).join('')}<td class="num"><b>${asF(r.mean,2)}</b></td><td class="num">${asF(r.sd,2)}</td><td class="num">${asF(r.se,2)}</td></tr>`).join('')}</tbody></table>`:'';
+  if(!fit.pts.length){ wrap.innerHTML=AS_EMPTY; fq('#asEq').innerHTML=''; }
+  else{ wrap.innerHTML=assayChartSVG(fit);
+    fq('#asEq').innerHTML=fit.ok?`<span>y = <b>${fit.m.toFixed(4)}</b>x ${fit.b<0?'−':'+'} <b>${Math.abs(fit.b).toFixed(4)}</b></span><span>R² = <b>${fit.r2.toFixed(4)}</b></span><span>n = ${fit.n} 點</span>`:'<span>至少需要兩個有數值的濃度點才能回歸</span>'; }
+  const has=rows.some(r=>r.hasA);
   assayCurrent={fit,rows,svg:fit.pts.length?wrap.innerHTML:''};
-  fq('#asDlPng').disabled=fq('#asDlSvg').disabled=!fit.pts.length; fq('#asCopy').disabled=fq('#asDlCsv').disabled=!rows.length;
+  fq('#asDlPng').disabled=fq('#asDlSvg').disabled=!fit.pts.length; fq('#asCopy').disabled=fq('#asDlCsv').disabled=!has;
 }
-function assayApplyStdPaste(){
-  const rows=assayParseBlock(fq('#asStdPaste').value).map(assayNumRow).filter(r=>r.some(v=>v!==null));
-  if(rows.length<2){ notify('至少要有 RAW1 與 Blank 兩列'); return; }
-  let concRow=null;
-  if(rows.length>=5) concRow=rows.shift();   // 多貼一列濃度也接受
-  const nC=Math.max(...rows.map(r=>r.length));
-  if(concRow){ assayState.conc=concRow.slice(0,nC).map(v=>v==null?null:v); fq('#asConc').value=assayState.conc.map(c=>c==null?'':c).join(' '); }
-  if(!assayState.conc.length) assayState.conc=Array.from({length:nC},()=>null);
-  const blank=rows[rows.length-1], raws=rows.slice(0,rows.length-1).slice(0,3);
-  assayState.raw=[0,1,2].map(r=>Array.from({length:assayState.conc.length},(_,j)=>(raws[r]&&raws[r][j]!=null)?raws[r][j]:null));
-  assayState.blank=Array.from({length:assayState.conc.length},(_,j)=>blank[j]!=null?blank[j]:null);
-  assaySave(); assayRender(true); showToast('檢量線資料已套用');
+function assayRender(){ assayRenderSheets(); assayRecalc(); }
+function assaySetCell(s,r,j,v){
+  if(s==='std'){ if(r==='conc') assayState.conc[j]=asNum(v); else if(r==='blank') assayState.blank[j]=asNum(v); else assayState.raw[+r.slice(3)][j]=asNum(v); }
+  else{ const sm=assayState.samples[j]; if(!sm) return; if(r==='name') sm.name=String(v==null?'':v).trim(); else if(r==='conc') sm.conc=asNum(v); else if(r==='blank') sm.blank=asNum(v); else sm.raw[+r.slice(3)]=asNum(v); }
 }
-function assayApplySmpPaste(){
-  const raw=assayParseBlock(fq('#asSmpPaste').value); if(raw.length<6){ notify('樣品區塊需要六列:名稱、濃度、RAW1、RAW2、RAW3、Blank'); return; }
-  const names=raw[0].slice(), rest=raw.slice(1,6).map(assayNumRow);
-  // 名稱列若第一格是「名稱」之類的標籤,對齊數值列的長度後從尾端取
-  const nS=Math.max(...rest.map(r=>r.length)); const nm=names.slice(-nS);
-  const list=[]; for(let i=0;i<nS;i++){ list.push({name:nm[i]||('樣品'+(i+1)),conc:rest[0][i]??null,raw:[rest[1][i]??null,rest[2][i]??null,rest[3][i]??null],blank:rest[4][i]??null}); }
-  assayState.samples=list; assaySave(); assayRender(true); showToast('已套用 '+list.length+' 個樣品');
+function assayEnsureCol(s,j){
+  if(s==='std'){ while(assayState.conc.length<=j) assayState.conc.push(null); const n=assayState.conc.length;
+    [0,1,2].forEach(r=>{ while(assayState.raw[r].length<n) assayState.raw[r].push(null); }); while(assayState.blank.length<n) assayState.blank.push(null); }
+  else{ while(assayState.samples.length<=j) assayState.samples.push(assayEmptySample()); }
 }
-function assayResultsTSV(){
-  const st=assayState.std; const head=['樣品','濃度 ('+(st.sampleUnit||'mg/mL')+')','Test1','Test2','Test3','Mean A','當量1 (mg/g)','當量2','當量3','Mean (mg/g)','SD','SE'];
-  const lines=[head.join('\t')]; (assayCurrent?assayCurrent.rows:[]).forEach(r=>lines.push([r.name,asF(r.conc,4),...r.tests.map(t=>asF(t,4)),asF(r.meanA,4),...r.eqs.map(e=>asF(e,4)),asF(r.mean,4),asF(r.sd,4),asF(r.se,4)].join('\t')));
-  if(assayCurrent&&assayCurrent.fit.ok){ const f=assayCurrent.fit; lines.push(''); lines.push(['檢量線','y = '+f.m.toFixed(4)+'x + '+f.b.toFixed(4),'R² = '+f.r2.toFixed(4)].join('\t')); }
-  return lines.join('\n');
+function assayRemoveCol(s,j){
+  if(s==='std'){ assayState.conc.splice(j,1); [0,1,2].forEach(r=>assayState.raw[r].splice(j,1)); assayState.blank.splice(j,1); if(!assayState.conc.length) assayEnsureCol('std',0); }
+  else{ assayState.samples.splice(j,1); if(!assayState.samples.length) assayEnsureCol('smp',0); }
+}
+/* 從焦點格開始把 Excel 範圍填進去;整塊帶著左邊標籤欄(Con.、RAW1、Blank、空白)也行 */
+function assayPasteAt(s,r0,j0,text){
+  const ROWS=s==='std'?AS_STD_ROWS:AS_SMP_ROWS;
+  let rows=text.replace(/\r/g,'').split('\n').filter(l=>l.trim()!=='').map(l=>(l.includes('\t')?l.split('\t'):l.trim().split(/[,\s]+/)).map(c=>c.trim()));
+  if(rows.length>=2 && rows.every(r=>asNum(r[0])===null)) rows=rows.map(r=>r.slice(1));
+  else if(rows.length===1 && rows[0].length>1 && asNum(rows[0][0])===null && (r0!=='name'||rows[0][0]==='')) rows=[rows[0].slice(1)];
+  rows.forEach(r=>{ while(r.length&&r[r.length-1]==='') r.pop(); });
+  const i0=ROWS.indexOf(r0); let filled=0;
+  rows.forEach((cells,i)=>{ const rk=ROWS[i0+i]; if(!rk) return; cells.forEach((c,k)=>{ assayEnsureCol(s,j0+k); assaySetCell(s,rk,j0+k,c); filled++; }); });
+  return filled;
+}
+function assayBindSheets(){
+  ['#asStdSheet','#asSmpSheet'].forEach(sel=>{ const root=fq(sel);
+    root.addEventListener('input',ev=>{ const inp=ev.target.closest('input[data-s]'); if(!inp) return; assaySetCell(inp.dataset.s,inp.dataset.r,+inp.dataset.j,inp.value); assaySave(); assayRecalc(); });
+    root.addEventListener('paste',ev=>{ const inp=ev.target.closest('input[data-s]'); if(!inp) return;
+      const text=(ev.clipboardData||window.clipboardData).getData('text')||''; if(!/[\t\n]/.test(text)) return;
+      ev.preventDefault(); const n=assayPasteAt(inp.dataset.s,inp.dataset.r,+inp.dataset.j,text); assaySave(); assayRender();
+      const back=root.querySelector(`input[data-r="${inp.dataset.r}"][data-j="${inp.dataset.j}"]`); if(back) back.focus(); if(n) showToast('已貼上 '+n+' 格'); });
+    root.addEventListener('keydown',ev=>{ const inp=ev.target.closest('input[data-s]'); if(!inp) return;
+      let d=0; if(ev.key==='Enter'||ev.key==='ArrowDown') d=1; else if(ev.key==='ArrowUp') d=-1; if(!d) return;
+      const ROWS=inp.dataset.s==='std'?AS_STD_ROWS:AS_SMP_ROWS; const nr=ROWS[ROWS.indexOf(inp.dataset.r)+d]; if(!nr) return;
+      ev.preventDefault(); const nx=root.querySelector(`input[data-r="${nr}"][data-j="${inp.dataset.j}"]`); if(nx){ nx.focus(); nx.select(); } });
+    root.addEventListener('click',ev=>{
+      const rm=ev.target.closest('.rmc'); if(rm){ assayRemoveCol(rm.dataset.s,+rm.dataset.j); assaySave(); assayRender(); return; }
+      const ad=ev.target.closest('.addc'); if(ad){ const s=ad.dataset.s; assayEnsureCol(s,s==='std'?assayState.conc.length:assayState.samples.length); assaySave(); assayRender();
+        const list=root.querySelectorAll(`input[data-r="${s==='std'?'conc':'name'}"]`); if(list.length) list[list.length-1].focus(); } });
+  });
+}
+/* 複製:跟 Excel 一樣直式排列(欄是樣品),貼回試算表就對位 */
+function assayCopyTSV(){
+  const st=assayState.std, R=(assayCurrent?assayCurrent.rows:[]).filter(r=>r.name||r.hasA);
+  const line=(lab,f)=>[lab,...R.map(f)].join('\t');
+  const L=[line('',r=>r.name),line('濃度 ('+(st.sampleUnit||'mg/mL')+')',r=>asF(r.conc,4))];
+  [0,1,2].forEach(i=>L.push(line('Test'+(i+1),r=>asF(r.tests[i],4)))); L.push(line('Mean',r=>asF(r.meanA,4)),line('SD',r=>asF(r.sdA,4)));
+  [0,1,2].forEach(i=>L.push(line('當量'+(i+1)+' (mg/g)',r=>asF(r.eqs[i],4)))); L.push(line('Mean (mg/g)',r=>asF(r.mean,4)),line('SD',r=>asF(r.sd,4)),line('SE',r=>asF(r.se,4)));
+  const f=assayCurrent&&assayCurrent.fit; if(f&&f.ok){ L.push(''); L.push(['檢量線',assayEqText(f),'R² = '+f.r2.toFixed(4)].join('\t')); }
+  return L.join('\n');
+}
+function assayCsv(){
+  const st=assayState.std, q=x=>/[",]/.test(x)?'"'+x.replace(/"/g,'""')+'"':x;
+  const L=[['樣品','濃度 ('+(st.sampleUnit||'mg/mL')+')','Test1','Test2','Test3','Mean A','SD A','當量1 (mg/g)','當量2','當量3','Mean (mg/g)','SD','SE'].map(q).join(',')];
+  (assayCurrent?assayCurrent.rows:[]).filter(r=>r.name||r.hasA).forEach(r=>L.push([r.name,asF(r.conc,4),...r.tests.map(t=>asF(t,4)),asF(r.meanA,4),asF(r.sdA,4),...r.eqs.map(e=>asF(e,4)),asF(r.mean,4),asF(r.sd,4),asF(r.se,4)].map(q).join(',')));
+  const f=assayCurrent&&assayCurrent.fit; if(f&&f.ok){ L.push(''); L.push(['檢量線',assayEqText(f),'R² = '+f.r2.toFixed(4)].map(q).join(',')); }
+  return '\uFEFF'+L.join('\n');
 }
 function initAssayOnce(){
   if(assayInited) return; assayInited=true;
   assayLoad();
   fq('#asStdName').value=assayState.std.name||''; fq('#asUnit').value=assayState.std.unit||'mg/mL'; fq('#asSampleUnit').value=assayState.std.sampleUnit||'mg/mL'; fq('#asWl').value=assayState.std.wl||'';
-  fq('#asConc').value=assayState.conc.map(c=>c==null?'':c).join(' ');
-  [['#asStdName','name'],['#asUnit','unit'],['#asSampleUnit','sampleUnit'],['#asWl','wl']].forEach(([sel,k])=>{ fq(sel).oninput=e=>{ assayState.std[k]=e.target.value.trim(); assaySave(); assayRender(false); }; });
-  fq('#asConc').onchange=e=>{ const c=e.target.value.split(/[,\s]+/).map(asNum).filter(v=>v!==null); assayState.conc=c;
-    assayState.raw=[0,1,2].map(r=>c.map((_,j)=>assayState.raw[r][j]??null)); assayState.blank=c.map((_,j)=>assayState.blank[j]??null); assaySave(); assayRender(true); };
-  fq('#asStdApply').onclick=assayApplyStdPaste;
-  fq('#asStdClear').onclick=async()=>{ if(!await confirmDialog('清空檢量線的濃度與吸光值?')) return; assayState.conc=[]; assayState.raw=[[],[],[]]; assayState.blank=[]; fq('#asConc').value=''; fq('#asStdPaste').value=''; assaySave(); assayRender(true); };
-  fq('#asSmpApply').onclick=assayApplySmpPaste;
-  fq('#asSmpAdd').onclick=()=>{ assayState.samples.push({name:'',conc:null,raw:[null,null,null],blank:null}); assaySave(); assayRender(true); };
-  fq('#asSmpClear').onclick=async()=>{ if(!await confirmDialog('清空所有樣品?')) return; assayState.samples=[]; fq('#asSmpPaste').value=''; assaySave(); assayRender(true); };
+  [['#asStdName','name'],['#asUnit','unit'],['#asSampleUnit','sampleUnit'],['#asWl','wl']].forEach(([sel,k])=>{ fq(sel).oninput=e=>{ assayState.std[k]=e.target.value.trim(); assaySave(); if(k==='unit'||k==='sampleUnit') assayRender(); else assayRecalc(); }; });
+  assayBindSheets();
+  fq('#asStdClear').onclick=async()=>{ if(!await confirmDialog('清空檢量線的濃度與吸光值?')) return; assayState.conc=[null,null,null,null,null]; assayState.raw=[[],[],[]]; assayState.blank=[]; assaySave(); assayRender(); };
+  fq('#asSmpClear').onclick=async()=>{ if(!await confirmDialog('清空所有樣品?')) return; assayState.samples=[0,1,2].map(assayEmptySample); assaySave(); assayRender(); };
   fq('#asDlSvg').onclick=()=>{ if(!assayCurrent||!assayCurrent.svg) return; ftirSaveBlob(new Blob([assayCurrent.svg],{type:'image/svg+xml'}),(assayState.std.name||'standard')+'_curve.svg'); };
   fq('#asDlPng').onclick=async()=>{ if(!assayCurrent||!assayCurrent.svg) return; try{ const b=await galSvgToPngBlob(assayCurrent.svg,3); ftirSaveBlob(b,(assayState.std.name||'standard')+'_curve.png'); }catch(e){ notify('PNG 產生失敗:'+(e&&e.message?e.message:'')); } };
-  fq('#asCopy').onclick=async()=>{ try{ await navigator.clipboard.writeText(assayResultsTSV()); showToast('✅ 已複製,可直接貼到 Excel'); }catch(e){ notify('複製失敗:'+(e&&e.message?e.message:'')); } };
-  fq('#asDlCsv').onclick=()=>{ ftirSaveBlob(new Blob(['\uFEFF'+assayResultsTSV().replace(/\t/g,',')],{type:'text/csv'}),(assayState.std.name||'assay')+'_results.csv'); };
-  assayRender(true);
+  fq('#asCopy').onclick=async()=>{ try{ await navigator.clipboard.writeText(assayCopyTSV()); showToast('✅ 已複製,貼到 Excel 會跟原本的表一樣直式排列'); }catch(e){ notify('複製失敗:'+(e&&e.message?e.message:'')); } };
+  fq('#asDlCsv').onclick=()=>{ ftirSaveBlob(new Blob([assayCsv()],{type:'text/csv'}),(assayState.std.name||'assay')+'_results.csv'); };
+  assayRender();
 }
 const SPEC_TYPE_LABEL={ftir:'FTIR',uv:'UV-Vis',lc:'LC',gc:'GC',tga:'TGA',dsc:'DSC'};
 function renderGallery(){
