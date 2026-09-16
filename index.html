@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="app-version" content="2026.09.15.1">
+<meta name="app-version" content="2026.09.16.1">
 <meta name="theme-color" content="#1B4B43" id="metaThemeColor">
 <title>SFPLAB 實驗室管理系統</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>">
@@ -812,14 +812,16 @@
   html[data-skin="botanic"][data-theme="night"] body{background-image:linear-gradient(rgba(127,227,178,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(127,227,178,.05) 1px,transparent 1px);background-size:28px 28px;}
   /* 字體:日間標題用襯線,夜間卡片標題用等寬 */
   html[data-skin="botanic"] .hdr h1,html[data-skin="botanic"] .modal h2,html[data-skin="botanic"] .dash-card-title,html[data-skin="botanic"] .stat .n,html[data-skin="botanic"] .brand{font-family:var(--serif);}
-  html[data-skin="botanic"] .hdr{border-bottom:1.5px solid var(--pine);padding-bottom:12px;}
+  html[data-skin="botanic"] .hdr{position:relative;padding-bottom:12px;}
+  html[data-skin="botanic"] .hdr::after{content:"";position:absolute;left:0;right:0;bottom:0;height:1.5px;background:var(--pine);transform-origin:left center;animation:botLine .8s cubic-bezier(.2,.8,.2,1);}
+  @keyframes botLine{from{transform:scaleX(0);}to{transform:scaleX(1);}}
   html[data-skin="botanic"] .hdr h1{border-left:none;padding-left:0;font-weight:700;font-size:24px;letter-spacing:.3px;}
   html[data-skin="botanic"] .hdr .sub{letter-spacing:2px;font-size:11px;}
   html[data-skin="botanic"] .dash-card-title{font-size:15px;font-weight:600;border-bottom:1px solid var(--line);padding-bottom:8px;}
   html[data-skin="botanic"] .brand{font-size:17px;letter-spacing:1px;color:var(--pine);font-weight:700;}
   html[data-skin="botanic"] .brand::after{content:"HERBARIUM";display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:1.5px;color:var(--ink-soft);font-weight:600;margin-top:2px;}
   html[data-skin="botanic"][data-theme="night"] .hdr h1,html[data-skin="botanic"][data-theme="night"] .modal h2{font-family:var(--sans);font-weight:700;color:#FFFFFF;}
-  html[data-skin="botanic"][data-theme="night"] .hdr{border-bottom:1px solid var(--line);}
+  html[data-skin="botanic"][data-theme="night"] .hdr::after{height:1px;background:var(--line);}
   html[data-skin="botanic"][data-theme="night"] .dash-card-title{font-family:var(--mono);font-size:11px;letter-spacing:1.6px;color:var(--pine);font-weight:500;}
   html[data-skin="botanic"][data-theme="night"] .stat .n{font-family:var(--mono);}
   html[data-skin="botanic"][data-theme="night"] .brand{font-family:var(--mono);font-size:13px;letter-spacing:2px;}
@@ -827,9 +829,44 @@
   html[data-skin="botanic"][data-theme="night"] th{font-family:var(--mono);color:var(--pine);}
   /* 日間首頁右上角的植物線稿浮水印 */
   html[data-skin="botanic"] #page-dashboard{position:relative;}
-  html[data-skin="botanic"]:not([data-theme="night"]) #page-dashboard::before{content:"";position:absolute;right:0;top:-10px;width:300px;height:300px;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300' fill='none' stroke='%232F5D3A' stroke-width='1.4' stroke-linecap='round'><path d='M40 270 C90 210 150 150 250 40'/><path d='M120 180 C110 140 130 110 170 100 C170 140 150 170 120 180 Z'/><path d='M120 180 C140 150 155 130 170 100'/><path d='M170 132 C165 100 185 75 225 68 C222 105 200 128 170 132 Z'/><path d='M170 132 C185 110 205 90 225 68'/><path d='M85 225 C70 200 80 170 110 158 C115 190 105 215 85 225 Z'/><path d='M85 225 C95 200 102 180 110 158'/></svg>") center/contain no-repeat;opacity:.11;pointer-events:none;}
+  /* 首頁的植物線稿(日)與層析圖(夜):每次進首頁都用 stroke-dashoffset 自己描一次 */
+  .bot-leafmark,.bot-ticmark{display:none;}
+  html[data-skin="botanic"]:not([data-theme="night"]) .page.active .bot-leafmark{display:block;position:absolute;right:0;top:-10px;width:300px;height:300px;opacity:.13;pointer-events:none;}
+  .bot-leafmark path{fill:none;stroke:var(--pine);stroke-width:1.4;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1;animation:botDraw 1.4s ease-out forwards;}
+  .bot-leafmark path:nth-child(2){animation-delay:.15s;} .bot-leafmark path:nth-child(3){animation-delay:.3s;} .bot-leafmark path:nth-child(4){animation-delay:.45s;}
+  .bot-leafmark path:nth-child(5){animation-delay:.6s;} .bot-leafmark path:nth-child(6){animation-delay:.75s;} .bot-leafmark path:nth-child(7){animation-delay:.9s;}
+  html[data-skin="botanic"][data-theme="night"] .page.active .bot-ticmark{display:block;position:absolute;right:0;top:6px;width:min(520px,60%);height:96px;opacity:.4;pointer-events:none;}
+  .bot-ticmark path{fill:none;stroke:var(--pine);stroke-width:1.2;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;animation:botDraw 1.6s ease-out forwards;}
+  @keyframes botDraw{to{stroke-dashoffset:0;}}
+  @media (max-width:680px){.bot-leafmark,.bot-ticmark{display:none !important;}}
+  /* 儀表版的「活」感:同步 LED 呼吸、低庫存數字閃一下琥珀色 */
+  .sync-led{display:none;}
+  html[data-skin="botanic"][data-theme="night"] .sync-led{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--pine);margin-right:6px;vertical-align:middle;animation:ledBreathe 2.4s ease-in-out infinite;}
+  html[data-skin="botanic"][data-theme="night"] .sync-led.warn{background:var(--amber);box-shadow:0 0 6px var(--amber);animation:none;}
+  @keyframes ledBreathe{0%,100%{opacity:.55;box-shadow:0 0 3px var(--pine);}50%{opacity:1;box-shadow:0 0 9px var(--pine);}}
+  html[data-skin="botanic"][data-theme="night"] .bot-blink{animation:botBlink 1.2s ease-in-out 1;}
+  @keyframes botBlink{0%,100%{color:inherit;text-shadow:none;}30%{color:var(--amber);text-shadow:0 0 8px var(--amber);}60%{color:inherit;text-shadow:none;}80%{color:var(--amber);text-shadow:0 0 8px var(--amber);}}
+  /* Ctrl+K 快速搜尋 */
+  .cmdk{position:fixed;inset:0;background:rgba(18,52,48,.45);display:none;align-items:flex-start;justify-content:center;padding:12vh 16px 16px;z-index:150;}
+  .cmdk.show{display:flex;}
+  .cmdk-box{width:min(620px,100%);background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);overflow:hidden;}
+  .cmdk-input{width:100%;border:none;border-bottom:1px solid var(--line);background:var(--panel);color:var(--ink);font-family:var(--sans);font-size:16px;padding:14px 16px;outline:none;box-sizing:border-box;}
+  .cmdk-list{max-height:min(52vh,420px);overflow-y:auto;overflow-x:hidden;padding:6px;}
+  .cmdk-group{font-family:var(--mono);font-size:10px;letter-spacing:1.6px;color:var(--ink-soft);padding:8px 10px 4px;}
+  .cmdk-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--radius-sm);cursor:pointer;font-size:13.5px;color:var(--ink);}
+  .cmdk-item .sub{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--ink-soft);white-space:nowrap;}
+  .cmdk-item.sel,.cmdk-item:hover{background:var(--tint);}
+  .cmdk-item.sel{box-shadow:inset 0 0 0 1px var(--pine);}
+  .cmdk-empty{padding:18px 12px;color:var(--ink-soft);font-size:13px;text-align:center;}
+  .cmdk-foot{display:flex;gap:14px;padding:8px 14px;border-top:1px solid var(--line);font-family:var(--mono);font-size:10.5px;color:var(--ink-soft);}
+  .cmdk-foot kbd{border:1px solid var(--line);border-radius:3px;padding:0 5px;font-family:inherit;}
+  html[data-skin="botanic"] .cmdk-box{animation:modalIn .18s ease-out;}
+  #cmdkBtn{display:none;}
+  html[data-skin="botanic"] #cmdkBtn{display:flex;margin-bottom:8px;}
+  .nav-cmdk .kbd{margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--ink-soft);border:1px solid var(--line);border-radius:3px;padding:1px 5px;}
+  html[data-skin="botanic"] #cmdkIcon{-webkit-mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M11 4 A7 7 0 1 0 11 18 A7 7 0 1 0 11 4 Z M16 16 L21 21'/></svg>");mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M11 4 A7 7 0 1 0 11 18 A7 7 0 1 0 11 4 Z M16 16 L21 21'/></svg>");}
   /* 側欄:線條圖示取代 emoji;選中底塊滑動 */
-  html[data-skin="botanic"] .nav-item .ic,html[data-skin="botanic"] #themeToggleIcon,html[data-skin="botanic"] #skinToggleIcon{font-size:0;width:16px;height:16px;display:inline-block;flex-shrink:0;background:currentColor;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:center;mask-position:center;-webkit-mask-size:contain;mask-size:contain;}
+  html[data-skin="botanic"] .nav-item .ic,html[data-skin="botanic"] #themeToggleIcon,html[data-skin="botanic"] #skinToggleIcon,html[data-skin="botanic"] #cmdkIcon{font-size:0;width:16px;height:16px;display:inline-block;flex-shrink:0;background:currentColor;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:center;mask-position:center;-webkit-mask-size:contain;mask-size:contain;}
   html[data-skin="botanic"] .nav-item[data-page="dashboard"] .ic{-webkit-mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M3 11 L12 4 L21 11 M5 10 V20 H19 V10'/></svg>");mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M3 11 L12 4 L21 11 M5 10 V20 H19 V10'/></svg>");}
   html[data-skin="botanic"] .nav-item[data-page="chemicals"] .ic{-webkit-mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M9 3 H15 M10 3 V9 L4 20 H20 L14 9 V3'/></svg>");mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M9 3 H15 M10 3 V9 L4 20 H20 L14 9 V3'/></svg>");}
   html[data-skin="botanic"] .nav-item[data-page="materials"] .ic{-webkit-mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M4 20 C6 12 12 6 20 4 C19 12 14 18 4 20 Z M4 20 C9 14 13 10 20 4'/></svg>");mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M4 20 C6 12 12 6 20 4 C19 12 14 18 4 20 Z M4 20 C9 14 13 10 20 4'/></svg>");}
@@ -983,6 +1020,7 @@
       <button class="ub-switch" id="editNameBtn" type="button">✎ 編輯姓名／縮寫</button>
       <button class="ub-switch" id="switchUserBtn" type="button">登出 / 切換帳號</button>
     </div>
+    <button class="nav-item nav-cmdk" id="cmdkBtn" type="button"><span class="ic" id="cmdkIcon"></span> 快速搜尋<span class="kbd">Ctrl K</span></button>
     <nav>
       <button class="nav-item active" id="navDashboard" data-page="dashboard"><span class="ic">🏠</span> 首頁</button>
       <button class="nav-item" id="navChem" data-page="chemicals"><span class="ic">🧪</span> 藥品清單</button>
@@ -1006,13 +1044,25 @@
       <button class="nav-item nav-theme nav-skin" id="skinToggleBtn" type="button" aria-pressed="false">
         <span class="ic" id="skinToggleIcon">🌿</span> <span id="skinToggleLabel">標本館風格</span>
       </button>
-      <div class="app-version">v<span id="appVersionText">-</span><button type="button" id="checkUpdateBtn">檢查更新</button></div>
+      <div class="app-version"><span class="sync-led" id="syncLed" aria-hidden="true"></span>v<span id="appVersionText">-</span><button type="button" id="checkUpdateBtn">檢查更新</button></div>
     </nav>
   </aside>
 
   <main class="main">
     <!-- ================= PAGE: 藥品清單 ================= -->
     <section class="page active" id="page-dashboard">
+      <svg class="bot-leafmark" viewBox="0 0 300 300" aria-hidden="true">
+        <path pathLength="1" d="M40 270 C90 210 150 150 250 40"></path>
+        <path pathLength="1" d="M120 180 C110 140 130 110 170 100 C170 140 150 170 120 180 Z"></path>
+        <path pathLength="1" d="M120 180 C140 150 155 130 170 100"></path>
+        <path pathLength="1" d="M170 132 C165 100 185 75 225 68 C222 105 200 128 170 132 Z"></path>
+        <path pathLength="1" d="M170 132 C185 110 205 90 225 68"></path>
+        <path pathLength="1" d="M85 225 C70 200 80 170 110 158 C115 190 105 215 85 225 Z"></path>
+        <path pathLength="1" d="M85 225 C95 200 102 180 110 158"></path>
+      </svg>
+      <svg class="bot-ticmark" viewBox="0 0 600 100" preserveAspectRatio="none" aria-hidden="true">
+        <path pathLength="1" d="M0 90 L60 89 L70 88 L78 40 L84 88 L110 89 L118 86 L124 60 L130 88 L170 89 L178 84 L184 12 L190 84 L210 89 L240 89 L248 80 L254 55 L260 88 L300 89 L340 89 L348 78 L356 30 L364 87 L380 89 L410 89 L418 70 L424 88 L470 89 L480 86 L486 66 L492 89 L540 89 L600 90"></path>
+      </svg>
       <div class="hdr" style="margin-bottom:16px;">
         <div>
           <h1 id="dashGreeting">哈囉</h1>
@@ -2637,6 +2687,13 @@
      Firebase 設定(取代 Claude 專屬的 window.storage)
      共用資料(shared=true)存在 Firestore,個人/裝置資料(shared=false)存在瀏覽器 localStorage
 ====================================================== -->
+<div class="cmdk" id="cmdk" role="dialog" aria-modal="true" aria-label="快速搜尋">
+  <div class="cmdk-box">
+    <input class="cmdk-input" id="cmdkInput" type="text" placeholder="搜尋頁面、藥品、試材、樣品、儀器、圖書,或輸入動作…" autocomplete="off">
+    <div class="cmdk-list" id="cmdkList"></div>
+    <div class="cmdk-foot"><span><kbd>↑</kbd> <kbd>↓</kbd> 選擇</span><span><kbd>Enter</kbd> 開啟</span><span><kbd>Esc</kbd> 關閉</span></div>
+  </div>
+</div>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
@@ -3124,9 +3181,98 @@ function fmtDateTime(iso){
 }
 /* 資料載入完成前不顯示空狀態;就算載入失敗,8 秒後也要讓畫面可用 */
 setTimeout(()=>document.body.classList.add('app-ready'), 8000);
+
+/* ============ Ctrl+K 快速搜尋:頁面、動作、藥品、試材、樣品、儀器、圖書 ============ */
+const CMDK_PAGES=[['dashboard','首頁'],['chemicals','藥品清單'],['materials','試材清單'],['samples','樣品清單'],['library','圖書借閱'],
+  ['chemUsageLog','藥品使用登記'],['instrumentUsageLog','儀器使用登記'],['dutyRoster','值週生'],['todoList','待辦事項'],['instrumentManual','儀器使用步驟'],
+  ['spectra','圖譜分析'],['spectraGallery','圖譜'],['chemPurchase','採買及報修'],['softwareBackup','軟體備份'],['adminTools','管理員功能'],['superAdminTools','總管理員功能'],['admin','帳號管理']];
+const CMDK_ACTIONS=[['新增藥品','addBtn','chemicals'],['新增試材','matAddBtn','materials'],['新增樣品','smpAddBtn','samples'],['新增待辦','todoAddBtn','todoList'],
+  ['新增圖書','libAddBtn','library'],['登記藥品使用','culAddBtn','chemUsageLog'],['登記儀器使用','iulAddBtn','instrumentUsageLog'],['新增比價','cmpAddBtn','chemPurchase']];
+function cmdkIndex(){
+  const out=[];
+  const visiblePage=p=>{ const nb=document.querySelector('.nav-item[data-page="'+p+'"]'); return nb && nb.style.display!=='none'; };
+  CMDK_PAGES.forEach(([p,label])=>{ if(!visiblePage(p)) return; out.push({g:'頁面',label,sub:'',kw:p,run:()=>switchPage(p)}); });
+  CMDK_ACTIONS.forEach(([label,id,page])=>{ if(!document.getElementById(id)||!visiblePage(page)) return;
+    out.push({g:'動作',label,sub:'',kw:'新增 add',run:()=>{ switchPage(page); setTimeout(()=>{ const b=document.getElementById(id); if(b) b.click(); },60); }}); });
+  out.push({g:'動作',label:currentTheme()==='night'?'切換成日間模式':'切換成夜間模式',sub:'',kw:'theme 主題 夜間 日間',run:()=>document.getElementById('themeToggleBtn').click()});
+  out.push({g:'動作',label:document.documentElement.getAttribute('data-skin')==='botanic'?'切換成經典風格':'切換成標本館風格',sub:'',kw:'skin 風格',run:()=>document.getElementById('skinToggleBtn').click()});
+  (items||[]).forEach(i=>out.push({g:'藥品',label:i.name_zh||i.id,sub:[i.id,i.location].filter(Boolean).join(' · '),kw:[i.name_en,i.cas,i.iupac,i.id].filter(Boolean).join(' '),run:()=>{ switchPage('chemicals'); openDetail(i.id); }}));
+  (matItems||[]).forEach(i=>out.push({g:'試材',label:i.name_zh||i.species||i.id,sub:i.id,kw:[i.species,i.source,i.id].filter(Boolean).join(' '),run:()=>{ switchPage('materials'); openMatDetail(i.id); }}));
+  (smpItems||[]).forEach(i=>out.push({g:'樣品',label:i.name_zh||i.id,sub:i.id,kw:[i.species,i.extractor,i.solvent,i.id].filter(Boolean).join(' '),run:()=>{ switchPage('samples'); openSmpDetail(i.id); }}));
+  const instNames=[].concat((INSTRUMENTS_BUILTIN||[]).map(i=>((instOverrides||{})[i.name]||{}).name||i.name),(customInstruments||[]).map(i=>i&&i.name?i.name:String(i)));
+  instNames.forEach(n=>out.push({g:'儀器',label:n,sub:'',kw:'instrument 儀器',run:()=>{ switchPage('instrumentManual'); setTimeout(()=>{ try{ openImDetail(n); }catch(e){} },60); }}));
+  (libraryBooks||[]).forEach(b=>out.push({g:'圖書',label:b.title||b.code,sub:b.code||'',kw:[b.author,b.isbn,b.category].filter(Boolean).join(' '),run:()=>{ switchPage('library'); const s=document.getElementById('libSearch'); if(s){ s.value=b.title||''; s.dispatchEvent(new Event('input',{bubbles:true})); } }}));
+  (todoItems||[]).filter(t=>!t.done).forEach(t=>out.push({g:'待辦',label:t.title||'',sub:t.due||'',kw:'todo 待辦',run:()=>switchPage('todoList')}));
+  return out;
+}
+function cmdkScore(e,q){
+  if(!q) return e.g==='頁面'||e.g==='動作' ? 1 : 0;
+  const l=String(e.label||'').toLowerCase(), k=String(e.kw||'').toLowerCase(), sub=String(e.sub||'').toLowerCase();
+  if(l.startsWith(q)) return 4; if(l.includes(q)) return 3; if(sub.includes(q)) return 2; if(k.includes(q)) return 1; return 0;
+}
+let cmdkItems=[], cmdkSel=0;
+function cmdkRender(){
+  const q=document.getElementById('cmdkInput').value.trim().toLowerCase();
+  const all=cmdkIndex();
+  cmdkItems=all.map(e=>({e,s:cmdkScore(e,q)})).filter(x=>x.s>0).sort((a,b)=>b.s-a.s).slice(0,14).map(x=>x.e);
+  cmdkSel=Math.min(cmdkSel,Math.max(0,cmdkItems.length-1));
+  const list=document.getElementById('cmdkList');
+  if(!cmdkItems.length){ list.innerHTML='<div class="cmdk-empty">找不到符合的項目</div>'; return; }
+  let html='', lastG='';
+  cmdkItems.forEach((e,i)=>{ if(e.g!==lastG){ html+='<div class="cmdk-group">'+escapeHtml(e.g)+'</div>'; lastG=e.g; }
+    html+='<div class="cmdk-item'+(i===cmdkSel?' sel':'')+'" data-i="'+i+'"><span>'+escapeHtml(e.label)+'</span>'+(e.sub?'<span class="sub">'+escapeHtml(e.sub)+'</span>':'')+'</div>'; });
+  list.innerHTML=html;
+  const sel=list.querySelector('.cmdk-item.sel'); if(sel) sel.scrollIntoView({block:'nearest'});
+}
+function cmdkOpen(){ if(!currentUser) return; const ov=document.getElementById('cmdk'); ov.classList.add('show'); const inp=document.getElementById('cmdkInput'); inp.value=''; cmdkSel=0; cmdkRender(); setTimeout(()=>inp.focus(),20); }
+function cmdkClose(){ document.getElementById('cmdk').classList.remove('show'); }
+function cmdkRun(i){ const e=cmdkItems[i]; if(!e) return; cmdkClose(); try{ e.run(); }catch(err){ console.error('cmdk run failed:',err); } }
+document.getElementById('cmdkInput').addEventListener('input', ()=>{ cmdkSel=0; cmdkRender(); });
+document.getElementById('cmdkInput').addEventListener('keydown', e=>{
+  if(e.key==='ArrowDown'){ e.preventDefault(); cmdkSel=Math.min(cmdkItems.length-1,cmdkSel+1); cmdkRender(); }
+  else if(e.key==='ArrowUp'){ e.preventDefault(); cmdkSel=Math.max(0,cmdkSel-1); cmdkRender(); }
+  else if(e.key==='Enter'){ e.preventDefault(); cmdkRun(cmdkSel); }
+  else if(e.key==='Escape'){ e.preventDefault(); e.stopPropagation(); cmdkClose(); }
+});
+document.getElementById('cmdkList').addEventListener('click', e=>{ const it=e.target.closest('.cmdk-item'); if(it) cmdkRun(+it.dataset.i); });
+document.getElementById('cmdk').addEventListener('click', e=>{ if(e.target.id==='cmdk') cmdkClose(); });
+document.getElementById('cmdkBtn').addEventListener('click', cmdkOpen);
+document.addEventListener('keydown', e=>{
+  if((e.ctrlKey||e.metaKey) && !e.altKey && String(e.key).toLowerCase()==='k'){ e.preventDefault(); const ov=document.getElementById('cmdk'); if(ov.classList.contains('show')) cmdkClose(); else cmdkOpen(); }
+}, true);
+
+/* ============ 標本館風格:統計數字從上一個值跑到新值;夜間低庫存閃一下琥珀色 ============ */
+(function(){
+  const busy=new WeakSet();
+  function animateTo(el,to){
+    const from=+el.dataset.shown||0, t0=performance.now(), dur=650; busy.add(el); el.dataset.target=String(to);
+    const step=now=>{ const k=Math.min(1,(now-t0)/dur), ease=1-Math.pow(1-k,3);
+      const v=String(Math.round(from+(to-from)*ease)); el.dataset.anim=v; el.textContent=v;
+      if(k<1){ requestAnimationFrame(step); return; }
+      el.dataset.shown=String(to);
+      // 動畫期間(或分頁在背景時)數字又變了:接著跑到最新值,不要停在舊目標
+      const latest=+el.dataset.target;
+      if(isFinite(latest)&&latest!==to) animateTo(el,latest); else busy.delete(el); };
+    requestAnimationFrame(step);
+  }
+  const obs=new MutationObserver(ms=>{
+    if(document.documentElement.getAttribute('data-skin')!=='botanic') return;
+    const seen=new Set();
+    ms.forEach(m=>{ const el=m.target.nodeType===3?m.target.parentElement:m.target; const n=el&&el.closest&&el.closest('.stat .n, .dash-chip .n'); if(n) seen.add(n); });
+    seen.forEach(n=>{
+      const t=n.textContent.trim(); if(!/^\d{1,6}$/.test(t)) return;
+      if(t===n.dataset.anim) return;                       // 自己寫進去的中間值
+      if(busy.has(n)){ n.dataset.target=t; return; }       // 動畫中先記下新目標
+      const to=+t; if(String(+n.dataset.shown||0)===t) return;
+      animateTo(n,to);
+      if(n.id==='statLow'||n.closest('.dash-chip.urgent')){ n.classList.remove('bot-blink'); void n.offsetWidth; if(to>0) n.classList.add('bot-blink'); }
+    });
+  });
+  obs.observe(document.body,{subtree:true,childList:true,characterData:true});
+})();
 /* ---- 離線提示 ---- */
-window.addEventListener('offline', ()=>showToast('網路已中斷,現在的操作可能存不進去;連上後再試一次。', 'error', 8000));
-window.addEventListener('online', ()=>showToast('網路已恢復。'));
+window.addEventListener('offline', ()=>{ showToast('網路已中斷,現在的操作可能存不進去;連上後再試一次。', 'error', 8000); const led=document.getElementById('syncLed'); if(led) led.classList.add('warn'); });
+window.addEventListener('online', ()=>{ showToast('網路已恢復。'); const led=document.getElementById('syncLed'); if(led) led.classList.remove('warn'); });
 function localDateISO(date){
   const d = date || new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -9738,6 +9884,7 @@ function notifyRealtimeError(label, err){
   if(now - realtimeErrorNotifiedAt < 60*1000) return;
   realtimeErrorNotifiedAt = now;
   showToast('即時同步中斷,目前顯示的可能不是最新資料;請檢查網路後重新整理。', 'error', 8000);
+  const led=document.getElementById('syncLed'); if(led) led.classList.add('warn');
 }
 function watchCollection(query, onData, label){
   const unsubscribe = query.onSnapshot(snap=>onData(snapshotItems(snap)), err=>notifyRealtimeError(label, err));

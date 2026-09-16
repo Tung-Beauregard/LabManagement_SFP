@@ -58,6 +58,8 @@
 - 主題在 `<head>` 最前面用一小段 script 先套用,避免夜間模式先閃白底
 - 所有顏色都走 CSS 變數(`--panel`, `--ink`, `--pine`, `--line` 等),日夜兩套變數對稱定義。新增 UI 時**務必用變數,不要硬編碼顏色**,否則夜間模式會出現亮塊
 - **第二個軸:介面風格**。`<html data-skin="botanic">` 是「標本館」風格(日間 = 植物標本館:羊皮紙底、深林綠、襯線標題;夜間 = 實驗室儀表:深墨綠底、螢光薄荷、等寬字標題),同樣存 localStorage(`ui-skin`),與日夜獨立。所有規則都以 `html[data-skin="botanic"]` 為前綴疊在經典版之上,沒有這個屬性就是原本的經典日夜版,不能動到經典版的規則。側欄 emoji 圖示在這個風格下由 CSS mask 的 SVG 線條圖示取代(以 `data-page` 選擇),按鍵浮起、主要按鈕光暈、頁面淡入、彈窗放大、側欄底塊滑動這些動態也只在這個風格下啟用,並尊重 `prefers-reduced-motion`
+- 標本館風格的「開場自畫線」:頁首底線用 `.hdr::after` 的 scaleX 畫出;首頁右上角的植物線稿(日)與層析圖(夜)是 `#page-dashboard` 裡的 inline SVG(`.bot-leafmark` / `.bot-ticmark`),用 `pathLength="1"` 加 stroke-dashoffset 描線,每次進首頁重播。夜間版另有同步 LED(`#syncLed`,離線或即時同步失敗轉琥珀色)與統計數字跑動、低庫存數字閃爍(MutationObserver 監看 `.stat .n` 與 `.dash-chip .n`)
+- **Ctrl+K / Cmd+K 快速搜尋**(所有風格都有,標本館風格側欄另有按鈕):`cmdkIndex()` 每次開啟時從 items / matItems / smpItems / 儀器 / libraryBooks / todoItems 現算索引,頁面與動作永遠在最前;選到項目會先 `switchPage` 再開該項目的詳細頁
 
 ---
 
