@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="app-version" content="2026.09.16.1">
+<meta name="app-version" content="2026.09.16.2">
 <meta name="theme-color" content="#1B4B43" id="metaThemeColor">
 <title>SFPLAB 實驗室管理系統</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>">
@@ -3399,6 +3399,14 @@ function nextSeq(list){
   return max+1;
 }
 function genId(list, prefix){ return `${prefix}-${String(nextSeq(list)).padStart(4,'0')}`; }
+/* 儲存後把資料放進本機清單。Firestore 的即時同步常在 set() 回來之前就把新文件推進來,
+   整個清單已經含有這筆,這時再 push 就會看到兩筆;改成有就替換、沒有才加 */
+function upsertLocal(list, item){
+  if(!Array.isArray(list)||!item) return list;
+  const i=list.findIndex(x=>x&&((item._doc_id&&x._doc_id===item._doc_id)||(item.id!=null&&x.id===item.id)));
+  if(i>=0) list[i]=item; else list.push(item);
+  return list;
+}
 
 /* ======================================================
    表單草稿自動保存(個人專屬,離開頁面/不小心關閉也不會遺失)
@@ -4348,7 +4356,7 @@ async function handleSave(){
   const ok = await fsSetItem('chemicals', data);
   if(!ok){ if(photoInfo.uploaded) await deleteStoredPhoto(photoInfo.path); notify('儲存失敗,請檢查網路連線後再試一次。'); return; }
   if(editingId){ items[items.findIndex(i=>i.id===editingId)] = data; }
-  else{ items.push(data); }
+  else{ upsertLocal(items, data); }
   if(existingItem && existingItem.photo_path && existingItem.photo_path!==photoInfo.path) await deleteStoredPhoto(existingItem.photo_path);
   if(!editingId) await clearDraft(CHEM_DRAFT_KEY);
   const cpIdToRemove = (!editingId && typeof cpActionId !== 'undefined') ? cpActionId : null;
@@ -4706,7 +4714,7 @@ async function handleMatSave(){
   const ok = await fsSetItem('materials', data);
   if(!ok){ if(photoInfo.uploaded) await deleteStoredPhoto(photoInfo.path); notify('儲存失敗,請檢查網路連線後再試一次。'); return; }
   if(editingMatId){ matItems[matItems.findIndex(i=>i.id===editingMatId)] = data; }
-  else{ matItems.push(data); }
+  else{ upsertLocal(matItems, data); }
   if(existingItem && existingItem.photo_path && existingItem.photo_path!==photoInfo.path) await deleteStoredPhoto(existingItem.photo_path);
   if(!editingMatId) await clearDraft(MAT_DRAFT_KEY);
   closeMatForm();
@@ -5270,7 +5278,7 @@ async function handleSmpSave(){
   const ok = await fsSetItem('samples', data);
   if(!ok){ await Promise.all(uploadedNow.map(deleteStoredPhoto)); notify('儲存失敗,請檢查網路連線後再試一次。'); return; }
   if(editingSmpId){ smpItems[smpItems.findIndex(i=>i.id===editingSmpId)] = data; }
-  else{ smpItems.push(data); }
+  else{ upsertLocal(smpItems, data); }
   if(existingItem){
     const oldPaths=[existingItem.photo_extract_path,existingItem.photo_bottle_path,existingItem.moisture&&existingItem.moisture.photo_path];
     const newPaths=[extractPhoto.path,bottlePhoto.path,moisturePhoto.path];
@@ -5579,7 +5587,7 @@ document.getElementById('culSaveBtn').addEventListener('click', async ()=>{
       tx.set(logRef, log);
     });
     chem.quantity = committedQty;
-    culItems.push(log);
+    upsertLocal(culItems, log);
     closeCulForm();
     renderAll();
     renderCulAll();
@@ -5741,7 +5749,7 @@ document.getElementById('iulSaveBtn').addEventListener('click', async ()=>{
   };
   const ok = await fsSetItem('instrument-reservations', rec);
   if(!ok){ notify('儲存失敗,請檢查網路連線後再試一次。'); return; }
-  iulItems.push(rec);
+  upsertLocal(iulItems, rec);
   closeIulForm();
   renderIulAll();
 });
@@ -6269,7 +6277,7 @@ document.getElementById('todoSaveBtn').addEventListener('click', async ()=>{
   };
   const ok = await fsSetItem('todo-items', item);
   if(!ok){ notify('儲存失敗,請檢查網路連線後再試一次。'); return; }
-  todoItems.push(item);
+  upsertLocal(todoItems, item);
   closeTodoForm();
   renderTodoAll();
 });
@@ -7889,7 +7897,7 @@ document.getElementById('cmpDetailSaveBtn').addEventListener('click', async ()=>
   const ok = await fsSetItem('price-comparisons', record);
   if(!ok){ notify('儲存失敗,請檢查網路連線後再試一次。'); return; }
   if(cmpCurrentId){ cmpItems = cmpItems.map(c=>c.id===cmpCurrentId?record:c); }
-  else{ cmpItems.push(record); cmpCurrentId = record.id; }
+  else{ upsertLocal(cmpItems, record); cmpCurrentId = record.id; }
 
   /* 外部報價單:沒有對應的待購買項目時,自動補一張標籤並直接放進「已詢價待審核」 */
   let cardCreated = false;
@@ -7912,7 +7920,7 @@ document.getElementById('cmpDetailSaveBtn').addEventListener('click', async ()=>
     cpLogPush(newItem, '外部報價建立', '跳過待購買,直接進入已詢價待審核');
     const okItem = await fsSetItem('chem-purchases', newItem);
     if(okItem){
-      cpItems.push(newItem);
+      upsertLocal(cpItems, newItem);
       record.linked_cp_id = newItem.id;
       cpLogPush(record, '建立採買標籤', newItem.name_zh);
       if(!await fsSetItem('price-comparisons', record)) showToast('採買標籤已建立,但比價紀錄的連結儲存失敗;請重新整理後確認。', 'error');
@@ -8052,7 +8060,7 @@ document.getElementById('cmpSubmitDecisionBtn').addEventListener('click', async 
       created_by: (currentUser&&currentUser.code)||null, created_at: new Date().toISOString(), logs: []
     };
     cpLogPush(newItem, '由比價工具建立', `${vendorLabel} ${packStr} $${entry.price}`);
-    cpItems.push(newItem);
+    upsertLocal(cpItems, newItem);
     if(!await fsSetItem('chem-purchases', newItem)){
       cpItems = cpItems.filter(i=>i!==newItem);
       showToast('採買項目建立失敗,請檢查網路連線後再試一次。', 'error'); return;
@@ -8102,7 +8110,7 @@ async function cpStartComparison(id){
   };
   cpLogPush(record, '建立比價', item.name_zh);
   cpLogPush(item, '開始詢價比價', '');
-  cmpItems.push(record);
+  upsertLocal(cmpItems, record);
   const okCmp = await fsSetItem('price-comparisons', record);
   if(!okCmp){
     cmpItems.pop();
@@ -8436,7 +8444,7 @@ async function cpImportQuoteRows(rows){
     const okRec = await fsSetItem('price-comparisons', record);
     const okItem = okRec ? await fsSetItem('chem-purchases', item) : false;
     if(okRec && okItem){
-      cmpItems.push(record);
+      upsertLocal(cmpItems, record);
       cpItems.push(item);
       okCount++;
     }else{
@@ -8567,7 +8575,7 @@ document.getElementById('libBookSave').addEventListener('click',async()=>{
     updated_at:new Date().toISOString(), updated_by_uid:currentUser.uid
   };
   if(!await fsSetItem('library-books',book)){ notify('圖書儲存失敗。'); return; }
-  if(old) libraryBooks[libraryBooks.findIndex(b=>b.id===old.id)]=book; else libraryBooks.push(book);
+  if(old) libraryBooks[libraryBooks.findIndex(b=>b.id===old.id)]=book; else upsertLocal(libraryBooks, book);
   closeLibraryBookForm(); renderLibraryAll();
 });
 document.getElementById('libDeleteBtn').addEventListener('click',async()=>{
@@ -8602,7 +8610,7 @@ document.getElementById('libBorrowConfirm').addEventListener('click',async()=>{
       tx.set(loanRef,loan);
     });
   }catch(err){ notify(err&&err.message==='already-borrowed'?'這本書剛剛已被其他人借走。':'借閱失敗,請檢查網路與權限。'); return; }
-  book.current_loan_id=loanRef.id; libraryLoans.push(loan); closeLibraryBorrow(); renderLibraryAll(); showToast('借閱完成');
+  book.current_loan_id=loanRef.id; upsertLocal(libraryLoans, loan); closeLibraryBorrow(); renderLibraryAll(); showToast('借閱完成');
 });
 async function returnLibraryLoan(loanId){
   const loan=libraryLoans.find(l=>l.id===loanId), book=loan&&libraryBooks.find(b=>b.id===loan.book_id);
