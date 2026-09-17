@@ -126,6 +126,11 @@
 - 修改 GC-MS 的流程:解出 base64 → 改 → 語法檢查 iframe 內 JS → 重新 base64 → 回填 `GC_IFRAME_B64`
 - **匯出 Word(期刊格式)**:iframe 的「匯出 Word」只送 `{gcExportDocx, rows, svg, title}` 給主系統,主系統用 JSZip(cdnjs)直接組 OOXML(`gcExportDocx` / `gdxBuildParts`):A4、字 12pt、中文標楷體英數 Times New Roman、三線表 0.75pt、E-/Z- 斜體、Area% 前二高差距 <5 兩列紅粗否則只標最高、≥10 未標紅整列紫、右下「精油量/鮮重/萃取率」註記。重量可從樣品清單帶入
 - 圖上標題框字體為 Times New Roman + 標楷體(依字元自動落字),`s.showTitle` 可整個關掉(含 PNG 與存入圖譜)
+- **手動積分表**(峰表上方可收合的面板,`parseTabulate` / `manualPeaks` / `tabulateText`):格式就是 MSD ChemStation「Tabulate → Copy」的內容(Peak #、Ret Time、Type、Width、Area、Start Time、End Time,Tab 或空白分隔,標題列略過)。套用後該樣品 `s.manualOn=true`,`activePeaks()` 改回傳表內的峰,自動積分與 rtMin / minPct 篩選都不再作用(刪峰 `s.dropped` 仍有效);Area(%)、KI、圖上編號、Word / CSV 匯出、存入圖譜全部跟著走。Area 留空或填 `-` 的列,用 Start–End 兩端連成的直線基線重新積分;相鄰兩列 End / Start 相接(≤1.5 個取樣點)視為連峰,共用一條基線、交界處垂直切開。面積單位比照 ChemStation(abundance × 0.1 秒,即 abundance·min × 600,`CS_AREA`),用實際檔案對過大峰比值 594–601
+- 成分名、標記、標籤位置都以峰頂 RT `toFixed(3)` 為鍵;ChemStation 的峰頂 RT 與本工具會差 0.001–0.003 min,所以切換手動 / 自動時用 `carryEdits()` 把 ±0.03 min 內最近那支的標註抄到新鍵,不要改成直接搬移(兩邊都要留)
+- 「圖上顯示積分基線」(`s.showInt`)會畫出每支峰的基線與兩端切線(自動模式畫 ALS 基線),勾著的時候 PNG 與存入圖譜也會帶著線
+- 已知的自動積分限制(尚未改,動了會讓既有樣品重新編號,要先跟使用者確認):ALS 基線 λ 固定 1e5,取樣密時基線會爬進拖尾峰底下;峰的邊界門檻是全圖最高峰的 0.2%,有超大主峰時小峰會被切掉或漏掉;突出度只跟相鄰谷比,峰頂有雜訊的寬峰會整支漏掉
+- Agilent 的 `CHROMTAB.CSV` 檔名全都一樣,樣品名在檔頭的欄名列 / 值列(`"Path","File","Date Acquired","Sample","Misc"`),`parseCSV` 會從那裡取名
 
 #### GC-MS 的資料層(分兩種,不要搞混)
 
