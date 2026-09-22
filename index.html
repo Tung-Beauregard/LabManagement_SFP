@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="app-version" content="2026.09.17.3">
+<meta name="app-version" content="2026.09.22.1">
 <meta name="theme-color" content="#1B4B43" id="metaThemeColor">
 <title>SFPLAB 實驗室管理系統</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>">
@@ -393,6 +393,40 @@
   .calc-result .item .l{font-size:10.5px;color:var(--ink-soft);margin-top:2px;}
   .calc-box .btn{margin-top:10px;width:100%;}
 
+  /* ---- 試材 / 樣品:表單步驟、編號列、萃取率讀數、試材與樣品互相連結 ---- */
+  .field-hint{font-size:11px;color:var(--ink-soft);margin-top:4px;line-height:1.5;}
+  .sci-name{font-style:italic;}
+  .section-title .step-no{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;margin-right:7px;border-radius:var(--pill);background:var(--pine);color:var(--on-pine);font-size:11px;font-weight:700;letter-spacing:0;vertical-align:1px;}
+  .smp-idline{display:flex;gap:14px;align-items:flex-start;}
+  .smp-idline-main{flex:1;min-width:0;}
+  .smp-idline-qr{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:6px;}
+  #smpQrTarget{padding:4px;background:#fff;border:1px solid var(--line);border-radius:var(--radius-sm);line-height:0;}
+  .link-btn{background:none;border:0;padding:0;color:var(--pine);text-decoration:underline;cursor:pointer;font:inherit;}
+  .link-note{font-size:11.5px;line-height:1.5;color:var(--amber-ink);background:var(--amber-bg);padding:6px 9px;border-radius:var(--radius-sm);margin-top:8px;}
+  .link-note .link-btn{color:inherit;font-weight:700;}
+  .rate-box{display:flex;align-items:center;justify-content:space-between;gap:6px 12px;flex-wrap:wrap;border:1px solid var(--line);background:var(--tint);border-radius:var(--radius);padding:12px 14px;margin:2px 0 14px;}
+  .rate-box .rate-k{font-size:12px;font-weight:700;color:var(--pine-deep);}
+  .rate-box .rate-formula{font-weight:400;color:var(--ink-soft);margin-left:8px;font-size:11px;}
+  .rate-box input{border:0;background:transparent;padding:0;width:130px;text-align:right;font-family:var(--mono);font-size:20px;font-weight:700;color:var(--pine);outline:none;}
+  .rate-box .rate-missing{flex-basis:100%;font-size:11.5px;line-height:1.5;color:var(--amber-ink);}
+  .rate-box .rate-missing:empty{display:none;}
+  .pending-tag{display:inline-block;font-size:10.5px;padding:2px 7px;border-radius:var(--pill);background:var(--amber-bg);color:var(--amber-ink);white-space:nowrap;font-weight:600;}
+  .name-block .pending-tag{margin:4px 4px 0 0;}
+  #smpTbody .id-badge, .lineage-item .id-badge{white-space:normal;overflow-wrap:anywhere;}
+  .lineage-box{margin-top:14px;border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;background:var(--panel-soft);}
+  .lineage-title{font-size:11.5px;font-weight:700;color:var(--ink-soft);margin-bottom:6px;}
+  .lineage-item{display:flex;align-items:center;gap:6px 8px;flex-wrap:wrap;width:100%;text-align:left;padding:8px 6px;border:0;border-top:1px solid var(--line);background:none;cursor:pointer;font:inherit;font-size:12.5px;color:var(--ink);}
+  .lineage-item:first-child{border-top:0;}
+  .lineage-item:hover{background:var(--hover);}
+  .lineage-item .when{margin-left:auto;font-size:11px;color:var(--ink-soft);}
+  .lineage-empty{font-size:12px;color:var(--ink-soft);}
+  .lineage-link{padding-left:10px;margin-top:10px;font-size:12.5px;}
+  .lineage-link .k{color:var(--ink-soft);margin-right:4px;}
+  .btn[disabled]{opacity:.55;cursor:default;}
+  #smpDryModeSeg button:focus-visible{outline-offset:-3px;}
+  #smpDryModeSeg button.on:focus-visible{outline-color:var(--on-pine);}
+  .tag-stack{display:inline-flex;flex-wrap:wrap;gap:4px;}
+
   /* detail / QR modal */
   .label-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px;position:relative;overflow:hidden;}
   .label-stripe{position:absolute;left:0;top:0;bottom:0;width:6px;}
@@ -680,6 +714,11 @@
     .label-grid{grid-template-columns:1fr;padding-left:0;text-align:left;}
 
     .modal-actions{padding-bottom:calc(12px + env(safe-area-inset-bottom));}
+    /* 樣品表單:手機上編號欄維持整列寬,QR 與下載鈕排到下面,長編號才不會被截掉 */
+    .smp-idline{flex-direction:column;align-items:stretch;gap:10px;}
+    .smp-idline-qr{flex-direction:row;align-items:center;gap:10px;align-self:flex-start;}
+    #smpDetailOverlay .label-grid{padding-left:10px;}
+    tr.row td .tag-stack{justify-content:flex-end;}
   }
 
   /* ---- 夜間模式微調:對比與眩光 ---- */
@@ -943,6 +982,7 @@
   /* 動態:按鍵浮起與按下回彈、主要按鈕擴散光暈、頁面淡入、彈窗放大 */
   html[data-skin="botanic"] .btn{position:relative;overflow:hidden;transition:transform .15s ease,box-shadow .15s ease,background-color .15s ease,opacity .15s ease;}
   html[data-skin="botanic"] .btn:hover{opacity:1;transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.14);}
+  html[data-skin="botanic"] .btn[disabled],html[data-skin="botanic"] .btn[disabled]:hover{opacity:.55;transform:none;box-shadow:none;}
   html[data-skin="botanic"] .btn:active{transform:translateY(0) scale(.97);box-shadow:none;}
   html[data-skin="botanic"] .btn-primary::after{content:"";position:absolute;left:50%;top:50%;width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,.5);transform:translate(-50%,-50%) scale(0);opacity:0;pointer-events:none;}
   html[data-skin="botanic"][data-theme="night"] .btn-primary::after{background:rgba(15,26,22,.35);}
@@ -1216,7 +1256,7 @@
       </div>
 
       <div class="toolbar">
-        <input type="text" id="matSearch" placeholder="搜尋物種 / 來源 / 編號...">
+        <input type="text" id="matSearch" placeholder="搜尋中文名稱 / 學名 / 來源 / 編號...">
         <select id="matFilterStorage"><option value="">所有存放位置</option></select>
         <select id="matFilterUse"><option value="">所有用途</option></select>
         <select id="matFilterOwner"><option value="">所有使用者的試材</option></select>
@@ -1231,7 +1271,7 @@
         <table class="sortable">
           <thead>
             <tr>
-              <th></th><th>中文名稱</th><th>物種</th><th>來源</th><th>部位</th><th>存放位置</th><th>取得日期</th><th>預計用途</th><th></th>
+              <th>試材</th><th style="width:12%;">編號</th><th style="width:8%;">部位</th><th style="width:12%;">來源</th><th style="width:12%;">存放位置</th><th style="width:11%;">取得日期</th><th style="width:10%;">預計用途</th><th style="width:11%;">已製備樣品</th><th style="width:56px;"></th>
             </tr>
           </thead>
           <tbody id="matTbody"></tbody>
@@ -1258,7 +1298,7 @@
       </div>
 
       <div class="toolbar">
-        <input type="text" id="smpSearch" placeholder="搜尋物種 / 編號...">
+        <input type="text" id="smpSearch" placeholder="搜尋中文名稱 / 學名 / 編號 / 來源...">
         <select id="smpFilterSolvent"><option value="">所有萃取物</option></select>
         <select id="smpFilterOwner"><option value="">所有持有人</option></select>
         <button class="btn btn-ghost" id="smpExportJsonBtn">匯出備份</button>
@@ -1271,7 +1311,7 @@
         <table class="sortable">
           <thead>
             <tr>
-              <th>中文名稱</th><th>編號</th><th>持有人</th><th>萃取日期</th><th>萃取物</th><th>分離部</th><th>萃取物重量</th><th>萃取率</th><th></th>
+              <th>樣品</th><th style="width:21%;">編號</th><th style="width:7%;">部位</th><th style="width:13%;">萃取物</th><th style="width:11%;">萃取日期</th><th style="width:11%;">萃取物重量</th><th style="width:8%;">萃取率</th><th style="width:9%;">持有人</th><th style="width:56px;"></th>
             </tr>
           </thead>
           <tbody id="smpTbody"></tbody>
@@ -2576,8 +2616,8 @@
       <div class="label-stripe" style="background:var(--pine);"></div>
       <div class="label-top">
         <div>
-          <h3 id="md_species"></h3>
-          <div class="en" id="md_id"></div>
+          <h3 id="md_name_zh"></h3>
+          <div class="en" id="md_species"></div>
         </div>
       </div>
       <div class="label-tags-row">
@@ -2594,8 +2634,14 @@
         <span>預計用途 <span id="md_use"></span></span>
         <span>建立者 <span id="md_creator"></span></span>
       </div>
+      <div class="qr-id-sm" id="md_id"></div>
+    </div>
+    <div class="lineage-box">
+      <div class="lineage-title">由這個試材製備的樣品 <span id="md_samplesCount"></span></div>
+      <div id="md_samplesList"></div>
     </div>
     <div class="modal-actions">
+      <button class="btn btn-ghost btn-sm" id="matNewSampleBtn">＋ 以此試材新增樣品</button>
       <div style="flex:1;"></div>
       <button class="btn btn-primary btn-sm" id="matEditFromDetailBtn">編輯</button>
     </div>
@@ -2613,8 +2659,8 @@
       <input type="text" id="m_id" readonly>
     </div>
     <div class="field row2">
-      <div><label>物種 *</label><input type="text" id="m_species" list="speciesList" placeholder="例如 台灣土肉桂"><div style="font-size:11px;color:var(--ink-soft);margin-top:4px;">請填寫學名,例如 Acacia confusa;之前輸入過的物種會出現在下拉選單中</div></div>
       <div><label>中文名稱</label><input type="text" id="m_name_zh" placeholder="例如 相思樹"></div>
+      <div><label>學名 *</label><input type="text" id="m_species" list="speciesList" placeholder="例如 Acacia confusa"><div class="field-hint">之前輸入過的學名會出現在下拉選單中</div></div>
     </div>
     <div class="field">
       <label>來源</label><input type="text" id="m_source" placeholder="例如 宜蘭 / 採集人">
@@ -2679,18 +2725,28 @@
         </div>
       </div>
       <div class="label-tags-row">
+        <span id="sd_part"></span>
         <span id="sd_extract"></span>
         <span id="sd_fraction"></span>
+        <span id="sd_pending"></span>
       </div>
       <div class="label-primary-row">
         <div><span class="k">萃取物重量</span> <span id="sd_weight"></span></div>
         <div><span class="k">萃取率</span> <span id="sd_rate"></span></div>
       </div>
+      <div class="label-grid">
+        <div><span class="k">萃取方法</span> <span id="sd_method"></span></div>
+        <div><span class="k">試材鮮重</span> <span id="sd_fresh"></span></div>
+        <div><span class="k">絕乾重</span> <span id="sd_dry"></span></div>
+        <div><span class="k">濕基含水率</span> <span id="sd_moisture"></span></div>
+      </div>
+      <div class="lineage-link" id="sd_materialRow" style="display:none;"><span class="k">來源試材</span> <button type="button" class="link-btn" id="sd_materialLink"></button></div>
       <div id="sd_photoWrap" style="padding-left:10px;margin-top:10px;display:flex;gap:8px;"></div>
       <div class="label-secondary-row">
         <span>萃取日期 <span id="sd_date"></span></span>
         <span>萃取者 <span id="sd_extractor"></span></span>
         <span>持有人 <span id="sd_owner"></span></span>
+        <span>來源 <span id="sd_source"></span></span>
         <span>取得日期 <span id="sd_acquired"></span></span>
       </div>
       <div class="qr-id-sm" id="sd_id"></div>
@@ -2710,56 +2766,58 @@
     <button class="close" aria-label="關閉" id="smpFormClose">✕</button>
     <h2 id="smpFormTitle">新增樣品</h2>
     <div id="smpCreatorBanner" style="display:none;font-size:12px;padding:8px 10px;border-radius:var(--radius-sm);margin-bottom:14px;"></div>
-    <div id="smpQrSection" style="display:none;text-align:center;margin-bottom:16px;padding:12px;background:var(--panel-soft);border-radius:var(--radius);">
-      <div id="smpQrTarget" style="display:inline-block;"></div>
-      <div style="font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-top:6px;" id="smpQrIdLabel"></div>
-      <div style="margin-top:8px;"><button class="btn btn-ghost btn-sm" id="smpDownloadQrBtn" type="button">下載 QR code</button></div>
-    </div>
-    <div class="field id-preview">
-      <label>編號</label>
-      <input type="text" id="s_id" readonly>
+    <div class="smp-idline">
+      <div class="smp-idline-main">
+        <div class="field id-preview" style="margin-bottom:0;">
+          <label>樣品編號(自動產生)</label>
+          <input type="text" id="s_id" readonly tabindex="-1">
+          <div class="field-hint" id="s_id_hint"></div>
+        </div>
+      </div>
+      <div class="smp-idline-qr" id="smpQrSection" style="display:none;">
+        <div id="smpQrTarget"></div>
+        <button class="btn btn-ghost btn-sm" id="smpDownloadQrBtn" type="button">下載 QR code</button>
+      </div>
     </div>
 
-    <div class="section-title first">試材資料</div>
+    <div class="section-title"><span class="step-no">1</span>試材</div>
     <div class="field">
-      <label>從試材匯入(選填)</label>
-      <select id="s_import_material"><option value="">不匯入 / 手動填寫</option></select>
+      <label>來源試材</label>
+      <select id="s_import_material"><option value="">不連結,手動填寫</option></select>
+      <div class="field-hint" id="s_material_hint">從試材清單選一筆,下面的資料會自動帶入;清單裡沒有的話就手動填寫。</div>
+      <div class="link-note" id="s_material_locked" style="display:none;">下面的資料來自試材清單,需要修改的話請先 <button type="button" class="link-btn" id="s_unlinkMaterialBtn">解除連結</button></div>
     </div>
     <div class="field row2">
-      <div>
-        <label>物種 *</label><input type="text" id="s_species" list="speciesList">
-        <div style="font-size:11px;color:var(--ink-soft);margin-top:4px;">請填寫學名,例如 Acacia confusa;之前輸入過的物種會出現在下拉選單中</div>
-      </div>
       <div><label>中文名稱 *</label><input type="text" id="s_name_zh" placeholder="例如 相思樹"></div>
+      <div>
+        <label>學名 *</label><input type="text" id="s_species" list="speciesList" placeholder="例如 Acacia confusa">
+        <div class="field-hint">之前輸入過的學名會出現在下拉選單中</div>
+      </div>
     </div>
     <div class="field row3eq">
-      <div><label>來源</label><input type="text" id="s_source"></div>
+      <div><label>部位</label>
+        <select id="s_part"><option value="">請選擇部位</option></select>
+      </div>
+      <div><label>來源</label><input type="text" id="s_source" placeholder="例如 宜蘭 / 採集人"></div>
       <div>
         <label>取得日期</label>
         <input type="date" id="s_acquired_date">
         <div class="unknown-row"><input type="checkbox" id="s_acquired_unknown"><label for="s_acquired_unknown" style="margin:0;">日期未知</label></div>
       </div>
-      <div><label>部位</label>
-        <select id="s_part"><option value="">請選擇部位</option></select>
-      </div>
     </div>
-    <div class="section-title">萃取資訊</div>
+
+    <div class="section-title"><span class="step-no">2</span>萃取</div>
     <div class="field row2">
-      <div><label>萃取日期</label><input type="date" id="s_extraction_date"></div>
       <div><label>萃取方法</label>
         <select id="s_extraction_method">
           <option value="">請選擇方法</option>
         </select>
       </div>
+      <div><label>萃取日期</label><input type="date" id="s_extraction_date"></div>
     </div>
     <div class="field row2">
-      <div><label>萃取者</label><input type="text" id="s_extractor" placeholder="預設帶入目前登入者"></div>
       <div id="s_solvent_wrap"><label>萃取溶劑</label>
         <select id="s_solvent"></select>
-      </div>
-      <div id="s_solvent_other_wrap" style="display:none;">
-        <label>自填溶劑名稱</label>
-        <input type="text" id="s_solvent_other">
       </div>
       <div id="s_extract_type_wrap" style="display:none;">
         <label>萃取物</label>
@@ -2769,6 +2827,11 @@
           <option value="水蒸氣淋溶物">水蒸氣淋溶物</option>
         </select>
       </div>
+      <div id="s_solvent_other_wrap" style="display:none;">
+        <label>自填溶劑名稱</label>
+        <input type="text" id="s_solvent_other">
+      </div>
+      <div><label>萃取者</label><input type="text" id="s_extractor" placeholder="預設帶入目前登入者"></div>
     </div>
     <div class="field row2" id="s_fraction_row">
       <div><label>是否為分離部</label>
@@ -2787,38 +2850,30 @@
         </select>
       </div>
     </div>
-    <div class="field row2">
-      <div><label>試材鮮重(g)</label><input type="number" id="s_material_fresh_weight" step="any" min="0" placeholder="萃取投入的試材總鮮重"></div>
-      <div><label>萃取物重量(g)</label><input type="number" id="s_sample_weight" step="any" min="0"></div>
+
+    <div class="section-title"><span class="step-no">3</span>重量與萃取率</div>
+    <div class="field">
+      <label>試材鮮重(g)</label>
+      <input type="number" id="s_material_fresh_weight" step="any" min="0" inputmode="decimal" placeholder="這次萃取投入的整批試材鮮重">
     </div>
     <div class="field">
-      <label>絕乾重(g)</label>
-      <div style="display:flex;gap:8px;">
-        <input type="number" id="s_dry_weight" step="any" min="0" placeholder="可手動輸入,或用下方按鈕帶入" style="flex:1;">
-        <button class="btn btn-ghost btn-sm" id="calcDryFromMoistureBtn" type="button">由含水量換算</button>
+      <label>絕乾重怎麼得到</label>
+      <div class="ftir-seg" id="smpDryModeSeg" role="group" aria-label="絕乾重怎麼得到">
+        <button type="button" data-mode="moisture">取樣測含水量換算</button>
+        <button type="button" data-mode="manual">直接輸入絕乾重</button>
       </div>
-      <div class="unknown-row" style="margin-top:8px;">若試材已為絕乾狀態,可直接在此欄位輸入乾重,不需使用下方含水量測定區。</div>
-    </div>
-    <div class="field row2">
-      <div><label>萃取率</label><input type="text" id="s_extraction_rate" readonly placeholder="自動計算"></div>
+      <input type="hidden" id="s_dry_mode" value="moisture">
     </div>
 
-    <!-- 含水量計算區 -->
-    <div class="calc-box">
-      <div class="calc-title">🧮 取樣含水量測定(用於換算絕乾重)</div>
-      <div class="field row2">
-        <div><label>取樣鮮重(含容器,g)</label><input type="number" id="mc_fresh_gross" step="any" min="0"></div>
-        <div><label>取樣乾重(含容器,g)</label><input type="number" id="mc_dry_gross" step="any" min="0"></div>
-      </div>
-      <div class="field">
-        <label>容器重(g)</label>
-        <input type="number" id="mc_container" step="any" min="0" style="max-width:200px;">
-      </div>
-      <div class="field">
-        <label>含水量照片</label>
-        <div class="photo-btn-row"><button type="button" class="btn btn-ghost btn-sm" id="mc_photoDropCam">📷 拍照</button><button type="button" class="btn btn-ghost btn-sm" id="mc_photoDropGal">🖼️ 選擇照片</button></div>
-        <input type="file" id="mc_photoInput" accept="image/*" capture="environment" class="visually-hidden-file">
-        <img id="mc_photoPreview" class="photo-preview" style="display:none;">
+    <!-- 含水量測定:排在它要餵的「絕乾重」前面,填完自動換算 -->
+    <div class="calc-box" id="smpMoistureBox">
+      <div class="calc-title">取樣含水量測定</div>
+      <div class="field-hint" style="margin:-6px 0 12px;">從整批試材取一小份烘乾,用來推算整批的絕乾重。</div>
+      <div class="link-note" id="mc_record_only_hint" style="display:none;margin:0 0 12px;">目前選的是「直接輸入絕乾重」,這裡的數值只留作紀錄,不會拿來換算;不需要的話可以清空。</div>
+      <div class="field row3eq">
+        <div><label>取樣鮮重(含容器,g)</label><input type="number" id="mc_fresh_gross" step="any" min="0" inputmode="decimal"></div>
+        <div><label>取樣乾重(含容器,g)</label><input type="number" id="mc_dry_gross" step="any" min="0" inputmode="decimal"></div>
+        <div><label>容器重(g)</label><input type="number" id="mc_container" step="any" min="0" inputmode="decimal"></div>
       </div>
       <div class="calc-result">
         <div class="item"><div class="v" id="mc_moisture_wet">-</div><div class="l">濕基含水率</div></div>
@@ -2826,10 +2881,32 @@
         <div class="item"><div class="v" id="mc_dry_net">-</div><div class="l">取樣乾重(g)</div></div>
       </div>
       <div class="unknown-row" id="mc_incomplete_hint" style="margin-top:8px;display:none;">三個重量都填完才會算出含水率;現在可以先存起來,之後再回來補。</div>
-      <div class="unknown-row" style="margin-top:10px;">上面的「取樣乾重」只是含水量測定用的小樣本,不能直接當成整批試材絕乾重;請用上方的「由含水量換算」按鈕。</div>
+      <div class="field" style="margin:12px 0 0;">
+        <label>含水量照片</label>
+        <div class="photo-btn-row"><button type="button" class="btn btn-ghost btn-sm" id="mc_photoDropCam">📷 拍照</button><button type="button" class="btn btn-ghost btn-sm" id="mc_photoDropGal">🖼️ 選擇照片</button></div>
+        <input type="file" id="mc_photoInput" accept="image/*" capture="environment" class="visually-hidden-file">
+        <img id="mc_photoPreview" class="photo-preview" style="display:none;">
+      </div>
     </div>
 
-    <div class="section-title">照片</div>
+    <div class="field row2">
+      <div>
+        <label>絕乾重(g)</label>
+        <input type="number" id="s_dry_weight" step="any" min="0" inputmode="decimal">
+        <div class="field-hint" id="s_dry_hint"></div>
+      </div>
+      <div>
+        <label>萃取物重量(g)</label>
+        <input type="number" id="s_sample_weight" step="any" min="0" inputmode="decimal">
+      </div>
+    </div>
+    <div class="rate-box">
+      <div class="rate-k">萃取率<span class="rate-formula">萃取物重量 ÷ 絕乾重</span></div>
+      <input type="text" id="s_extraction_rate" readonly tabindex="-1" placeholder="-" aria-label="萃取率">
+      <div class="rate-missing" id="s_rate_missing"></div>
+    </div>
+
+    <div class="section-title"><span class="step-no">4</span>照片</div>
     <div class="field row2">
       <div>
         <label>萃取材照片</label>
@@ -3639,9 +3716,15 @@ async function loadDraft(key){
 async function clearDraft(key){
   try{ await window.storage.delete(key, false); }catch(e){}
 }
+/* cancel():丟掉還沒執行的那一次;flush():有排程就立刻執行。
+   表單關閉時要用:編輯模式取消(否則關閉後才觸發,會把既有資料存成「新增草稿」),新增模式則立刻存一次 */
 function debounce(fn, delay){
-  let t;
-  return (...args)=>{ clearTimeout(t); t = setTimeout(()=>fn(...args), delay); };
+  let t = null, lastArgs = null;
+  const run = ()=>{ t = null; const a = lastArgs; lastArgs = null; fn(...(a||[])); };
+  const wrapped = (...args)=>{ lastArgs = args; clearTimeout(t); t = setTimeout(run, delay); };
+  wrapped.cancel = ()=>{ clearTimeout(t); t = null; lastArgs = null; };
+  wrapped.flush = ()=>{ if(t!==null){ clearTimeout(t); run(); } };
+  return wrapped;
 }
 
 /* ======================================================
@@ -4353,7 +4436,7 @@ function populateLocationSelect(currentValue){
 }
 const CHEM_FIELD_IDS = ['f_name_zh','f_name_en','f_iupac','f_cas','f_location','f_grade','f_quantity','f_unit','f_purchase_date','f_low_threshold','f_sds','f_note'];
 const CHEM_DRAFT_KEY = 'draft-chemical';
-const saveChemDraftDebounced = debounce(()=>{ if(!editingId) saveDraft(CHEM_DRAFT_KEY, gatherChemDraft()); }, 700);
+const saveChemDraftDebounced = debounce(()=>{ if(!editingId && document.getElementById('formOverlay').classList.contains('show')) saveDraft(CHEM_DRAFT_KEY, gatherChemDraft()); }, 700);
 function gatherChemDraft(){
   return {
     fields: collectFormValues(CHEM_FIELD_IDS),
@@ -4494,7 +4577,10 @@ async function openForm(id){
   }
   document.getElementById('formOverlay').classList.add('show');
 }
-function closeForm(){ document.getElementById('formOverlay').classList.remove('show'); editingId = null; if(typeof cpActionId !== 'undefined') cpActionId = null; }
+function closeForm(){
+  if(editingId) saveChemDraftDebounced.cancel(); else saveChemDraftDebounced.flush();   // 編輯模式關閉後才觸發的計時器會把既有資料存成新增草稿
+  document.getElementById('formOverlay').classList.remove('show'); editingId = null; if(typeof cpActionId !== 'undefined') cpActionId = null;
+}
 function clearChemForm(){
   CHEM_FIELD_IDS.forEach(fid=>document.getElementById(fid).value='');
   document.querySelectorAll('input[name="f_state"]').forEach(r=>{ r.checked = false; });
@@ -4502,7 +4588,8 @@ function clearChemForm(){
   document.querySelectorAll('#hazPicker .haz-chip').forEach(chip=>{ chip.classList.remove('on'); chip.style.background=''; chip.style.borderColor=''; });
   document.getElementById('photoPreview').style.display = 'none';
   document.getElementById('photoPreview').src = '';
-  clearDraft(CHEM_DRAFT_KEY);
+  saveChemDraftDebounced.cancel();
+  if(!editingId) clearDraft(CHEM_DRAFT_KEY);              // 編輯既有藥品時按清除,不該連另外存著的新增草稿一起刪
 }
 document.getElementById('clearChemBtn').addEventListener('click', async ()=>{
   if(await confirmDialog('確定要清空目前表單所有已輸入的內容嗎?此動作無法復原。')) clearChemForm();
@@ -4557,6 +4644,7 @@ async function handleSave(){
   if(editingId){ items[items.findIndex(i=>i.id===editingId)] = data; }
   else{ upsertLocal(items, data); }
   if(existingItem && existingItem.photo_path && existingItem.photo_path!==photoInfo.path) await deleteStoredPhoto(existingItem.photo_path);
+  saveChemDraftDebounced.cancel();
   if(!editingId) await clearDraft(CHEM_DRAFT_KEY);
   const cpIdToRemove = (!editingId && typeof cpActionId !== 'undefined') ? cpActionId : null;
   closeForm();
@@ -4690,7 +4778,7 @@ function populateMatSelects(currentStorage){
 }
 const MAT_FIELD_IDS = ['m_species','m_name_zh','m_source','m_acquired_date','m_acquired_unknown','m_part','m_storage','m_use','m_note'];
 const MAT_DRAFT_KEY = 'draft-material';
-const saveMatDraftDebounced = debounce(()=>{ if(!editingMatId) saveDraft(MAT_DRAFT_KEY, gatherMatDraft()); }, 700);
+const saveMatDraftDebounced = debounce(()=>{ if(!editingMatId && document.getElementById('matFormOverlay').classList.contains('show')) saveDraft(MAT_DRAFT_KEY, gatherMatDraft()); }, 700);
 function gatherMatDraft(){
   return {
     fields: collectFormValues(MAT_FIELD_IDS),
@@ -4751,28 +4839,38 @@ function renderMatTable(){
   const tbody = document.getElementById('matTbody');
   tbody.innerHTML = '';
   document.getElementById('matEmptyState').style.display = filtered.length ? 'none' : 'block';
-  filtered.sort((a,b)=> (a.species||'').localeCompare(b.species||'', 'zh-Hant'));
+  filtered.sort((a,b)=> (a.name_zh||a.species||'').localeCompare(b.name_zh||b.species||'', 'zh-Hant'));
+  const smpCount = new Map();
+  smpItems.forEach(s=>{ if(s.material_id) smpCount.set(s.material_id, (smpCount.get(s.material_id)||0)+1); });
   filtered.forEach(item=>{
     const tr = document.createElement('tr');
     tr.className = 'row';
     const dateLabel = item.acquired_unknown ? '未知' : (item.acquired_date || '-');
+    const made = smpCount.get(item.id) || 0;
+    /* 標題列:有中文名稱就中文在上、學名在下;沒有中文名稱就只顯示學名,不重複 */
     tr.innerHTML = `
-      <td class="cell-head">${item.photo ? `<img class="thumb" src="${item.photo}" style="cursor:zoom-in;" onclick="event.stopPropagation();openLightbox(this.src)">` : ''}<div class="name-block"><div class="name-zh">${escapeHtml(item.species)}</div></div></td>
-      <td data-label="中文名稱">${escapeHtml(item.name_zh||'-')}</td>
-      <td data-label="物種">${escapeHtml(item.species)}</td>
-      <td data-label="來源">${escapeHtml(item.source||'-')}</td>
+      <td class="cell-head">${item.photo ? `<img class="thumb" src="${escapeHtml(item.photo)}" style="cursor:zoom-in;">` : ''}<div class="name-block"><div class="name-zh${item.name_zh ? '' : sciCls(item.species)}">${escapeHtml(item.name_zh||item.species||'-')}</div>${item.name_zh && item.species ? `<div class="book-meta${sciCls(item.species)}">${escapeHtml(item.species)}</div>` : ''}</div></td>
+      <td data-label="編號"><span class="id-badge">${escapeHtml(item.id)}</span></td>
       <td data-label="部位">${item.part ? `<span class="plain-tag">${escapeHtml(item.part)}</span>` : '-'}</td>
+      <td data-label="來源">${escapeHtml(item.source||'-')}</td>
       <td data-label="存放位置">${escapeHtml(storageLabel(item.storage_location))}</td>
       <td data-label="取得日期">${escapeHtml(dateLabel)}</td>
       <td data-label="預計用途">${item.intended_use ? `<span class="plain-tag">${escapeHtml(item.intended_use)}</span>` : '-'}</td>
-      <td class="cell-actions">${isAdmin() ? `<button class="btn btn-ghost btn-sm btn-row-delete" onclick="quickDeleteMat('${item.id}', event)" title="刪除">✕</button>` : ''}</td>
+      <td data-label="已製備樣品">${made ? made + ' 個' : '-'}</td>
+      <td class="cell-actions">${isAdmin() ? `<button class="btn btn-ghost btn-sm btn-row-delete" title="刪除">✕</button>` : ''}</td>
     `;
+    const thumb = tr.querySelector('.thumb');
+    if(thumb) thumb.addEventListener('click', (ev)=>{ ev.stopPropagation(); openLightbox(thumb.src); });
+    const delBtn = tr.querySelector('.btn-row-delete');
+    if(delBtn) delBtn.addEventListener('click', (ev)=> quickDeleteMat(item.id, ev));
     tr.addEventListener('click', ()=> openMatDetail(item.id));
     tbody.appendChild(tr);
   });
 }
 function renderMatAll(){ populateMatFilters(); renderMatStats(); renderMatTable(); }
 
+/* 學名用斜體,但只限拉丁字母開頭的字串:舊資料的學名欄有些填的是中文,中文沒有斜體字型,硬做傾斜很難看 */
+function sciCls(s){ return /^[A-Za-z]/.test(String(s||'').trim()) ? ' sci-name' : ''; }
 function populateSpeciesDatalist(){
   const set = new Set();
   matItems.forEach(i=>{ if(i.species) set.add(i.species); });
@@ -4782,25 +4880,54 @@ function populateSpeciesDatalist(){
 function openMatDetail(id){
   const item = matItems.find(i=>i.id===id);
   if(!item) return;
-  document.getElementById('md_species').textContent = item.species || '-';
+  document.getElementById('md_name_zh').textContent = item.name_zh || item.species || '-';
+  document.getElementById('md_species').textContent = item.name_zh ? (item.species || '') : '';
+  document.getElementById('md_species').className = 'en' + sciCls(item.species);
+  document.getElementById('md_name_zh').className = item.name_zh ? '' : sciCls(item.species).trim();
   document.getElementById('md_id').textContent = item.id;
   document.getElementById('md_part').innerHTML = item.part ? `<span class="plain-tag">${escapeHtml(item.part)}</span>` : '';
   document.getElementById('md_storage').innerHTML = item.storage_location ? `<span class="plain-tag">${escapeHtml(storageLabel(item.storage_location))}</span>` : '';
   document.getElementById('md_source').textContent = item.source || '-';
   document.getElementById('md_date').textContent = item.acquired_unknown ? '未知' : (item.acquired_date || '-');
   document.getElementById('md_note').textContent = item.note || '';
-  document.getElementById('md_photoWrap').innerHTML = item.photo ? `<img src="${item.photo}" style="max-width:100%;max-height:140px;border-radius:var(--radius-sm);border:1px solid var(--line);cursor:zoom-in;" onclick="openLightbox(this.src)">` : '';
+  document.getElementById('md_photoWrap').innerHTML = item.photo ? `<img src="${escapeHtml(item.photo)}" style="max-width:100%;max-height:140px;border-radius:var(--radius-sm);border:1px solid var(--line);cursor:zoom-in;" onclick="openLightbox(this.src)">` : '';
   document.getElementById('md_use').textContent = item.intended_use || '-';
   const creatorAcc = findAccount(item.created_by);
   document.getElementById('md_creator').textContent = item.created_by ? (creatorAcc ? (creatorAcc.name||creatorAcc.code) : item.created_by) : '未知';
+  /* 由這個試材製備的樣品:靠樣品上既有的 material_id 反查,不另外存資料 */
+  const made = smpItems.filter(s=>s.material_id===item.id)
+    .sort((a,b)=> (b.extraction_date||'').localeCompare(a.extraction_date||''));
+  document.getElementById('md_samplesCount').textContent = made.length ? `(${made.length})` : '';
+  const listEl = document.getElementById('md_samplesList');
+  listEl.innerHTML = '';
+  if(!made.length){
+    listEl.innerHTML = '<div class="lineage-empty">還沒有樣品連結到這個試材。</div>';
+  }else{
+    made.forEach(s=>{
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'lineage-item';
+      const ext = extractDisplay(s);
+      btn.innerHTML = `<span class="id-badge">${escapeHtml(s.id)}</span>`
+        + (ext ? `<span class="plain-tag">${escapeHtml(ext)}</span>` : '')
+        + ((s.fraction_type==='liquid_liquid' && s.fraction_layer) ? `<span class="plain-tag">${escapeHtml(s.fraction_layer)}</span>` : '')
+        + `<span class="when">${escapeHtml(s.extraction_date||'')}</span>`;
+      btn.addEventListener('click', ()=>{ closeMatDetail(); switchPage('samples'); openSmpDetail(s.id); });
+      listEl.appendChild(btn);
+    });
+  }
+  document.getElementById('matNewSampleBtn').onclick = ()=> startSmpFromMaterial(item.id);
   document.getElementById('matEditFromDetailBtn').onclick = ()=>{ closeMatDetail(); openMatForm(item.id); };
   document.getElementById('matDetailOverlay').classList.add('show');
 }
 function closeMatDetail(){ document.getElementById('matDetailOverlay').classList.remove('show'); }
 document.getElementById('matDetailClose').addEventListener('click', closeMatDetail);
+document.getElementById('matDetailOverlay').addEventListener('click', (e)=>{ if(e.target.id==='matDetailOverlay') closeMatDetail(); });
 
 async function openMatForm(id){
   editingMatId = id || null;
+  matFormSession++;
+  setMatSavingUi(false);
   const existingStorage = id ? ((matItems.find(i=>i.id===id)||{}).storage_location||'') : '';
   populateMatSelects(existingStorage);
   populateSpeciesDatalist();
@@ -4839,6 +4966,7 @@ async function openMatForm(id){
       banner.textContent = `此筆資料由 ${creatorLabel} 建立,只有建立者本人或管理員能編輯,目前為唯讀模式。`;
     }
     MAT_FIELD_IDS.forEach(fid=> document.getElementById(fid).disabled = !editable);
+    document.getElementById('m_acquired_date').disabled = !editable || !!item.acquired_unknown;   // 上一行會把「日期未知」時該停用的日期欄重新打開
     document.getElementById('matSaveBtn').style.display = editable ? 'inline-block' : 'none';
     document.getElementById('clearMatBtn').style.display = editable ? 'inline-block' : 'none';
     document.getElementById('matDeleteBtn').style.display = isAdmin() ? 'inline-block' : 'none';
@@ -4856,7 +4984,11 @@ async function openMatForm(id){
   }
   document.getElementById('matFormOverlay').classList.add('show');
 }
-function closeMatForm(){ document.getElementById('matFormOverlay').classList.remove('show'); editingMatId = null; }
+function closeMatForm(){
+  if(editingMatId) saveMatDraftDebounced.cancel(); else saveMatDraftDebounced.flush();
+  document.getElementById('matFormOverlay').classList.remove('show');
+  editingMatId = null;
+}
 function clearMatForm(){
   MAT_FIELD_IDS.forEach(fid=>{
     const el = document.getElementById(fid);
@@ -4865,7 +4997,8 @@ function clearMatForm(){
   document.getElementById('m_acquired_date').disabled = false;
   document.getElementById('m_photoPreview').style.display = 'none';
   document.getElementById('m_photoPreview').src = '';
-  clearDraft(MAT_DRAFT_KEY);
+  saveMatDraftDebounced.cancel();
+  if(!editingMatId) clearDraft(MAT_DRAFT_KEY);           // 編輯既有試材時按清除,不該連另外存著的新增草稿一起刪
 }
 document.getElementById('clearMatBtn').addEventListener('click', async ()=>{
   if(await confirmDialog('確定要清空目前表單所有已輸入的內容嗎?此動作無法復原。')) clearMatForm();
@@ -4879,44 +5012,77 @@ document.getElementById('m_acquired_unknown').addEventListener('change', (e)=>{
   if(e.target.checked) document.getElementById('m_acquired_date').value = '';
 });
 
+let matFormSession = 0;             // 每開一次試材表單加一,用來分辨「儲存完成時畫面上是不是同一張表單」
+let matSavingSession = -1;          // 正在儲存的是哪一次開啟的表單;-1 表示沒有
+/* 儲存鎖只擋同一張表單重複送出,不擋關閉:離線時 set() 要等連線回來才會結束,鎖住取消鈕表單就關不掉 */
+function setMatSavingUi(on){
+  ['matSaveBtn','matDeleteBtn','clearMatBtn'].forEach(id=>{ document.getElementById(id).disabled = on; });
+  document.getElementById('matSaveBtn').textContent = on ? '儲存中…' : '儲存';
+}
 async function handleMatSave(){
+  const session = matFormSession;
+  if(matSavingSession === session) return;                // 手機連點兩下會各跑一輪,存出兩筆
   const existingItem = editingMatId ? matItems.find(i=>i.id===editingMatId) : null;
-  if(editingMatId && !canEdit(existingItem)){ notify('只有建立者本人或管理員能編輯這筆資料。'); return; }
-  const species = document.getElementById('m_species').value.trim();
-  const part = document.getElementById('m_part').value;
-  const storage_location = document.getElementById('m_storage').value;
-  if(!species || !part || !storage_location){ notify('請至少填寫「物種」「部位」與「存放位置」'); return; }
+  const isEdit = !!editingMatId;
+  if(isEdit && !existingItem){ notify('這筆試材已經被刪除,無法儲存。'); return; }
+  if(isEdit && !canEdit(existingItem)){ notify('只有建立者本人或管理員能編輯這筆資料。'); return; }
+  const val = fid=> document.getElementById(fid).value;
+  const species = val('m_species').trim();
+  const part = val('m_part');
+  const storage_location = val('m_storage');
+  if(!species || !part || !storage_location){ notify('請至少填寫「學名」「部位」與「存放位置」'); return; }
+  /* 表單上的值在第一個 await 之前一次抓齊;儲存途中表單可能被關掉或改開別筆 */
   const recordId = editingMatId || pendingMatId || genId(matItems, 'MAT');
-  let photoInfo;
-  try{ photoInfo = await uploadPreviewPhoto('m_photoPreview','materials',recordId,'material',existingItem&&existingItem.photo_path); }
-  catch(err){ notify(err.message || '照片上傳失敗。'); return; }
+  const preview = document.getElementById('m_photoPreview');
+  const photoSrc = preview.style.display !== 'none' ? preview.src : null;
+  const unknown = document.getElementById('m_acquired_unknown').checked;
+  const nowIso = new Date().toISOString();
+  /* 建立者資訊一律取自開始儲存時抓到的 existingItem,不要在 await 之後重讀全域的 editingMatId */
   const data = {
     id: recordId,
     _doc_id: existingItem ? existingItem._doc_id : null,
     species,
-    name_zh: document.getElementById('m_name_zh').value.trim(),
-    source: document.getElementById('m_source').value.trim(),
-    acquired_unknown: document.getElementById('m_acquired_unknown').checked,
-    acquired_date: document.getElementById('m_acquired_unknown').checked ? '' : document.getElementById('m_acquired_date').value,
+    name_zh: val('m_name_zh').trim(),
+    source: val('m_source').trim(),
+    acquired_unknown: unknown,
+    acquired_date: unknown ? '' : val('m_acquired_date'),
     part,
     storage_location,
-    intended_use: document.getElementById('m_use').value,
-    note: document.getElementById('m_note').value.trim(),
-    photo: photoInfo.url,
-    photo_path: photoInfo.path,
-    updated_at: new Date().toISOString(),
+    intended_use: val('m_use'),
+    note: val('m_note').trim(),
+    photo: null,
+    photo_path: null,
+    updated_at: nowIso,
     updated_by_uid: (currentUser && currentUser.uid) || null,
-    created_by_uid: editingMatId ? (matItems.find(i=>i.id===editingMatId)?.created_by_uid || null) : ((currentUser && currentUser.uid) || null),
-    created_by: editingMatId ? (matItems.find(i=>i.id===editingMatId)?.created_by || (currentUser && currentUser.code) || null) : ((currentUser && currentUser.code) || null),
-    created_at: editingMatId ? (matItems.find(i=>i.id===editingMatId)?.created_at || new Date().toISOString()) : new Date().toISOString()
+    created_by_uid: isEdit ? (existingItem.created_by_uid || null) : ((currentUser && currentUser.uid) || null),
+    created_by: isEdit ? (existingItem.created_by || (currentUser && currentUser.code) || null) : ((currentUser && currentUser.code) || null),
+    created_at: isEdit ? (existingItem.created_at || nowIso) : nowIso
   };
-  const ok = await fsSetItem('materials', data);
-  if(!ok){ if(photoInfo.uploaded) await deleteStoredPhoto(photoInfo.path); notify('儲存失敗,請檢查網路連線後再試一次。'); return; }
-  if(editingMatId){ matItems[matItems.findIndex(i=>i.id===editingMatId)] = data; }
-  else{ upsertLocal(matItems, data); }
-  if(existingItem && existingItem.photo_path && existingItem.photo_path!==photoInfo.path) await deleteStoredPhoto(existingItem.photo_path);
-  if(!editingMatId) await clearDraft(MAT_DRAFT_KEY);
-  closeMatForm();
+  matSavingSession = session;
+  setMatSavingUi(true);
+  let saved = false;
+  try{
+    let photoInfo;
+    try{ photoInfo = await uploadPhotoSource(photoSrc,'materials',recordId,'material',existingItem&&existingItem.photo_path); }
+    catch(err){ notify(err.message || '照片上傳失敗。'); return; }
+    data.photo = photoInfo.url;
+    data.photo_path = photoInfo.path;
+    const ok = await fsSetItem('materials', data);
+    if(!ok){ if(photoInfo.uploaded) await deleteStoredPhoto(photoInfo.path); notify('儲存失敗,請檢查網路連線後再試一次。'); return; }
+    upsertLocal(matItems, data);
+    if(existingItem && existingItem.photo_path && existingItem.photo_path!==photoInfo.path) await deleteStoredPhoto(existingItem.photo_path);
+    saved = true;
+  }finally{
+    if(matSavingSession === session) matSavingSession = -1;
+    if(matFormSession === session) setMatSavingUi(false);
+  }
+  if(!saved) return;
+  /* 表單還停在同一次開啟才收尾;使用者中途已經關掉、或去開了別筆,就不要動現在畫面上的表單 */
+  const formOpen = document.getElementById('matFormOverlay').classList.contains('show');
+  const sameForm = matFormSession === session;
+  if(sameForm) saveMatDraftDebounced.cancel();
+  if(!isEdit && (sameForm || !(formOpen && !editingMatId))) await clearDraft(MAT_DRAFT_KEY);   // 另外開了一張新增表單的話,草稿現在是那一張的
+  if(sameForm && formOpen) closeMatForm();
   renderMatAll();
 }
 async function handleMatDelete(){
@@ -4936,7 +5102,7 @@ bindPhotoUpload('m_photoDrop','m_photoInput','m_photoPreview');
 document.getElementById('m_photoInput').addEventListener('change', ()=> setTimeout(saveMatDraftDebounced, 50));
 
 function exportMatCsv(){
-  const headers = ['編號','中文名稱','物種','來源','取得日期','部位','存放位置','預計用途','備註'];
+  const headers = ['編號','中文名稱','學名','來源','取得日期','部位','存放位置','預計用途','備註'];
   const rows = matItems.map(i=>[
     i.id, i.name_zh||'', i.species, i.source, i.acquired_unknown ? '未知' : i.acquired_date, i.part, storageLabel(i.storage_location), i.intended_use, i.note
   ]);
@@ -4973,6 +5139,11 @@ const SMP_STORAGE_KEY = 'samples-data';
 let smpItems = [];
 let editingSmpId = null;
 let pendingSmpId = null;
+let smpFormSession = 0;             // 每開一次樣品表單加一,用來分辨「儲存完成時畫面上是不是同一張表單」
+let smpSavingSession = -1;          // 正在儲存的是哪一次開啟的表單;-1 表示沒有
+let smpFormEditable = true;          // 唯讀模式(非建立者也非管理員)由 openSmpForm 設定
+let smpLockedFields = new Set();     // 連結試材後被鎖住的試材欄位
+let smpManualDryBackup = '';         // 切到「含水量換算」前手動輸入的絕乾重,切回來時還原
 
 async function loadSmpItems(){
   smpItems = await fsGetAll('samples');
@@ -4988,11 +5159,17 @@ const SMP_FIELD_IDS = [
   's_import_material','s_name_zh','s_species','s_source','s_acquired_date','s_acquired_unknown','s_part',
   's_extraction_date','s_extraction_method','s_extractor','s_fraction_type','s_fraction_layer',
   's_solvent','s_solvent_other','s_extract_type',
-  's_material_fresh_weight','s_sample_weight','s_dry_weight',
+  's_material_fresh_weight','s_dry_mode','s_sample_weight','s_dry_weight',
   'mc_fresh_gross','mc_dry_gross','mc_container'
 ];
+/* 連結試材後會鎖住的欄位。部位不鎖:同一個試材(例如全果)可能只取其中一部分(果皮、種子)來萃取 */
+const SMP_MATERIAL_LOCK_IDS = ['s_name_zh','s_species','s_source','s_acquired_date','s_acquired_unknown'];
 const SMP_DRAFT_KEY = 'draft-sample';
-const saveSmpDraftDebounced = debounce(()=>{ if(!editingSmpId) saveDraft(SMP_DRAFT_KEY, gatherSmpDraft()); }, 700);
+const saveSmpDraftDebounced = debounce(()=>{
+  if(editingSmpId) return;
+  if(!document.getElementById('smpFormOverlay').classList.contains('show')) return;   // 表單已經關了就不要再寫草稿
+  saveDraft(SMP_DRAFT_KEY, gatherSmpDraft());
+}, 700);
 function gatherSmpDraft(){
   return {
     fields: collectFormValues(SMP_FIELD_IDS),
@@ -5004,31 +5181,57 @@ function gatherSmpDraft(){
   };
 }
 function applySmpDraft(d){
-  if(!d) return;
+  if(!d) return false;
   restoreFormValues(SMP_FIELD_IDS, d.fields);
-  document.getElementById('s_acquired_date').disabled = !!document.getElementById('s_acquired_unknown').checked;
-  document.getElementById('s_fraction_layer_wrap').style.display = document.getElementById('s_fraction_type').value==='liquid_liquid' ? 'block' : 'none';
-  toggleSolventVsExtractType();
+  const matSel = document.getElementById('s_import_material');
+  if(matSel.selectedIndex < 0) matSel.value = '';            // 草稿連結的試材已經不在清單裡
   if(d.photos){
     if(d.photos.extract){ document.getElementById('s_photoExtractPreview').src = d.photos.extract; document.getElementById('s_photoExtractPreview').style.display='block'; }
     if(d.photos.bottle){ document.getElementById('s_photoBottlePreview').src = d.photos.bottle; document.getElementById('s_photoBottlePreview').style.display='block'; }
     if(d.photos.moisture){ document.getElementById('mc_photoPreview').src = d.photos.moisture; document.getElementById('mc_photoPreview').style.display='block'; }
   }
-  updateMoistureCalc();
-  updateExtractionRate();
-  updateSampleId();
+  /* 舊版存下來的草稿沒有 s_dry_mode,改由欄位內容推斷 */
+  const hasMode = !!(d.fields && d.fields.s_dry_mode);
+  if(!hasMode) document.getElementById('s_dry_mode').value = inferSmpDryModeFromForm();
+  if(matSel.value) lockSmpMaterialFields();
+  return true;
 }
-function populateSmpSelects(){
+function smpMaterialOptionLabel(m){
+  const name = m.name_zh ? (m.species ? `${m.name_zh} ${m.species}` : m.name_zh) : (m.species || '');
+  return [name, m.part || '部位未填', m.id].filter(Boolean).join(',');
+}
+function populateSmpSelects(currentMaterialId){
   document.getElementById('s_part').innerHTML = '<option value="">請選擇部位</option>' + PART_OPTIONS.map(p=>`<option value="${p}">${p}</option>`).join('');
   document.getElementById('s_extraction_method').innerHTML = '<option value="">請選擇方法</option>' + EXTRACTION_METHOD_OPTIONS.map(m=>`<option value="${m}">${m}</option>`).join('');
   document.getElementById('s_solvent').innerHTML = SOLVENT_OPTIONS.map(s=>`<option value="${s}">${s}</option>`).join('');
-  document.getElementById('s_import_material').innerHTML = '<option value="">不匯入 / 手動填寫</option>' +
-    matItems.map(m=>`<option value="${m.id}">${m.id} - ${escapeHtml(m.species)}</option>`).join('');
+  const mats = matItems.slice().sort((a,b)=> (a.name_zh||a.species||'').localeCompare(b.name_zh||b.species||'', 'zh-Hant'));
+  let html = '<option value="">不連結,手動填寫</option>' +
+    mats.map(m=>`<option value="${escapeHtml(m.id)}">${escapeHtml(smpMaterialOptionLabel(m))}</option>`).join('');
+  /* 連結的試材後來被刪掉時,保留一個選項,否則一存檔連結就默默消失 */
+  if(currentMaterialId && !matItems.some(m=>m.id===currentMaterialId)){
+    html += `<option value="${escapeHtml(currentMaterialId)}">${escapeHtml(currentMaterialId)}(試材已刪除)</option>`;
+  }
+  document.getElementById('s_import_material').innerHTML = html;
 }
 function extractDisplay(item){
   if(item.extract_type) return item.extract_type;
   const solvent = item.solvent==='其他' ? (item.solvent_other||'其他') : item.solvent;
   return solvent ? solvent + '萃取物' : '';
+}
+/* 還沒填完、看得出來之後要回來補的樣品。只挑沒有疑義的兩種情況,避免對本來就不打算填的樣品一直提醒 */
+function smpPendingTags(item){
+  const tags = [];
+  const m = item.moisture || {};
+  const filled = [m.fresh_gross, m.dry_gross, m.container].filter(v=>v!=null).length;
+  if(filled > 0 && filled < 3) tags.push('含水量待補');
+  if((item.dry_weight != null || filled === 3) && item.sample_weight == null) tags.push('萃取物重量待補');
+  return tags;
+}
+function smpMoistureWetOf(item){
+  const m = item.moisture || {};
+  if(m.fresh_gross == null || m.dry_gross == null || m.container == null) return null;
+  const r = moistureRatesOf(Number(m.fresh_gross), Number(m.dry_gross), Number(m.container));
+  return (r && r !== 'error') ? r.wet : null;
 }
 function populateSmpFilters(){
   const sel = document.getElementById('smpFilterSolvent');
@@ -5036,11 +5239,18 @@ function populateSmpFilters(){
   const usedSolvents = [...new Set(smpItems.map(i=>extractDisplay(i)).filter(Boolean))];
   sel.innerHTML = '<option value="">所有萃取物</option>' + usedSolvents.map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
   sel.value = cur;
+  if(sel.selectedIndex < 0) sel.value = '';
   const ownerSel = document.getElementById('smpFilterOwner');
   const curOwner = ownerSel.value;
   const usedOwners = [...new Set(smpItems.map(i=>i.created_by).filter(Boolean))];
-  ownerSel.innerHTML = '<option value="">所有持有人</option>' + usedOwners.map(code=>`<option value="${escapeHtml(code)}">${escapeHtml(code)}</option>`).join('');
+  ownerSel.innerHTML = '<option value="">所有持有人</option>' + usedOwners.map(code=>`<option value="${escapeHtml(code)}">${escapeHtml(ownerLabel(code))}</option>`).join('');
   ownerSel.value = curOwner;
+  if(ownerSel.selectedIndex < 0) ownerSel.value = '';
+}
+/* 持有人顯示名稱:先用 uid 找帳號,找不到再用代號,都找不到就顯示原本存的代號(不要露出一長串 uid) */
+function smpOwnerLabel(item){
+  const acc = findAccount(item.created_by_uid) || findAccount(item.created_by);
+  return acc ? (acc.name || acc.code) : (item.created_by || '-');
 }
 function renderSmpStats(){
   document.getElementById('smpStatTotal').textContent = smpItems.length;
@@ -5054,7 +5264,7 @@ function renderSmpTable(){
     if(fSolvent && extractDisplay(i) !== fSolvent) return false;
     if(fOwner && i.created_by !== fOwner) return false;
     if(search){
-      const hay = [i.name_zh, i.species, i.id].join(' ').toLowerCase();
+      const hay = [i.name_zh, i.species, i.id, i.source, i.part, extractDisplay(i)].join(' ').toLowerCase();
       if(!hay.includes(search)) return false;
     }
     return true;
@@ -5067,28 +5277,31 @@ function renderSmpTable(){
     const tr = document.createElement('tr');
     tr.className = 'row';
     const solventDisplay = extractDisplay(item);
+    const fraction = (item.fraction_type==='liquid_liquid' && item.fraction_layer) ? item.fraction_layer : '';
+    const pending = smpPendingTags(item).map(t=>`<span class="pending-tag">${escapeHtml(t)}</span>`).join('');
+    const weight = item.sample_weight != null ? escapeHtml(String(item.sample_weight)) + ' g' : '-';
     tr.innerHTML = `
-      <td data-label="中文名稱"><div class="book-title">${escapeHtml(item.name_zh||'-')}</div><div class="book-meta">${escapeHtml(item.species||'')}</div></td>
-      <td data-label="編號"><span class="id-badge">${truncate6(item.id)}</span></td>
-      <td data-label="持有人">${truncate6(item.created_by || '-')}</td>
+      <td class="cell-head"><div class="name-block"><div class="name-zh${item.name_zh ? '' : sciCls(item.species)}">${escapeHtml(item.name_zh||item.species||'-')}</div>${item.name_zh && item.species ? `<div class="book-meta${sciCls(item.species)}">${escapeHtml(item.species)}</div>` : ''}${pending}</div></td>
+      <td data-label="編號"><span class="id-badge">${escapeHtml(item.id)}</span></td>
+      <td data-label="部位">${item.part ? `<span class="plain-tag">${escapeHtml(item.part)}</span>` : '-'}</td>
+      <td data-label="萃取物">${(solventDisplay || fraction) ? `<span class="tag-stack">${solventDisplay ? `<span class="plain-tag">${escapeHtml(solventDisplay)}</span>` : ''}${fraction ? `<span class="plain-tag">${escapeHtml(fraction)}</span>` : ''}</span>` : '-'}</td>
       <td data-label="萃取日期">${escapeHtml(item.extraction_date||'-')}</td>
-      <td data-label="萃取物">${solventDisplay ? `<span class="plain-tag">${escapeHtml(solventDisplay)}</span>` : '-'}</td>
-      <td data-label="分離部">${item.fraction_type==='liquid_liquid' ? `<span class="plain-tag">${escapeHtml(item.fraction_layer||'-')}</span>` : '-'}</td>
-      <td data-label="萃取物重量">${item.sample_weight ?? '-'} ${item.sample_weight!=null?'g':''}</td>
+      <td data-label="萃取物重量">${weight}</td>
       <td data-label="萃取率">${escapeHtml(item.extraction_rate || '-')}</td>
-      <td class="cell-actions">${isAdmin() ? `<button class="btn btn-ghost btn-sm btn-row-delete" onclick="quickDeleteSmp('${item.id}', event)" title="刪除">✕</button>` : ''}</td>
+      <td data-label="持有人">${escapeHtml(smpOwnerLabel(item))}</td>
+      <td class="cell-actions">${isAdmin() ? `<button class="btn btn-ghost btn-sm btn-row-delete" title="刪除">✕</button>` : ''}</td>
     `;
+    const delBtn = tr.querySelector('.btn-row-delete');
+    if(delBtn) delBtn.addEventListener('click', (ev)=> quickDeleteSmp(item.id, ev));
     tr.addEventListener('click', ()=> openSmpDetail(item.id));
     tbody.appendChild(tr);
   });
 }
 function renderSmpAll(){ populateSmpFilters(); renderSmpStats(); renderSmpTable(); }
 
+/* ---- 含水量 → 絕乾重 → 萃取率:一條由上往下的計算 ---- */
 const MOISTURE_INPUT_IDS = ['mc_fresh_gross','mc_dry_gross','mc_container'];
-function getMoistureRates(){
-  const fresh = parseFloat(document.getElementById('mc_fresh_gross').value);
-  const dry = parseFloat(document.getElementById('mc_dry_gross').value);
-  const container = parseFloat(document.getElementById('mc_container').value);
+function moistureRatesOf(fresh, dry, container){
   if(isNaN(fresh) || isNaN(dry) || isNaN(container)) return null;
   const freshNet = fresh - container;
   const dryNet = dry - container;
@@ -5096,6 +5309,13 @@ function getMoistureRates(){
   const wet = ((freshNet - dryNet) / freshNet) * 100;   // 濕基含水率
   const dryBasis = ((freshNet - dryNet) / dryNet) * 100; // 乾基含水率
   return { wet, dry: dryBasis, dryNet };
+}
+function getMoistureRates(){
+  return moistureRatesOf(
+    parseFloat(document.getElementById('mc_fresh_gross').value),
+    parseFloat(document.getElementById('mc_dry_gross').value),
+    parseFloat(document.getElementById('mc_container').value)
+  );
 }
 function updateMoistureCalc(){
   const wetEl = document.getElementById('mc_moisture_wet');
@@ -5107,33 +5327,108 @@ function updateMoistureCalc(){
   else{ wetEl.textContent = rates.wet.toFixed(2) + '%'; dryEl.textContent = rates.dry.toFixed(2) + '%'; netEl.textContent = rates.dryNet.toFixed(2); }
   const filled = MOISTURE_INPUT_IDS.filter(id=>document.getElementById(id).value!=='').length;
   document.getElementById('mc_incomplete_hint').style.display =
-    (filled > 0 && filled < MOISTURE_INPUT_IDS.length) ? 'block' : 'none';
+    (filled > 0 && filled < MOISTURE_INPUT_IDS.length) ? 'flex' : 'none';
 }
-MOISTURE_INPUT_IDS.forEach(id=>{
-  document.getElementById(id).addEventListener('input', updateMoistureCalc);
+function getSmpDryMode(){ return document.getElementById('s_dry_mode').value === 'manual' ? 'manual' : 'moisture'; }
+/* 沒有另外存「絕乾重怎麼來的」,由數值推斷:只有「重算之後寫回去的數字會和原值一模一樣」才算含水量換算模式。
+   其餘一律當成手動輸入,原值原封不動。用容差比對不夠嚴:手動填 1082.1627 會被判成換算模式,然後被改寫成 1082.163 */
+function inferSmpDryMode(v){
+  const has = x=> x !== null && x !== undefined && x !== '' && !isNaN(Number(x));
+  if(!has(v.dry)) return 'moisture';
+  if(has(v.fresh) && has(v.mFresh) && has(v.mDry) && has(v.mCont)){
+    const r = moistureRatesOf(Number(v.mFresh), Number(v.mDry), Number(v.mCont));
+    if(r && r !== 'error'){
+      const calc = Number(v.fresh) * (1 - r.wet/100);
+      if(Number(calc.toFixed(3)) === Number(v.dry)) return 'moisture';
+    }
+  }
+  return 'manual';
+}
+function inferSmpDryModeFromForm(){
+  const val = id=> document.getElementById(id).value;
+  return inferSmpDryMode({ fresh:val('s_material_fresh_weight'), dry:val('s_dry_weight'), mFresh:val('mc_fresh_gross'), mDry:val('mc_dry_gross'), mCont:val('mc_container') });
+}
+function smpMoistureHasContent(){
+  return MOISTURE_INPUT_IDS.some(id=>document.getElementById(id).value !== '') || document.getElementById('mc_photoPreview').style.display !== 'none';
+}
+function renderSmpDryMode(){
+  const mode = getSmpDryMode();
+  document.querySelectorAll('#smpDryModeSeg button').forEach(b=>{
+    const on = b.dataset.mode === mode;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    b.disabled = !smpFormEditable;
+  });
+  /* 手動模式下,含水量區只要還有內容就照樣攤開:藏起來的值一樣會被驗證、被存進去,看不到的話
+     使用者會被一則講三個看不見欄位的錯誤訊息擋住,唯讀的人也看不到原本量測的數值與照片 */
+  const recordOnly = mode === 'manual' && smpMoistureHasContent();
+  document.getElementById('smpMoistureBox').style.display = (mode === 'moisture' || recordOnly) ? 'block' : 'none';
+  document.getElementById('mc_record_only_hint').style.display = recordOnly ? 'block' : 'none';
+  document.getElementById('s_dry_weight').readOnly = mode === 'moisture';
+  document.getElementById('s_dry_weight').placeholder = mode === 'moisture' ? '自動換算' : '';
+  document.getElementById('s_dry_hint').textContent = mode === 'moisture'
+    ? '= 試材鮮重 × (1 − 濕基含水率),填完上面的含水量測定就會自動算出來。'
+    : '試材已經是絕乾狀態,或已經另外算好絕乾重時使用。';
+}
+function recomputeSmpDry(){
+  if(getSmpDryMode() !== 'moisture') return;
+  const fresh = parseFloat(document.getElementById('s_material_fresh_weight').value);
+  const rates = getMoistureRates();
+  document.getElementById('s_dry_weight').value =
+    (isNaN(fresh) || !rates || rates === 'error') ? '' : (fresh * (1 - rates.wet/100)).toFixed(3);
+}
+function setSmpDryMode(mode){
+  const prev = getSmpDryMode();
+  if(mode === prev) return;
+  const dryEl = document.getElementById('s_dry_weight');
+  if(mode === 'moisture') smpManualDryBackup = dryEl.value;
+  document.getElementById('s_dry_mode').value = mode;
+  renderSmpDryMode();
+  if(mode === 'moisture') recomputeSmpDry();
+  else if(smpManualDryBackup !== '') dryEl.value = smpManualDryBackup;   // 手動輸入過的值還原;沒有的話保留剛換算出來的值當起點
+  updateExtractionRate();
+  saveSmpDraftDebounced();
+}
+document.querySelectorAll('#smpDryModeSeg button').forEach(b=>{
+  b.addEventListener('click', ()=> setSmpDryMode(b.dataset.mode));
+});
+/* smpStoredRate:匯入的舊資料可能只有萃取率、沒有任何重量。絕乾重與萃取物重量都還空著的時候保留原本那個值,
+   不要因為使用者動了鮮重或切了一下模式就把它清成空白(openSmpForm 設定,新增與清除時歸零) */
+let smpStoredRate = '';
+function updateExtractionRate(){
+  const dryStr = document.getElementById('s_dry_weight').value;
+  const extractStr = document.getElementById('s_sample_weight').value;
+  const dry = parseFloat(dryStr);
+  const extractWeight = parseFloat(extractStr);
+  const rateEl = document.getElementById('s_extraction_rate');
+  const computable = !(isNaN(dry) || dry <= 0 || isNaN(extractWeight) || extractWeight < 0);
+  if(computable) rateEl.value = ((extractWeight / dry) * 100).toFixed(2) + '%';
+  else rateEl.value = (dryStr === '' && extractStr === '') ? smpStoredRate : '';
+  updateSmpRateMissing();
+}
+function updateSmpRateMissing(){
+  const el = document.getElementById('s_rate_missing');
+  if(document.getElementById('s_extraction_rate').value){ el.textContent = ''; return; }
+  const empty = id=> document.getElementById(id).value === '';
+  const miss = [];
+  if(getSmpDryMode() === 'moisture'){
+    if(getMoistureRates() === 'error'){ el.textContent = '含水量的三個重量互相矛盾,需符合取樣鮮重 > 取樣乾重 > 容器重。'; return; }
+    if(empty('s_material_fresh_weight')) miss.push('試材鮮重');
+    if(empty('mc_fresh_gross')) miss.push('取樣鮮重');
+    if(empty('mc_dry_gross')) miss.push('取樣乾重');
+    if(empty('mc_container')) miss.push('容器重');
+  }else if(empty('s_dry_weight')) miss.push('絕乾重');
+  if(empty('s_sample_weight')) miss.push('萃取物重量');
+  if(!miss.length){ el.textContent = ''; return; }
+  el.textContent = '還缺:' + miss.join('、') + (smpFormEditable ? ';可以先存起來,之後再回來補。' : '');
+}
+MOISTURE_INPUT_IDS.concat(['s_material_fresh_weight']).forEach(id=>{
+  document.getElementById(id).addEventListener('input', ()=>{ updateMoistureCalc(); recomputeSmpDry(); updateExtractionRate(); });
+});
+['s_dry_weight','s_sample_weight'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', ()=> updateExtractionRate());
 });
 bindPhotoUpload('mc_photoDrop','mc_photoInput','mc_photoPreview');
-
-document.getElementById('calcDryFromMoistureBtn').addEventListener('click', ()=>{
-  const freshMaterial = parseFloat(document.getElementById('s_material_fresh_weight').value);
-  const rates = getMoistureRates();
-  if(isNaN(freshMaterial)){ notify('請先填寫「試材鮮重」'); return; }
-  if(!rates || rates === 'error'){ notify('請先完整填寫下方含水量測定區的三個重量欄位'); return; }
-  const absDryWeight = freshMaterial * (1 - rates.wet/100);
-  document.getElementById('s_dry_weight').value = absDryWeight.toFixed(3);
-  updateExtractionRate();
-});
-
-function updateExtractionRate(){
-  const dry = parseFloat(document.getElementById('s_dry_weight').value);
-  const extractWeight = parseFloat(document.getElementById('s_sample_weight').value);
-  const rateEl = document.getElementById('s_extraction_rate');
-  if(isNaN(dry) || dry <= 0 || isNaN(extractWeight) || extractWeight < 0){ rateEl.value = ''; return; }
-  rateEl.value = ((extractWeight / dry) * 100).toFixed(2) + '%';
-}
-['s_dry_weight','s_sample_weight'].forEach(id=>{
-  document.getElementById(id).addEventListener('input', updateExtractionRate);
-});
 
 document.getElementById('s_fraction_type').addEventListener('change', (e)=>{
   document.getElementById('s_fraction_layer_wrap').style.display = e.target.value==='liquid_liquid' ? 'block' : 'none';
@@ -5159,23 +5454,62 @@ document.getElementById('s_extraction_method').addEventListener('change', ()=>{
   updateSampleId();
 });
 
+/* ---- 來源試材:選了就帶入並鎖住,解除連結才能改 ---- */
+function lockSmpMaterialFields(){
+  /* 要鎖哪些欄位看「試材本身有沒有填」,不看表單現在有沒有值:試材沒填的欄位(例如中文名稱在試材是選填、
+     在樣品卻必填)由使用者自己補,之後重開這筆樣品也要還能改。試材已經被刪掉時一律不鎖 */
+  const m = matItems.find(i=>i.id===document.getElementById('s_import_material').value);
+  const locked = new Set();
+  if(m){
+    if(m.name_zh) locked.add('s_name_zh');
+    if(m.species) locked.add('s_species');
+    if(m.source) locked.add('s_source');
+    if(m.acquired_unknown || m.acquired_date){ locked.add('s_acquired_date'); locked.add('s_acquired_unknown'); }
+  }
+  smpLockedFields = locked;
+}
+function syncSmpLocks(){
+  const linked = !!document.getElementById('s_import_material').value;
+  if(!linked) smpLockedFields = new Set();
+  SMP_FIELD_IDS.forEach(fid=>{
+    document.getElementById(fid).disabled = !smpFormEditable || smpLockedFields.has(fid);
+  });
+  if(document.getElementById('s_acquired_unknown').checked) document.getElementById('s_acquired_date').disabled = true;
+  document.getElementById('s_material_hint').style.display = (!linked && smpFormEditable) ? 'block' : 'none';
+  document.getElementById('s_material_locked').style.display = (linked && smpFormEditable && smpLockedFields.size) ? 'block' : 'none';
+}
 document.getElementById('s_import_material').addEventListener('change', (e)=>{
   const mid = e.target.value;
-  if(!mid) return;
-  const m = matItems.find(i=>i.id===mid);
-  if(!m) return;
-  document.getElementById('s_species').value = m.species||'';
-  document.getElementById('s_name_zh').value = m.name_zh||'';
-  document.getElementById('s_source').value = m.source||'';
-  document.getElementById('s_acquired_date').value = m.acquired_date||'';
-  document.getElementById('s_acquired_unknown').checked = !!m.acquired_unknown;
-  document.getElementById('s_acquired_date').disabled = !!m.acquired_unknown;
-  document.getElementById('s_part').value = m.part||'';
+  const m = mid ? matItems.find(i=>i.id===mid) : null;
+  if(m){
+    /* 試材有填的欄位直接帶入。試材沒填的欄位:原本的值若是上一個試材帶進來的(被鎖住的)就清掉,
+       使用者自己打的則保留,不要因為重選試材就把人家補的中文名稱洗成空白 */
+    const wasLocked = smpLockedFields;
+    const bring = (fid, v)=>{ const el = document.getElementById(fid); if(v) el.value = v; else if(wasLocked.has(fid)) el.value = ''; };
+    bring('s_species', m.species);
+    bring('s_name_zh', m.name_zh);
+    bring('s_source', m.source);
+    if(m.acquired_unknown || m.acquired_date){
+      document.getElementById('s_acquired_date').value = m.acquired_unknown ? '' : m.acquired_date;
+      document.getElementById('s_acquired_unknown').checked = !!m.acquired_unknown;
+    }else if(wasLocked.has('s_acquired_date')){
+      document.getElementById('s_acquired_date').value = '';
+      document.getElementById('s_acquired_unknown').checked = false;
+    }
+    if(m.part) document.getElementById('s_part').value = m.part;
+    lockSmpMaterialFields();
+  }
+  syncSmpLocks();
   updateSampleId();
 });
+document.getElementById('s_unlinkMaterialBtn').addEventListener('click', ()=>{
+  document.getElementById('s_import_material').value = '';
+  syncSmpLocks();
+  saveSmpDraftDebounced();
+});
 document.getElementById('s_acquired_unknown').addEventListener('change', (e)=>{
-  document.getElementById('s_acquired_date').disabled = e.target.checked;
   if(e.target.checked) document.getElementById('s_acquired_date').value = '';
+  syncSmpLocks();
 });
 
 /* ---- 樣品編號自動生成:代號_物種縮寫_部位_溶劑(E)_分離部(F,選填)_序號 ---- */
@@ -5208,14 +5542,26 @@ function nextSeqForPrefix(prefix, excludeId){
   let max = 0;
   smpItems.forEach(i=>{
     if(excludeId && i.id===excludeId) return;
-    if(i.id && i.id.startsWith(prefix+'_')){
-      const m = /_(\d+)$/.exec(i.id);
-      if(m){ const n = parseInt(m[1],10); if(n>max) max = n; }
-    }
+    if(!i.id || !i.id.startsWith(prefix+'_')) return;
+    /* 前綴之後必須整段都是序號。粗萃物的前綴同時是分離部編號(…_MeE_HexF_03)的開頭,
+       只比對開頭會把分離部的序號算進來,粗萃物的編號就出現無法解釋的跳號 */
+    const rest = i.id.slice(prefix.length + 1);
+    if(/^\d+$/.test(rest)){ const n = parseInt(rest,10); if(n>max) max = n; }
   });
   return max+1;
 }
+function updateSmpIdHint(){
+  const el = document.getElementById('s_id_hint');
+  if(editingSmpId){ el.textContent = '編號建立後不會再變動,已經貼在瓶子上的 QR 標籤可以繼續使用。'; return; }
+  const miss = [];
+  if(!document.getElementById('s_species').value.trim()) miss.push('學名');
+  if(!document.getElementById('s_part').value) miss.push('部位');
+  el.textContent = miss.length
+    ? `填好${miss.join('與')}後編號會跟著更新。`
+    : '由使用者名稱縮寫、學名縮寫、部位、溶劑或萃取物、分離部(有的話)、序號組成;儲存後不會再變動。';
+}
 function updateSampleId(){
+  updateSmpIdHint();
   if(editingSmpId) return; // 編輯既有樣品時編號不重新產生,避免與舊資料脫鉤
   const prefix = computeSamplePrefix();
   const seq = nextSeqForPrefix(prefix, null);
@@ -5230,23 +5576,56 @@ function updateSampleId(){
 function openSmpDetail(id){
   const item = smpItems.find(i=>i.id===id);
   if(!item) return;
-  document.getElementById('sd_name_zh').textContent = item.name_zh || '-';
-  document.getElementById('sd_species').textContent = item.species || '';
+  document.getElementById('sd_name_zh').textContent = item.name_zh || item.species || '-';
+  document.getElementById('sd_species').textContent = item.name_zh ? (item.species || '') : '';
+  document.getElementById('sd_species').className = 'en' + sciCls(item.species);
+  document.getElementById('sd_name_zh').className = item.name_zh ? '' : sciCls(item.species).trim();
   document.getElementById('sd_id').textContent = item.id;
   const solventDisplay = extractDisplay(item);
+  document.getElementById('sd_part').innerHTML = item.part ? `<span class="plain-tag">${escapeHtml(item.part)}</span>` : '';
   document.getElementById('sd_extract').innerHTML = solventDisplay ? `<span class="plain-tag">${escapeHtml(solventDisplay)}</span>` : '';
   document.getElementById('sd_fraction').innerHTML = (item.fraction_type==='liquid_liquid' && item.fraction_layer) ? `<span class="plain-tag">${escapeHtml(item.fraction_layer)}</span>` : '';
-  document.getElementById('sd_weight').textContent = (item.sample_weight ?? '-') + (item.sample_weight!=null ? ' g' : '');
+  document.getElementById('sd_pending').innerHTML = smpPendingTags(item).map(t=>`<span class="pending-tag">${escapeHtml(t)}</span>`).join(' ');
+  const grams = v=> v != null ? v + ' g' : '-';
+  document.getElementById('sd_weight').textContent = grams(item.sample_weight);
   document.getElementById('sd_rate').textContent = item.extraction_rate || '-';
+  document.getElementById('sd_method').textContent = item.extraction_method || '-';
+  document.getElementById('sd_fresh').textContent = grams(item.material_fresh_weight);
+  document.getElementById('sd_dry').textContent = grams(item.dry_weight);
+  const wet = smpMoistureWetOf(item);
+  document.getElementById('sd_moisture').textContent = wet != null ? wet.toFixed(2) + '%' : '-';
   document.getElementById('sd_date').textContent = item.extraction_date || '-';
   document.getElementById('sd_extractor').textContent = item.extractor || '-';
-  document.getElementById('sd_owner').textContent = item.created_by || '-';
+  document.getElementById('sd_owner').textContent = smpOwnerLabel(item);
+  document.getElementById('sd_source').textContent = item.source || '-';
   document.getElementById('sd_acquired').textContent = item.acquired_unknown ? '未知' : (item.acquired_date || '-');
-  const photos = [item.photo_extract, item.photo_bottle].filter(Boolean);
-  document.getElementById('sd_photoWrap').innerHTML = photos.map(src=>`<img src="${src}" style="max-width:120px;max-height:120px;border-radius:var(--radius-sm);border:1px solid var(--line);cursor:zoom-in;object-fit:cover;" onclick="openLightbox(this.src)">`).join('');
+  /* 來源試材:點了跳到試材的詳細卡 */
+  const matRow = document.getElementById('sd_materialRow');
+  const matLink = document.getElementById('sd_materialLink');
+  if(item.material_id){
+    const m = matItems.find(x=>x.id===item.material_id);
+    matRow.style.display = 'block';
+    matLink.textContent = m ? `${m.name_zh||m.species||''},${m.id}` : `${item.material_id}(試材已刪除)`;
+    matLink.disabled = !m;
+    matLink.onclick = m ? ()=>{ closeSmpDetail(); switchPage('materials'); openMatDetail(m.id); } : null;
+  }else{
+    matRow.style.display = 'none';
+    matLink.onclick = null;
+  }
+  const photoWrap = document.getElementById('sd_photoWrap');
+  photoWrap.innerHTML = '';
+  [item.photo_extract, item.photo_bottle].filter(Boolean).forEach(src=>{
+    const img = document.createElement('img');
+    img.src = src;
+    img.style.cssText = 'max-width:120px;max-height:120px;border-radius:var(--radius-sm);border:1px solid var(--line);cursor:zoom-in;object-fit:cover;';
+    img.addEventListener('click', ()=> openLightbox(img.src));
+    photoWrap.appendChild(img);
+  });
   const qrTarget = document.getElementById('sdQrTarget');
   qrTarget.innerHTML = '';
-  new QRCode(qrTarget, { text: buildItemUrl('smp', item.id), width: 200, height: 200, colorDark: '#1B4B43', colorLight: '#ffffff' });
+  /* QR 函式庫走外部 CDN,沒載到時不要讓整張詳細卡打不開 */
+  try{ new QRCode(qrTarget, { text: buildItemUrl('smp', item.id), width: 200, height: 200, colorDark: '#1B4B43', colorLight: '#ffffff' }); }
+  catch(e){ console.warn('QR code unavailable:', e); }
   document.getElementById('smpEditFromDetailBtn').onclick = ()=>{ closeSmpDetail(); openSmpForm(item.id); };
   document.getElementById('smpDuplicateBtn').onclick = ()=> duplicateSmpItem(item.id);
   document.getElementById('smpDownloadQrFromDetailBtn').onclick = ()=>{
@@ -5265,92 +5644,113 @@ function openSmpDetail(id){
 }
 function closeSmpDetail(){ document.getElementById('smpDetailOverlay').classList.remove('show'); }
 document.getElementById('smpDetailClose').addEventListener('click', closeSmpDetail);
+document.getElementById('smpDetailOverlay').addEventListener('click', (e)=>{ if(e.target.id==='smpDetailOverlay') closeSmpDetail(); });
 
+/* 「複製並編輯」與「以此試材新增樣品」都會開一張預先填好的新增表單。
+   手上若有還沒存的新增草稿,先問過再取代,不要把兩份內容混在一起 */
+async function confirmReplaceSmpDraft(){
+  const draft = await loadDraft(SMP_DRAFT_KEY);
+  if(!draft) return true;
+  return confirmDialog('你有一份還沒儲存的新增樣品草稿;繼續的話會用新的內容取代它,確定嗎?', {okText:'取代草稿'});
+}
 async function duplicateSmpItem(id){
   const src = smpItems.find(i=>i.id===id);
   if(!src) return;
+  if(!await confirmReplaceSmpDraft()) return;
   closeSmpDetail();
-  await openSmpForm(null);
-  document.getElementById('s_import_material').value = src.material_id || '';
-  document.getElementById('s_name_zh').value = src.name_zh||'';
-  document.getElementById('s_species').value = src.species||'';
-  document.getElementById('s_source').value = src.source||'';
-  document.getElementById('s_acquired_date').value = src.acquired_date||'';
-  document.getElementById('s_acquired_unknown').checked = !!src.acquired_unknown;
-  document.getElementById('s_acquired_date').disabled = !!src.acquired_unknown;
-  document.getElementById('s_part').value = src.part||'';
-  document.getElementById('s_extraction_method').value = src.extraction_method||'';
-  document.getElementById('s_fraction_type').value = src.fraction_type||'none';
-  document.getElementById('s_fraction_layer').value = src.fraction_layer||'正己烷分離部';
-  document.getElementById('s_fraction_layer_wrap').style.display = src.fraction_type==='liquid_liquid' ? 'block' : 'none';
-  document.getElementById('s_solvent').value = src.solvent||SOLVENT_OPTIONS[0];
-  document.getElementById('s_solvent_other').value = src.solvent_other||'';
-  document.getElementById('s_solvent_other_wrap').style.display = src.solvent==='其他' ? 'block' : 'none';
-  document.getElementById('s_extract_type').value = src.extract_type || EXTRACT_TYPE_OPTIONS[0];
-  toggleSolventVsExtractType();
-  document.getElementById('s_material_fresh_weight').value = src.material_fresh_weight ?? '';
-  document.getElementById('mc_fresh_gross').value = src.moisture?.fresh_gross ?? '';
-  document.getElementById('mc_dry_gross').value = src.moisture?.dry_gross ?? '';
-  document.getElementById('mc_container').value = src.moisture?.container ?? '';
-  updateMoistureCalc();
-  updateSampleId();
-  saveSmpDraftDebounced();
-  notify('已複製這筆樣品的資料到新增表單,萃取物重量/絕乾重/萃取率留空讓你重新填,記得確認分離部等欄位後再儲存。');
+  await openSmpForm(null, {prefill:src});
+  notify('已複製這筆樣品的資料到新增表單;萃取日期、萃取物重量和照片留空讓你重新填,確認分離部等欄位後再儲存。');
 }
-async function openSmpForm(id){
+async function startSmpFromMaterial(materialId){
+  if(!await confirmReplaceSmpDraft()) return;
+  switchPage('samples');
+  await openSmpForm(null, {materialId});
+}
+/* 把一筆既有樣品的內容填進表單。forDuplicate:複製用,不帶這次萃取才有的結果(日期、萃取物重量、照片) */
+function fillSmpForm(item, forDuplicate){
+  const set = (fid, v)=>{ document.getElementById(fid).value = v; };
+  set('s_import_material', item.material_id || '');
+  if(document.getElementById('s_import_material').selectedIndex < 0) set('s_import_material', '');
+  set('s_name_zh', item.name_zh||'');
+  set('s_species', item.species||'');
+  set('s_source', item.source||'');
+  set('s_acquired_date', item.acquired_date||'');
+  document.getElementById('s_acquired_unknown').checked = !!item.acquired_unknown;
+  set('s_part', item.part||'');
+  set('s_extraction_method', item.extraction_method||'');
+  set('s_fraction_type', item.fraction_type||'none');
+  set('s_fraction_layer', item.fraction_layer||'正己烷分離部');
+  set('s_solvent', item.solvent||SOLVENT_OPTIONS[0]);
+  set('s_solvent_other', item.solvent_other||'');
+  set('s_extract_type', item.extract_type || EXTRACT_TYPE_OPTIONS[0]);
+  set('s_material_fresh_weight', item.material_fresh_weight ?? '');
+  set('mc_fresh_gross', item.moisture?.fresh_gross ?? '');
+  set('mc_dry_gross', item.moisture?.dry_gross ?? '');
+  set('mc_container', item.moisture?.container ?? '');
+  const mode = inferSmpDryMode({ fresh:item.material_fresh_weight, dry:item.dry_weight, mFresh:item.moisture?.fresh_gross, mDry:item.moisture?.dry_gross, mCont:item.moisture?.container });
+  set('s_dry_mode', mode);
+  if(forDuplicate) return;
+  set('s_extraction_date', item.extraction_date||'');
+  set('s_extractor', item.extractor||'');
+  set('s_sample_weight', item.sample_weight ?? '');
+  set('s_dry_weight', item.dry_weight ?? '');
+  set('s_extraction_rate', item.extraction_rate || '');
+  const showPhoto = (pid, src)=>{ if(src){ document.getElementById(pid).src = src; document.getElementById(pid).style.display = 'block'; } };
+  showPhoto('s_photoExtractPreview', item.photo_extract);
+  showPhoto('s_photoBottlePreview', item.photo_bottle);
+  showPhoto('mc_photoPreview', item.moisture?.photo);
+}
+/* 欄位值都就位之後,把畫面上跟著連動的部分一次對齊 */
+function syncSmpFormState(){
+  document.getElementById('s_fraction_layer_wrap').style.display = document.getElementById('s_fraction_type').value==='liquid_liquid' ? 'block' : 'none';
+  toggleSolventVsExtractType();
+  updateMoistureCalc();
+  renderSmpDryMode();
+  recomputeSmpDry();
+  updateExtractionRate();
+  syncSmpLocks();
+  updateSampleId();
+}
+async function openSmpForm(id, opts){
+  opts = opts || {};
+  const item = id ? smpItems.find(i=>i.id===id) : null;
+  if(id && !item){ notify('找不到這筆樣品,可能已經被刪除。'); return; }
   editingSmpId = id || null;
-  populateSmpSelects();
+  smpFormSession++;
+  setSmpSavingUi(false);
+  smpStoredRate = (item && item.dry_weight == null && item.sample_weight == null) ? (item.extraction_rate || '') : '';
+  populateSmpSelects(item ? item.material_id : (opts.prefill ? opts.prefill.material_id : null));
   populateSpeciesDatalist();
   document.getElementById('smpFormTitle').textContent = id ? '編輯樣品' : '新增樣品';
   document.getElementById('smpDeleteBtn').style.display = 'none';
-  document.getElementById('s_solvent_other_wrap').style.display = 'none';
-  document.getElementById('s_fraction_layer_wrap').style.display = 'none';
   ['s_photoExtractPreview','s_photoBottlePreview','mc_photoPreview'].forEach(pid=>{
     document.getElementById(pid).style.display = 'none';
     document.getElementById(pid).src = '';
   });
-  document.getElementById('s_acquired_date').disabled = false;
+  smpLockedFields = new Set();
+  smpManualDryBackup = '';
+  /* 先全部歸零,再依情況填入,避免上一次開啟留下的值混進來 */
+  SMP_FIELD_IDS.forEach(fid=>{
+    const el = document.getElementById(fid);
+    if(el.type==='checkbox') el.checked = false; else el.value = '';
+  });
+  document.getElementById('s_solvent').value = SOLVENT_OPTIONS[0];
+  document.getElementById('s_extract_type').value = EXTRACT_TYPE_OPTIONS[0];
+  document.getElementById('s_fraction_type').value = 'none';
+  document.getElementById('s_fraction_layer').value = '正己烷分離部';
+  document.getElementById('s_dry_mode').value = 'moisture';
+  document.getElementById('s_extraction_rate').value = '';
 
-  if(id){
-    const item = smpItems.find(i=>i.id===id);
+  if(item){
     document.getElementById('s_id').value = item.id;
-    document.getElementById('s_import_material').value = item.material_id || '';
-    document.getElementById('s_name_zh').value = item.name_zh||'';
-    document.getElementById('s_species').value = item.species||'';
-    document.getElementById('s_source').value = item.source||'';
-    document.getElementById('s_acquired_date').value = item.acquired_date||'';
-    document.getElementById('s_acquired_unknown').checked = !!item.acquired_unknown;
-    document.getElementById('s_acquired_date').disabled = !!item.acquired_unknown;
-    document.getElementById('s_part').value = item.part||'';
-    document.getElementById('s_extraction_date').value = item.extraction_date||'';
-    document.getElementById('s_extraction_method').value = item.extraction_method||'';
-    document.getElementById('s_extractor').value = item.extractor||'';
-    document.getElementById('s_fraction_type').value = item.fraction_type||'none';
-    document.getElementById('s_fraction_layer').value = item.fraction_layer||'正己烷分離部';
-    if(item.fraction_type==='liquid_liquid') document.getElementById('s_fraction_layer_wrap').style.display = 'block';
-    document.getElementById('s_solvent').value = item.solvent||SOLVENT_OPTIONS[0];
-    document.getElementById('s_solvent_other').value = item.solvent_other||'';
-    if(item.solvent==='其他') document.getElementById('s_solvent_other_wrap').style.display = 'block';
-    document.getElementById('s_extract_type').value = item.extract_type || EXTRACT_TYPE_OPTIONS[0];
-    toggleSolventVsExtractType();
-    document.getElementById('s_material_fresh_weight').value = item.material_fresh_weight ?? '';
-    document.getElementById('s_sample_weight').value = item.sample_weight ?? '';
-    document.getElementById('s_dry_weight').value = item.dry_weight ?? '';
-    document.getElementById('s_extraction_rate').value = item.extraction_rate || '';
-    document.getElementById('mc_fresh_gross').value = item.moisture?.fresh_gross ?? '';
-    document.getElementById('mc_dry_gross').value = item.moisture?.dry_gross ?? '';
-    document.getElementById('mc_container').value = item.moisture?.container ?? '';
-    if(item.photo_extract){ document.getElementById('s_photoExtractPreview').src = item.photo_extract; document.getElementById('s_photoExtractPreview').style.display='block'; }
-    if(item.photo_bottle){ document.getElementById('s_photoBottlePreview').src = item.photo_bottle; document.getElementById('s_photoBottlePreview').style.display='block'; }
-    if(item.moisture?.photo){ document.getElementById('mc_photoPreview').src = item.moisture.photo; document.getElementById('mc_photoPreview').style.display='block'; }
-    updateMoistureCalc();
-
-    const editable = canEdit(item);
+    fillSmpForm(item, false);
+    smpFormEditable = canEdit(item);
+    if(document.getElementById('s_import_material').value) lockSmpMaterialFields();
     const creatorAcc = findAccount(item.created_by);
     const creatorLabel = item.created_by ? (creatorAcc ? (creatorAcc.name||creatorAcc.code) : item.created_by) : '未知';
     const banner = document.getElementById('smpCreatorBanner');
     banner.style.display = 'block';
-    if(editable){
+    if(smpFormEditable){
       banner.style.background = 'var(--tint)';
       banner.style.color = 'var(--pine-deep)';
       banner.textContent = `建立者:${creatorLabel}`;
@@ -5359,20 +5759,16 @@ async function openSmpForm(id){
       banner.style.color = 'var(--amber-ink)';
       banner.textContent = `此筆資料由 ${creatorLabel} 建立,只有建立者本人或管理員能編輯,目前為唯讀模式。`;
     }
-    SMP_FIELD_IDS.forEach(fid=> document.getElementById(fid).disabled = !editable);
-    document.getElementById('smpSaveBtn').style.display = editable ? 'inline-block' : 'none';
-    document.getElementById('clearSmpBtn').style.display = editable ? 'inline-block' : 'none';
+    document.getElementById('smpSaveBtn').style.display = smpFormEditable ? 'inline-block' : 'none';
+    document.getElementById('clearSmpBtn').style.display = smpFormEditable ? 'inline-block' : 'none';
     document.getElementById('smpDeleteBtn').style.display = isAdmin() ? 'inline-block' : 'none';
+    syncSmpFormState();
 
-    document.getElementById('smpQrSection').style.display = 'block';
-    document.getElementById('smpQrIdLabel').textContent = item.id;
+    document.getElementById('smpQrSection').style.display = 'flex';
     const smpQrTarget = document.getElementById('smpQrTarget');
     smpQrTarget.innerHTML = '';
-    new QRCode(smpQrTarget, { text: buildItemUrl('smp', item.id), width: 200, height: 200, colorDark: '#1B4B43', colorLight: '#ffffff' });
-    setTimeout(()=>{
-      const el = smpQrTarget.querySelector('canvas') || smpQrTarget.querySelector('img');
-      if(el){ el.style.width = '84px'; el.style.height = '84px'; }
-    }, 30);
+    try{ new QRCode(smpQrTarget, { text: buildItemUrl('smp', item.id), width: 200, height: 200, colorDark: '#1B4B43', colorLight: '#ffffff' }); }
+    catch(e){ console.warn('QR code unavailable:', e); document.getElementById('smpQrSection').style.display = 'none'; }
     document.getElementById('smpDownloadQrBtn').onclick = ()=>{
       setTimeout(()=>{
         const canvas = smpQrTarget.querySelector('canvas');
@@ -5386,106 +5782,148 @@ async function openSmpForm(id){
       }, 50);
     };
   }else{
+    smpFormEditable = true;
     document.getElementById('smpCreatorBanner').style.display = 'none';
     document.getElementById('smpQrSection').style.display = 'none';
-    SMP_FIELD_IDS.forEach(fid=> document.getElementById(fid).disabled = false);
     document.getElementById('smpSaveBtn').style.display = 'inline-block';
     document.getElementById('clearSmpBtn').style.display = 'inline-block';
-    ['s_import_material','s_name_zh','s_species','s_source','s_acquired_date','s_part','s_extraction_date','s_extraction_method','s_solvent_other','s_material_fresh_weight','s_sample_weight','s_dry_weight','mc_fresh_gross','mc_dry_gross','mc_container'].forEach(fid=>document.getElementById(fid).value='');
-    document.getElementById('s_acquired_unknown').checked = false;
-    document.getElementById('s_solvent').value = SOLVENT_OPTIONS[0];
-    document.getElementById('s_extract_type').value = EXTRACT_TYPE_OPTIONS[0];
-    toggleSolventVsExtractType();
-    document.getElementById('s_fraction_type').value = 'none';
-    document.getElementById('s_fraction_layer').value = '正己烷分離部';
-    document.getElementById('s_extraction_rate').value = '';
     document.getElementById('s_extractor').value = (currentUser && currentUser.code) ? currentUser.code : ((currentUser && currentUser.name) || '');
-    updateMoistureCalc();
-    updateSampleId();
-    const draft = await loadDraft(SMP_DRAFT_KEY);
-    applySmpDraft(draft);
+    if(opts.prefill){
+      fillSmpForm(opts.prefill, true);
+      if(document.getElementById('s_import_material').value) lockSmpMaterialFields();
+    }else if(opts.materialId){
+      document.getElementById('s_import_material').value = opts.materialId;
+      document.getElementById('s_import_material').dispatchEvent(new Event('change'));
+    }else{
+      applySmpDraft(await loadDraft(SMP_DRAFT_KEY));
+    }
+    syncSmpFormState();
+    if(opts.prefill || opts.materialId) saveSmpDraftDebounced();
   }
   document.getElementById('smpFormOverlay').classList.add('show');
 }
-function closeSmpForm(){ document.getElementById('smpFormOverlay').classList.remove('show'); editingSmpId = null; }
+function closeSmpForm(){
+  if(editingSmpId) saveSmpDraftDebounced.cancel(); else saveSmpDraftDebounced.flush();
+  document.getElementById('smpFormOverlay').classList.remove('show');
+  editingSmpId = null;
+}
+/* 儲存鎖只擋「同一次開啟的表單」重複送出,不擋關閉:離線時 Firestore 的 set() 要等連線回來才會結束,
+   鎖住取消鈕的話表單就關不掉了。所以只停用儲存、刪除、清除三顆,取消與 ✕ 照常可按 */
+function setSmpSavingUi(on){
+  ['smpSaveBtn','smpDeleteBtn','clearSmpBtn'].forEach(id=>{ document.getElementById(id).disabled = on; });
+  document.getElementById('smpSaveBtn').textContent = on ? '儲存中…' : '儲存';
+}
 
 async function handleSmpSave(){
-  const existingItem = editingSmpId ? smpItems.find(i=>i.id===editingSmpId) : null;
-  if(editingSmpId && !canEdit(existingItem)){ notify('只有建立者本人或管理員能編輯這筆資料。'); return; }
-  const species = document.getElementById('s_species').value.trim();
-  const nameZh = document.getElementById('s_name_zh').value.trim();
-  if(!species || !nameZh){ notify('請填寫「物種」與「中文名稱」'); return; }
+  const session = smpFormSession;
+  if(smpSavingSession === session) return;                // 照片上傳要好幾秒,連點兩下會各跑一輪,存出兩筆
+  const isEdit = !!editingSmpId;
+  const existingItem = isEdit ? smpItems.find(i=>i.id===editingSmpId) : null;
+  if(isEdit && !existingItem){ notify('這筆樣品已經被刪除,無法儲存。'); return; }
+  if(isEdit && !canEdit(existingItem)){ notify('只有建立者本人或管理員能編輯這筆資料。'); return; }
+  const val = fid=> document.getElementById(fid).value;
+  const species = val('s_species').trim();
+  const nameZh = val('s_name_zh').trim();
+  if(!species || !nameZh){ notify('請填寫「中文名稱」與「學名」'); return; }
   const nonNegativeIds = ['s_material_fresh_weight','s_sample_weight','s_dry_weight','mc_fresh_gross','mc_dry_gross','mc_container'];
-  if(nonNegativeIds.some(fid=>document.getElementById(fid).value!=='' && Number(document.getElementById(fid).value)<0)){
+  if(nonNegativeIds.some(fid=>val(fid)!=='' && Number(val(fid))<0)){
     notify('重量不能是負數。'); return;
   }
   /* 含水量可以只填一部分先存起來;未填滿就不算含水率。
      只有三個都填了卻互相矛盾才擋,避免存進不可能的數值。 */
   if(getMoistureRates() === 'error'){
+    document.getElementById('smpMoistureBox').style.display = 'block';   // 手動模式下這一區可能是收起來的,先攤開讓人看得到是哪三格
     notify('含水量的三個重量互相矛盾,需符合取樣鮮重 > 取樣乾重 > 容器重。'); return;
   }
-  const finalId = editingSmpId || computeSamplePrefix() + '_' + String(nextSeqForPrefix(computeSamplePrefix(), null)).padStart(2,'0');
-  const uploadedNow=[];
-  let extractPhoto, bottlePhoto, moisturePhoto;
-  try{
-    extractPhoto = await uploadPreviewPhoto('s_photoExtractPreview','samples',finalId,'extract',existingItem&&existingItem.photo_extract_path); if(extractPhoto.uploaded) uploadedNow.push(extractPhoto.path);
-    bottlePhoto = await uploadPreviewPhoto('s_photoBottlePreview','samples',finalId,'bottle',existingItem&&existingItem.photo_bottle_path); if(bottlePhoto.uploaded) uploadedNow.push(bottlePhoto.path);
-    moisturePhoto = await uploadPreviewPhoto('mc_photoPreview','samples',finalId,'moisture',existingItem&&existingItem.moisture&&existingItem.moisture.photo_path); if(moisturePhoto.uploaded) uploadedNow.push(moisturePhoto.path);
-  }catch(err){
-    await Promise.all(uploadedNow.map(deleteStoredPhoto));
-    notify(err.message || '照片上傳失敗。'); return;
-  }
+  /* 表單上的值在第一個 await 之前一次抓齊。儲存途中使用者可以關掉表單去開別筆,
+     之後再從 DOM 讀就會讀到別筆的內容 */
+  const num = fid=> val(fid) === '' ? null : Number(val(fid));
+  const photoSrc = pid=>{ const el = document.getElementById(pid); return el.style.display !== 'none' ? el.src : null; };
+  const prefix = computeSamplePrefix();
+  const finalId = isEdit ? existingItem.id : prefix + '_' + String(nextSeqForPrefix(prefix, null)).padStart(2,'0');
+  const unknown = document.getElementById('s_acquired_unknown').checked;
+  const isDistillation = DISTILLATION_METHODS.includes(val('s_extraction_method'));
+  const nowIso = new Date().toISOString();
   const data = {
     id: finalId,
     _doc_id: existingItem ? existingItem._doc_id : null,
-    material_id: document.getElementById('s_import_material').value || null,
+    material_id: val('s_import_material') || null,
     name_zh: nameZh,
     species,
-    source: document.getElementById('s_source').value.trim(),
-    acquired_unknown: document.getElementById('s_acquired_unknown').checked,
-    acquired_date: document.getElementById('s_acquired_unknown').checked ? '' : document.getElementById('s_acquired_date').value,
-    part: document.getElementById('s_part').value,
-    extraction_date: document.getElementById('s_extraction_date').value,
-    extraction_method: document.getElementById('s_extraction_method').value,
-    extractor: document.getElementById('s_extractor').value.trim(),
-    fraction_type: document.getElementById('s_fraction_type').value,
-    fraction_layer: document.getElementById('s_fraction_type').value==='liquid_liquid' ? document.getElementById('s_fraction_layer').value : null,
-    solvent: document.getElementById('s_solvent').value,
-    extract_type: DISTILLATION_METHODS.includes(document.getElementById('s_extraction_method').value) ? document.getElementById('s_extract_type').value : null,
-    solvent_other: document.getElementById('s_solvent_other').value.trim(),
-    material_fresh_weight: document.getElementById('s_material_fresh_weight').value === '' ? null : Number(document.getElementById('s_material_fresh_weight').value),
-    sample_weight: document.getElementById('s_sample_weight').value === '' ? null : Number(document.getElementById('s_sample_weight').value),
-    dry_weight: document.getElementById('s_dry_weight').value === '' ? null : Number(document.getElementById('s_dry_weight').value),
-    extraction_rate: document.getElementById('s_extraction_rate').value,
-    photo_extract: extractPhoto.url,
-    photo_extract_path: extractPhoto.path,
-    photo_bottle: bottlePhoto.url,
-    photo_bottle_path: bottlePhoto.path,
+    source: val('s_source').trim(),
+    acquired_unknown: unknown,
+    acquired_date: unknown ? '' : val('s_acquired_date'),
+    part: val('s_part'),
+    extraction_date: val('s_extraction_date'),
+    extraction_method: val('s_extraction_method'),
+    extractor: val('s_extractor').trim(),
+    fraction_type: val('s_fraction_type'),
+    fraction_layer: val('s_fraction_type')==='liquid_liquid' ? val('s_fraction_layer') : null,
+    solvent: val('s_solvent'),
+    extract_type: isDistillation ? val('s_extract_type') : null,
+    solvent_other: val('s_solvent_other').trim(),
+    material_fresh_weight: num('s_material_fresh_weight'),
+    sample_weight: num('s_sample_weight'),
+    dry_weight: num('s_dry_weight'),
+    extraction_rate: val('s_extraction_rate'),
+    photo_extract: null,
+    photo_extract_path: null,
+    photo_bottle: null,
+    photo_bottle_path: null,
     moisture: {
-      fresh_gross: document.getElementById('mc_fresh_gross').value === '' ? null : Number(document.getElementById('mc_fresh_gross').value),
-      dry_gross: document.getElementById('mc_dry_gross').value === '' ? null : Number(document.getElementById('mc_dry_gross').value),
-      container: document.getElementById('mc_container').value === '' ? null : Number(document.getElementById('mc_container').value),
-      photo: moisturePhoto.url,
-      photo_path: moisturePhoto.path
+      fresh_gross: num('mc_fresh_gross'),
+      dry_gross: num('mc_dry_gross'),
+      container: num('mc_container'),
+      photo: null,
+      photo_path: null
     },
-    updated_at: new Date().toISOString(),
+    updated_at: nowIso,
     updated_by_uid: (currentUser && currentUser.uid) || null,
-    created_by_uid: editingSmpId ? (smpItems.find(i=>i.id===editingSmpId)?.created_by_uid || null) : ((currentUser && currentUser.uid) || null),
-    created_by: editingSmpId ? (smpItems.find(i=>i.id===editingSmpId)?.created_by || (currentUser && currentUser.code) || null) : ((currentUser && currentUser.code) || null),
-    created_at: editingSmpId ? (smpItems.find(i=>i.id===editingSmpId)?.created_at || new Date().toISOString()) : new Date().toISOString()
+    created_by_uid: isEdit ? (existingItem.created_by_uid || null) : ((currentUser && currentUser.uid) || null),
+    created_by: isEdit ? (existingItem.created_by || (currentUser && currentUser.code) || null) : ((currentUser && currentUser.code) || null),
+    created_at: isEdit ? (existingItem.created_at || nowIso) : nowIso
   };
-  const ok = await fsSetItem('samples', data);
-  if(!ok){ await Promise.all(uploadedNow.map(deleteStoredPhoto)); notify('儲存失敗,請檢查網路連線後再試一次。'); return; }
-  if(editingSmpId){ smpItems[smpItems.findIndex(i=>i.id===editingSmpId)] = data; }
-  else{ upsertLocal(smpItems, data); }
-  if(existingItem){
-    const oldPaths=[existingItem.photo_extract_path,existingItem.photo_bottle_path,existingItem.moisture&&existingItem.moisture.photo_path];
-    const newPaths=[extractPhoto.path,bottlePhoto.path,moisturePhoto.path];
-    await Promise.all(oldPaths.filter((p,idx)=>p&&p!==newPaths[idx]).map(deleteStoredPhoto));
+  const sources = { extract: photoSrc('s_photoExtractPreview'), bottle: photoSrc('s_photoBottlePreview'), moisture: photoSrc('mc_photoPreview') };
+
+  smpSavingSession = session;
+  setSmpSavingUi(true);
+  let saved = false;
+  try{
+    const uploadedNow=[];
+    let extractPhoto, bottlePhoto, moisturePhoto;
+    try{
+      extractPhoto = await uploadPhotoSource(sources.extract,'samples',finalId,'extract',existingItem&&existingItem.photo_extract_path); if(extractPhoto.uploaded) uploadedNow.push(extractPhoto.path);
+      bottlePhoto = await uploadPhotoSource(sources.bottle,'samples',finalId,'bottle',existingItem&&existingItem.photo_bottle_path); if(bottlePhoto.uploaded) uploadedNow.push(bottlePhoto.path);
+      moisturePhoto = await uploadPhotoSource(sources.moisture,'samples',finalId,'moisture',existingItem&&existingItem.moisture&&existingItem.moisture.photo_path); if(moisturePhoto.uploaded) uploadedNow.push(moisturePhoto.path);
+    }catch(err){
+      await Promise.all(uploadedNow.map(deleteStoredPhoto));
+      notify(err.message || '照片上傳失敗。'); return;
+    }
+    data.photo_extract = extractPhoto.url;   data.photo_extract_path = extractPhoto.path;
+    data.photo_bottle = bottlePhoto.url;     data.photo_bottle_path = bottlePhoto.path;
+    data.moisture.photo = moisturePhoto.url; data.moisture.photo_path = moisturePhoto.path;
+    const ok = await fsSetItem('samples', data);
+    if(!ok){ await Promise.all(uploadedNow.map(deleteStoredPhoto)); notify('儲存失敗,請檢查網路連線後再試一次。'); return; }
+    upsertLocal(smpItems, data);
+    if(existingItem){
+      const oldPaths=[existingItem.photo_extract_path,existingItem.photo_bottle_path,existingItem.moisture&&existingItem.moisture.photo_path];
+      const newPaths=[extractPhoto.path,bottlePhoto.path,moisturePhoto.path];
+      await Promise.all(oldPaths.filter((p,idx)=>p&&p!==newPaths[idx]).map(deleteStoredPhoto));
+    }
+    saved = true;
+  }finally{
+    if(smpSavingSession === session) smpSavingSession = -1;
+    if(smpFormSession === session) setSmpSavingUi(false);
   }
-  if(!editingSmpId) await clearDraft(SMP_DRAFT_KEY);
-  closeSmpForm();
+  if(!saved) return;
+  /* 表單還停在同一次開啟才收尾;使用者中途已經關掉、或去開了別筆,就不要動現在畫面上的表單 */
+  const formOpen = document.getElementById('smpFormOverlay').classList.contains('show');
+  const sameForm = smpFormSession === session;
+  if(sameForm) saveSmpDraftDebounced.cancel();
+  if(!isEdit && (sameForm || !(formOpen && !editingSmpId))) await clearDraft(SMP_DRAFT_KEY);   // 另外開了一張新增表單的話,草稿現在是那一張的
+  if(sameForm && formOpen) closeSmpForm();
   renderSmpAll();
+  renderMatTable();
 }
 async function handleSmpDelete(){
   if(!editingSmpId || !isAdmin()) return;
@@ -5499,6 +5937,7 @@ async function handleSmpDelete(){
   smpItems = smpItems.filter(i=>i.id!==idToDelete);
   closeSmpForm();
   renderSmpAll();
+  renderMatTable();
 }
 bindPhotoUpload('s_photoExtractDrop','s_photoExtractInput','s_photoExtractPreview');
 bindPhotoUpload('s_photoBottleDrop','s_photoBottleInput','s_photoBottlePreview');
@@ -5511,20 +5950,22 @@ function clearSmpForm(){
     const el = document.getElementById(fid);
     if(el.type==='checkbox') el.checked = false; else el.value='';
   });
-  document.getElementById('s_acquired_date').disabled = false;
   document.getElementById('s_solvent').value = SOLVENT_OPTIONS[0];
   document.getElementById('s_extract_type').value = EXTRACT_TYPE_OPTIONS[0];
   document.getElementById('s_fraction_type').value = 'none';
   document.getElementById('s_fraction_layer').value = '正己烷分離部';
-  toggleSolventVsExtractType();
+  document.getElementById('s_dry_mode').value = 'moisture';
   document.getElementById('s_extraction_rate').value = '';
-  updateMoistureCalc();
+  smpLockedFields = new Set();
+  smpManualDryBackup = '';
+  smpStoredRate = '';
   ['s_photoExtractPreview','s_photoBottlePreview','mc_photoPreview'].forEach(pid=>{
     document.getElementById(pid).style.display = 'none';
     document.getElementById(pid).src = '';
   });
-  clearDraft(SMP_DRAFT_KEY);
-  updateSampleId();
+  syncSmpFormState();
+  saveSmpDraftDebounced.cancel();
+  if(!editingSmpId) clearDraft(SMP_DRAFT_KEY);           // 編輯既有樣品時按清除,不該連另外存著的新增草稿一起刪
 }
 document.getElementById('clearSmpBtn').addEventListener('click', async ()=>{
   if(await confirmDialog('確定要清空目前表單所有已輸入的內容嗎?此動作無法復原。')) clearSmpForm();
@@ -5549,6 +5990,7 @@ async function quickDeleteSmp(id, ev){
   if(deletedItem) await Promise.all([deletedItem.photo_extract_path,deletedItem.photo_bottle_path,deletedItem.moisture&&deletedItem.moisture.photo_path].filter(Boolean).map(deleteStoredPhoto));
   smpItems = smpItems.filter(i=>i.id!==id);
   renderSmpAll();
+  renderMatTable();
 }
 document.getElementById('smpSearch').addEventListener('input', renderSmpTable);
 document.getElementById('smpFilterSolvent').addEventListener('change', renderSmpTable);
@@ -10758,7 +11200,7 @@ function startRealtimeSync(){
   }, 'users');
   watchCollection(db.collection('chemicals'), rows=>{ items=rows; renderAll(); renderDashboard(); }, 'chemicals');
   watchCollection(db.collection('materials'), rows=>{ matItems=rows; renderMatAll(); }, 'materials');
-  watchCollection(db.collection('samples'), rows=>{ smpItems=rows; renderSmpAll(); }, 'samples');
+  watchCollection(db.collection('samples'), rows=>{ smpItems=rows; renderSmpAll(); renderMatTable(); }, 'samples');
   const usageQuery = isAdmin() ? db.collection('chem-usage-logs') : db.collection('chem-usage-logs').where('user_uid','==',currentUser.uid);
   watchCollection(usageQuery, rows=>{ culItems=rows; renderCulAll(); }, 'chem-usage-logs');
   watchCollection(db.collection('instrument-reservations'), rows=>{ iulItems=rows; renderIulAll(); renderDashboard(); }, 'instrument-reservations');
