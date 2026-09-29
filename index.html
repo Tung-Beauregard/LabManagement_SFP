@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="app-version" content="2026.09.22.1">
+<meta name="app-version" content="2026.09.29.1">
 <meta name="theme-color" content="#1B4B43" id="metaThemeColor">
 <title>SFPLAB 實驗室管理系統</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>">
@@ -1630,7 +1630,15 @@
               <label class="ftir-chk"><input type="checkbox" id="ftirShowTitle" checked>顯示標題</label>
               <div class="field" style="margin-bottom:10px;"><input type="text" id="ftirTitle" placeholder="輸入圖表標題"></div>
               <label class="ftir-chk"><input type="checkbox" id="ftirShowAxisTitles" checked>顯示座標軸文字</label>
-              <label class="ftir-chk" style="margin-bottom:0;"><input type="checkbox" id="ftirShowTickLabels" checked>顯示刻度數字</label>
+              <label class="ftir-chk"><input type="checkbox" id="ftirShowTickLabels" checked>顯示刻度數字</label>
+              <div class="field row2" style="margin-bottom:6px;">
+                <div><label style="font-size:12px;">X 軸左端(高波數)</label><input type="number" id="ftirXmax" step="any" min="0" placeholder="4000"></div>
+                <div><label style="font-size:12px;">X 軸右端(低波數)</label><input type="number" id="ftirXmin" step="any" min="0" placeholder="自動"></div>
+              </div>
+              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                <button type="button" class="btn btn-ghost btn-sm" id="ftirRangeReset">全範圍</button>
+                <span class="ftir-hint" id="ftirRangeHint" style="margin-top:0;"></span>
+              </div>
             </div>
 
             <div class="ftir-card">
@@ -9644,29 +9652,58 @@ function ftirBuildSVG(spec){
   const labelDx=spec.labelDx||0, labelDy=spec.labelDy||0;   // labelDy 正值代表往上
   const m={l:22+(showTickLabels?30:0)+(showAxisTitles?18:0),r:22,t:(title?46:0)+16,b:16+(showTickLabels?22:0)+(showAxisTitles?20:0)};
   const W=920, H=(title?520:494);
-  const pw=W-m.l-m.r, ph=H-m.t-m.b;
-  const XMAX=4000,XMIN=Math.min(...traces.map(t=>t.xmin),650);
+  let pw=W-m.l-m.r; const ph=H-m.t-m.b;
+  // xrange={hi,lo} 由 ftirRender 決定;沒指定時維持原本的 4000 到 min(最低波數,650),畫法完全不變
+  const xr=spec.xrange||null;
+  const XMAX=xr?xr.hi:4000,XMIN=xr?xr.lo:Math.min(...traces.map(t=>t.xmin),650);
   let offset=0,gap=0.06,maxSingle=0;
-  for(const t of traces){
-    let ymn=Infinity,ymx=-Infinity;for(const v of t.y){if(v<ymn)ymn=v;if(v>ymx)ymx=v;}
-    t._base=offset;t._min=ymn;t._max=ymx;maxSingle=Math.max(maxSingle,ymx-ymn);offset+=(ymx-ymn)+gap;
+  if(xr){
+    // 可見點＝範圍內的取樣點,兩端再補一個內插在框線上的點,曲線才會畫滿到邊框
+    const lerp=(i,j,b)=>t=>[b,t.y[i]+(t.y[j]-t.y[i])*(b-t.x[i])/(t.x[j]-t.x[i])];
+    for(const t of traces){
+      const vis=[];let a=-1,z=-1;
+      for(let i=0;i<t.x.length;i++)if(t.x[i]<=XMAX&&t.x[i]>=XMIN){if(a<0)a=i;z=i;vis.push([t.x[i],t.y[i]]);}
+      if(a>0){const xo=t.x[a-1],b=xo>XMAX?XMAX:(xo<XMIN?XMIN:null);if(b!=null)vis.unshift(lerp(a-1,a,b)(t));}
+      if(z>=0&&z<t.x.length-1){const xo=t.x[z+1],b=xo>XMAX?XMAX:(xo<XMIN?XMIN:null);if(b!=null)vis.push(lerp(z,z+1,b)(t));}
+      t._vis=vis;
+    }
+    // 疊圖時,範圍內完全沒有數據的光譜不佔高度,也不影響其他光譜的縮放;
+    // 光譜之間的間距改成跟光譜高度成比例(全範圍時固定 0.06 吸光度,放大到很弱的區段會顯得太空)
+    for(const t of traces){
+      let ymn=Infinity,ymx=-Infinity;for(const [,v] of t._vis){if(v<ymn)ymn=v;if(v>ymx)ymx=v;}
+      t._empty=!isFinite(ymn); t._min=t._empty?0:ymn; t._max=t._empty?0:ymx;
+      if(!t._empty)maxSingle=Math.max(maxSingle,ymx-ymn);
+    }
+    if(!(maxSingle>0))maxSingle=1;
+    gap=0.2*maxSingle;
+    for(const t of traces){t._base=offset;if(!t._empty)offset+=(t._max-t._min)+gap;}
+  }else{
+    for(const t of traces){
+      let ymn=Infinity,ymx=-Infinity;for(const v of t.y){if(v<ymn)ymn=v;if(v>ymx)ymx=v;}
+      t._base=offset;t._min=ymn;t._max=ymx;maxSingle=Math.max(maxSingle,ymx-ymn);offset+=(ymx-ymn)+gap;
+    }
   }
   const single=traces.length===1;
-  const yLo=single?(traces[0]._min-0.04*maxSingle):-0.03;
+  const yLo=single?(traces[0]._min-0.04*maxSingle):(xr?-0.1*maxSingle:-0.03);
   const yHi=single?(traces[0]._min+maxSingle*(labelMode==='both'?1.5:1.34)):(offset+0.18*maxSingle);
+  const yt=ftirNiceTicks(yLo,yHi,7),ytm=ftirNiceTicks(yLo,yHi,14);
+  const yStep=yt.length>1?yt[1]-yt[0]:1, yDec=Math.max(2,Math.ceil(-Math.log10(yStep)-1e-9));
+  if(yDec>2&&showTickLabels){m.l+=7*(yDec-2);pw=W-m.l-m.r;}
   const X=wn=>m.l+(XMAX-wn)/(XMAX-XMIN)*pw;
   const Y=a=>m.t+(yHi-a)/(yHi-yLo)*ph;
   const S=[`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`];
   S.push(`<rect width="${W}" height="${H}" fill="#fff"/>`);
-  for(let wn=4000;wn>=Math.ceil(XMIN/100)*100;wn-=100){
-    if(wn>XMAX)continue;const px=X(wn),M=(wn%500===0);
+  // 刻度:全範圍是每 100 一小格、每 500 標數字;縮小範圍時改用能標出至少 4 個數字的間距
+  const XT=[[1000,200],[500,100],[200,50],[100,20],[50,10],[20,5],[10,2],[5,1]];
+  const [xMaj,xMinor]=xr?(XT.find(([a])=>(XMAX-XMIN)/a>=4)||XT[XT.length-1]):[500,100];
+  for(let k=Math.floor(XMAX/xMinor+1e-9);k>=Math.ceil(XMIN/xMinor-1e-9);k--){
+    const wn=k*xMinor,px=X(wn),M=(k%(xMaj/xMinor)===0);
     S.push(`<line x1="${px.toFixed(1)}" y1="${m.t+ph}" x2="${px.toFixed(1)}" y2="${(m.t+ph-(M?7:4)).toFixed(1)}" stroke="#111" stroke-width="1"/>`);
     if(M&&showTickLabels)S.push(`<text x="${px.toFixed(1)}" y="${m.t+ph+18}" font-size="13" text-anchor="middle" fill="#111">${wn}</text>`);
   }
-  const yt=ftirNiceTicks(yLo,yHi,7),ytm=ftirNiceTicks(yLo,yHi,14);
   for(const v of ytm){if(v<yLo-1e-9||v>yHi+1e-9)continue;const py=Y(v),M=yt.some(t=>Math.abs(t-v)<1e-9);
     S.push(`<line x1="${m.l}" y1="${py.toFixed(1)}" x2="${(m.l+(M?7:4)).toFixed(1)}" y2="${py.toFixed(1)}" stroke="#111" stroke-width="1"/>`);
-    if(M&&showTickLabels)S.push(`<text x="${m.l-9}" y="${(py+4).toFixed(1)}" font-size="12" text-anchor="end" fill="#111">${v.toFixed(2)}</text>`);}
+    if(M&&showTickLabels)S.push(`<text x="${m.l-9}" y="${(py+4).toFixed(1)}" font-size="12" text-anchor="end" fill="#111">${v.toFixed(yDec)}</text>`);}
   (guides||[]).forEach(wn=>{
     if(wn>XMAX||wn<XMIN)return;const px=X(wn);
     S.push(`<line x1="${px.toFixed(1)}" y1="${m.t}" x2="${px.toFixed(1)}" y2="${m.t+ph}" stroke="#333" stroke-width="0.9" stroke-dasharray="5 3" opacity="0.75"/>`);
@@ -9675,7 +9712,9 @@ function ftirBuildSVG(spec){
   const markers=[];
   traces.forEach((t,ti)=>{
     const c=FTIR_COLORS[ti%FTIR_COLORS.length];
-    let d='';for(let i=0;i<t.x.length;i++){if(t.x[i]>XMAX||t.x[i]<XMIN)continue;
+    let d='';
+    if(xr){for(const [xv,v] of t._vis)d+=(d?'L':'M')+X(xv).toFixed(2)+' '+Y(v-t._min+t._base).toFixed(2)+' ';}
+    else for(let i=0;i<t.x.length;i++){if(t.x[i]>XMAX||t.x[i]<XMIN)continue;
       const yy=t.y[i]-t._min+t._base;d+=(d?'L':'M')+X(t.x[i]).toFixed(2)+' '+Y(yy).toFixed(2)+' ';}
     S.push(`<path d="${d}" fill="none" stroke="${c}" stroke-width="1.05" stroke-linejoin="round"/>`);
     t.peaks.forEach((p,k)=>{
@@ -9721,7 +9760,7 @@ function ftirBuildSVG(spec){
 let FTIR_LIB=[];   // {id,name,n,first,last,y} 僅暫存本機記憶體
 const ftirState={sel:[],ymode:'abs',atrRef:2000,prom:0.02,topN:14,
   labelMode:'num',showPeakLabels:true,labelDx:0,labelDy:0,decimals:2,showTitle:true,title:'',
-  showAxisTitles:true,showTickLabels:true,guides:[],
+  showAxisTitles:true,showTickLabels:true,guides:[],xmin:null,xmax:null,
   legend:{show:true,pos:'tr',frame:false}};
 let ftirCurrent=null;
 let ftirInited=false;
@@ -9745,6 +9784,13 @@ function initFtirOnce(){
   fq('#ftirTitle').oninput=e=>{ftirState.title=e.target.value;ftirRender();};
   fq('#ftirShowAxisTitles').onchange=e=>{ftirState.showAxisTitles=e.target.checked;ftirRender();};
   fq('#ftirShowTickLabels').onchange=e=>{ftirState.showTickLabels=e.target.checked;ftirRender();};
+  // 波數範圍在按 Enter 或離開欄位時才套用,打字打到一半(例如 1 → 18 → 1800)不會一直重畫
+  [['#ftirXmax','xmax'],['#ftirXmin','xmin']].forEach(([sel,k])=>{const el=fq(sel);
+    const apply=()=>{const v=parseFloat(el.value);const nv=isFinite(v)&&v>0?v:null;
+      if(nv==null&&(el.value!==''||(el.validity&&el.validity.badInput)))el.value='';
+      if(nv===ftirState[k])return;ftirState[k]=nv;ftirRender();};
+    el.onchange=apply; el.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();apply();}};});
+  fq('#ftirRangeReset').onclick=()=>{ftirState.xmin=null;ftirState.xmax=null;fq('#ftirXmin').value='';fq('#ftirXmax').value='';ftirRender();};
   fq('#ftirShowLegend').onchange=e=>{ftirState.legend.show=e.target.checked;ftirRender();};
   fq('#ftirLegendPos').onchange=e=>{ftirState.legend.pos=e.target.value;ftirRender();};
   fq('#ftirLegendFrame').onchange=e=>{ftirState.legend.frame=e.target.checked;ftirRender();};
@@ -9815,18 +9861,41 @@ function ftirToggleGuide(wn){
   if(i>=0)ftirState.guides.splice(i,1);else ftirState.guides.push(wn);
   ftirRender();
 }
+/* X 軸波數範圍:兩格都空＝全範圍。只填一格時另一端用預設值(左端 4000、右端 min(最低波數,650));
+   兩格填反了自動對調;數值夾在 min(資料最低,650) 到 max(資料最高,4000) 之間;
+   範圍不到 20 cm⁻¹,或跟實際光譜數據重疊不到 20 cm⁻¹,就退回全範圍並提示 */
+const ftirFmtWn=v=>String(Math.round(v*10)/10);
+function ftirResolveRange(chosen){
+  const hint=fq('#ftirRangeHint'), say=t=>{if(hint)hint.textContent=t;};
+  if(ftirState.xmin==null&&ftirState.xmax==null){say('');return null;}
+  let dLo=Infinity,dHi=-Infinity;
+  chosen.forEach(it=>{dLo=Math.min(dLo,it.first,it.last);dHi=Math.max(dHi,it.first,it.last);});
+  const eLo=Math.min(dLo,650),eHi=Math.max(dHi,4000);
+  let hi=ftirState.xmax!=null?ftirState.xmax:4000, lo=ftirState.xmin!=null?ftirState.xmin:eLo;
+  if(hi<lo){const t=hi;hi=lo;lo=t;}
+  hi=Math.min(hi,eHi); lo=Math.max(lo,eLo);
+  if(!(hi-lo>=20)||!(Math.min(hi,dHi)-Math.max(lo,dLo)>=20)){say('範圍太窄或不在光譜資料內,目前顯示全範圍。');return null;}
+  say(`目前顯示 ${ftirFmtWn(hi)} 至 ${ftirFmtWn(lo)} cm⁻¹,峰只在這一段裡找。`);
+  return {hi,lo};
+}
 function ftirRender(){
   const wrap=fq('#ftirPlotwrap'),tw=fq('#ftirTablewrap');
   const chosen=ftirState.sel.map(id=>FTIR_LIB.find(x=>x.id===id)).filter(Boolean);
   const multi=chosen.length>1;
   if(!chosen.length){wrap.innerHTML='<div class="ftir-empty" id="ftirEmpty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="52" height="52"><path d="M3 3v18h18M7 15l3-4 3 3 4-6"/></svg><div>上傳 .asp 或 .spc 光譜檔以開始</div></div>';tw.innerHTML='';
-    ['#ftirDlPng','#ftirDlSvg','#ftirDlCsv','#ftirSave'].forEach(s=>fq(s).disabled=true);ftirCurrent=null;return;}
+    ['#ftirDlPng','#ftirDlSvg','#ftirDlCsv','#ftirSave'].forEach(s=>fq(s).disabled=true);ftirCurrent=null;
+    const rh=fq('#ftirRangeHint');if(rh)rh.textContent='';return;}
+  const xr=ftirResolveRange(chosen);
   const traces=chosen.map(item=>{
     const x=ftirXAxis(item);
     let y=ftirTransform(x,item.y,ftirState.ymode,ftirState.atrRef);
     const base=y.slice(0,40).sort((a,b)=>a-b)[20]||0;
     if(multi)y=y.map(v=>v-base);
-    const peaks=ftirDetect(x,y,ftirState.prom,ftirState.topN);
+    // 有指定範圍時只在範圍內找峰:峰數上限與突出度門檻都以這一段為準,放大指紋區才看得到細節
+    let peaks;
+    if(xr){const ix=[];for(let i=0;i<x.length;i++)if(x[i]<=xr.hi&&x[i]>=xr.lo)ix.push(i);
+      peaks=ix.length>2?ftirDetect(ix.map(i=>x[i]),ix.map(i=>y[i]),ftirState.prom,ftirState.topN):[];}
+    else peaks=ftirDetect(x,y,ftirState.prom,ftirState.topN);
     return {name:item.name,x,y,xmin:Math.min(item.first,item.last),peaks};
   });
   const title=ftirState.showTitle?(ftirState.title||(chosen.length===1?chosen[0].name:'')):'';
@@ -9834,8 +9903,8 @@ function ftirRender(){
     labelMode:ftirState.labelMode,decimals:ftirState.decimals,legend:ftirState.legend,
     showPeakLabels:ftirState.showPeakLabels,labelDx:ftirState.labelDx,labelDy:ftirState.labelDy,
     showAxisTitles:ftirState.showAxisTitles,showTickLabels:ftirState.showTickLabels,
-    guides:multi?ftirState.guides:[]});
-  ftirCurrent={traces,built,name:chosen.length===1?chosen[0].name:'overlay',ymode:ftirState.ymode,multi,items:chosen};
+    guides:multi?ftirState.guides:[],xrange:xr});
+  ftirCurrent={traces,built,name:chosen.length===1?chosen[0].name:'overlay',ymode:ftirState.ymode,multi,items:chosen,xrange:xr};
   wrap.innerHTML=built.svg;
   ftirCurrent._svg=wrap.querySelector('svg');
   if(multi)ftirCurrent._svg.querySelectorAll('.pk').forEach(t=>{t.onclick=()=>ftirToggleGuide(parseFloat(t.getAttribute('data-wn')));});
@@ -9856,7 +9925,7 @@ function ftirRenderTable(traces,multi){
         ${multi?`<td style="text-align:center">${pinned?'●':'○'}</td>`:''}</tr>`;});
   });
   fq('#ftirTablewrap').innerHTML=`<table><thead>${head}</thead><tbody>${rows}</tbody></table>
-    <div class="note">${multi?'疊圖比對時,點圖上峰標籤或表格任一列,可在該波數釘選一條貫穿全圖的比較虛線(●＝已釘選);再點一次取消。':'建議歸屬由波數比對常見官能基區間,僅供初判。'}最終指認須配合樣品背景與其他分析。</div>`;
+    <div class="note">${ftirCurrent&&ftirCurrent.xrange?`只列出 ${ftirFmtWn(ftirCurrent.xrange.hi)} 至 ${ftirFmtWn(ftirCurrent.xrange.lo)} cm⁻¹ 範圍內的峰。`:''}${multi?'疊圖比對時,點圖上峰標籤或表格任一列,可在該波數釘選一條貫穿全圖的比較虛線(●＝已釘選);再點一次取消。':'建議歸屬由波數比對常見官能基區間,僅供初判。'}最終指認須配合樣品背景與其他分析。</div>`;
   const trs=[...fq('#ftirTablewrap').querySelectorAll('tbody tr')];
   trs.forEach((tr,i)=>{
     tr.onmouseenter=()=>ftirHighlight(i);
@@ -9931,7 +10000,8 @@ async function ftirSaveToGallery(){
         topN:ftirState.topN, labelMode:ftirState.labelMode,
         showPeakLabels:ftirState.showPeakLabels, labelDx:ftirState.labelDx, labelDy:ftirState.labelDy,
         showTitle:ftirState.showTitle, title:ftirState.title,
-        showAxisTitles:ftirState.showAxisTitles, showTickLabels:ftirState.showTickLabels };
+        showAxisTitles:ftirState.showAxisTitles, showTickLabels:ftirState.showTickLabels,
+        xmin:ftirState.xmin, xmax:ftirState.xmax };
     }
   }
   const btn=fq('#ftirSave');btn.disabled=true;const old=btn.textContent;btn.textContent='儲存中…';
@@ -10617,6 +10687,8 @@ function loadSpectrumToEditor(rec){
   if(st.showTitle!=null){ftirState.showTitle=st.showTitle;fq('#ftirShowTitle').checked=st.showTitle;}
   if(st.showAxisTitles!=null){ftirState.showAxisTitles=st.showAxisTitles;fq('#ftirShowAxisTitles').checked=st.showAxisTitles;}
   if(st.showTickLabels!=null){ftirState.showTickLabels=st.showTickLabels;fq('#ftirShowTickLabels').checked=st.showTickLabels;}
+  ftirState.xmin=isFinite(st.xmin)&&st.xmin>0?st.xmin:null; ftirState.xmax=isFinite(st.xmax)&&st.xmax>0?st.xmax:null;
+  fq('#ftirXmin').value=ftirState.xmin==null?'':ftirState.xmin; fq('#ftirXmax').value=ftirState.xmax==null?'':ftirState.xmax;
   // 標記為「編輯既有筆」,存檔時覆蓋
   ftirEditingId=rec.id;
   ftirRenderLib();ftirRender();ftirUpdateSaveLabel();
