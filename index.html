@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="app-version" content="2026.09.29.2">
+<meta name="app-version" content="2026.09.30.1">
 <meta name="theme-color" content="#1B4B43" id="metaThemeColor">
 <title>SFPLAB 實驗室管理系統</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>">
@@ -1672,6 +1672,28 @@
               <div class="ftir-parambox hide" id="ftirKmBox">
                 <div class="ftir-hint">Kubelka–Munk:R = 10⁻ᴬ,F(R) = (1−R)² / 2R。適用漫反射(DRIFTS)。</div>
               </div>
+            </div>
+
+            <div class="ftir-card">
+              <h3>平滑處理</h3>
+              <label class="ftir-chk"><input type="checkbox" id="ftirFftOn">傅立葉平滑(Fourier-domain)</label>
+              <div class="ftir-parambox hide" id="ftirFftBox" style="margin:-2px 0 12px;">
+                <div class="field" style="margin:0;"><label style="font-size:12px;">截止頻率(越低越平滑)</label>
+                  <div class="ftir-rangerow"><input type="range" id="ftirFftCut" min="3" max="80" step="1" value="30"><output id="ftirFftCutOut">30%</output></div>
+                </div>
+                <div class="ftir-hint" id="ftirFftHint"></div>
+              </div>
+              <label class="ftir-chk"><input type="checkbox" id="ftirSgOn">Savitzky-Golay 平滑</label>
+              <div class="ftir-parambox hide" id="ftirSgBox" style="margin:-2px 0 12px;">
+                <div class="field"><label style="font-size:12px;">視窗點數</label>
+                  <div class="ftir-rangerow"><input type="range" id="ftirSgWin" min="5" max="51" step="2" value="9"><output id="ftirSgWinOut">9</output></div>
+                </div>
+                <div class="field" style="margin:0;"><label style="font-size:12px;">多項式階數</label>
+                  <div class="ftir-seg" id="ftirSgOrd"><button data-v="2" class="on">2</button><button data-v="3">3</button><button data-v="4">4</button></div>
+                </div>
+                <div class="ftir-hint" id="ftirSgHint"></div>
+              </div>
+              <div class="ftir-hint" style="margin-top:0;">平滑套用在原始吸光度上,之後才做 KM / ATR 轉換與找峰;兩種都勾時先做傅立葉,再做 Savitzky-Golay。原始數據不會被改動,取消勾選就回到原圖。</div>
             </div>
 
             <div class="ftir-card">
@@ -9640,6 +9662,108 @@ function ftirTransform(x,y,mode,atrRef){
 }
 const FTIR_YLABEL={abs:'Absorbance',km:'Kubelka\u2013Munk F(R)',atr:'Absorbance (ATR corrected)'};
 
+/* ============ 平滑(只影響畫圖與找峰,原始數據 item.y 不動) ============ */
+// 基數 2 的就地 FFT;inv=true 做反轉換並除以長度
+function ftirFft(re,im,inv){
+  const n=re.length;
+  for(let i=1,j=0;i<n;i++){let bit=n>>1;for(;j&bit;bit>>=1)j^=bit;j^=bit;
+    if(i<j){let t=re[i];re[i]=re[j];re[j]=t;t=im[i];im[i]=im[j];im[j]=t;}}
+  for(let len=2;len<=n;len<<=1){const ang=2*Math.PI/len*(inv?1:-1),h=len>>1;
+    for(let k=0;k<h;k++){const cr=Math.cos(ang*k),ci=Math.sin(ang*k);
+      for(let i=k;i<n;i+=len){const b=i+h,xr=re[b]*cr-im[b]*ci,xi=re[b]*ci+im[b]*cr;
+        re[b]=re[i]-xr;im[b]=im[i]-xi;re[i]+=xr;im[i]+=xi;}}}
+  if(inv)for(let i=0;i<n;i++){re[i]/=n;im[i]/=n;}
+}
+/* 傅立葉平滑:FFT 後乘上高斯低通 H(f)=exp(-ln2·(f/fc)²)(f 以 Nyquist 為 1,截止頻率處振幅剩一半),再反轉換。
+   高斯在兩個域都沒有旁瓣,不會像硬截斷那樣產生振鈴。兩端先用「奇對稱鏡射」補長度(中心取兩端各 5 點最小平方直線在端點的值,
+   比直接用端點少受雜訊影響,又不像單純平均會在斜坡上偏掉),
+   曲線在邊界的高度與斜率都接得上;補的長度大於濾波核寬,再補零到 2 的次方,反轉換後只取原本那段 */
+function ftirFourierSmooth(y,cut){
+  const n=y.length; if(n<8||!(cut>0))return y.slice();
+  const k=Math.min(5,n>>2), c=(k-1)/2; let a=0,b=0,sa=0,sb=0,q=0;
+  for(let i=0;i<k;i++){a+=y[i];b+=y[n-1-i];} a/=k; b/=k;
+  for(let i=0;i<k;i++){sa+=(i-c)*(y[i]-a);sb+=(i-c)*(y[n-1-i]-b);q+=(i-c)*(i-c);}
+  if(q>0){a-=sa/q*c; b-=sb/q*c;}   // 直線在 i=0(兩端的端點)上的值
+  const r=Math.min(n-1,Math.ceil(2.5/cut)+8);
+  let L=1; while(L<n+4*r)L<<=1;
+  const re=new Float64Array(L),im=new Float64Array(L);
+  for(let i=0;i<n;i++)re[r+i]=y[i];
+  for(let j=1;j<=r;j++){re[r-j]=2*a-y[j]; re[r+n-1+j]=2*b-y[n-1-j];}
+  ftirFft(re,im,false);
+  const c2=cut*cut;
+  for(let i=0;i<L;i++){const f=Math.min(i,L-i)/(L/2),g=Math.exp(-Math.LN2*f*f/c2);re[i]*=g;im[i]*=g;}
+  ftirFft(re,im,true);
+  const o=new Array(n); for(let i=0;i<n;i++)o[i]=re[r+i]; return o;
+}
+// Savitzky-Golay 實際使用的視窗:奇數、至少比階數多 2、不超過光譜點數;回傳 0 表示點數太少不能做
+function ftirSgWin(w,ord,n){
+  let e=Math.max(w|0,ord+2); if(e%2===0)e++;
+  if(n!=null&&e>n)e=n%2?n:n-1;
+  return e>=ord+2?e:0;
+}
+/* Savitzky-Golay 係數:對視窗內每個位置 k 各算一組,用最小平方擬合 ord 階多項式後取 k 點的值。
+   中間各點用中心那組;頭尾各半個視窗改用「對最前(最後)一整窗擬合、在該點取值」,
+   與 scipy.signal.savgol_filter 預設的 mode='interp' 相同 */
+const ftirSgCache={};
+function ftirSgCoeffs(w,ord){
+  const key=w+'_'+ord; if(ftirSgCache[key])return ftirSgCache[key];
+  const m=(w-1)/2,P=ord+1,A=[];
+  for(let i=0;i<w;i++){const u=(i-m)/m,row=[];let pw=1;for(let q=0;q<P;q++){row.push(pw);pw*=u;}A.push(row);}
+  const M=[];for(let q=0;q<P;q++){const row=[];for(let c=0;c<P;c++){let t=0;for(let i=0;i<w;i++)t+=A[i][q]*A[i][c];row.push(t);}M.push(row);}
+  // 高斯-喬丹求反矩陣(最多 5×5)
+  const I=M.map((row,i)=>row.concat(Array.from({length:P},(_,j)=>i===j?1:0)));
+  for(let c=0;c<P;c++){let piv=c;for(let rr=c+1;rr<P;rr++)if(Math.abs(I[rr][c])>Math.abs(I[piv][c]))piv=rr;
+    [I[c],I[piv]]=[I[piv],I[c]];const d=I[c][c];for(let j=0;j<2*P;j++)I[c][j]/=d;
+    for(let rr=0;rr<P;rr++)if(rr!==c){const f=I[rr][c];if(f)for(let j=0;j<2*P;j++)I[rr][j]-=f*I[c][j];}}
+  const Mi=I.map(row=>row.slice(P));
+  const B=A.map(row=>Mi.map(mr=>mr.reduce((t,v,c)=>t+v*row[c],0)));   // B[i][q] = (Mi · A[i])_q
+  const C=[];for(let k=0;k<w;k++){const row=new Float64Array(w);for(let i=0;i<w;i++){let t=0;for(let q=0;q<P;q++)t+=A[k][q]*B[i][q];row[i]=t;}C.push(row);}
+  return ftirSgCache[key]=C;
+}
+function ftirSgSmooth(y,w,ord){
+  const n=y.length; w=ftirSgWin(w,ord,n); if(!w)return y.slice();
+  const m=(w-1)/2,C=ftirSgCoeffs(w,ord),c0=C[m],o=new Array(n);
+  for(let i=m;i<n-m;i++){let t=0;for(let j=0;j<w;j++)t+=c0[j]*y[i-m+j];o[i]=t;}
+  for(let i=0;i<m;i++){const c=C[i];let t=0;for(let j=0;j<w;j++)t+=c[j]*y[j];o[i]=t;}
+  for(let i=n-m;i<n;i++){const c=C[i-(n-w)];let t=0;for(let j=0;j<w;j++)t+=c[j]*y[n-w+j];o[i]=t;}
+  return o;
+}
+// 依目前設定平滑;兩種都沒開時原樣回傳同一個陣列,畫法與以前完全相同
+function ftirApplySmooth(y){
+  const sm=ftirState.smooth; let o=y;
+  if(sm.fft)o=ftirFourierSmooth(o,sm.fftCut/100);
+  if(sm.sg)o=ftirSgSmooth(o,sm.sgWin,sm.sgOrd);
+  return o;
+}
+function ftirSmoothDesc(){
+  const sm=ftirState.smooth,d=[];
+  if(sm.fft)d.push(`傅立葉 ${sm.fftCut}%`);
+  if(sm.sg)d.push(`Savitzky-Golay ${ftirSgWin(sm.sgWin,sm.sgOrd)} 點 ${sm.sgOrd} 階`);
+  return d.join(' → ');
+}
+/* 參數旁的說明:換算成這條光譜的波數寬度,比百分比好懂 */
+function ftirSmoothHints(chosen){
+  const sps=(chosen||[]).filter(it=>it.n>1).map(it=>Math.abs(it.last-it.first)/(it.n-1));
+  const it=chosen&&chosen[0], sp=sps[0]||0, sm=ftirState.smooth;
+  // 平滑參數以「點」為單位,取樣間距不同的光譜疊在一起時,同一設定在各條的波數寬度不同
+  const mixed=sps.length>1&&Math.max(...sps)/Math.min(...sps)>1.05;
+  const mixNote=mixed?`疊圖中的光譜取樣間距不同(每點 ${Math.min(...sps).toFixed(2)} 到 ${Math.max(...sps).toFixed(2)} cm⁻¹),同一設定在各條光譜上的平滑寬度不一樣,上述波數寬度以第一條光譜為準。`:'';
+  const fh=fq('#ftirFftHint'), sh=fq('#ftirSgHint');
+  if(fh){const c=sm.fftCut/100, w=sp?sp*2/c:0;
+    // 高斯低通在截止頻率處振幅剩一半:週期為 w 的起伏剩一半;高斯形的峰要窄到半高寬約 w/4 才會剩一半高
+    fh.textContent=`截止頻率＝取樣極限(Nyquist)的 ${sm.fftCut}%。`+(w?`週期短於約 ${w.toFixed(1)} cm⁻¹ 的起伏(雜訊)會被壓到一半以下;半高寬約 ${(0.51*sp/c).toFixed(1)} cm⁻¹ 的峰高度約剩一半,半高寬約 ${w.toFixed(1)} cm⁻¹ 的峰約剩九成。`:'')+mixNote;}
+  if(sh){const e=ftirSgWin(sm.sgWin,sm.sgOrd,it?it.n:null);
+    sh.textContent=(e&&e!==sm.sgWin?`${sm.sgOrd} 階至少要 ${e} 點,實際用 ${e} 點。`:'')+(sp&&e?`視窗約 ${(e*sp).toFixed(1)} cm⁻¹(每點 ${sp.toFixed(2)} cm⁻¹)。`:'')+'點數越多越平滑;階數越高越能保住尖峰的高度與形狀。'+mixNote;}
+}
+function ftirSyncSmoothUI(){
+  const sm=ftirState.smooth;
+  fq('#ftirFftOn').checked=sm.fft; fq('#ftirFftBox').classList.toggle('hide',!sm.fft);
+  fq('#ftirFftCut').value=sm.fftCut; fq('#ftirFftCutOut').textContent=sm.fftCut+'%';
+  fq('#ftirSgOn').checked=sm.sg; fq('#ftirSgBox').classList.toggle('hide',!sm.sg);
+  fq('#ftirSgWin').value=sm.sgWin; fq('#ftirSgWinOut').textContent=sm.sgWin;
+  document.querySelectorAll('#ftirSgOrd button').forEach(b=>b.classList.toggle('on',+b.dataset.v===sm.sgOrd));
+}
+
 /* ============ 找峰 ============ */
 function ftirSavgol9(y){const c=[-21,14,39,54,59,54,39,14,-21],half=4,n=y.length,o=new Array(n);
  for(let i=0;i<n;i++){let s=0,w=0;for(let k=-half;k<=half;k++){const j=i+k;if(j<0||j>=n)continue;s+=c[k+half]*y[j];w+=c[k+half];}o[i]=s/w;}return o;}
@@ -9779,6 +9903,7 @@ let FTIR_LIB=[];   // {id,name,n,first,last,y} 僅暫存本機記憶體
 const ftirState={sel:[],ymode:'abs',atrRef:2000,prom:0.02,topN:14,
   labelMode:'num',showPeakLabels:true,labelDx:0,labelDy:0,decimals:2,showTitle:true,title:'',
   showAxisTitles:true,showTickLabels:true,guides:[],xmin:null,xmax:null,
+  smooth:{fft:false,fftCut:30,sg:false,sgWin:9,sgOrd:2},
   legend:{show:true,pos:'tr',frame:false}};
 let ftirCurrent=null;
 let ftirInited=false;
@@ -9815,6 +9940,11 @@ function initFtirOnce(){
   fq('#ftirAtrRef').oninput=e=>{ftirState.atrRef=+e.target.value||2000;ftirRender();};
   ftirSeg('#ftirYmode',v=>{ftirState.ymode=v;fq('#ftirAtrBox').classList.toggle('hide',v!=='atr');fq('#ftirKmBox').classList.toggle('hide',v!=='km');ftirRender();});
   ftirSeg('#ftirLabelmode',v=>{ftirState.labelMode=v;ftirRender();});
+  fq('#ftirFftOn').onchange=e=>{ftirState.smooth.fft=e.target.checked;fq('#ftirFftBox').classList.toggle('hide',!e.target.checked);ftirRender();};
+  fq('#ftirFftCut').oninput=e=>{const v=+e.target.value;fq('#ftirFftCutOut').textContent=v+'%';ftirState.smooth.fftCut=v;ftirRender();};
+  fq('#ftirSgOn').onchange=e=>{ftirState.smooth.sg=e.target.checked;fq('#ftirSgBox').classList.toggle('hide',!e.target.checked);ftirRender();};
+  fq('#ftirSgWin').oninput=e=>{const v=+e.target.value;fq('#ftirSgWinOut').textContent=v;ftirState.smooth.sgWin=v;ftirRender();};
+  ftirSeg('#ftirSgOrd',v=>{ftirState.smooth.sgOrd=+v;ftirRender();});
   fq('#ftirShowPeakLabels').onchange=e=>{ftirState.showPeakLabels=e.target.checked;ftirSyncPeakLabelBox();ftirRender();};
   fq('#ftirLabelDx').oninput=e=>{const v=+e.target.value;fq('#ftirLabelDxOut').textContent=v;ftirState.labelDx=v;ftirRender();};
   fq('#ftirLabelDy').oninput=e=>{const v=+e.target.value;fq('#ftirLabelDyOut').textContent=v;ftirState.labelDy=v;ftirRender();};
@@ -9902,11 +10032,12 @@ function ftirRender(){
   const multi=chosen.length>1;
   if(!chosen.length){wrap.innerHTML='<div class="ftir-empty" id="ftirEmpty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="52" height="52"><path d="M3 3v18h18M7 15l3-4 3 3 4-6"/></svg><div>上傳 .asp 或 .spc 光譜檔以開始</div></div>';tw.innerHTML='';
     ['#ftirDlPng','#ftirDlSvg','#ftirDlCsv','#ftirSave'].forEach(s=>fq(s).disabled=true);ftirCurrent=null;
-    const rh=fq('#ftirRangeHint');if(rh)rh.textContent='';return;}
+    const rh=fq('#ftirRangeHint');if(rh)rh.textContent='';ftirSmoothHints([]);return;}
   const xr=ftirResolveRange(chosen);
+  ftirSmoothHints(chosen);
   const traces=chosen.map(item=>{
     const x=ftirXAxis(item);
-    let y=ftirTransform(x,item.y,ftirState.ymode,ftirState.atrRef);
+    let y=ftirTransform(x,ftirApplySmooth(item.y),ftirState.ymode,ftirState.atrRef);
     const base=y.slice(0,40).sort((a,b)=>a-b)[20]||0;
     if(multi)y=y.map(v=>v-base);
     // 有指定範圍時只在範圍內找峰:峰數上限與突出度門檻都以這一段為準,放大指紋區才看得到細節
@@ -9943,7 +10074,7 @@ function ftirRenderTable(traces,multi){
         ${multi?`<td style="text-align:center">${pinned?'●':'○'}</td>`:''}</tr>`;});
   });
   fq('#ftirTablewrap').innerHTML=`<table><thead>${head}</thead><tbody>${rows}</tbody></table>
-    <div class="note">${ftirCurrent&&ftirCurrent.xrange?`只列出 ${ftirFmtWn(ftirCurrent.xrange.hi)} 至 ${ftirFmtWn(ftirCurrent.xrange.lo)} cm⁻¹ 範圍內的峰。`:''}${multi?'疊圖比對時,點圖上峰標籤或表格任一列,可在該波數釘選一條貫穿全圖的比較虛線(●＝已釘選);再點一次取消。':'建議歸屬由波數比對常見官能基區間,僅供初判。'}最終指認須配合樣品背景與其他分析。</div>`;
+    <div class="note">${ftirSmoothDesc()?`已平滑(${ftirSmoothDesc()}),峰值來自平滑後的曲線。`:''}${ftirCurrent&&ftirCurrent.xrange?`只列出 ${ftirFmtWn(ftirCurrent.xrange.hi)} 至 ${ftirFmtWn(ftirCurrent.xrange.lo)} cm⁻¹ 範圍內的峰。`:''}${multi?'疊圖比對時,點圖上峰標籤或表格任一列,可在該波數釘選一條貫穿全圖的比較虛線(●＝已釘選);再點一次取消。':'建議歸屬由波數比對常見官能基區間,僅供初判。'}最終指認須配合樣品背景與其他分析。</div>`;
   const trs=[...fq('#ftirTablewrap').querySelectorAll('tbody tr')];
   trs.forEach((tr,i)=>{
     tr.onmouseenter=()=>ftirHighlight(i);
@@ -10019,7 +10150,7 @@ async function ftirSaveToGallery(){
         showPeakLabels:ftirState.showPeakLabels, labelDx:ftirState.labelDx, labelDy:ftirState.labelDy,
         showTitle:ftirState.showTitle, title:ftirState.title,
         showAxisTitles:ftirState.showAxisTitles, showTickLabels:ftirState.showTickLabels,
-        xmin:ftirState.xmin, xmax:ftirState.xmax };
+        xmin:ftirState.xmin, xmax:ftirState.xmax, smooth:Object.assign({},ftirState.smooth) };
     }
   }
   const btn=fq('#ftirSave');btn.disabled=true;const old=btn.textContent;btn.textContent='儲存中…';
@@ -10707,6 +10838,9 @@ function loadSpectrumToEditor(rec){
   if(st.showTickLabels!=null){ftirState.showTickLabels=st.showTickLabels;fq('#ftirShowTickLabels').checked=st.showTickLabels;}
   ftirState.xmin=isFinite(st.xmin)&&st.xmin>0?st.xmin:null; ftirState.xmax=isFinite(st.xmax)&&st.xmax>0?st.xmax:null;
   fq('#ftirXmin').value=ftirState.xmin==null?'':ftirState.xmin; fq('#ftirXmax').value=ftirState.xmax==null?'':ftirState.xmax;
+  // 平滑設定:舊圖譜沒有這個欄位就是不平滑
+  {const sm=st.smooth||{}; ftirState.smooth={fft:!!sm.fft,fftCut:isFinite(sm.fftCut)&&sm.fftCut>0?+sm.fftCut:30,sg:!!sm.sg,
+    sgWin:isFinite(sm.sgWin)&&sm.sgWin>=5?+sm.sgWin:9,sgOrd:[2,3,4].includes(+sm.sgOrd)?+sm.sgOrd:2}; ftirSyncSmoothUI();}
   // 標記為「編輯既有筆」,存檔時覆蓋
   ftirEditingId=rec.id;
   ftirRenderLib();ftirRender();ftirUpdateSaveLabel();
