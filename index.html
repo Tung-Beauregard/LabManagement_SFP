@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="app-version" content="2026.09.30.1">
+<meta name="app-version" content="2026.10.01.1">
 <meta name="theme-color" content="#1B4B43" id="metaThemeColor">
 <title>SFPLAB 實驗室管理系統</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>">
@@ -778,6 +778,8 @@
   .ftir-seg button.on{background:var(--pine);color:var(--on-pine);}
   .ftir-parambox{background:var(--panel-soft);border:1px solid var(--line);border-radius:var(--radius-sm);padding:11px;margin-top:9px;}
   .ftir-parambox.hide{display:none;}
+  .ftir-warn{font-size:11.5px;line-height:1.6;color:var(--ink);background:var(--amber-soft);border:1px solid var(--amber);border-radius:var(--radius-sm);padding:8px 10px;margin:0 0 10px;}
+  .ftir-warn.hide{display:none;}
   .ftir-rangerow{display:flex;align-items:center;gap:10px;}
   .ftir-rangerow input[type=range]{flex:1;accent-color:var(--pine);}
   .ftir-rangerow output{font-family:var(--mono);font-size:12px;min-width:40px;text-align:right;}
@@ -1693,6 +1695,7 @@
                 </div>
                 <div class="ftir-hint" id="ftirSgHint"></div>
               </div>
+              <div class="ftir-warn hide" id="ftirSmoothWarn"></div>
               <div class="ftir-hint" style="margin-top:0;">平滑套用在原始吸光度上,之後才做 KM / ATR 轉換與找峰;兩種都勾時先做傅立葉,再做 Savitzky-Golay。原始數據不會被改動,取消勾選就回到原圖。</div>
             </div>
 
@@ -9755,6 +9758,22 @@ function ftirSmoothHints(chosen){
   if(sh){const e=ftirSgWin(sm.sgWin,sm.sgOrd,it?it.n:null);
     sh.textContent=(e&&e!==sm.sgWin?`${sm.sgOrd} 階至少要 ${e} 點,實際用 ${e} 點。`:'')+(sp&&e?`視窗約 ${(e*sp).toFixed(1)} cm⁻¹(每點 ${sp.toFixed(2)} cm⁻¹)。`:'')+'點數越多越平滑;階數越高越能保住尖峰的高度與形狀。'+mixNote;}
 }
+/* 打開任一種平滑時顯示提醒,並算出目前設定讓最高峰降低多少,讓人知道峰高已經被改變 */
+function ftirSmoothWarn(chosen,xr){
+  const el=fq('#ftirSmoothWarn'); if(!el)return;
+  const sm=ftirState.smooth, on=sm.fft||sm.sg;
+  el.classList.toggle('hide',!on); if(!on){el.textContent='';return;}
+  const tip='要比較峰高或寫進論文時,建議先用小一點的參數,並在方法中註明平滑方式與參數。';
+  const it=chosen&&chosen[0];
+  if(!it||!(it.n>2)){el.textContent='平滑會壓低尖峰的高度。'+tip;return;}
+  const x=ftirXAxis(it), raw=it.y, smo=ftirApplySmooth(raw);
+  let lo=Infinity,top=-1;
+  for(let i=0;i<raw.length;i++){if(xr&&(x[i]>xr.hi||x[i]<xr.lo))continue;if(raw[i]<lo)lo=raw[i];if(top<0||raw[i]>raw[top])top=i;}
+  if(top<0){el.textContent='平滑會壓低尖峰的高度。'+tip;return;}
+  let ms=-Infinity;for(let j=Math.max(0,top-3);j<=Math.min(raw.length-1,top+3);j++)ms=Math.max(ms,smo[j]);
+  const h0=raw[top]-lo, h1=ms-lo, drop=h0>0?(1-h1/h0)*100:0;
+  el.textContent=(drop>=0.5?`以目前設定,${chosen.length>1?'第一條光譜':'這條光譜'}最高的峰(${x[top].toFixed(0)} cm⁻¹)高度降低約 ${drop.toFixed(0)}%。`:'以目前設定,最高峰的高度幾乎沒有改變。')+tip;
+}
 function ftirSyncSmoothUI(){
   const sm=ftirState.smooth;
   fq('#ftirFftOn').checked=sm.fft; fq('#ftirFftBox').classList.toggle('hide',!sm.fft);
@@ -10032,9 +10051,10 @@ function ftirRender(){
   const multi=chosen.length>1;
   if(!chosen.length){wrap.innerHTML='<div class="ftir-empty" id="ftirEmpty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="52" height="52"><path d="M3 3v18h18M7 15l3-4 3 3 4-6"/></svg><div>上傳 .asp 或 .spc 光譜檔以開始</div></div>';tw.innerHTML='';
     ['#ftirDlPng','#ftirDlSvg','#ftirDlCsv','#ftirSave'].forEach(s=>fq(s).disabled=true);ftirCurrent=null;
-    const rh=fq('#ftirRangeHint');if(rh)rh.textContent='';ftirSmoothHints([]);return;}
+    const rh=fq('#ftirRangeHint');if(rh)rh.textContent='';ftirSmoothHints([]);ftirSmoothWarn([],null);return;}
   const xr=ftirResolveRange(chosen);
   ftirSmoothHints(chosen);
+  ftirSmoothWarn(chosen,xr);
   const traces=chosen.map(item=>{
     const x=ftirXAxis(item);
     let y=ftirTransform(x,ftirApplySmooth(item.y),ftirState.ymode,ftirState.atrRef);
