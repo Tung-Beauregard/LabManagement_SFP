@@ -131,6 +131,7 @@
 
 ### UV-Vis(圖譜分析頁的 UV-Vis 子標籤)
 - 讀 Analytik Jena SPECORD 50 PLUS(WinASPECT)的 `.dat`:ASCII 標頭(NPOINTS、XUNITS、YUNITS…)後接 `XDATA=` / `YDATA=` 各 NPOINTS 個小端序 float32(另有內容相同的 OrgXData / OrgYData);也收兩欄「波長,數值」的 .csv / .txt
+- **原始單位**:.dat 讀檔頭 YUNITS;兩欄的 CSV / TXT 沒有正式單位,`uvGuessUnit` 先看檔頭字樣、再看數值範圍(最大值 > 5 當百分比)猜一個,匯入時用 `uvUnitDialog` 一個檔一列請使用者確認(取消就不匯入那些文字檔)。文字檔在 `UV_LIB` 裡另存 `raw` 與 `srcUnit`,光譜清單上有單位選單可事後改,改了用 `uvRawToAbs` 重新換算
 - 匯入時一律換算成吸光度保存(%T、%R 用 −log₁₀(v/100)),三種顯示模式(吸收度、%T、KM)都從吸光度算;KM 與 FTIR 共用 `ftirTransform(x,y,'km')`,找峰共用 `ftirDetect`(%T 模式先反相找谷)
 - 同軸疊圖(不像 FTIR 會位移堆疊)、λmax 標籤水平放在峰上並高低錯開、可設顯示波長範圍;存入圖譜的 type 是 `uv`,peaks 用 `{sample,wn,val}`,藝廊詳細頁對 uv 顯示「λmax / 數值 / 樣品」欄
 - 模組函式全部以 `uv` 開頭,狀態在 `uvState`,暫存光譜在 `UV_LIB`(只在本機記憶體)

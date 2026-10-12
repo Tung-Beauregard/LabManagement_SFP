@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="app-version" content="2026.10.08.1">
+<meta name="app-version" content="2026.10.12.1">
 <meta name="theme-color" content="#1B4B43" id="metaThemeColor">
 <title>SFPLAB 實驗室管理系統</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>">
@@ -766,6 +766,12 @@
   .ftir-row .swatch{width:11px;height:11px;border-radius:3px;flex:none;}
   .ftir-row .nm{flex:1;font-family:var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;}
   .ftir-row .rm{color:var(--ink-soft);padding:0 4px;border-radius:4px;cursor:pointer;}
+  .ftir-row select.uv-unit{flex:none;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--panel-soft);color:var(--ink);font-size:11px;padding:1px 3px;font-family:var(--sans);}
+  .uv-unitlist{margin:12px 0 2px;display:flex;flex-direction:column;gap:9px;max-height:50vh;overflow-x:hidden;overflow-y:auto;}
+  .uv-unitrow{display:flex;align-items:center;gap:10px;}
+  .uv-unitrow .nm{flex:1;min-width:0;font-size:13px;color:var(--ink);word-break:break-all;line-height:1.4;}
+  .uv-unitrow .nm small{display:block;font-size:11px;color:var(--ink-soft);}
+  .uv-unitrow select{flex:none;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--panel-soft);color:var(--ink);font-size:13px;padding:6px 8px;font-family:var(--sans);}
   .ftir-row .rm:hover{background:var(--panel);color:var(--danger);}
   .ftir-row .mv{color:var(--ink-soft);cursor:pointer;font-size:9px;padding:0 2px;line-height:1;}
   .ftir-row .mv:hover{color:var(--pine);}
@@ -1797,7 +1803,7 @@
                 <button data-v="refl">反射率 %R</button>
                 <button data-v="km">KM 轉換</button>
               </div>
-              <div class="ftir-hint">Kubelka–Munk:R = 10⁻ᴬ,F(R) = (1−R)² / 2R,與 FTIR 相同作法,適用固體漫反射;溶液吸光度請維持「吸收度」。%T 或 %R 的檔案匯入時會先換算成吸光度;穿透率與反射率模式由吸光度反推(T = R = 10⁻ᴬ)。</div>
+              <div class="ftir-hint">Kubelka–Munk:R = 10⁻ᴬ,F(R) = (1−R)² / 2R,與 FTIR 相同作法,適用固體漫反射;溶液吸光度請維持「吸收度」。%T 或 %R 的檔案匯入時會先換算成吸光度(.dat 依檔頭判斷原始單位;CSV / TXT 匯入時會問原始單位,之後也能在光譜清單上改);穿透率與反射率模式由吸光度反推(T = R = 10⁻ᴬ)。</div>
             </div>
 
             <div class="ftir-card">
@@ -10213,32 +10219,82 @@ function uvParseSpecord(buf){
   return {x:arr('XDATA='),y:arr('YDATA='),xunits:head('XUNITS')||'nm',yunits:head('YUNITS')||'A',time:head('TIME'),origin:head('ORIGIN')};
 }
 function uvParseText(text){
-  const x=[],y=[];
-  text.split(/\r?\n/).forEach(line=>{ const m=line.trim().split(/[,\t; ]+/); if(m.length<2) return;
-    const a=parseFloat(m[0]), b=parseFloat(m[1]); if(isFinite(a)&&isFinite(b)){ x.push(a); y.push(b); } });
+  const x=[],y=[],head=[];
+  text.split(/\r?\n/).forEach(line=>{ const m=line.trim().split(/[,\t; ]+/); if(m.length<2){ if(line.trim()) head.push(line); return; }
+    const a=parseFloat(m[0]), b=parseFloat(m[1]); if(isFinite(a)&&isFinite(b)){ x.push(a); y.push(b); } else head.push(line); });
   if(x.length<3) throw new Error('沒有找到「波長,數值」兩欄資料');
-  return {x,y,xunits:'nm',yunits:'A',time:'',origin:''};
+  const g=uvGuessUnit(head,y);
+  return {x,y,xunits:'nm',yunits:g.u,unitWhy:g.why,time:'',origin:''};
+}
+/* 兩欄文字檔沒有正式的單位欄位:先看檔頭有沒有寫,沒有再看數值範圍(吸光度很少超過 5,百分比通常到幾十)。只是預設值,匯入時會請使用者確認 */
+function uvGuessUnit(head,y){
+  const h=head.join(' ');
+  if(/%\s*T\b|\bT\s*\(\s*%\s*\)|transmit|穿透|透射/i.test(h)) return {u:'%T',why:'檔頭寫著穿透率'};
+  if(/%\s*R\b|\bR\s*\(\s*%\s*\)|reflect|反射/i.test(h)) return {u:'%R',why:'檔頭寫著反射率'};
+  if(/\babs|absorb|吸光|\bA\b|\bAU\b/i.test(h)) return {u:'A',why:'檔頭寫著吸光度'};
+  let mx=-Infinity; for(const v of y) if(v>mx) mx=v;
+  return mx>5?{u:'%T',why:`數值最大到 ${mx.toFixed(0)},看起來是百分比(穿透率或反射率)`}:{u:'A',why:`數值最大 ${mx.toFixed(2)},看起來是吸光度`};
 }
 /* %T 與 %R 的檔案先換成吸光度;KM 再從吸光度反推 R,與 FTIR 一致 */
-function uvToAbsorbance(d){
-  const u=String(d.yunits||'A').toUpperCase();
-  if(u.includes('%T')||u==='T'||u.includes('TRANS')||u.includes('%R')||u==='R'||u.includes('REFL')) return d.y.map(v=>-Math.log10(Math.max(1e-6,v/100)));
-  return d.y.slice();
+function uvUnitCode(yunits){
+  const u=String(yunits||'A').toUpperCase();
+  if(u.includes('%T')||u==='T'||u.includes('TRANS')) return '%T';
+  if(u.includes('%R')||u==='R'||u.includes('REFL')) return '%R';
+  return 'A';
 }
-function uvHandleFiles(list){
-  [...list].forEach(f=>{
-    const rd=new FileReader();
-    rd.onload=()=>{ try{
-        const d=/\.dat$/i.test(f.name)?uvParseSpecord(rd.result):uvParseText(new TextDecoder('utf-8').decode(rd.result));
-        const order=d.x.map((v,i)=>i).sort((a,b)=>d.x[a]-d.x[b]);        // 波長一律遞增
-        const A=uvToAbsorbance(d);
-        const id='u'+Date.now()+Math.random().toString(36).slice(2,6);
-        UV_LIB.push({id,name:f.name.replace(/\.(dat|csv|txt)$/i,''),x:order.map(i=>d.x[i]),y:order.map(i=>A[i]),yunits:d.yunits,time:d.time,origin:d.origin,file:f});
-        if(!uvState.sel.length) uvState.sel=[id];
-        uvRenderLib(); uvRender();
-      }catch(e){ notify(f.name+':'+(e&&e.message?e.message:'讀取失敗')); } };
-    rd.readAsArrayBuffer(f);
+function uvRawToAbs(y,unit){ return unit==='A'?y.slice():y.map(v=>-Math.log10(Math.max(1e-6,v/100))); }
+function uvToAbsorbance(d){ return uvRawToAbs(d.y,uvUnitCode(d.yunits)); }
+/* CSV / TXT 匯入時選原始單位:一個檔一列,預設是猜出來的單位;取消就不匯入這些文字檔 */
+const UV_UNIT_OPTS=[['A','吸光度 A'],['%T','穿透率 %T'],['%R','反射率 %R']];
+function uvUnitDialog(items){
+  return new Promise(resolve=>{
+    const ov=document.createElement('div'); ov.className='ui-dialog-overlay';
+    ov.innerHTML='<div class="ui-dialog" role="dialog" aria-modal="true"><div class="ui-dialog-msg"></div><div class="uv-unitlist"></div>'
+      +'<div class="ui-dialog-actions"><button type="button" class="btn btn-ghost ui-dialog-cancel">取消匯入</button><button type="button" class="btn btn-primary ui-dialog-ok">匯入</button></div></div>';
+    ov.querySelector('.ui-dialog-msg').textContent=(items.length>1?'這些 CSV / TXT 檔':'這個 CSV / TXT 檔')+'的數值是什麼單位?系統先依檔頭或數值範圍猜了一個,請確認。';
+    const list=ov.querySelector('.uv-unitlist');
+    items.forEach(it=>{ const row=document.createElement('div'); row.className='uv-unitrow';
+      row.innerHTML=`<div class="nm">${escapeHtml(it.name)}<small>${escapeHtml(it.why||'')}</small></div><select>${UV_UNIT_OPTS.map(([v,t])=>`<option value="${v}"${v===it.guess?' selected':''}>${t}</option>`).join('')}</select>`;
+      list.appendChild(row); });
+    const prevFocus=document.activeElement;
+    const done=val=>{ document.removeEventListener('keydown',onKey,true); ov.remove(); try{ if(prevFocus&&prevFocus.focus) prevFocus.focus(); }catch(_e){} resolve(val); };
+    const okVal=()=>[...list.querySelectorAll('select')].map(x=>x.value);
+    const onKey=e=>{ if(e.key==='Escape'){ e.stopImmediatePropagation(); e.preventDefault(); done(null); }
+      else if(e.key==='Enter'&&document.activeElement&&document.activeElement.tagName!=='SELECT'&&!document.activeElement.classList.contains('ui-dialog-cancel')){ e.stopImmediatePropagation(); e.preventDefault(); done(okVal()); } };
+    document.addEventListener('keydown',onKey,true);
+    ov.querySelector('.ui-dialog-ok').onclick=()=>done(okVal());
+    ov.querySelector('.ui-dialog-cancel').onclick=()=>done(null);
+    ov.addEventListener('click',e=>{ if(e.target===ov) done(null); });
+    document.body.appendChild(ov);
+    setTimeout(()=>{ const f=list.querySelector('select'); (f||ov.querySelector('.ui-dialog-ok')).focus(); },20);
   });
+}
+async function uvHandleFiles(list){
+  const files=[...list]; if(!files.length) return;
+  const readBuf=f=>new Promise(res=>{ const rd=new FileReader(); rd.onload=()=>res(rd.result); rd.onerror=()=>res(null); rd.readAsArrayBuffer(f); });
+  const parsed=[];
+  for(const f of files){
+    const buf=await readBuf(f); if(!buf){ notify(f.name+':讀取失敗'); continue; }
+    try{ const isDat=/\.dat$/i.test(f.name);
+      parsed.push({f,isDat,d:isDat?uvParseSpecord(buf):uvParseText(new TextDecoder('utf-8').decode(buf))});
+    }catch(e){ notify(f.name+':'+(e&&e.message?e.message:'讀取失敗')); }
+  }
+  // .dat 的檔頭有 YUNITS,不用問;CSV / TXT 一次問完
+  const txt=parsed.filter(p=>!p.isDat); let skip=new Set();
+  if(txt.length){
+    const units=await uvUnitDialog(txt.map(p=>({name:p.f.name,guess:p.d.yunits,why:p.d.unitWhy})));
+    if(!units) skip=new Set(txt); else txt.forEach((p,i)=>{ p.d.yunits=units[i]; });
+  }
+  parsed.filter(p=>!skip.has(p)).forEach(({f,isDat,d})=>{
+    const order=d.x.map((v,i)=>i).sort((a,b)=>d.x[a]-d.x[b]);        // 波長一律遞增
+    const raw=order.map(i=>d.y[i]), unit=uvUnitCode(d.yunits);
+    const id='u'+Date.now()+Math.random().toString(36).slice(2,6);
+    const item={id,name:f.name.replace(/\.(dat|csv|txt)$/i,''),x:order.map(i=>d.x[i]),y:uvRawToAbs(raw,unit),yunits:d.yunits,time:d.time,origin:d.origin,file:f};
+    if(!isDat){ item.raw=raw; item.srcUnit=unit; }        // 文字檔留著原始數值,清單上改單位時重新換算
+    UV_LIB.push(item);
+    if(!uvState.sel.length) uvState.sel=[id];
+  });
+  uvRenderLib(); uvRender();
 }
 function uvRenderLib(){
   const box=fq('#uvLib'); box.innerHTML='';
@@ -10247,11 +10303,13 @@ function uvRenderLib(){
     const idx=uvState.sel.indexOf(item.id);
     const el=document.createElement('div'); el.className='ftir-row'+(idx>=0?' sel':'');
     const color=idx>=0?UV_COLORS[idx%FTIR_COLORS.length]:'transparent';
-    el.innerHTML=`<input type="checkbox" ${idx>=0?'checked':''}><span class="swatch" style="background:${color}"></span><span class="nm" title="點兩下改名">${escapeHtml(item.name)}</span><span class="rm" title="移除暫存">✕</span>`;
+    el.innerHTML=`<input type="checkbox" ${idx>=0?'checked':''}><span class="swatch" style="background:${color}"></span><span class="nm" title="點兩下改名">${escapeHtml(item.name)}</span>${item.raw?`<select class="uv-unit" title="原始檔的數值單位;選錯可以在這裡改">${UV_UNIT_OPTS.map(([v])=>`<option value="${v}"${v===item.srcUnit?' selected':''}>${v}</option>`).join('')}</select>`:''}<span class="rm" title="移除暫存">✕</span>`;
     el.querySelector('input').onchange=e=>{
       if(e.target.checked){ if(!uvState.sel.includes(item.id)) uvState.sel.push(item.id); }
       else uvState.sel=uvState.sel.filter(x=>x!==item.id);
       uvRenderLib(); uvRender(); };
+    const us=el.querySelector('select.uv-unit');
+    if(us) us.onchange=e=>{ item.srcUnit=e.target.value; item.yunits=e.target.value; item.y=uvRawToAbs(item.raw,item.srcUnit); uvRender(); };
     el.querySelector('.nm').ondblclick=async()=>{ const nm=await promptDialog('光譜名稱', item.name); if(nm===null) return; const t=nm.trim(); if(!t) return; item.name=t; uvRenderLib(); uvRender(); };
     el.querySelector('.rm').onclick=()=>{ UV_LIB=UV_LIB.filter(x=>x.id!==item.id); uvState.sel=uvState.sel.filter(x=>x!==item.id); uvRenderLib(); uvRender(); };
     box.appendChild(el);
