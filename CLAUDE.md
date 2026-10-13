@@ -165,6 +165,11 @@
   - **新載入的樣品一律 `algo:2`**(`parseCSV`);升級前存在瀏覽器裡的樣品沒有這個欄位,維持舊版,因為成分名稱、標記、刪峰都以峰頂 RT 為鍵,換演算法峰會重新編號。烷類 RT 那一列的「積分」選單可逐個樣品切換,切換時用 `carryEdits()` 把成分名稱、標記、標籤位置抄到 ±0.03 min 內最近的峰,刪過的峰也一併對應。單檔匯出入帶著 `algo`,舊匯出檔沒有就是舊版
   - 新版的演算法與評分工具是在本機另外開發的(多個候選版本對同一套評分與壓力測試比較後選出),原始碼直接貼在 GC iframe 裡,要改時沿用 `gc-extract` / `gc-inject` 流程
 - Agilent 的 `CHROMTAB.CSV` 檔名全都一樣,樣品名在檔頭的欄名列 / 值列(`"Path","File","Date Acquired","Sample","Misc"`),`parseCSV` 會從那裡取名
+- **直接讀 DATA.MS**(MSD ChemStation 的質譜原始檔,`parseMS` / `msSample`):可選檔或把整個 `.D` 資料夾拖進來(`walkDir` 只找裡面的 DATA.MS)。TIC 取每筆掃描最後 4 個位元組(儀器記下的 TIC,和 CHROMTAB.CSV 逐點相同);RT 從整數毫秒四捨五入到小數第 3 位,不要改用 `toFixed`(遇到 x.xxx5 會捨錯邊)。ChemStation 自己在剛好 .5 的點偶爾捨去、規則對不出來,一個檔約十幾點差 0.001 分鐘,同一個檔走 CSV 或 DATA.MS 的 Area% 差不到 0.001 個百分點。原始檔放 IndexedDB(`tb-ms`,以樣品 id 為鍵,`MSDB`),樣品上只記 `s.ms={scans}`;localStorage 放不下質譜。刪樣品時一併刪 IndexedDB
+- **峰的質譜**(`peakSpectrum`):峰頂前後各一次掃描平均,扣背景(峰兩側、峰外 0.25 分鐘內 TIC 最低的各 3 次掃描,避免相鄰峰的谷底把自己的離子扣掉),整數質量(有些檔是每 0.1 質量一點),最大峰 999。成分表每列的「譜」展開質譜圖與 NIST 候選
+- **NIST 比對**:頁面把每支峰的質譜寫成 MSP,POST 到本機的 `tools/nist-bridge.ps1`(`http://localhost:28790/search`),由它交給 NIST MS Search 的自動搜尋介面(AUTOIMP.MSD → FILESPEC.FIL → MSP,`nistms$.exe /INSTRUMENT /PAR=2`,等 SRCREADY.TXT,讀 SRCRESLT.TXT)。NIST 讀完 FILESPEC.FIL 會把它刪掉,所以每次都重寫;AUTOIMP.MSD 用完還原,不影響同台電腦的 ChemStation / AMDIS。暫存檔放 `C:\SFPLAB-NIST`(NIST 是 32 位元舊程式,路徑不能有空白)。搜尋用的圖庫與輸出名次(建議 20)在 NIST 自己的設定裡
+- NIST 結果檔是純 ASCII,**希臘字母會丟失**(β-月桂烯寫成 a-Myrcene),所以名稱一律靠 CAS 對回 KI 資料庫(`candInfo` / `dbByCas`):對得上就用資料庫的名稱與 KI 當 rKI,對不上用 NIST 的名稱與 RI。同一 CAS 的多筆命中合併(`nistGroups`);Wiley 的命中沒有 RI,同一 CAS 在 NIST 圖庫有 RI 的借來用,另存本機快取 `tb.nistRi`。搜尋後自動填入第一候選,**使用者自己填過或改過的列不動**(`edits.auto`);rKI 只有自動帶入的(`edits.rkiAuto`)才會跟著換成分。rKI 和實測 KI 差超過容差標琥珀色。結果存在樣品的 `s.nist`,單檔匯出入帶著
+- 成分表多 CAS 與 MF 兩欄(有質譜或填過 CAS 的樣品才顯示);CSV 匯出多 CAS、MF 欄。Word / 正式報告 / 複製表格的版面沒有改
 
 #### GC-MS 的資料層(分兩種,不要搞混)
 
@@ -172,7 +177,7 @@
 
 | blob key | 內容 | 誰能改 |
 |---|---|---|
-| `gc-ki-database-data` | KI 資料庫 | 只有管理員 |
+| `gc-ki-database-data` | KI 資料庫,每筆 `[名稱, KI]` 或 `[名稱, KI, CAS]`(CAS 可多個,分號隔開,存之前驗檢查碼) | 只有管理員 |
 | `gc-ki-pending-data` | 待審提案佇列 | 誰都能提案;只有管理員能核准/退回/移除 |
 | `gc-alkane-sets-data` | 烷類 RT 組合 | 誰都能新增;改與刪限建立者本人或管理員 |
 
@@ -219,12 +224,13 @@
 
 ### 開發輔助腳本(`tools/`)
 
-不參與部署,只給開發用:
+不參與部署;除了 `nist-bridge` 之外都只給開發用:
 
 - `tools/gc-extract.ps1 -Out <檔案>`:把 `GC_IFRAME_B64` 解出成可編輯的 HTML
 - `tools/gc-inject.ps1 -Source <檔案>`:改完後重新編碼寫回 `index.html`
 - `tools/check-syntax.ps1`:抽出主檔與 GC iframe 的 inline script 跑 `node --check`,並檢查 CSS 大括號平衡
 - `tools/serve.ps1 [-Port 8765]`:不需要 node 或 python 的本機靜態伺服器(PowerShell 的 HttpListener),開 `http://localhost:8765/` 預覽。Google 登入需要 http 來源,直接雙擊開 `file://` 不行
+- `tools/nist-bridge.cmd`(呼叫 `nist-bridge.ps1`):**這支不是開發用,是給裝有 NIST 的電腦跑的**,GC 頁面的「NIST 搜尋」靠它。預設 port 28790(8790 在這台被別的程式佔了),只接受實驗室網站與 localhost 來源;自動找 `C:\NIST*\MSSEARCH`,也可用 `-NistDir` 指定
 
 改完 `index.html` 至少要跑一次 `check-syntax.ps1`。機器上沒有 node 時,改用 `serve.ps1` 開起來看瀏覽器 console 有沒有語法錯誤,並實際操作改到的流程。
 
