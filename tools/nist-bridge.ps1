@@ -39,12 +39,18 @@ New-Item -ItemType Directory -Force $WorkDir | Out-Null
 # appear in a search result are sent to the page.
 $Greek = @{ alpha='α'; beta='β'; gamma='γ'; delta='δ'; epsilon='ε'; zeta='ζ'; eta='η'; theta='θ'; iota='ι'; kappa='κ'
   lambda='λ'; mu='μ'; nu='ν'; xi='ξ'; omicron='ο'; pi='π'; rho='ρ'; sigma='σ'; tau='τ'; upsilon='υ'; phi='φ'; chi='χ'; psi='ψ'; omega='ω' }
+# NIST writes Greek letters three ways: .alpha. (most), <<alpha>> (about 100 names), and spelled out
+# (beta-Isopropyltropolone, 3Beta,20-dihydroxy-5alpha-...). Spelled-out words are only converted for the
+# common letters and only as whole words, so names like "Betaine" or "PI-103" stay as they are.
 function Convert-Greek([string]$s) {
-  [regex]::Replace($s, '\.([A-Za-z]+)\.', [Text.RegularExpressions.MatchEvaluator]{ param($m)
+  $ev = [Text.RegularExpressions.MatchEvaluator]{ param($m)
     $w = $m.Groups[1].Value; $g = $Greek[$w]
     if (-not $g) { return $m.Value }
-    if ($w.Length -gt 1 -and $w -ceq $w.ToUpper()) { return $g.ToUpper() }   # .DELTA. -> Δ
-    return $g })
+    if ($w.Length -gt 1 -and $w -ceq $w.ToUpper() -and ($m.Value -match '^[.<]' -or $w -eq 'DELTA')) { return $g.ToUpper() }   # .DELTA. -> Δ
+    return $g }
+  $s = [regex]::Replace($s, '\.([A-Za-z]+)\.', $ev)
+  $s = [regex]::Replace($s, '<<([A-Za-z]+)>>', $ev)
+  [regex]::Replace($s, '(?<![A-Za-z])\.?(alpha|beta|gamma|delta|epsilon|omega)\.?(?![A-Za-z])', $ev, 'IgnoreCase')
 }
 # NIST's primary name is often a CAS index name ("1,3-Cyclohexadiene, 1-methyl-4-(1-methylethyl)-");
 # then take the first synonym that looks like a common name (".alpha.-Terpinene")
@@ -92,7 +98,11 @@ function Build-NameTable {
 $Names = New-Object 'Collections.Generic.Dictionary[string,string]'
 if (Build-NameTable) {
   foreach ($l in [IO.File]::ReadLines($NameFile, [Text.Encoding]::UTF8)) {
-    $i = $l.IndexOf("`t"); if ($i -gt 0) { $Names[$l.Substring(0, $i)] = $l.Substring($i + 1) }
+    $i = $l.IndexOf("`t"); if ($i -le 0) { continue }
+    $nm = $l.Substring($i + 1)
+    # tables built before the <<alpha>> / spelled-out handling are fixed here, so no rebuild is needed
+    if ($nm -match '(?i)alpha|beta|gamma|delta|epsilon|omega|<<') { $nm = Convert-Greek $nm }
+    $Names[$l.Substring(0, $i)] = $nm
   }
 }
 Write-Host "CAS 對照表:$($Names.Count) 筆"
