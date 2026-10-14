@@ -82,6 +82,7 @@
 
 ## 主要模組現況
 
+- **藥品危害性(GHS)**:`GHS` 照官方 GHS01–09 排序,`code`(explosive、flammable、oxidizing、gas、corrosive、toxic、irritant、health、environment、none)存在藥品的 `hazards` 陣列,不可改名(gas 是 2026-10 新增)。圖示是官方 GHS 圖示(Wikimedia Commons 的 GHS-pictogram-*.svg,公有領域),清掉 metadata 與編輯器屬性後內嵌在 `GHS_PICTO`,`ghsIconSvg(code,size)` 畫出來。新增/編輯表單的選擇器是大圖示方塊(手機一排三個),可複選、選到的打勾,「無/未知」和其他互斥;狀態一律由 `syncHazPicker()` 對齊
 - **採購流程**:看板(6 欄含「已審核待訂購」)、比價工具(SheetJS 匯入 Excel)、支援藥品與耗材/儀器維修兩種類型
 - **儀器管理**:緊湊格狀卡片、房號色碼(602/603/經德/林場)、軟體備份記錄、使用步驟頁
 - **值週生**:逐項完成追蹤(記錄誰完成)、進度條、可展開明細
