@@ -168,8 +168,14 @@
 - **直接讀 DATA.MS**(MSD ChemStation 的質譜原始檔,`parseMS` / `msSample`):可選檔或把整個 `.D` 資料夾拖進來(`walkDir` 只找裡面的 DATA.MS)。TIC 取每筆掃描最後 4 個位元組(儀器記下的 TIC,和 CHROMTAB.CSV 逐點相同);RT 從整數毫秒四捨五入到小數第 3 位,不要改用 `toFixed`(遇到 x.xxx5 會捨錯邊)。ChemStation 自己在剛好 .5 的點偶爾捨去、規則對不出來,一個檔約十幾點差 0.001 分鐘,同一個檔走 CSV 或 DATA.MS 的 Area% 差不到 0.001 個百分點。原始檔放 IndexedDB(`tb-ms`,以樣品 id 為鍵,`MSDB`),樣品上只記 `s.ms={scans}`;localStorage 放不下質譜。刪樣品時一併刪 IndexedDB
 - **峰的質譜**(`peakSpectrum`):峰頂前後各一次掃描平均,扣背景(峰兩側、峰外 0.25 分鐘內 TIC 最低的各 3 次掃描,避免相鄰峰的谷底把自己的離子扣掉),整數質量(有些檔是每 0.1 質量一點),最大峰 999。成分表每列的「譜」展開質譜圖與 NIST 候選
 - **NIST 比對**:頁面把每支峰的質譜寫成 MSP,POST 到本機的 `tools/nist-bridge.ps1`(`http://localhost:28790/search`),由它交給 NIST MS Search 的自動搜尋介面(AUTOIMP.MSD → FILESPEC.FIL → MSP,`nistms$.exe /INSTRUMENT /PAR=2`,等 SRCREADY.TXT,讀 SRCRESLT.TXT)。NIST 讀完 FILESPEC.FIL 會把它刪掉,所以每次都重寫;AUTOIMP.MSD 用完還原,不影響同台電腦的 ChemStation / AMDIS。暫存檔放 `C:\SFPLAB-NIST`(NIST 是 32 位元舊程式,路徑不能有空白)。搜尋用的圖庫與輸出名次(建議 20)在 NIST 自己的設定裡
-- NIST 結果檔是純 ASCII,**希臘字母會丟失**(β-月桂烯寫成 a-Myrcene),所以名稱一律靠 CAS 對回 KI 資料庫(`candInfo` / `dbByCas`):對得上就用資料庫的名稱與 KI 當 rKI,對不上用 NIST 的名稱與 RI。同一 CAS 的多筆命中合併(`nistGroups`);Wiley 的命中沒有 RI,同一 CAS 在 NIST 圖庫有 RI 的借來用,另存本機快取 `tb.nistRi`。搜尋後自動填入第一候選,**使用者自己填過或改過的列不動**(`edits.auto`);rKI 只有自動帶入的(`edits.rkiAuto`)才會跟著換成分。rKI 和實測 KI 差超過容差標琥珀色。結果存在樣品的 `s.nist`,單檔匯出入帶著
-- 成分表多 CAS 與 MF 兩欄(有質譜或填過 CAS 的樣品才顯示);CSV 匯出多 CAS、MF 欄。Word / 正式報告 / 複製表格的版面沒有改
+- NIST 結果檔是純 ASCII,**希臘字母不可靠**:α 和 β 都寫成 `a`(a-Pinene 可能是 β-Pinene),γ 寫成 `c`,立體標記 1α,4aβ 變成 `1a,4aa`,所以名稱不能靠字串換。名稱順序(`candInfo`):① CAS 對到 KI 資料庫(`dbByCas`;雲端還沒補 CAS 的內建項目用 `DB_DEFAULT_CAS` 對,`dbCas`)用實驗室的名稱與 KI;② 連線程式依 CAS 查的 NIST 正式名稱(`c.nname`);③ 結果檔名稱,只換 `.alpha.`、`para-` 這種確定的(`fixName`)。成分表上方有「名稱對照規則」可展開
+- **CAS 對照表**:連線程式第一次啟動時用 lib2nist 把 NIST 的 RI 資料庫(`nist_ri`)匯出成文字,依 CAS 建「CAS → NIST 正式名稱」(`.alpha.` 換回 α,主名稱是 CAS 索引名時改用第一個像俗名的同義名),存在 `C:\SFPLAB-NIST\nist_names.tsv`,約 3.9 萬筆(另外 10 萬筆沒有 CAS)。資料來自有授權的圖庫,只留在那台電腦,搜尋時只回傳結果裡出現的 CAS。lib2nist **不能用隱藏視窗啟動**,會一直閒置不輸出(踩過的坑);整理用一次 regex 掃全檔,逐行的 PowerShell 迴圈要三分多鐘
+- **RI 只有 mainlib / replib 的命中才有**,Wiley 沒有;同一化合物 Wiley 的重複譜很多,前 20 名常全是 Wiley,就拿不到 RI。同一 CAS 在別的命中有 RI 就借用;連線程式另把每次看到的 CAS → RI 記在 `C:\SFPLAB-NIST\ri_cache.tsv` 並隨結果回傳,瀏覽器也有快取 `tb.nistRi`。試過輸出改 50 名,120 支峰只多 1 支有 RI 還慢很多,不值得;NIST 26 試用版附的 MSPepSearch 開不了 NIST 的 mainlib / replib(錯誤 -10),只能開 Wiley 這類使用者圖庫,不能拿來補 RI。NIST 沒有 RI 的,管理員可以在候選表「新增到資料庫」自己填文獻值
+- 連線程式的 PowerShell:變數名稱不分大小寫,函式裡的 `$names` 會蓋掉全域的 `$Names`(踩過的坑)。同一 CAS 的多筆命中合併(`nistGroups`)。搜尋後自動填入第一候選,**使用者自己填過或改過的列不動**(`edits.auto`);rKI 只有自動帶入的(`edits.rkiAuto`)才會跟著換成分。rKI 和實測 KI 差超過容差標琥珀色。結果存在樣品的 `s.nist`,單檔匯出入帶著
+- 成分表多 CAS 與 MF 兩欄(有質譜或填過 CAS 的樣品才顯示);CSV 匯出多 CAS、rKI_source、MF 欄。複製表格的版面沒有改
+- **rKI 的出處與報告引用**:KI 資料庫每筆可帶「來源」(第四個元素,例如 `Adams 2007 (KI)`、`NIST 20`、`標準品實測` 或自填的文獻)。每支峰的 rKI 記住出處(`edits.rkiSrc`;自己打的 rKI 沒有出處,報告列「未註明出處」),iframe 隨成分表送 `src`。主系統匯出 Word(期刊格式)與正式報告時,表下自動加註(`gcRkiNoteXml`):KI 是 Kovats 對數式、rKI 各來源;用到兩種以上來源時 rKI 右上角標 a、b…(`gdxRun` 的 `sup`,rPr 裡 `vertAlign` 要排在 `sz` 之後,順序錯 Word 會說檔案損毀),接著列參考文獻(`GC_REFS`,NIST 依版本自動產生,不認得的標籤原樣列出)。舊版快取的 iframe 送來的列沒有 `src`,就只註 KI 的算法
+- **指數的種類**:Adams (2007) 每個化合物列兩個值,AI 是升溫程式的線性式(van den Dool & Kratz),KI 是 Kovats 對數式;本工具 `calcKI` 用對數式(2026-10 使用者決定維持),所以參考值應對 Adams 的 KI 欄。NIST 的 RI 接近 AI。內建 80 筆經 CAS 比對:27 筆是 KI、34 筆是 AI、13 筆兩欄相同、6 筆對不到;標籤記在 `DB_DEFAULT_SRC`(只記標籤,不放書上的數值),雲端沒填來源且 KI 仍是內建值時用它(`dbSrc`)。「補上內建 CAS 與來源」把 CAS 與標籤寫進雲端
+- **Adams 這本書不能整本匯入**:電子版(ed. 4.1)版權頁明載未經出版社書面同意不得重製或存入資訊檢索系統;而且 repo 是公開的,書上的數值不要寫進程式碼。需要時由管理員查書,逐筆填進雲端 KI 資料庫並標來源
 
 #### GC-MS 的資料層(分兩種,不要搞混)
 
@@ -177,7 +183,7 @@
 
 | blob key | 內容 | 誰能改 |
 |---|---|---|
-| `gc-ki-database-data` | KI 資料庫,每筆 `[名稱, KI]` 或 `[名稱, KI, CAS]`(CAS 可多個,分號隔開,存之前驗檢查碼) | 只有管理員 |
+| `gc-ki-database-data` | KI 資料庫,每筆 `[名稱, KI]`、`[名稱, KI, CAS]` 或 `[名稱, KI, CAS, 來源]`(CAS 可多個,分號隔開,存之前驗檢查碼;來源是 KI 的出處) | 只有管理員 |
 | `gc-ki-pending-data` | 待審提案佇列 | 誰都能提案;只有管理員能核准/退回/移除 |
 | `gc-alkane-sets-data` | 烷類 RT 組合 | 誰都能新增;改與刪限建立者本人或管理員 |
 

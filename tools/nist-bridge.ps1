@@ -25,9 +25,98 @@ if (-not $NistDir -or -not (Test-Path (Join-Path $NistDir 'nistms$.exe'))) {
   Write-Host '找不到 NIST MS Search(nistms$.exe)。請用 -NistDir 指定 MSSEARCH 資料夾,例如 -NistDir C:\NIST20\MSSEARCH'
   exit 1
 }
+# Version label for the page's citations ("NIST 20" from C:\NIST20\MSSEARCH)
+$NistLabel = 'NIST'
+if ($NistDir -match 'NIST(\d+)') { $NistLabel = 'NIST ' + $Matches[1] }
 # NIST is a 32-bit program that splits FILESPEC.FIL on spaces: keep the work folder short and space-free
 if ($WorkDir -match '\s') { Write-Host 'WorkDir 不能有空白'; exit 1 }
 New-Item -ItemType Directory -Force $WorkDir | Out-Null
+
+# CAS -> NIST name table, built once from NIST's own RI compound list (nist_ri) with lib2nist.
+# SRCRESLT.TXT loses Greek letters (alpha and beta both come out as "a", gamma as "c"), while the library
+# keeps them as .alpha./.beta.; the page shows the proper name for each CAS from this table.
+# It is derived from the licensed library, so it stays in $WorkDir; only the names for CAS numbers that
+# appear in a search result are sent to the page.
+$Greek = @{ alpha='α'; beta='β'; gamma='γ'; delta='δ'; epsilon='ε'; zeta='ζ'; eta='η'; theta='θ'; iota='ι'; kappa='κ'
+  lambda='λ'; mu='μ'; nu='ν'; xi='ξ'; omicron='ο'; pi='π'; rho='ρ'; sigma='σ'; tau='τ'; upsilon='υ'; phi='φ'; chi='χ'; psi='ψ'; omega='ω' }
+function Convert-Greek([string]$s) {
+  [regex]::Replace($s, '\.([A-Za-z]+)\.', [Text.RegularExpressions.MatchEvaluator]{ param($m)
+    $w = $m.Groups[1].Value; $g = $Greek[$w]
+    if (-not $g) { return $m.Value }
+    if ($w.Length -gt 1 -and $w -ceq $w.ToUpper()) { return $g.ToUpper() }   # .DELTA. -> Δ
+    return $g })
+}
+# NIST's primary name is often a CAS index name ("1,3-Cyclohexadiene, 1-methyl-4-(1-methylethyl)-");
+# then take the first synonym that looks like a common name (".alpha.-Terpinene")
+function Select-Name([string]$primary, $syns) {
+  if ($primary -notmatch ', ') { return $primary }
+  foreach ($s in $syns) {
+    if ($s.StartsWith('$:') -or $s -match ', ' -or $s.Length -gt 40 -or $s -match '#|\(Salt/Mix\)|^NSC |^UN ' -or
+        $s -cmatch '^[^a-z]*$' -or [regex]::Matches($s, '[A-Za-z]').Count -lt 3) { continue }
+    return $s
+  }
+  return $primary
+}
+$NameFile = Join-Path $WorkDir 'nist_names.tsv'
+function Build-NameTable {
+  $riLib = Join-Path $NistDir 'nist_ri'; $l2n = Join-Path $NistDir 'lib2nist.exe'; $dbu = Join-Path $riLib 'USER.DBU'
+  if (-not (Test-Path $dbu) -or -not (Test-Path $l2n)) { return $false }
+  if ((Test-Path $NameFile) -and (Get-Item $NameFile).LastWriteTime -gt (Get-Item $dbu).LastWriteTime) { return $true }
+  Write-Host '第一次啟動:從 NIST 的 RI 資料庫建立 CAS 對照表,約需四分鐘,會跳出 lib2nist 視窗,之後不用再做…'
+  $ini = Join-Path $WorkDir 'lib2nist.ini'; $msp = Join-Path $WorkDir 'nist_ri.msp'; $log = Join-Path $WorkDir 'lib2nist.log'
+  if (-not ((Test-Path $msp) -and (Get-Item $msp).LastWriteTime -gt (Get-Item $dbu).LastWriteTime)) {
+    # an .ini on the command line keeps lib2nist from writing its settings into the registry;
+    # do not start it hidden: with -WindowStyle Hidden it sits idle and never writes the output
+    [IO.File]::WriteAllText($ini, "[Directory]`r`nNIST=<None>`r`n[Output]`r`nDB=0`r`nText=1`r`nTextFileType=0`r`nIncludeSynonyms=1`r`nKeepIDs=1`r`n", $Latin1)
+    Start-Process -FilePath $l2n -ArgumentList '/log1', "`"$log`"", "`"$ini`"", '/OutMSP', '/NoAlias', '/AllowNoPeaks', "`"$riLib`"", "`"=$msp`"" -Wait
+  }
+  if (-not (Test-Path $msp)) { return $false }
+  Write-Host '整理對照表…'
+  # one regex pass over the whole export (a line-by-line PowerShell loop takes minutes); only about 39k of the
+  # 140k compounds have a CAS number, the rest are listed with CASNO: 0 and cannot be matched anyway
+  $text = [IO.File]::ReadAllText($msp, $Latin1)
+  $rx = New-Object Text.RegularExpressions.Regex('^Name: ([^\r\n]*)((?:\r?\n(?!CASNO: |Name: )[^\r\n]*)*)\r?\nCASNO: ([1-9][0-9]{4,})\r?$', [Text.RegularExpressions.RegexOptions]::Multiline)
+  $sb = New-Object Text.StringBuilder
+  foreach ($m in $rx.Matches($text)) {
+    $name = $m.Groups[1].Value; $cas = $m.Groups[3].Value; $syn = @()
+    if ($name.Contains(', ')) { $syn = @([regex]::Matches($m.Groups[2].Value, '(?m)^Synon: ([^\r\n]*)') | ForEach-Object { $_.Groups[1].Value }) }
+    $nm = Select-Name $name $syn
+    if ($nm.Contains('.')) { $nm = Convert-Greek $nm }
+    [void]$sb.Append($cas.Substring(0, $cas.Length - 3)).Append('-').Append($cas.Substring($cas.Length - 3, 2)).Append('-').Append($cas.Substring($cas.Length - 1)).Append("`t").Append($nm).Append("`n")
+  }
+  $text = $null
+  [IO.File]::WriteAllText($NameFile, $sb.ToString(), (New-Object Text.UTF8Encoding($false)))
+  Remove-Item -LiteralPath $msp
+  return $true
+}
+$Names = New-Object 'Collections.Generic.Dictionary[string,string]'
+if (Build-NameTable) {
+  foreach ($l in [IO.File]::ReadLines($NameFile, [Text.Encoding]::UTF8)) {
+    $i = $l.IndexOf("`t"); if ($i -gt 0) { $Names[$l.Substring(0, $i)] = $l.Substring($i + 1) }
+  }
+}
+Write-Host "CAS 對照表:$($Names.Count) 筆"
+
+# CAS -> RI remembered from every search on this PC. Wiley hits carry no RI, so when the top 20 hits of a
+# compound happen to be all Wiley spectra, an RI seen in an earlier search still fills the gap.
+$RiFile = Join-Path $WorkDir 'ri_cache.tsv'
+$RiCache = New-Object 'Collections.Generic.Dictionary[string,int]'
+if (Test-Path $RiFile) {
+  foreach ($l in [IO.File]::ReadLines($RiFile)) { $p = $l.Split("`t"); if ($p.Length -eq 2) { $RiCache[$p[0]] = [int]$p[1] } }
+}
+function Get-Extras([string]$text) {
+  # PowerShell variable names ignore case: a local $names here would hide the script-level $Names table
+  $outNames = @{}; $outRi = @{}; $new = $false
+  foreach ($m in [regex]::Matches($text, 'CAS:([\d-]+); Mw: \d+; Lib: <<[^>]*>>; Id: \d+; RI: (\d+)')) {
+    $c = $m.Groups[1].Value; if ($c -eq '0') { continue }
+    $r = [int]$m.Groups[2].Value
+    if ($r -gt 0 -and -not $RiCache.ContainsKey($c)) { $RiCache[$c] = $r; $new = $true }
+    if ($Names.ContainsKey($c)) { $outNames[$c] = $Names[$c] }
+    if ($RiCache.ContainsKey($c)) { $outRi[$c] = $RiCache[$c] }
+  }
+  if ($new) { [IO.File]::WriteAllLines($RiFile, [string[]]@($RiCache.GetEnumerator() | ForEach-Object { "$($_.Key)`t$($_.Value)" })) }
+  return @{ names = $outNames; ri = $outRi }
+}
 
 function Invoke-NistSearch([string]$msp) {
   $query = Join-Path $WorkDir 'QUERY.MSP'
@@ -98,7 +187,7 @@ while ($listener.IsListening) {
     }
     $path = $req.Url.AbsolutePath
     if ($req.HttpMethod -eq 'GET' -and ($path -eq '/ping' -or $path -eq '/')) {
-      Send-Json $ctx 200 @{ ok = $true; app = 'sfplab-nist-bridge'; version = 1; nist = $NistDir }
+      Send-Json $ctx 200 @{ ok = $true; app = 'sfplab-nist-bridge'; version = 2; nist = $NistDir; names = $Names.Count; ri = $RiCache.Count }
       continue
     }
     if ($req.HttpMethod -eq 'POST' -and $path -eq '/search') {
@@ -110,7 +199,8 @@ while ($listener.IsListening) {
       $t0 = Get-Date
       try {
         $text = Invoke-NistSearch $msp
-        Send-Json $ctx 200 @{ ok = $true; result = $text }
+        $ex = Get-Extras $text
+        Send-Json $ctx 200 @{ ok = $true; result = $text; names = $ex.names; ri = $ex.ri; lib = $NistLabel }
         Write-Host ("{0:HH:mm:ss} 搜尋 {1} 張質譜,{2:N1} 秒" -f (Get-Date), $n, ((Get-Date) - $t0).TotalSeconds)
       } catch {
         Send-Json $ctx 500 @{ ok = $false; error = $_.Exception.Message }
