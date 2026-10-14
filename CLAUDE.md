@@ -175,6 +175,7 @@
 - **直接讀 DATA.MS**(MSD ChemStation 的質譜原始檔,`parseMS` / `msSample`):可選檔或把整個 `.D` 資料夾拖進來(`walkDir` 只找裡面的 DATA.MS)。TIC 取每筆掃描最後 4 個位元組(儀器記下的 TIC,和 CHROMTAB.CSV 逐點相同);RT 從整數毫秒四捨五入到小數第 3 位,不要改用 `toFixed`(遇到 x.xxx5 會捨錯邊)。ChemStation 自己在剛好 .5 的點偶爾捨去、規則對不出來,一個檔約十幾點差 0.001 分鐘,同一個檔走 CSV 或 DATA.MS 的 Area% 差不到 0.001 個百分點。原始檔放 IndexedDB(`tb-ms`,以樣品 id 為鍵,`MSDB`),樣品上只記 `s.ms={scans}`;localStorage 放不下質譜。刪樣品時一併刪 IndexedDB
 - **峰的質譜**(`peakSpectrum`):峰頂前後各一次掃描平均,扣背景(峰兩側、峰外 0.25 分鐘內 TIC 最低的各 3 次掃描,避免相鄰峰的谷底把自己的離子扣掉),整數質量(有些檔是每 0.1 質量一點),最大峰 999。成分表每列的「譜」展開質譜圖與 NIST 候選
 - **NIST 比對**:頁面把每支峰的質譜寫成 MSP,POST 到本機的 `tools/nist-bridge.ps1`(`http://localhost:28790/search`),由它交給 NIST MS Search 的自動搜尋介面(AUTOIMP.MSD → FILESPEC.FIL → MSP,`nistms$.exe /INSTRUMENT /PAR=2`,等 SRCREADY.TXT,讀 SRCRESLT.TXT)。NIST 讀完 FILESPEC.FIL 會把它刪掉,所以每次都重寫;AUTOIMP.MSD 用完還原,不影響同台電腦的 ChemStation / AMDIS。暫存檔放 `C:\SFPLAB-NIST`(NIST 是 32 位元舊程式,路徑不能有空白)。搜尋用的圖庫與輸出名次(建議 20)在 NIST 自己的設定裡
+- **「啟動 NIST 連線程式」鈕**:搜尋時連不到連線程式(fetch 丟 TypeError 或逾時)才出現(`nistOffline`)。按下去 iframe 送 `{gcLaunchNist:1}`,主系統確認來源是 `gcFrame` 之後在頂層頁面點一個 `sfplab-nist://start` 連結(iframe 自己開會被擋,或整個工具被換成錯誤頁;使用者在 iframe 裡按的那一下,瀏覽器也算到上層頁面,所以不會被當成沒經同意);iframe 之後每秒 ping 一次,60 秒內連上就把上次那次搜尋(`nistLast`)重做。`sfplab-nist:` 要先在那台電腦雙擊 `tools/nist-bridge-install.cmd` 登記(只寫目前使用者的 HKCU,不需要系統管理員;移除用 `nist-bridge-uninstall.cmd`;資料夾搬家要重跑),登記的指令不帶連結內容,只會以最小化視窗開 `nist-bridge.cmd`。連線程式已經在執行時第二個會直接結束(exit 0,視窗不停留),所以多按幾次沒關係
 - NIST 結果檔是純 ASCII,**希臘字母不可靠**:α 和 β 都寫成 `a`(a-Pinene 可能是 β-Pinene),γ 寫成 `c`,立體標記 1α,4aβ 變成 `1a,4aa`,所以名稱不能靠字串換。名稱順序(`candInfo`):① CAS 對到 KI 資料庫(`dbByCas`;雲端還沒補 CAS 的內建項目用 `DB_DEFAULT_CAS` 對,`dbCas`)用實驗室的名稱與 KI;② 連線程式依 CAS 查的 NIST 正式名稱(`c.nname`);③ 結果檔名稱,只換 `.alpha.`、`para-` 這種確定的(`fixName`)。成分表上方有「名稱對照規則」可展開
 - **CAS 對照表**:連線程式第一次啟動時用 lib2nist 把 NIST 的 RI 資料庫(`nist_ri`)匯出成文字,依 CAS 建「CAS → NIST 正式名稱」(`.alpha.` 換回 α,主名稱是 CAS 索引名時改用第一個像俗名的同義名),存在 `C:\SFPLAB-NIST\nist_names.tsv`,約 3.9 萬筆(另外 10 萬筆沒有 CAS)。資料來自有授權的圖庫,只留在那台電腦,搜尋時只回傳結果裡出現的 CAS。lib2nist **不能用隱藏視窗啟動**,會一直閒置不輸出(踩過的坑);整理用一次 regex 掃全檔,逐行的 PowerShell 迴圈要三分多鐘
 - **RI 只有 mainlib / replib 的命中才有**,Wiley 沒有;同一化合物 Wiley 的重複譜很多,前 20 名常全是 Wiley,就拿不到 RI。同一 CAS 在別的命中有 RI 就借用;連線程式另把每次看到的 CAS → RI 記在 `C:\SFPLAB-NIST\ri_cache.tsv` 並隨結果回傳,瀏覽器也有快取 `tb.nistRi`。試過輸出改 50 名,120 支峰只多 1 支有 RI 還慢很多,不值得;NIST 26 試用版附的 MSPepSearch 開不了 NIST 的 mainlib / replib(錯誤 -10),只能開 Wiley 這類使用者圖庫,不能拿來補 RI。NIST 沒有 RI 的,管理員可以在候選表「新增到資料庫」自己填文獻值
@@ -238,13 +239,14 @@
 
 ### 開發輔助腳本(`tools/`)
 
-不參與部署;除了 `nist-bridge` 之外都只給開發用:
+不參與部署;除了 `nist-bridge` 開頭的幾支之外都只給開發用:
 
 - `tools/gc-extract.ps1 -Out <檔案>`:把 `GC_IFRAME_B64` 解出成可編輯的 HTML
 - `tools/gc-inject.ps1 -Source <檔案>`:改完後重新編碼寫回 `index.html`
 - `tools/check-syntax.ps1`:抽出主檔與 GC iframe 的 inline script 跑 `node --check`,並檢查 CSS 大括號平衡
 - `tools/serve.ps1 [-Port 8765]`:不需要 node 或 python 的本機靜態伺服器(PowerShell 的 HttpListener),開 `http://localhost:8765/` 預覽。Google 登入需要 http 來源,直接雙擊開 `file://` 不行
 - `tools/nist-bridge.cmd`(呼叫 `nist-bridge.ps1`):**這支不是開發用,是給裝有 NIST 的電腦跑的**,GC 頁面的「NIST 搜尋」靠它。預設 port 28790(8790 在這台被別的程式佔了),只接受實驗室網站與 localhost 來源;自動找 `C:\NIST*\MSSEARCH`,也可用 `-NistDir` 指定
+- `tools/nist-bridge-install.cmd` / `nist-bridge-uninstall.cmd`(呼叫 `nist-bridge-install.ps1 [-Uninstall]`):同樣給裝有 NIST 的電腦,登記或移除 `sfplab-nist:` 連結,讓 GC 頁面的「啟動 NIST 連線程式」鈕叫得出 `nist-bridge.cmd`
 
 改完 `index.html` 至少要跑一次 `check-syntax.ps1`。機器上沒有 node 時,改用 `serve.ps1` 開起來看瀏覽器 console 有沒有語法錯誤,並實際操作改到的流程。
 

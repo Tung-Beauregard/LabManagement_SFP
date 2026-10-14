@@ -16,6 +16,13 @@ $AllowedOrigins = @('https://tung-beauregard.github.io')
 $LocalOrigin = '^http://(localhost|127\.0\.0\.1)(:\d+)?$'
 $Latin1 = [Text.Encoding]::GetEncoding(28591)
 
+# Started again (the page's launch button, or a second double-click) while one is already running:
+# say so and leave with exit code 0, so nist-bridge.cmd closes the window instead of pausing
+try {
+  $running = Invoke-RestMethod -Uri "http://localhost:$Port/ping" -TimeoutSec 2
+  if ($running.app -eq 'sfplab-nist-bridge') { Write-Host 'NIST 連線程式已經在執行,不用再開一個。'; Start-Sleep -Seconds 2; exit 0 }
+} catch {}
+
 if (-not $NistDir) {
   $cands = @('C:\NIST20\MSSEARCH', 'C:\NIST23\MSSEARCH', 'C:\NIST26\MSSEARCH', 'C:\NIST17\MSSEARCH')
   $cands += Get-ChildItem 'C:\' -Directory -Filter 'NIST*' -ErrorAction SilentlyContinue | ForEach-Object { Join-Path $_.FullName 'MSSEARCH' }
