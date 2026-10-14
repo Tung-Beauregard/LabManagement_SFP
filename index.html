@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="app-version" content="2026.10.14.1">
+<meta name="app-version" content="2026.10.14.2">
 <meta name="theme-color" content="#1B4B43" id="metaThemeColor">
 <title>SFPLAB 實驗室管理系統</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>">
@@ -198,6 +198,9 @@
   .nav-item .ic{font-size:15px;}
   .nav-item:hover{background:var(--hover);}
   .nav-item.active{background:var(--pine);color:var(--on-pine);}
+  /* 首頁頁籤:不在首頁時也有底色與左側色條,並和下面的頁籤隔開一點,一眼找得到 */
+  .nav-item[data-page="dashboard"]{font-weight:700;margin-bottom:10px;}
+  .nav-item[data-page="dashboard"]:not(.active){background:var(--tint);color:var(--pine-deep);box-shadow:inset 4px 0 0 var(--pine),inset 0 0 0 1px var(--pine);}
   .nav-theme{margin-top:8px;padding-top:12px;border-top:1px solid var(--line);border-radius:0;
              color:var(--ink-soft);font-size:13px;}
   .nav-theme:hover{background:var(--hover);}
@@ -949,12 +952,13 @@
   .cmdk.show{display:flex;}
   .cmdk-box{width:min(620px,100%);background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);overflow:hidden;}
   .cmdk-input{width:100%;border:none;border-bottom:1px solid var(--line);background:var(--panel);color:var(--ink);font-family:var(--sans);font-size:16px;padding:14px 16px;outline:none;box-sizing:border-box;}
-  .cmdk-list{max-height:min(52vh,420px);overflow-y:auto;overflow-x:hidden;padding:6px;}
-  .cmdk-group{font-family:var(--mono);font-size:10px;letter-spacing:1.6px;color:var(--ink-soft);padding:8px 10px 4px;}
-  .cmdk-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--radius-sm);cursor:pointer;font-size:13.5px;color:var(--ink);}
+  .cmdk-list{max-height:min(52vh,420px);overflow-y:auto;overflow-x:hidden;padding:8px;}
+  .cmdk-group{font-family:var(--mono);font-size:10px;letter-spacing:1.6px;color:var(--ink-soft);padding:10px 4px 6px;}
+  /* 每一項有自己的框線、上下留空,手機上不容易點錯 */
+  .cmdk-item{display:flex;align-items:center;gap:10px;padding:12px;margin:0 0 6px;border:1px solid var(--line);border-radius:var(--radius-sm);cursor:pointer;font-size:13.5px;color:var(--ink);}
   .cmdk-item .sub{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--ink-soft);white-space:nowrap;}
   .cmdk-item.sel,.cmdk-item:hover{background:var(--tint);}
-  .cmdk-item.sel{box-shadow:inset 0 0 0 1px var(--pine);}
+  .cmdk-item.sel{border-color:var(--pine);box-shadow:inset 0 0 0 1px var(--pine);}
   .cmdk-empty{padding:18px 12px;color:var(--ink-soft);font-size:13px;text-align:center;}
   .cmdk-foot{display:flex;gap:14px;padding:8px 14px;border-top:1px solid var(--line);font-family:var(--mono);font-size:10.5px;color:var(--ink-soft);}
   .cmdk-foot kbd{border:1px solid var(--line);border-radius:3px;padding:0 5px;font-family:inherit;}
@@ -1438,8 +1442,8 @@
       </div>
       <div class="management-grid">
         <div class="management-card">
-          <h3>側邊欄頁籤排序</h3>
-          <div class="help">用「↑ ↓」調整左側頁籤的顯示順序,所有成員都會套用;軟體備份與管理員相關頁籤固定在底部,不參與排序。</div>
+          <h3>側邊欄頁籤排序與名稱</h3>
+          <div class="help">用「↑ ↓」調整左側頁籤的顯示順序,按「改名」換頁籤名稱(該頁的標題、首頁捷徑與快速搜尋會跟著換,最多 12 個字,留空就恢復原本的名稱),所有成員都會套用;軟體備份與管理員相關頁籤固定在底部,不參與排序。</div>
           <div class="setting-list" id="saNavOrderList"></div>
         </div>
         <div class="management-card">
@@ -3241,7 +3245,37 @@ const SYSTEM_SETTINGS_KEY = 'system-settings-data';
 const DEFAULT_NAV_ORDER = [...document.querySelectorAll('.sidebar nav .nav-item[data-page]')]
   .filter(b=>!b.classList.contains('nav-item-admin-pinned') && b.id!=='navSoftwareBackup')
   .map(b=>b.dataset.page);
-let systemSettings = { chem_locations:DEFAULT_CHEM_LOCATIONS.slice(), material_locations:DEFAULT_STORAGE_OPTIONS.map(o=>({...o})), nav_order:[] };
+/* 側欄頁籤名稱:預設值取自 HTML;總管理員改過的存在 system-settings-data 的 nav_labels({頁面: 名稱})。
+   開頁時把「文字剛好等於預設名稱」的地方記下來(側欄、該頁的頁首標題、首頁快捷按鈕),改名時只換這些 */
+const NAV_LABEL_MAX = 12;
+function navTextNode(el){
+  const ts = [...el.childNodes].filter(n=>n.nodeType===3 && n.textContent.trim());
+  return ts[ts.length-1] || null;
+}
+const DEFAULT_NAV_LABELS = {};
+const NAV_LABEL_TARGETS = [];
+DEFAULT_NAV_ORDER.forEach(page=>{
+  const btn = document.querySelector(`.sidebar nav .nav-item[data-page="${page}"]`);
+  const node = btn && navTextNode(btn);
+  if(!node) return;
+  const def = node.textContent.trim();
+  DEFAULT_NAV_LABELS[page] = def;
+  NAV_LABEL_TARGETS.push({ page, node });
+  const h1 = document.querySelector(`#page-${page} .hdr h1`);
+  if(h1 && h1.children.length===0 && h1.textContent.trim()===def) NAV_LABEL_TARGETS.push({ page, node:h1.firstChild });
+  document.querySelectorAll(`.dash-quick button[onclick="switchPage('${page}')"]`).forEach(b=>{
+    const t = navTextNode(b);
+    if(t && t.textContent.trim()===def) NAV_LABEL_TARGETS.push({ page, node:t });
+  });
+});
+function navLabel(page){ return ((systemSettings && systemSettings.nav_labels) || {})[page] || DEFAULT_NAV_LABELS[page] || page; }
+function applyNavLabels(){
+  NAV_LABEL_TARGETS.forEach(({ page, node })=>{
+    const lead = (node.textContent.match(/^\s*/)||[''])[0];
+    node.textContent = lead + navLabel(page);
+  });
+}
+let systemSettings = { chem_locations:DEFAULT_CHEM_LOCATIONS.slice(), material_locations:DEFAULT_STORAGE_OPTIONS.map(o=>({...o})), nav_order:[], nav_labels:{} };
 function normalizeSystemSettings(raw){
   const hasChem = !!(raw && Array.isArray(raw.chem_locations));
   const hasMat = !!(raw && Array.isArray(raw.material_locations));
@@ -3257,10 +3291,17 @@ function normalizeSystemSettings(raw){
   });
   const navRaw = (raw && Array.isArray(raw.nav_order)) ? raw.nav_order : [];
   const cleanNav = [...new Set(navRaw.map(v=>String(v||'').trim()).filter(Boolean))];
+  const labRaw = (raw && raw.nav_labels && typeof raw.nav_labels==='object' && !Array.isArray(raw.nav_labels)) ? raw.nav_labels : {};
+  const cleanLabels = {};
+  Object.keys(labRaw).forEach(page=>{
+    const v = String(labRaw[page]||'').replace(/\s+/g,' ').trim().slice(0, NAV_LABEL_MAX);
+    if(v && DEFAULT_NAV_LABELS[page] && v!==DEFAULT_NAV_LABELS[page]) cleanLabels[page] = v;
+  });
   return {
     chem_locations: hasChem ? cleanChem : DEFAULT_CHEM_LOCATIONS.slice(),
     material_locations: hasMat ? cleanMat : DEFAULT_STORAGE_OPTIONS.map(o=>({...o})),
-    nav_order: cleanNav
+    nav_order: cleanNav,
+    nav_labels: cleanLabels
   };
 }
 function effectiveNavOrder(){
@@ -3283,6 +3324,7 @@ function applySystemSettings(raw){
   CHEM_LOCATIONS = systemSettings.chem_locations.slice();
   STORAGE_OPTIONS = systemSettings.material_locations.map(o=>({...o}));
   applyNavOrder();
+  applyNavLabels();
 }
 async function loadSystemSettings(){
   const res = await window.storage.get(SYSTEM_SETTINGS_KEY, true);
@@ -3496,7 +3538,7 @@ const CMDK_ACTIONS=[['新增藥品','addBtn','chemicals'],['新增試材','matAd
 function cmdkIndex(){
   const out=[];
   const visiblePage=p=>{ const nb=document.querySelector('.nav-item[data-page="'+p+'"]'); return nb && nb.style.display!=='none'; };
-  CMDK_PAGES.forEach(([p,label])=>{ if(!visiblePage(p)) return; out.push({g:'頁面',label,sub:'',kw:p,run:()=>switchPage(p)}); });
+  CMDK_PAGES.forEach(([p,label])=>{ if(!visiblePage(p)) return; out.push({g:'頁面',label:DEFAULT_NAV_LABELS[p]?navLabel(p):label,sub:'',kw:p+' '+label,run:()=>switchPage(p)}); });
   CMDK_ACTIONS.forEach(([label,id,page])=>{ if(!document.getElementById(id)||!visiblePage(page)) return;
     out.push({g:'動作',label,sub:'',kw:'新增 add',run:()=>{ switchPage(page); setTimeout(()=>{ const b=document.getElementById(id); if(b) b.click(); },60); }}); });
   out.push({g:'動作',label:currentTheme()==='night'?'切換成日間模式':'切換成夜間模式',sub:'',kw:'theme 主題 夜間 日間',run:()=>document.getElementById('themeToggleBtn').click()});
@@ -7471,7 +7513,8 @@ function renderSuperAdminTools(){
   document.getElementById('saNavOrderList').innerHTML = navOrder.map((page,idx)=>{
     const btn = document.querySelector(`.sidebar nav .nav-item[data-page="${page}"]`);
     const label = btn ? btn.textContent.trim() : page;
-    return `<div class="setting-row"><span>${escapeHtml(label)}</span><div style="display:flex;gap:4px;"><button type="button" class="btn btn-ghost btn-sm" data-nav-move="up" data-nav-page="${escapeHtml(page)}" ${idx===0?'disabled':''}>↑</button><button type="button" class="btn btn-ghost btn-sm" data-nav-move="down" data-nav-page="${escapeHtml(page)}" ${idx===navOrder.length-1?'disabled':''}>↓</button></div></div>`;
+    const renamed = !!(systemSettings.nav_labels||{})[page];
+    return `<div class="setting-row"><div><span>${escapeHtml(label)}</span>${renamed?`<div class="meta">原本叫「${escapeHtml(DEFAULT_NAV_LABELS[page]||page)}」</div>`:''}</div><div style="display:flex;gap:4px;"><button type="button" class="btn btn-ghost btn-sm" data-nav-rename="${escapeHtml(page)}">改名</button><button type="button" class="btn btn-ghost btn-sm" data-nav-move="up" data-nav-page="${escapeHtml(page)}" ${idx===0?'disabled':''}>↑</button><button type="button" class="btn btn-ghost btn-sm" data-nav-move="down" data-nav-page="${escapeHtml(page)}" ${idx===navOrder.length-1?'disabled':''}>↓</button></div></div>`;
   }).join('');
   const instList = document.getElementById('saInstrumentList');
   instList.innerHTML = INSTRUMENTS_ALL().slice().sort((a,b)=>a.room.localeCompare(b.room)||a.name.localeCompare(b.name)).map(inst=>`
@@ -7550,6 +7593,22 @@ document.getElementById('saQuotedDeleteBtn').addEventListener('click', async ()=
 });
 
 document.getElementById('saNavOrderList').addEventListener('click', async (e)=>{
+  const ren=e.target.closest('[data-nav-rename]');
+  if(ren && isSuperAdmin()){
+    const page=ren.dataset.navRename, def=DEFAULT_NAV_LABELS[page];
+    if(!def) return;
+    const input=await promptDialog(`「${def}」頁籤的新名稱(最多 ${NAV_LABEL_MAX} 個字;留空恢復成「${def}」)`, navLabel(page));
+    if(input===null) return;
+    const v=String(input).replace(/\s+/g,' ').trim();
+    if(v.length>NAV_LABEL_MAX){ notify(`名稱最多 ${NAV_LABEL_MAX} 個字。`); return; }
+    const used=Object.keys(DEFAULT_NAV_LABELS).find(p=>p!==page && navLabel(p)===v);
+    if(v && used){ notify(`「${v}」已經是別的頁籤的名稱了。`); return; }
+    const labels={...(systemSettings.nav_labels||{})};
+    if(!v || v===def) delete labels[page]; else labels[page]=v;
+    systemSettings.nav_labels=labels;
+    await saveSystemSettings();
+    return;
+  }
   const btn=e.target.closest('[data-nav-move]'); if(!btn||!isSuperAdmin()) return;
   const page=btn.dataset.navPage, dir=btn.dataset.navMove;
   const order=effectiveNavOrder();

@@ -59,7 +59,7 @@
 - 所有顏色都走 CSS 變數(`--panel`, `--ink`, `--pine`, `--line` 等),日夜兩套變數對稱定義。新增 UI 時**務必用變數,不要硬編碼顏色**,否則夜間模式會出現亮塊
 - **第二個軸:介面風格**。`<html data-skin="botanic">` 是「標本館」風格(日間 = 植物標本館:羊皮紙底、深林綠、襯線標題;夜間 = 實驗室儀表:深墨綠底、螢光薄荷、等寬字標題),同樣存 localStorage(`ui-skin`),與日夜獨立。所有規則都以 `html[data-skin="botanic"]` 為前綴疊在經典版之上,沒有這個屬性就是原本的經典日夜版,不能動到經典版的規則。側欄 emoji 圖示在這個風格下由 CSS mask 的 SVG 線條圖示取代(以 `data-page` 選擇),按鍵浮起、主要按鈕光暈、頁面淡入、彈窗放大、側欄底塊滑動這些動態也只在這個風格下啟用,並尊重 `prefers-reduced-motion`
 - 標本館風格的「開場自畫線」:頁首底線用 `.hdr::after` 的 scaleX 畫出;首頁右上角的植物線稿(日)與層析圖(夜)是 `#page-dashboard` 裡的 inline SVG(`.bot-leafmark` / `.bot-ticmark`),用 `pathLength="1"` 加 stroke-dashoffset 描線,每次進首頁重播。夜間版另有同步 LED(`#syncLed`,離線或即時同步失敗轉琥珀色)與統計數字跑動、低庫存數字閃爍(MutationObserver 監看 `.stat .n` 與 `.dash-chip .n`)
-- **Ctrl+K / Cmd+K 快速搜尋**(所有風格都有,標本館風格側欄另有按鈕):`cmdkIndex()` 每次開啟時從 items / matItems / smpItems / 儀器 / libraryBooks / todoItems 現算索引,頁面與動作永遠在最前;選到項目會先 `switchPage` 再開該項目的詳細頁
+- **Ctrl+K / Cmd+K 快速搜尋**(所有風格都有,標本館風格側欄另有按鈕):`cmdkIndex()` 每次開啟時從 items / matItems / smpItems / 儀器 / libraryBooks / todoItems 現算索引,頁面與動作永遠在最前;選到項目會先 `switchPage` 再開該項目的詳細頁。清單每一項有框線、項目之間留 6px,避免手機上點錯
 
 ---
 
@@ -88,7 +88,9 @@
 - **儀表板**:預設首頁,狀態藥丸與警示彙整卡
 - **圖譜分析(圖譜分析頁)**:五個子標籤(LC/GC/FTIR/TGA/DSC)
 - **圖譜(藝廊頁)**:存好的圖譜縮圖牆,可綁定試材/樣品,可回 FTIR 編輯
-- **總管理員功能**:側邊欄頁籤排序(Firestore 同步)、儀器與存放位置的新增/編輯/刪除
+- **總管理員功能**:側邊欄頁籤排序與改名(Firestore 同步)、儀器與存放位置的新增/編輯/刪除
+- **側邊欄頁籤名稱**:預設名稱取自 HTML(`DEFAULT_NAV_LABELS`),改過的存在 `system-settings-data` 的 `nav_labels`({頁面: 名稱},最多 12 字,和預設相同就不存)。開頁時把「文字剛好等於預設名稱」的地方記在 `NAV_LABEL_TARGETS`(側欄、該頁頁首 h1、首頁快捷按鈕),`applyNavLabels` 只換這些;快速搜尋的頁面項目用 `navLabel()`,舊名稱留在搜尋關鍵字裡。`normalizeSystemSettings` 會丟掉不認得的鍵,新增設定欄位一定要加進去
+- **首頁頁籤**:不在首頁時也有淺底色、左側色條與細框(`.nav-item[data-page="dashboard"]:not(.active)`),和下面的頁籤多隔 10px
 - **試材清單 / 樣品清單**:樣品以 `material_id` 連回試材,兩邊的詳細卡可互相跳轉;細節見下一節
 
 ---
