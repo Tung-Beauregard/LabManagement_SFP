@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="app-version" content="2026.10.15.2">
+<meta name="app-version" content="2026.10.15.3">
 <meta name="theme-color" content="#1B4B43" id="metaThemeColor">
 <title>SFPLAB 實驗室管理系統</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>">
@@ -3139,18 +3139,43 @@ async function fsGetWhere(collectionName, field, op, value){
 const fsInFlight = new Map();
 /* 顯示編號(CHEM-0012 這種)是前端從記憶體清單算出來的,兩個人同時新增會撞號。
    新增前先查雲端有沒有同號;有的話把序號往後推到沒人用的為止,格式不變,既有資料完全不動。 */
+/* 新增資料時搶一個沒人用的編號。回傳搶到的佔位文件 ref(沒用到佔位時是 null),寫入失敗時由呼叫端釋放。
+   兩道關卡:
+   1. 查該集合有沒有同 id 的既有文件(舊資料沒有佔位文件,靠這一步擋)
+   2. 在 id-claims 用 transaction 建「集合__編號」的佔位文件;兩個人同一瞬間搶同一號時,
+      Firestore 只讓一個 transaction 成功,另一個會看到文件已存在而往下一號試。
+      以前只有第 1 步,查與寫之間不是原子的,同時新增仍會撞號。
+   規則還沒放行 id-claims、或離線時,transaction 會失敗;這時退回只做第 1 步,新增不會因此整個失效。 */
+const FS_ID_CLAIMS = 'id-claims';
 async function fsClaimFreeId(collectionName, item){
-  if(item._doc_id || !item.id) return;                       // 編輯既有資料不需要查
+  if(item._doc_id || !item.id) return null;                  // 編輯既有資料不需要查
   const m = /^(.*[-_])(\d+)$/.exec(String(item.id));        // CHEM-0012 與樣品的 W_Au_L_MeAcE_01 都適用
-  if(!m) return;                                             // 不是「前綴+序號」格式的 ID 不處理
+  if(!m) return null;                                        // 不是「前綴+序號」格式的 ID 不處理
   const original = item.id;
-  let seq = parseInt(m[2],10), width = m[2].length, tries = 0;
+  let seq = parseInt(m[2],10), width = m[2].length, tries = 0, useClaims = true, claimRef = null;
   while(tries++ < 50){
     const snap = await db.collection(collectionName).where('id','==',item.id).limit(1).get();
-    if(snap.empty) break;
+    let taken = !snap.empty;
+    if(!taken && useClaims){
+      const ref = db.collection(FS_ID_CLAIMS).doc(collectionName + '__' + item.id);
+      try{
+        taken = await db.runTransaction(async tx=>{
+          const s = await tx.get(ref);
+          if(s.exists) return true;
+          tx.set(ref, { collection: collectionName, id: item.id, by_uid: (currentUser && currentUser.uid) || null, at: new Date().toISOString() });
+          return false;
+        });
+        if(!taken) claimRef = ref;
+      }catch(e){
+        console.warn('id-claims 無法使用,退回查詢檢查:', (e && e.code) || e);
+        useClaims = false;
+      }
+    }
+    if(!taken) break;
     seq++; item.id = m[1] + String(seq).padStart(width,'0');
   }
   if(item.id !== original) showToast(`編號 ${original} 剛被別人用走了,已自動改為 ${item.id}`, null, 5000);
+  return claimRef;
 }
 async function fsSetItem(collectionName, item){
   const key = collectionName + '::' + (item._doc_id || item.id || '');
@@ -3161,14 +3186,20 @@ async function fsSetItem(collectionName, item){
   return p;
 }
 async function fsSetItemRaw(collectionName, item){
+  let claim = null;
   try{
     if(new TextEncoder().encode(JSON.stringify(item)).length > 900*1024) throw new Error('單筆資料超過 900 KB,請先移除 Base64 照片。');
-    await fsClaimFreeId(collectionName, item);
+    claim = await fsClaimFreeId(collectionName, item);
     const docId = item._doc_id || db.collection(collectionName).doc().id;
     item._doc_id = docId;
     await db.collection(collectionName).doc(docId).set(item);
     return true;
-  }catch(e){ console.error('fsSetItem failed:', e); return false; }
+  }catch(e){
+    console.error('fsSetItem failed:', e);
+    // 編號搶到了但正式寫入失敗:把佔位文件放掉,下次新增才不會平白跳號
+    if(claim){ try{ await claim.delete(); }catch(_e){} }
+    return false;
+  }
 }
 async function fsDeleteItem(collectionName, id, docId){
   try{

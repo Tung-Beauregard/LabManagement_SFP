@@ -11,7 +11,7 @@
 - 部署位置:`tung-beauregard.github.io/LabManagement_SFP/`
 - 後端:Firebase Firestore(專案 `labmanagementapp-d5b03`),Firebase SDK 10.13.2+
 - 前端:單一 HTML,inline CSS 與 JavaScript,無建置步驟
-- 檔案規模:約 9000 行
+- 檔案規模:約 12000 行
 
 系統管理:藥品清單、試材清單、樣品清單、儀器管理、值週生輪值、圖書借閱、採購與報修流程、圖譜分析工具。
 
@@ -69,6 +69,7 @@
 - 共用設定用 blob 文件存在 `lab-data/` 底下(如 `system-settings-data`),用 `window.storage.set(KEY, JSON.stringify(data), true)` 寫入、`watchBlob(KEY, cb)` 即時同步
 - 扣庫存、值週打勾、圖書借還都用 `runTransaction`,避免並發覆蓋
 - 整批覆蓋(`fsReplaceAll`)只用於匯入備份,平常新增編輯都是單筆 `fsSetItem`
+- **編號搶號(`id-claims` 集合)**:`CHEM-0012`、`W_Au_L_MeAcE_01` 這類「前綴+序號」的 id 是前端從清單取最大值加一算出來的,兩個人同一瞬間新增會算出同一號。`fsClaimFreeId` 先查該集合有沒有同 id 的既有文件,再用 transaction 在 `id-claims` 建「集合__編號」的佔位文件;搶輸的那邊會自動往下一號試並 toast 告知。正式寫入失敗時佔位文件會放掉。規則還沒放行 `id-claims` 或離線時 transaction 失敗,就退回只做查詢檢查,新增不會因此壞掉。佔位文件刻意不隨項目刪除而刪除,已印成 QR 的編號不該被重用
 
 ### 權限模型
 - 權限採 role 判斷(member / admin / super_admin),用戶端與規則層雙重把關
