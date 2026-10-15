@@ -59,7 +59,7 @@
 - 所有顏色都走 CSS 變數(`--panel`, `--ink`, `--pine`, `--line` 等),日夜兩套變數對稱定義。新增 UI 時**務必用變數,不要硬編碼顏色**,否則夜間模式會出現亮塊
 - **第二個軸:介面風格**。`<html data-skin="botanic">` 是「標本館」風格(日間 = 植物標本館:羊皮紙底、深林綠、襯線標題;夜間 = 實驗室儀表:深墨綠底、螢光薄荷、等寬字標題),同樣存 localStorage(`ui-skin`),與日夜獨立。所有規則都以 `html[data-skin="botanic"]` 為前綴疊在經典版之上,沒有這個屬性就是原本的經典日夜版,不能動到經典版的規則。側欄 emoji 圖示在這個風格下由 CSS mask 的 SVG 線條圖示取代(以 `data-page` 選擇),按鍵浮起、主要按鈕光暈、頁面淡入、彈窗放大、側欄底塊滑動這些動態也只在這個風格下啟用,並尊重 `prefers-reduced-motion`
 - 標本館風格的「開場自畫線」:頁首底線用 `.hdr::after` 的 scaleX 畫出;首頁右上角的植物線稿(日)與層析圖(夜)是 `#page-dashboard` 裡的 inline SVG(`.bot-leafmark` / `.bot-ticmark`),用 `pathLength="1"` 加 stroke-dashoffset 描線,每次進首頁重播。夜間版另有同步 LED(`#syncLed`,離線或即時同步失敗轉琥珀色)與統計數字跑動、低庫存數字閃爍(MutationObserver 監看 `.stat .n` 與 `.dash-chip .n`)
-- **Ctrl+K / Cmd+K 快速搜尋**(所有風格都有,標本館風格側欄另有按鈕):`cmdkIndex()` 每次開啟時從 items / matItems / smpItems / 儀器 / libraryBooks / todoItems 現算索引,頁面與動作永遠在最前;選到項目會先 `switchPage` 再開該項目的詳細頁。清單每一項有框線、項目之間留 6px,避免手機上點錯
+- **Ctrl+K / Cmd+K 快速搜尋**(所有風格都有,標本館風格側欄另有按鈕):`cmdkIndex()` 每次開啟時從 items / matItems / smpItems / 儀器 / libraryBooks / todoItems 現算索引,另外也收已經即時同步在手上的 Firebase 資料:圖譜(spectraItems,含 GC 峰的成分名)、採買及報修(cpItems)、今天以後的儀器預約(iulItems)、藥品使用登記(culItems,非管理員只看自己的)、GC 的 KI 資料庫(gcKidb,選了會切到 GC 並送 `{gcOpenKi:名稱}` 打開 KI 面板篩出那一筆);儀器的使用步驟與維修紀錄文字放在儀器的關鍵字裡。頁面與動作永遠在最前;有輸入時每一類最多 6 筆,使用紀錄才不會把其他結果擠掉;選到項目會先 `switchPage` 再開該項目的詳細頁。清單每一項有框線、項目之間留 6px,避免手機上點錯
 
 ---
 
@@ -92,7 +92,7 @@
 - **總管理員功能**:側邊欄頁籤排序與改名(Firestore 同步)、儀器與存放位置的新增/編輯/刪除
 - **側邊欄頁籤名稱**:預設名稱取自 HTML(`DEFAULT_NAV_LABELS`),改過的存在 `system-settings-data` 的 `nav_labels`({頁面: 名稱},最多 12 字,和預設相同就不存)。開頁時把「文字剛好等於預設名稱」的地方記在 `NAV_LABEL_TARGETS`(側欄、該頁頁首 h1、首頁快捷按鈕),`applyNavLabels` 只換這些;快速搜尋的頁面項目用 `navLabel()`,舊名稱留在搜尋關鍵字裡。`normalizeSystemSettings` 會丟掉不認得的鍵,新增設定欄位一定要加進去
 - **首頁頁籤**:不在首頁時也有淺底色、左側色條與細框(`.nav-item[data-page="dashboard"]:not(.active)`),和下面的頁籤多隔 10px
-- **側欄自動收合**(桌機有滑鼠才有,`@media (min-width:681px) and (hover:hover)`;手機抽屜與觸控平板不變):平常只剩 60px 寬的一排圖示,滑鼠移上去(或鍵盤 `:focus-visible` 移進去)稍停才展開成 196px、浮在內容上,展開時用負的 `margin-right` 抵掉多出來的寬度,右邊內容不跳。所有列都不換行,展開前後圖示位置不變(才不會點錯),所以自動收合時太長的頁籤名稱(約 8 個字以上)展開後會被截掉;收合時名稱、登出、檢查更新用 `visibility` 藏起來(點不到),版本列只留同步燈。側欄底部「固定展開側欄」切 `html[data-nav="pin"]`(localStorage `nav-pin`,和主題一樣在 `<head>` 先套用)就是原本的樣子;切換後送一次 `resize` 讓圖表與選中底塊重新量
+- **側欄自動收合**(桌機有滑鼠才有,`@media (min-width:681px) and (hover:hover)`;手機抽屜與觸控平板不變):平常只剩 60px 寬的一排圖示,滑鼠移上去(或鍵盤 `:focus-visible` 移進去)稍停才展開成 196px、浮在內容上,展開時用負的 `margin-right` 抵掉多出來的寬度,右邊內容不跳。所有列都不換行,展開前後圖示位置不變(才不會點錯),所以自動收合時太長的頁籤名稱(約 8 個字以上)展開後會被截掉;收合時名稱、身分標籤、登出、檢查更新用 `visibility` 藏起來(點不到),身分改顯示一個正方形小方塊(`#ub_mini`,和手機版頭像同一個字,`renderUserBadge` 填),版本列只留同步燈。身分標籤(`#ub_code`)一定要跟著不換行,否則收合時會被擠成一字一行,也讓展開前後高度不同、圖示跳動(踩過的坑)。側欄底部「固定展開側欄」切 `html[data-nav="pin"]`(localStorage `nav-pin`,和主題一樣在 `<head>` 先套用)就是原本的樣子;切換後送一次 `resize` 讓圖表與選中底塊重新量
 - **試材清單 / 樣品清單**:樣品以 `material_id` 連回試材,兩邊的詳細卡可互相跳轉;細節見下一節
 
 ---
@@ -160,6 +160,7 @@
 - iframe 寬度 860px 以下時左欄(載入、樣品、參數)疊到上面:載入與樣品並排,參數排成多欄小格(`.rail .ctl` 用 auto-fill grid),480px 以下才變一欄。這段 media query 要放在 `.rail` / `.ctl` 的基本規則之後,放前面會被蓋掉(以前的版本就是這樣,疊上去後每一格都拉滿整列)
 - **iframe 高度回報只量 `.top` + `.wrap`,不可量 `body`**。KI 候選選單這類浮層掛在 body 上會把 body 撐高,父層跟著加高 iframe,浮層又重新定位,形成無限來回跳動(踩過的坑)。另外底部固定多報 250px,因為選單是 `position:fixed`,不留空間會被 iframe 邊界切掉
 - 功能:CSV 解析(Agilent/Shimadzu/Thermo)、ALS 基線、積分找峰、Kovats KI、萜類 KI 資料庫、成分表編輯、烷類 RT 組合、疊圖(樣品列多選)、局部放大插圖、峰標籤拖曳、單檔完整匯出入(自帶 TIC 與所有設定)、存入圖譜藝廊
+- **局部放大插圖**(`s.insets`,最多 4 組):面板自動排在右上,按住外框可以拖(位移存在各組的 `dx` / `dy`,限制在圖框內;連接虛線面板在選取框上方接底邊、拖到下方接頂邊);面板裡的編號也能拖(存在各組的 `lp`,以峰頂 RT 為鍵,和主圖的 `labelPos` 分開)。「放大圖回原位」清掉這些位移。主圖上放大區間內的峰怎麼標由 `s.izMain` 決定:`all` 全部標、`big` 只標 Area% ≥ `s.izMainPct`(預設 1)、`none` 不標只在放大圖標;放大圖裡一律全部標。單檔匯出入帶著 `izMain` / `izMainPct`
 - **疊圖的標準化與基線平滑**(`overlaySVG`,疊圖模式說明列上的兩個勾選框,存在 `params.ovNorm` / `params.ovSmooth`,預設都開):標準化時每個樣品以自己最高峰的峰頂(原始訊號 `hy`,bleed 標記之後的不算,`ovRef`)為 100%,Y 軸改成 Relative abundance (%)、固定到 110%,溶劑峰這類更高的部分被圖框裁掉(`clipPath#ovclip`);沒有偵測到峰的樣品用積分範圍內的最大值。和最濃的樣品比放大 1.5 倍以上的樣品做基線平滑(`ovSmoothBase`):峰的範圍(`il`–`ir`)照原始數據畫,峰外用移動平均(視窗依放大倍數 7–41 點,平均前先把峰換成兩端連線),峰邊緣前後 4 點漸變。積分參數是全域共用的,濃淡差很多時淡的樣品可能抓不到峰。左欄參數改動時 `params` 用 `Object.assign` 重建,左欄以外的設定才不會被洗掉
 - 修改 GC-MS 的流程:解出 base64 → 改 → 語法檢查 iframe 內 JS → 重新 base64 → 回填 `GC_IFRAME_B64`
 - **匯出 Word(期刊格式)**:iframe 的「匯出 Word」只送 `{gcExportDocx, rows, svg, title}` 給主系統,主系統用 JSZip(cdnjs)直接組 OOXML(`gcExportDocx` / `gdxBuildParts`):A4、字 12pt、中文標楷體英數 Times New Roman、三線表 0.75pt、E-/Z- 斜體、Area% 前二高差距 <5 兩列紅粗否則只標最高、≥10 未標紅整列紫、右下「精油量/鮮重/萃取率」註記。重量可從樣品清單帶入
