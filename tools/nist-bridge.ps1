@@ -156,48 +156,245 @@ function Convert-Greek([string]$s) {
   $s = [regex]::Replace($s, '<<([A-Za-z]+)>>', $ev)
   [regex]::Replace($s, '(?<![A-Za-z])\.?(alpha|beta|gamma|delta|epsilon|omega)\.?(?![A-Za-z])', $ev, 'IgnoreCase')
 }
-# NIST's primary name is often a CAS index name ("1,3-Cyclohexadiene, 1-methyl-4-(1-methylethyl)-");
-# then take the first synonym that looks like a common name (".alpha.-Terpinene")
-function Select-Name([string]$primary, $syns) {
-  if ($primary -notmatch ', ') { return $primary }
-  foreach ($s in $syns) {
-    if ($s.StartsWith('$:') -or $s -match ', ' -or $s.Length -gt 40 -or $s -match '#|\(Salt/Mix\)|^NSC |^UN ' -or
-        $s -cmatch '^[^a-z]*$' -or [regex]::Matches($s, '[A-Za-z]').Count -lt 3) { continue }
-    return $s
+# NIST's other plain-text marks: (.+/-.) (.+.) (.-.) for (±) (+) (-), and CAS index edition tags such as
+# "Lactide (6CI)". Greek letters as above; NIST writes the double-bond Δ in lowercase too (.delta.5,7-), so a δ
+# right before a locant becomes Δ (δ-3-Carene and δ-Cadinene keep their δ: a hyphen comes first).
+$RxNistHint = New-Object Text.RegularExpressions.Regex('[.<]|alpha|beta|gamma|delta|epsilon|omega|CI\)', 'IgnoreCase')
+function Format-NistName([string]$s) {
+  if (-not $RxNistHint.IsMatch($s)) { return $s }
+  $s = $s.Replace('.+/-.', '±').Replace('(.+.)', '(+)').Replace('(.-.)', '(-)')
+  $s = [regex]::Replace($s, '\s*\(\d*CI\)\s*$', '')
+  return [regex]::Replace((Convert-Greek $s), '(?<![A-Za-z])δ(?=\(?\d)', 'Δ')
+}
+# Which name to show for a CAS. NIST's primary name is sometimes a CAS index name
+# ("1,3-Cyclohexadiene, 1-methyl-4-(1-methylethyl)-") or a semi-systematic one ("Cadina-1(10),4-diene") while a
+# synonym is the name people use (".alpha.-Terpinene", "δ-Cadinene"). Every name gets a "how systematic" score:
+# CAS index comma, bicyclo / stereo brackets, ξ, stereo locants, substituent prefixes with locants,
+# parent-hydride stems, 3 per locant. A name is replaced only when it scores 15 or more (20 or more when it is a
+# plain substituent name with no brackets, stereo, ξ or parent-hydride stem: 6,10-Dimethyl-5,9-undecadien-2-one,
+# 1,1,6-Trimethyl-1,2-dihydronaphthalene and 5,6,7,8,4'-Pentamethoxyflavone are what people write, and NIST lists
+# Dihydropseudoionone, Dehydro-ar-ionene and Ponkanetin before Geranylacetone or Tangeretin), and only by a
+# synonym that scores 9 or less and at least 10 lower. So 1,8-Cineole, 1-Octen-3-ol, 2-Methyl-1-butene and
+# 1,2,3-Trimethoxybenzene stay as NIST has them, and a systematic name is never swapped for another systematic one.
+# Synonyms that are registry or product codes (Surfynol 104, Rcra waste number U208), annotations (Steriochemistry
+# unspecified, Dioxin (herbicide contaminant)), bare class words (Carboximide, Alkaloid A), acronyms, all-caps,
+# very long, or longer than the name they would replace are never chosen. Some NIST records carry another compound's
+# synonym list (14504-09-7, C6Cl6O2, lists 8-Bromoguanine), so a pick must also fit the record's formula: no name
+# word for an element the formula lacks, a word for every Br, Cl, F, I, S, P or Si it has, and no alcohol / ketone /
+# aldehyde / ether mix-up with the name it replaces (4-Methyl-1-phenylpentan-3-ol is not Isopropyl phenethyl ketone,
+# and 3-ethoxy-3,7-dimethyl-1,6-octadiene is not Ethyl linalool). A pick may not add E/Z or cis/trans the name
+# did not have, nor drop the locants of a multiplied substituent (2,3,5-Trimethyl-6-butylpyrazine is not just
+# Butyltrimethylpyrazine).
+$RxLocant  = [regex]'(?<=^|[-,(\[ ])\d+[a-z]?(?=[-,()\]'']|$)'
+$RxSubst   = New-Object Text.RegularExpressions.Regex('\d[\d,a-z'']*-(?:di|tri|tetra|penta|hexa|hepta|octa|nona|deca)?(?:methyl|ethyl|propyl|butyl|pentyl|hexyl|isopropyl|methoxy|ethoxy|hydroxy|oxo|methylene|methylidene|ethenyl|ethylidene|propenyl|vinyl|acetyl|formyl|hydro)|methylethyl|methylethenyl|ylidene|propan-2-yl|prop-1-en-2-yl|carboxaldehyde', 'IgnoreCase')
+$RxStereo  = [regex]'\(\d+[a-z]?[RSαβξ]|\brel\b|[RS]\*'
+# bicyclo / spiro numbers (bicyclo[3.1.1]) and stereo descriptors in brackets ([1S-(1α,4aβ)]-, [S-(Z,E)]-);
+# fusion locants (Benz[a]anthracene, Imidazo[1,2-b]pyridazine) belong to ordinary names
+$RxBracket = [regex]'\[\d+\.\d+|\[[^\]]*(?:\d[RS]\b|[αβξ]|\b[RS]-)'
+$RxParent  = [regex]'^[A-Z][a-z]+a-\d'
+$RxEZ      = [regex]'\(\d+[EZ]'
+$RxOptical = [regex]'^(?:\([+\-−±]\)-|\(\+/-\)-|\([RS]\)-|D-|L-|DL-|dl-|d-|l-)'
+# any stereo information at all; a pick may only carry E/Z or cis/trans when the name it replaces had some
+$RxAnyStereo = [regex]'\([^)]*\b[EZRS]\b[^)]*\)|(?<![A-Za-z])(?:cis|trans|endo|exo|rel|rac)(?=[-,])|[αβξ±]|\(\d+[a-z]?[RSαβξEZ]|[EZ]-'
+$RxAddedStereo = [regex]'\((?:[EZ])(?:,[EZ])*\)|(?<![A-Za-z])(?:cis|trans)(?=[-,])'
+$RxJunk    = New-Object Text.RegularExpressions.Regex('#|\(Salt/Mix\)|^(?:NSC|UN|NCI|CCRIS|HSDB|EINECS|AI3|BRN|FEMA|UNII|CHEBI|DTXSID|MFCD|ZINC|SCHEMBL)\b|\d{5,}|\b(?:compound|inhibitor|derivative|oil|hallucinogen|steroid|unspecified|related|waste|number|parent|artifact|activator|contaminant|herbicide|insecticide|pesticide|fungicide|antioxidant|plasticizer|reagent|impurity|metabolite|isomer|alkaloid)\b|methylethyl|^(?:Di|Tri)?(?:carboximide|imide|amide|lactone|ester|ketone|aldehyde|alcohol|ether|acid)$', 'IgnoreCase')
+# trailing product codes (Ionox 100, Permethyl 99A, Surfynol TG, Rcra ... U208), a trailing qualifier in
+# parentheses after a space (Dihydroxytoluene (Related)), and names that start with an acronym word (MP diol glycol)
+$RxTrail   = [regex]'\s(?:\d+[A-Za-z]*|[A-Z]\d+|[A-Z]{2})$|\s\([^)]*[A-Za-z]{3,}[^)]*\)|^[A-Z]{2,}\s'
+# a single trailing capital, roman numeral or "Base" is usually a catalogue name (Grotan B, Chroman I); such a
+# pick is used only when no other synonym qualifies (Cembrene A has no better one)
+$RxWeakEnd = [regex]'\s(?:[A-Z]|[IVX]+|Base)$'
+# a lowercase word after the first one has to look like chemistry (acetate, oxide, ...); "Kodaflex txib" does not
+$RxChemWord = [regex]'^(?:[a-z]*(?:ane|ene|yne|ol|al|one|ate|ite|ide|ine|yl|ic|ose|oid|in|ium)|acid|ester|ether|alcohol|glycol|lactone|anhydride|ketone|aldehyde|oxide|epoxide|amine|amide|nitrile|acetal|hydrate)$'
+# product and registry codes (MGA 100, JWH-018) and acronyms (TMPD Glycol, Butyl-PBD); case-sensitive, so
+# Terpinen-4-ol and trans-2-Hexenal are not caught. Also the ASCII Greek of old names (2-Methyltetrahydro-b-carboline)
+$RxCode    = [regex]'\b[A-Z]{2,}[\s\-]?\d+\b|[A-Z]{3}|(?<![A-Za-z])[abgd]-(?=[a-z])'
+# a lowercase first letter is only normal for stereo and position prefixes (trans-, p-, tert-, ...)
+$RxLowerOk = [regex]'^(?:cis|trans|endo|exo|syn|anti|erythro|threo|meso|rac|rel|ent|epi|allo|sec|tert|iso|neo|nor|dl|[ompndl])[-,]'
+# a multiplied substituent; when the replaced name gives its locants, a pick without digits loses the isomer
+$RxMulti   = New-Object Text.RegularExpressions.Regex('(?:di|tri|tetra|penta|hexa)(?:methyl|ethyl|propyl|butyl|chloro|fluoro|bromo|iodo|methoxy|hydroxy|amino|nitro)', 'IgnoreCase')
+# also refused: a bare prefix ("trans-"), and the old Δ double-bond notation (Ergosta-5,7-dien-3β-ol is the
+# name in use, not Δ5,7-Ergostadienol)
+function Test-UsableSynonym([string]$s) {
+  if (-not ($s.Length -ge 5 -and $s.Length -le 60 -and $s.Split(' ').Count -le 4 -and -not $s.StartsWith('$:') -and
+    -not $s.EndsWith('-') -and -not $s.StartsWith('Δ') -and -not $RxJunk.IsMatch($s) -and -not $RxCode.IsMatch($s) -and -not $RxTrail.IsMatch($s) -and
+    $s -cmatch '[a-z]{3}' -and ($s -cmatch '^[^a-z]' -or $RxLowerOk.IsMatch($s)))) { return $false }
+  $w = $s.Split(' ')
+  for ($i = 1; $i -lt $w.Count; $i++) { if ($w[$i] -cmatch '^[a-z]+$' -and -not $RxChemWord.IsMatch($w[$i])) { return $false } }
+  # a three-letter-or-longer word with no vowel is an abbreviation (Hcdd)
+  foreach ($x in ($s -split "[\s\-(),']")) { if ($x -cmatch '^[A-Za-z]{3,}$' -and $x -notmatch '[aeiouy]') { return $false } }
+  return $true
+}
+# element -> the name fragments that stand for it
+$ElemWords = @{ Br = 'brom'; Cl = 'chlor'; F = 'fluor'; I = 'iod'; S = 'thi|sulf|sulph|mercapt'; P = 'phosph'; Si = 'sil'
+  N = 'nitr|amino|amine|amide|aza|pyrid|indol|imidazol|purin|guanin|cytosin|quinolin|ephedrin|nicotin|cyan' }
+$RxFormula = [regex]'(?m)^Formula: ([^\r\n]*)'
+function Get-NameClass([string]$s) {
+  $l = $s.ToLowerInvariant()
+  if ($l -match 'ketone|one\b') { return 'ketone' }
+  if ($l -match 'alcohol|ol\b|hydroxy') { return 'alcohol' }
+  if ($l -match 'aldehyde|al\b') { return 'aldehyde' }
+  if ($l -match 'ether|oxy\b|(?:meth|eth|prop|but|pent|hex|benzyl|phen)oxy') { return 'ether' }
+  return ''
+}
+# $els: element symbols of the record's formula (empty when NIST gives none: then only the class check applies)
+function Test-FormulaFit([string]$pick, [string]$cur, $els) {
+  if ($els.Count -gt 0) {
+    $n = $pick.ToLowerInvariant()
+    foreach ($e in $ElemWords.Keys) {
+      $has = $els.Contains($e); $named = $n -match $ElemWords[$e]
+      if ($named -and -not $has) { return $false }
+      if ($has -and -not $named -and $e -ne 'N') { return $false }
+    }
   }
-  return $primary
+  $a = Get-NameClass $pick; $b = Get-NameClass $cur
+  return (-not $a -or -not $b -or $a -eq $b)
+}
+function Get-LocantFree([string]$s) { return ([regex]::Replace($s, "[\d,'\-()\[\]\s]", '')).ToLowerInvariant() }
+function Get-NameScore([string]$s) {
+  $n = 3 * $RxLocant.Matches($s).Count
+  if ($s.Contains(', ')) { $n += 100 }
+  if ($RxBracket.IsMatch($s)) { $n += 30 }
+  if ($s.Contains('ξ')) { $n += 20 }
+  if ($RxStereo.IsMatch($s)) { $n += 15 }
+  if ($RxSubst.IsMatch($s)) { $n += 4 }
+  if ($RxParent.IsMatch($s)) { $n += 9 }
+  if ($RxEZ.IsMatch($s)) { $n += 4 }
+  if ($RxOptical.IsMatch($s)) { $n += 2 }
+  return $n
+}
+# $primary is already formatted; the synonyms come from $block (the record's lines between Name and CASNO).
+# A CAS index name is first swapped for the first synonym that is not one, as earlier versions did. The result
+# (or a primary that was not a CAS index name) is then replaced as described above. Among the qualifying synonyms,
+# NIST's order decides (picking the lowest score instead turned 2,4-Lutidine into α,γ-Dimethylpyridine), except
+# that one of the same class as the name it replaces comes first (Brassicasterol over Brassicasterin) and a
+# catalogue-looking ending comes last. When the pick carries an optical prefix and NIST also lists the plain name,
+# the plain name is used ((+)-δ-Cadinene -> δ-Cadinene).
+$RxSynon = [regex]'(?m)^Synon: ([^\r\n]*)'
+function Select-Name([string]$primary, [string]$block) {
+  $cur = $primary
+  if ($primary.Contains(', ')) {
+    $first = $null
+    foreach ($sm in $RxSynon.Matches($block)) {
+      $s = $sm.Groups[1].Value.Trim()
+      if ($s.StartsWith('$:') -or $s -match ', ' -or $s.Length -gt 40 -or $s -match '#|\(Salt/Mix\)|^NSC |^UN ' -or
+          $s -cmatch '^[^a-z]*$' -or [regex]::Matches($s, '[A-Za-z]').Count -lt 3) { continue }
+      $first = $s; break
+    }
+    if (-not $first) { return $primary }
+    $cur = Format-NistName $first
+  }
+  $ps = Get-NameScore $cur
+  $plainName = -not ($RxBracket.IsMatch($cur) -or $cur.Contains('ξ') -or $RxStereo.IsMatch($cur) -or $RxParent.IsMatch($cur) -or $RxEZ.IsMatch($cur))
+  if ($ps -lt 15 -or ($plainName -and $ps -lt 20)) { return $cur }
+  $bare = Get-LocantFree $cur
+  $curStereo = $RxAnyStereo.IsMatch($cur)
+  $curMulti = @(if ($RxLocant.IsMatch($cur)) { $RxMulti.Matches($cur) | ForEach-Object { $_.Value.ToLowerInvariant() } })
+  $curClass = Get-NameClass $cur
+  $els = New-Object 'Collections.Generic.HashSet[string]'
+  $fm = $RxFormula.Match($block)
+  if ($fm.Success) { foreach ($em in [regex]::Matches($fm.Groups[1].Value, '[A-Z][a-z]?')) { [void]$els.Add($em.Value) } }
+  $ok = New-Object 'Collections.Generic.List[string]'
+  foreach ($sm in $RxSynon.Matches($block)) {
+    $s = Format-NistName $sm.Groups[1].Value.Trim()
+    # a common name is shorter than the systematic one it stands for; the longer picks were all worse.
+    # The same name without its locants is no improvement (2,4,5-Trimethylthiazole -> Trimethylthiazole loses
+    # which isomer it is)
+    if ($s.Length -gt $cur.Length -or -not (Test-UsableSynonym $s) -or (Get-LocantFree $s) -eq $bare) { continue }
+    $sc = Get-NameScore $s
+    if ($sc -gt 9 -or $sc -gt $ps - 10 -or -not (Test-FormulaFit $s $cur $els)) { continue }
+    if (-not $curStereo -and $RxAddedStereo.IsMatch($s)) { continue }
+    if ($s -notmatch '\d' -and @($RxMulti.Matches($s) | Where-Object { $curMulti -contains $_.Value.ToLowerInvariant() }).Count -gt 0) { continue }
+    if (-not $ok.Contains($s)) { $ok.Add($s) }
+  }
+  if ($ok.Count -eq 0) { return $cur }
+  $pick = $null
+  foreach ($pass in 1..3) {
+    foreach ($s in $ok) {
+      $weak = $RxWeakEnd.IsMatch($s)
+      if (($pass -eq 1 -and $curClass -and -not $weak -and (Get-NameClass $s) -eq $curClass) -or ($pass -eq 2 -and -not $weak) -or $pass -eq 3) { $pick = $s; break }
+    }
+    if ($pick) { break }
+  }
+  if ($RxOptical.IsMatch($pick)) { $plain = $RxOptical.Replace($pick, ''); if ($ok.Contains($plain)) { return $plain } }
+  return $pick
 }
 $NameFile = Join-Path $WorkDir 'nist_names.tsv'
+# First line of the table. Tables built by older versions of this script (no header, CAS index rule only)
+# are rebuilt once; older scripts skip this line because it has no tab.
+$NameTableTag = '#sfplab-names v2'
+function Test-NameTableTag {
+  if (-not (Test-Path $NameFile)) { return $false }
+  $r = New-Object IO.StreamReader($NameFile, [Text.Encoding]::UTF8)
+  try { return ($r.ReadLine() -eq $NameTableTag) } finally { $r.Close() }
+}
+function Get-TableCount {
+  if (-not (Test-Path $NameFile)) { return 0 }
+  $n = 0; foreach ($l in [IO.File]::ReadLines($NameFile)) { if ($l.IndexOf("`t") -gt 0) { $n++ } }
+  return $n
+}
 function Build-NameTable {
   $riLib = Join-Path $NistDir 'nist_ri'; $l2n = Join-Path $NistDir 'lib2nist.exe'; $dbu = Join-Path $riLib 'USER.DBU'
-  if (-not (Test-Path $dbu) -or -not (Test-Path $l2n)) { return $false }
-  if ((Test-Path $NameFile) -and (Get-Item $NameFile).LastWriteTime -gt (Get-Item $dbu).LastWriteTime) { return $true }
-  Write-Host '第一次啟動:從 NIST 的 RI 資料庫建立 CAS 對照表,約需四分鐘,會跳出 lib2nist 視窗,之後不用再做…'
-  $ini = Join-Path $WorkDir 'lib2nist.ini'; $msp = Join-Path $WorkDir 'nist_ri.msp'; $log = Join-Path $WorkDir 'lib2nist.log'
-  if (-not ((Test-Path $msp) -and (Get-Item $msp).LastWriteTime -gt (Get-Item $dbu).LastWriteTime)) {
-    # an .ini on the command line keeps lib2nist from writing its settings into the registry;
-    # do not start it hidden: with -WindowStyle Hidden it sits idle and never writes the output
-    [IO.File]::WriteAllText($ini, "[Directory]`r`nNIST=<None>`r`n[Output]`r`nDB=0`r`nText=1`r`nTextFileType=0`r`nIncludeSynonyms=1`r`nKeepIDs=1`r`n", $Latin1)
-    Start-Process -FilePath $l2n -ArgumentList '/log1', "`"$log`"", "`"$ini`"", '/OutMSP', '/NoAlias', '/AllowNoPeaks', "`"$riLib`"", "`"=$msp`"" -Wait
-  }
-  if (-not (Test-Path $msp)) { return $false }
-  Write-Host '整理對照表…'
-  # one regex pass over the whole export (a line-by-line PowerShell loop takes minutes); only about 39k of the
-  # 140k compounds have a CAS number, the rest are listed with CASNO: 0 and cannot be matched anyway
-  $text = [IO.File]::ReadAllText($msp, $Latin1)
-  $rx = New-Object Text.RegularExpressions.Regex('^Name: ([^\r\n]*)((?:\r?\n(?!CASNO: |Name: )[^\r\n]*)*)\r?\nCASNO: ([1-9][0-9]{4,})\r?$', [Text.RegularExpressions.RegexOptions]::Multiline)
-  $sb = New-Object Text.StringBuilder
-  foreach ($m in $rx.Matches($text)) {
-    $name = $m.Groups[1].Value; $cas = $m.Groups[3].Value; $syn = @()
-    if ($name.Contains(', ')) { $syn = @([regex]::Matches($m.Groups[2].Value, '(?m)^Synon: ([^\r\n]*)') | ForEach-Object { $_.Groups[1].Value }) }
-    $nm = Select-Name $name $syn
-    if ($nm.Contains('.')) { $nm = Convert-Greek $nm }
-    [void]$sb.Append($cas.Substring(0, $cas.Length - 3)).Append('-').Append($cas.Substring($cas.Length - 3, 2)).Append('-').Append($cas.Substring($cas.Length - 1)).Append("`t").Append($nm).Append("`n")
-  }
-  $text = $null
-  [IO.File]::WriteAllText($NameFile, $sb.ToString(), (New-Object Text.UTF8Encoding($false)))
-  Remove-Item -LiteralPath $msp
-  return $true
+  # cannot rebuild: keep using whatever table is there
+  if (-not (Test-Path $dbu) -or -not (Test-Path $l2n)) { return (Test-Path $NameFile) }
+  if ((Test-Path $NameFile) -and (Get-Item $NameFile).LastWriteTime -gt (Get-Item $dbu).LastWriteTime -and (Test-NameTableTag)) { return $true }
+  # One builder at a time: pressing the page's launch button again during the build starts a second copy of this
+  # script, which would otherwise read the half-written export or race on the table
+  $lockFile = Join-Path $WorkDir 'nist_names.lock'
+  try { $lock = [IO.File]::Open($lockFile, 'OpenOrCreate', 'ReadWrite', 'None') }
+  catch { Write-Host 'CAS 對照表正在由另一個連線程式視窗建立,這個視窗不用開,會自動關掉。'; Start-Sleep -Seconds 3; exit 0 }
+  try {
+    Write-Host '從 NIST 的 RI 資料庫建立(或更新)CAS 對照表,約需四分鐘,會跳出 lib2nist 視窗,請不要關掉它,之後不用再做…'
+    $ini = Join-Path $WorkDir 'lib2nist.ini'; $msp = Join-Path $WorkDir 'nist_ri.msp'; $log = Join-Path $WorkDir 'lib2nist.log'
+    if (-not ((Test-Path $msp) -and (Get-Item $msp).LastWriteTime -gt (Get-Item $dbu).LastWriteTime)) {
+      # lib2nist writes to a .part file that becomes nist_ri.msp only when its log says it converted the whole
+      # library (its exit code is 0 even when it fails), so a window closed halfway never leaves a short export
+      $part = Join-Path $WorkDir 'nist_ri.part.msp'
+      if (Test-Path $part) { Remove-Item -LiteralPath $part }
+      # an .ini on the command line keeps lib2nist from writing its settings into the registry;
+      # do not start it hidden: with -WindowStyle Hidden it sits idle and never writes the output
+      [IO.File]::WriteAllText($ini, "[Directory]`r`nNIST=<None>`r`n[Output]`r`nDB=0`r`nText=1`r`nTextFileType=0`r`nIncludeSynonyms=1`r`nKeepIDs=1`r`n", $Latin1)
+      Start-Process -FilePath $l2n -ArgumentList '/log1', "`"$log`"", "`"$ini`"", '/OutMSP', '/NoAlias', '/AllowNoPeaks', "`"$riLib`"", "`"=$part`"" -Wait
+      $logText = if (Test-Path $log) { [IO.File]::ReadAllText($log, $Latin1) } else { '' }
+      $i = $logText.LastIndexOf('conversion into text file started')
+      $done = $i -ge 0 -and $logText.Substring($i) -match 'Converted ([1-9]\d*) spectra'
+      if (-not $done -or -not (Test-Path $part)) {
+        if (Test-Path $part) { Remove-Item -LiteralPath $part }
+        Write-Host 'lib2nist 沒有完成匯出(視窗被關掉,或出了錯),先沿用原本的 CAS 對照表,下次啟動再試。'
+        return (Test-Path $NameFile)
+      }
+      Move-Item -LiteralPath $part -Destination $msp -Force
+    }
+    Write-Host '整理對照表…'
+    # one regex pass over the whole export (a line-by-line PowerShell loop takes minutes); only about 39k of the
+    # 140k compounds have a CAS number, the rest are listed with CASNO: 0 and cannot be matched anyway
+    $text = [IO.File]::ReadAllText($msp, $Latin1)
+    $rx = New-Object Text.RegularExpressions.Regex('^Name: ([^\r\n]*)((?:\r?\n(?!CASNO: |Name: )[^\r\n]*)*)\r?\nCASNO: ([1-9][0-9]{4,})\r?$', [Text.RegularExpressions.RegexOptions]::Multiline)
+    $sb = New-Object Text.StringBuilder
+    [void]$sb.Append($NameTableTag).Append("`n")
+    $count = 0
+    foreach ($m in $rx.Matches($text)) {
+      $name = $m.Groups[1].Value.Trim(); $cas = $m.Groups[3].Value
+      $name = Format-NistName $name
+      $nm = Select-Name $name $m.Groups[2].Value
+      [void]$sb.Append($cas.Substring(0, $cas.Length - 3)).Append('-').Append($cas.Substring($cas.Length - 3, 2)).Append('-').Append($cas.Substring($cas.Length - 1)).Append("`t").Append($nm).Append("`n")
+      $count++
+    }
+    $text = $null
+    # a table much shorter than the one it would replace means a damaged export: keep the old one
+    $old = Get-TableCount
+    if ($old -gt 0 -and $count -lt 0.9 * $old) {
+      Write-Host "新的 CAS 對照表只有 $count 筆,比原本的 $old 筆少很多,先沿用原本的,下次啟動再試。"
+      Remove-Item -LiteralPath $msp
+      return $true
+    }
+    # written next to it and then moved into place, so a crash halfway never leaves a short table with the tag
+    $tmp = $NameFile + '.tmp'
+    [IO.File]::WriteAllText($tmp, $sb.ToString(), (New-Object Text.UTF8Encoding($false)))
+    Move-Item -LiteralPath $tmp -Destination $NameFile -Force
+    Remove-Item -LiteralPath $msp
+    return $true
+  } finally { $lock.Close() }
 }
 $Names = New-Object 'Collections.Generic.Dictionary[string,string]'
 if (Build-NameTable) {
