@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="app-version" content="2026.10.28.1">
+<meta name="app-version" content="2026.11.02.1">
 <meta name="theme-color" content="#1B4B43" id="metaThemeColor">
 <title>SFPLAB 實驗室管理系統</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>">
@@ -882,6 +882,39 @@
   #uvTablewrap th,#uvTablewrap td{text-align:left;padding:6px 9px;border-bottom:1px solid var(--line);}
   #uvTablewrap th{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);font-weight:700;}
   #uvTablewrap td.num{font-family:var(--mono);text-align:right;white-space:nowrap;}
+  /* DSC / TGA */
+  #sp-dsc .ftir-main,#sp-tga .ftir-main{min-width:0;}
+  .th-plotwrap{position:relative;}
+  .th-plotwrap.measuring{cursor:crosshair;touch-action:none;user-select:none;-webkit-user-select:none;}
+  .th-plotwrap.measuring svg{outline:2px dashed var(--pine);outline-offset:-2px;}
+  .th-selbox{position:absolute;background:var(--tint);border-left:1.5px solid var(--pine);border-right:1.5px solid var(--pine);opacity:.6;pointer-events:none;}
+  .th-measure{width:100%;margin-top:2px;}
+  .th-row3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
+  .th-sub{display:flex;align-items:center;gap:8px;margin:16px 0 6px;font-size:11px;letter-spacing:1.2px;color:var(--ink-soft);font-weight:700;min-height:28px;}
+  .th-subtools{margin-left:auto;letter-spacing:0;font-weight:400;}
+  .th-tablewrap{overflow-x:auto;}
+  .th-table{display:table;width:100%;border-collapse:collapse;font-size:13px;table-layout:auto;}
+  .th-table thead{display:table-header-group;}
+  .th-table tbody{display:table-row-group;}
+  .th-table tr{display:table-row;}
+  .th-table th,.th-table td{display:table-cell;width:auto;text-align:left;padding:6px 10px;border-bottom:1px solid var(--line);white-space:nowrap;}
+  .th-table th{font-size:11px;letter-spacing:.02em;text-transform:none;color:var(--ink-soft);font-weight:700;}
+  .th-table .num{font-family:var(--mono);text-align:right;}
+  .th-table td.nmc{font-family:var(--mono);max-width:220px;overflow:hidden;text-overflow:ellipsis;}
+  .th-table .swatch{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px;}
+  .th-table input,.th-table select{width:auto;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--panel-soft);color:var(--ink);font-size:12.5px;padding:4px 6px;font-family:var(--sans);}
+  .th-table select{max-width:300px;}
+  .th-table input[type=number]{width:96px;font-family:var(--mono);}
+  .th-table input.th-lab{width:84px;}
+  .th-muted{color:var(--ink-soft);font-size:11.5px;}
+  .th-x{border:0;background:none;color:var(--ink-soft);cursor:pointer;padding:2px 6px;border-radius:4px;font-size:13px;}
+  .th-x:hover{color:var(--danger);background:var(--panel-soft);}
+  #galDetailBody table.th-table{margin-top:0;}
+  #galDetailBody .th-table th{font-size:11px;letter-spacing:.02em;text-transform:none;}
+  #galDetailBody .th-table th.num{text-align:right;}
+  #galDetailBody .th-table tbody tr{cursor:default;}
+  #galDetailBody .th-table tbody tr:hover{background:none;}
+  .th-askcurve select{width:100%;margin-top:12px;border:1px solid var(--line);border-radius:var(--radius-sm);padding:8px 10px;font-size:13px;background:var(--panel-soft);color:var(--ink);font-family:var(--sans);}
   #ftirTablewrap table,#galDetailBody table{width:100%;border-collapse:collapse;margin-top:14px;font-size:13px;}
   #ftirTablewrap th,#ftirTablewrap td,#galDetailBody th,#galDetailBody td{text-align:left;padding:6px 9px;border-bottom:1px solid var(--line);}
   #ftirTablewrap th,#galDetailBody th{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);font-weight:700;}
@@ -1935,8 +1968,216 @@
       <div class="sp-panel" id="sp-gc">
         <iframe id="gcFrame" title="GC-MS TIC Bench" style="width:100%;border:0;display:block;min-height:640px;background:var(--panel);"></iframe>
       </div>
-      <div class="sp-panel" id="sp-tga"><div class="sp-placeholder"><div class="sp-ph-icon">🔥</div><b>TGA 熱重分析</b><span>這個模組還在規劃中,之後會加入資料上傳與圖譜分析。</span></div></div>
-      <div class="sp-panel" id="sp-dsc"><div class="sp-placeholder"><div class="sp-ph-icon">📉</div><b>DSC 示差掃描熱量</b><span>這個模組還在規劃中,之後會加入資料上傳與圖譜分析。</span></div></div>
+      <div class="sp-panel" id="sp-tga">
+        <div class="ftir-grid">
+          <div class="ftir-side">
+            <div class="ftir-card">
+              <h3>曲線庫<span class="cnt" id="tgaLibCount"></span></h3>
+              <div class="ftir-drop" id="tgaDrop">
+                <strong>拖曳或點擊上傳</strong>
+                <small>PerkinElmer 匯出的 .csv / .txt,或整理好的 Excel(溫度欄 + 重量欄)</small>
+              </div>
+              <input type="file" id="tgaFile" accept=".csv,.txt,.xlsx,.xls" multiple class="visually-hidden-file">
+              <div class="ftir-lib" id="tgaLib"></div>
+              <div class="ftir-libtools">
+                <button class="btn btn-ghost btn-sm" id="tgaSelAll">全選疊圖</button>
+                <button class="btn btn-ghost btn-sm" id="tgaClearSel">取消選取</button>
+                <button class="btn btn-ghost btn-sm" id="tgaWipe">清空暫存</button>
+              </div>
+              <div class="ftir-hint">一個 Excel 有好幾組「溫度、重量」欄時,每組各是一條曲線。勾選 1 條＝單一曲線;勾選多條＝疊圖。名稱點兩下可改。上傳的曲線只暫存在這台電腦,按「存入圖譜」才會存進全實驗室共用的圖譜頁。</div>
+            </div>
+
+            <div class="ftir-card">
+              <h3>標題與座標軸</h3>
+              <label class="ftir-chk"><input type="checkbox" id="tgaShowTitle" checked>顯示標題</label>
+              <div class="field" style="margin-bottom:10px;"><input type="text" id="tgaTitle" placeholder="輸入圖表標題"></div>
+              <label class="ftir-chk"><input type="checkbox" id="tgaShowAxisTitles" checked>顯示座標軸文字</label>
+              <label class="ftir-chk"><input type="checkbox" id="tgaShowTickLabels" checked>顯示刻度數字</label>
+              <div class="field row2" style="margin-bottom:0;">
+                <div><label style="font-size:12px;">顯示起(°C)</label><input type="number" id="tgaXmin" placeholder="自動"></div>
+                <div><label style="font-size:12px;">顯示迄(°C)</label><input type="number" id="tgaXmax" placeholder="自動"></div>
+              </div>
+            </div>
+
+            <div class="ftir-card">
+              <h3>縱軸</h3>
+              <div class="field"><label style="font-size:12px;">TG 單位</label>
+                <div class="ftir-seg" id="tgaWunit"><button data-v="%" class="on">重量 %</button><button data-v="mg">mg</button></div>
+              </div>
+              <div class="th-row3 field">
+                <div><label style="font-size:12px;">TG 最小</label><input type="number" id="tgaWMin" step="any" placeholder="自動"></div>
+                <div><label style="font-size:12px;">TG 最大</label><input type="number" id="tgaWMax" step="any" placeholder="自動"></div>
+                <div><label style="font-size:12px;">刻度間距</label><input type="number" id="tgaWStep" step="any" min="0" placeholder="自動"></div>
+              </div>
+              <div class="field"><label style="font-size:12px;">DTG 單位</label>
+                <div class="ftir-seg" id="tgaDunit"><button data-v="C" class="on">每 °C</button><button data-v="min">每分鐘</button></div>
+              </div>
+              <div class="th-row3 field" style="margin-bottom:0;">
+                <div><label style="font-size:12px;">DTG 最小</label><input type="number" id="tgaDMin" step="any" placeholder="自動"></div>
+                <div><label style="font-size:12px;">DTG 最大</label><input type="number" id="tgaDMax" step="any" placeholder="自動"></div>
+                <div><label style="font-size:12px;">刻度間距</label><input type="number" id="tgaDStep" step="any" min="0" placeholder="自動"></div>
+              </div>
+              <div class="ftir-hint">空著就是自動:失重不多時 TG 軸自動放大到資料範圍,失重超過一半才畫滿 0–100%。mg 只適用原始檔是 mg 的曲線;每分鐘要有升溫速率(檔案有時間欄,或在下方曲線設定填)。</div>
+            </div>
+
+            <div class="ftir-card">
+              <h3>圖例</h3>
+              <label class="ftir-chk"><input type="checkbox" id="tgaShowLegend" checked>顯示圖例</label>
+              <div class="field" style="margin-bottom:10px;">
+                <select id="tgaLegendPos"><option value="auto">自動(避開曲線)</option><option value="tr">右上</option><option value="tl">左上</option><option value="br">右下</option><option value="bl">左下</option></select>
+              </div>
+              <label class="ftir-chk" style="margin-bottom:0;"><input type="checkbox" id="tgaLegendFrame">圖例外框</label>
+            </div>
+
+            <div class="ftir-card">
+              <h3>顯示</h3>
+              <div class="ftir-seg" id="tgaMode">
+                <button data-v="both" class="on">TG + DTG</button>
+                <button data-v="tg">只有 TG</button>
+                <button data-v="dtg">只有 DTG</button>
+              </div>
+              <div class="field" style="margin:10px 0 0;"><label style="font-size:12px;">DTG 方向</label>
+                <div class="ftir-seg" id="tgaDtgDir">
+                  <button data-v="down" class="on">失重峰朝下</button>
+                  <button data-v="up">失重峰朝上</button>
+                </div>
+              </div>
+              <div class="ftir-hint">TG 是重量(左軸,% 或 mg);DTG 是重量的微分(右軸,虛線;每 °C 是 dW/dT,每分鐘是 dW/dt)。失重峰朝下畫微分本身,朝上畫它的負值。</div>
+            </div>
+
+            <div class="ftir-card">
+              <h3>DTG 峰與失重階段</h3>
+              <div class="field"><label style="font-size:12px;">DTG 平滑寬度(越大越平滑)</label>
+                <div class="ftir-rangerow"><input type="range" id="tgaSmooth" min="2" max="30" step="1" value="10"><output id="tgaSmoothOut">10 °C</output></div>
+              </div>
+              <div class="field"><label style="font-size:12px;">靈敏度(越高抓越多峰)</label>
+                <div class="ftir-rangerow"><input type="range" id="tgaSens" min="0.5" max="3" step="0.1" value="1"><output id="tgaSensOut">1.0</output></div>
+              </div>
+              <div class="field"><label style="font-size:12px;">最多標示峰數</label>
+                <div class="ftir-rangerow"><input type="range" id="tgaTopn" min="1" max="12" step="1" value="6"><output id="tgaTopnOut">6</output></div>
+              </div>
+              <label class="ftir-chk"><input type="checkbox" id="tgaShowLabels" checked>圖上標示 DTG 峰溫</label>
+              <button class="btn btn-ghost btn-sm th-measure" id="tgaMeasure" disabled>手動量測:在圖上拖曳範圍</button>
+            </div>
+
+            <div class="ftir-card">
+              <h3>輸出</h3>
+              <div class="ftir-btnrow">
+                <button class="btn btn-primary btn-sm" id="tgaSave" disabled>存入圖譜</button>
+                <button class="btn btn-ghost btn-sm" id="tgaDlPng" disabled>PNG</button>
+                <button class="btn btn-ghost btn-sm" id="tgaDlSvg" disabled>SVG</button>
+                <button class="btn btn-ghost btn-sm" id="tgaDlCsv" disabled>數值 CSV</button>
+              </div>
+              <div class="ftir-hint">「存入圖譜」會把目前這張圖、失重階段表與原始檔存到全實驗室共用的「圖譜」頁;PNG 為 3× 高解析。</div>
+            </div>
+          </div>
+
+          <div class="ftir-main">
+            <div class="ftir-plotcard">
+              <div class="ftir-plotwrap th-plotwrap" id="tgaPlotwrap"></div>
+              <div id="tgaCurvewrap"></div>
+              <div id="tgaTablewrap"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="sp-panel" id="sp-dsc">
+        <div class="ftir-grid">
+          <div class="ftir-side">
+            <div class="ftir-card">
+              <h3>曲線庫<span class="cnt" id="dscLibCount"></span></h3>
+              <div class="ftir-drop" id="dscDrop">
+                <strong>拖曳或點擊上傳</strong>
+                <small>PerkinElmer 匯出的 .csv / .txt,或整理好的 Excel(溫度欄 + 熱流欄)</small>
+              </div>
+              <input type="file" id="dscFile" accept=".csv,.txt,.xlsx,.xls" multiple class="visually-hidden-file">
+              <div class="ftir-lib" id="dscLib"></div>
+              <div class="ftir-libtools">
+                <button class="btn btn-ghost btn-sm" id="dscSelAll">全選疊圖</button>
+                <button class="btn btn-ghost btn-sm" id="dscClearSel">取消選取</button>
+                <button class="btn btn-ghost btn-sm" id="dscWipe">清空暫存</button>
+              </div>
+              <div class="ftir-hint">一個檔有好幾段升降溫時,在圖下方的「曲線設定」選要畫哪一段(預設第 2 次升溫)。勾選 1 條＝單一曲線;勾選多條＝疊圖。名稱點兩下可改。上傳的曲線只暫存在這台電腦,按「存入圖譜」才會存進全實驗室共用的圖譜頁。</div>
+            </div>
+
+            <div class="ftir-card">
+              <h3>標題與座標軸</h3>
+              <label class="ftir-chk"><input type="checkbox" id="dscShowTitle" checked>顯示標題</label>
+              <div class="field" style="margin-bottom:10px;"><input type="text" id="dscTitle" placeholder="輸入圖表標題"></div>
+              <label class="ftir-chk"><input type="checkbox" id="dscShowAxisTitles" checked>顯示座標軸文字</label>
+              <label class="ftir-chk"><input type="checkbox" id="dscShowTickLabels" checked>顯示刻度數字</label>
+              <div class="field row2" style="margin-bottom:0;">
+                <div><label style="font-size:12px;">顯示起(°C)</label><input type="number" id="dscXmin" placeholder="自動"></div>
+                <div><label style="font-size:12px;">顯示迄(°C)</label><input type="number" id="dscXmax" placeholder="自動"></div>
+              </div>
+            </div>
+
+            <div class="ftir-card">
+              <h3>縱軸</h3>
+              <div class="field"><label style="font-size:12px;">單位</label>
+                <select id="dscYunit"><option value="auto">自動(數值很小時換成 μW)</option><option value="x1">mW(除以重量時 W/g)</option><option value="x1000">μW(除以重量時 mW/g)</option></select>
+              </div>
+              <div class="th-row3 field">
+                <div><label style="font-size:12px;">最小</label><input type="number" id="dscYmin" step="any" placeholder="自動"></div>
+                <div><label style="font-size:12px;">最大</label><input type="number" id="dscYmax" step="any" placeholder="自動"></div>
+                <div><label style="font-size:12px;">刻度間距</label><input type="number" id="dscYstep" step="any" min="0" placeholder="自動"></div>
+              </div>
+              <label class="ftir-chk" style="margin-bottom:0;"><input type="checkbox" id="dscYskip" checked>自動範圍略過每段開頭與結尾</label>
+              <div class="ftir-hint">曲線看起來太平,多半是每段開頭儀器追溫度的上衝把縱軸撐大了;自動範圍預設不算那一段(超出的部分裁掉)。最小、最大、間距的單位同縱軸,空著就是自動;單位選「自動」時,一填數值就固定在當下的單位。</div>
+            </div>
+
+            <div class="ftir-card">
+              <h3>圖例</h3>
+              <label class="ftir-chk"><input type="checkbox" id="dscShowLegend" checked>顯示圖例</label>
+              <div class="field" style="margin-bottom:10px;">
+                <select id="dscLegendPos"><option value="auto">自動(避開曲線)</option><option value="tr">右上</option><option value="tl">左上</option><option value="br">右下</option><option value="bl">左下</option></select>
+              </div>
+              <label class="ftir-chk" style="margin-bottom:0;"><input type="checkbox" id="dscLegendFrame">圖例外框</label>
+            </div>
+
+            <div class="ftir-card">
+              <h3>熱流方向與疊圖</h3>
+              <div class="ftir-seg" id="dscEndo">
+                <button data-v="up" class="on">吸熱朝上</button>
+                <button data-v="down">吸熱朝下</button>
+              </div>
+              <label class="ftir-chk" style="margin-top:10px;"><input type="checkbox" id="dscPerMass" checked>有填樣品重時換算成 W/g</label>
+              <div class="field" style="margin-bottom:0;"><label style="font-size:12px;">疊圖錯開(每條往上移多少,單位同縱軸)</label><input type="number" id="dscOffset" min="0" step="any" placeholder="0 = 不錯開"></div>
+              <div class="ftir-hint">吸熱朝下時只把縱軸反過來,數值的正負照原本(PerkinElmer 是吸熱為正)。錯開疊圖時刻度數字只對第一條成立,改畫比例尺。</div>
+            </div>
+
+            <div class="ftir-card">
+              <h3>轉變標示</h3>
+              <label class="ftir-chk"><input type="checkbox" id="dscAuto" checked>自動找 Tg 與吸放熱峰</label>
+              <div class="field"><label style="font-size:12px;">靈敏度(越高抓越多)</label>
+                <div class="ftir-rangerow"><input type="range" id="dscSens" min="0.5" max="3" step="0.1" value="1"><output id="dscSensOut">1.0</output></div>
+              </div>
+              <label class="ftir-chk"><input type="checkbox" id="dscShowLabels" checked>圖上標示溫度</label>
+              <button class="btn btn-ghost btn-sm th-measure" id="dscMeasure" disabled>手動量測:在圖上拖曳範圍</button>
+              <div class="ftir-hint">每段開頭(儀器還在追溫度)與快到折返溫度的地方不自動找。自動判讀偏保守,寧可少標;漏掉的用手動量測補。</div>
+            </div>
+
+            <div class="ftir-card">
+              <h3>輸出</h3>
+              <div class="ftir-btnrow">
+                <button class="btn btn-primary btn-sm" id="dscSave" disabled>存入圖譜</button>
+                <button class="btn btn-ghost btn-sm" id="dscDlPng" disabled>PNG</button>
+                <button class="btn btn-ghost btn-sm" id="dscDlSvg" disabled>SVG</button>
+                <button class="btn btn-ghost btn-sm" id="dscDlCsv" disabled>數值 CSV</button>
+              </div>
+              <div class="ftir-hint">「存入圖譜」會把目前這張圖、轉變表與原始檔存到全實驗室共用的「圖譜」頁;PNG 為 3× 高解析。</div>
+            </div>
+          </div>
+
+          <div class="ftir-main">
+            <div class="ftir-plotcard">
+              <div class="ftir-plotwrap th-plotwrap" id="dscPlotwrap"></div>
+              <div id="dscCurvewrap"></div>
+              <div id="dscTablewrap"></div>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- ============ 圖譜(藝廊) ============ -->
@@ -3650,7 +3891,7 @@ function cmdkIndex(){
   (libraryBooks||[]).forEach(b=>out.push({g:'圖書',label:b.title||b.code,sub:b.code||'',kw:[b.author,b.isbn,b.category].filter(Boolean).join(' '),run:()=>{ switchPage('library'); const s=document.getElementById('libSearch'); if(s){ s.value=b.title||''; s.dispatchEvent(new Event('input',{bubbles:true})); } }}));
   (todoItems||[]).filter(t=>!t.done).forEach(t=>out.push({g:'待辦',label:t.title||'',sub:t.due||'',kw:'todo 待辦',run:()=>switchPage('todoList')}));
   // 其他存在 Firebase 的資料:畫面本來就即時同步在手上,這裡只是加進索引
-  const SP_TYPE={gc:'GC',ftir:'FTIR',uv:'UV-Vis'};
+  const SP_TYPE={gc:'GC',ftir:'FTIR',uv:'UV-Vis',dsc:'DSC',tga:'TGA'};
   (spectraItems||[]).forEach(s=>out.push({g:'圖譜',label:s.name||'(未命名圖譜)',sub:[SP_TYPE[s.type]||s.type,s.bind_label,(s.created_at||'').slice(0,10)].filter(Boolean).join(' · '),
     kw:[s.type,SP_TYPE[s.type],s.bind_label,s.created_by,(s.peaks||[]).map(p=>p&&(p.cmp||p.full||p.tag||p.sample)||'').join(' ')].filter(Boolean).join(' '),
     run:()=>{ switchPage('spectraGallery'); openGalDetail(s.id); }}));
@@ -9763,6 +10004,8 @@ document.getElementById('spTabs').addEventListener('click', (e)=>{
   if(key==='gc') loadGcFrame();
   if(key==='uv') initUvOnce();
   if(key==='assay') initAssayOnce();
+  if(key==='dsc') thInit(DSC_M);
+  if(key==='tga') thInit(TGA_M);
 });
 
 /* ============ FTIR 讀檔 ============ */
@@ -10690,6 +10933,1224 @@ function initUvOnce(){
   uvRenderLib(); uvRender();
 }
 
+/* ============ DSC / TGA(熱分析) ============
+   兩頁共用:讀檔(PerkinElmer 匯出的 CSV,或整理好的 Excel)、切升降溫段、曲線庫、圖例、拖曳量測、存入圖譜。
+   DSC 自動找 Tg 與吸放熱峰(熱流一律以吸熱為正分析,畫圖時才依「吸熱朝上 / 朝下」翻軸);
+   TGA 換成重量百分比、算 DTG,標 DTG 峰溫與各階段失重。暫存曲線只在這台電腦的記憶體裡 */
+/* ============ DSC / TGA 共用:讀表格、切升降溫段、平滑與微分 ============
+   PerkinElmer Pyris 匯出的 CSV 第一列是欄名(Time、Unsubtracted Heat Flow、Baseline Heat Flow、Program Temperature、
+   Sample Temperature…);整理過的 Excel 常是「溫度欄 + 好幾個樣品欄」或「溫度、數值」一對一對排。
+   一律先讀成欄位清單,再依欄名找出時間、程序溫度、樣品溫度與訊號 */
+function thParseText(text){
+  const lines=String(text||'').split(/\r?\n/).filter(l=>l.trim());
+  if(!lines.length) throw new Error('檔案是空的');
+  const isNum=s=>s!==''&&isFinite(+s);
+  // 分隔字元:三種都試,看第一列數字開始的 5 列切出幾個數字,最多的那種(一樣多時逗號優先)
+  const pick=[',','\t',';'].map(d=>{ const sp=l=>l.split(d).map(s=>s.trim().replace(/^"|"$/g,''));
+    let i0=-1; for(let i=0;i<lines.length;i++){ if(sp(lines[i]).filter(isNum).length>=2){ i0=i; break; } }
+    let score=0; if(i0>=0) for(let i=i0;i<Math.min(lines.length,i0+5);i++) score+=sp(lines[i]).filter(isNum).length;
+    return {sp,i0,score}; }).reduce((p,q)=>q.score>p.score?q:p);
+  const split=pick.sp, h0=pick.i0;
+  if(h0<0) throw new Error('找不到數字欄');
+  const rows=lines.slice(h0).map(split).filter(c=>c.filter(isNum).length>=2);
+  return thColsFromRows(h0>0?split(lines[h0-1]):[], h0>1?split(lines[h0-2]):null, rows, r=>r.map(x=>isNum(x??'')?+x:NaN));
+}
+/* 欄名列的上一列常是樣品名(整理過的表一個樣品佔兩欄,名字寫在溫度欄上面):非溫度欄的欄名前面接上它 */
+function thColsFromRows(head, above, rows, toNums){
+  const n=rows.reduce((m,r)=>Math.max(m,r.length),head.length), cols=[], num=rows.map(toNums);
+  const str=v=>String(v==null?'':v).trim();
+  let cur='';
+  for(let j=0;j<n;j++){
+    const h=str(head[j]), a=above?str(above[j]):'';
+    let label=h;
+    if(above){ if(TH_RX.temp.test(h)) cur=a; else { if(a) cur=a; if(cur&&cur!==h) label=h?cur+' '+h:cur; } }
+    const v=num.map(r=>r[j]??NaN);
+    if(v.filter(isFinite).length<5) continue;
+    const name=h||('欄 '+(j+1));
+    cols.push({name, label:label||name, v});
+  }
+  return cols;
+}
+/* Excel:每個工作表各自當成一張表,欄名列的找法和文字檔一樣 */
+function thParseSheets(buf){
+  const wb=XLSX.read(buf,{type:'array'}), out=[];
+  const isN=x=>(typeof x==='number'&&isFinite(x))||(typeof x==='string'&&x.trim()!==''&&isFinite(+x));
+  wb.SheetNames.forEach(sn=>{
+    const rows=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,blankrows:false,raw:true});
+    let h0=-1; for(let i=0;i<rows.length;i++){ if((rows[i]||[]).filter(isN).length>=2){ h0=i; break; } }
+    if(h0<0||rows.length-h0<5) return;
+    const cols=thColsFromRows((h0>0?rows[h0-1]:null)||[], h0>1?(rows[h0-2]||null):null, rows.slice(h0), r=>r.map(x=>isN(x)?+x:NaN));
+    if(cols.length>=2) out.push({sheet:sn, cols});
+  });
+  return out;
+}
+const TH_RX={ time:/^\s*time\b|時間/i, prog:/program\s*temp/i, temp:/temp|溫度/i,
+  hf:/heat\s*flow|熱流/i, hfBase:/baseline\s*heat/i, weight:/weight|mass|重量/i };
+/* 一張表拆成曲線:Pyris 格式(有程序溫度或時間)整張就是一條;其他每個訊號欄配它左邊最近的溫度欄 */
+function thCurvesFromCols(cols, kind){
+  const find=rx=>cols.find(c=>rx.test(c.name));
+  const time=find(TH_RX.time), prog=find(TH_RX.prog);
+  const temp=cols.find(c=>/sample\s*temp/i.test(c.name))||cols.find(c=>TH_RX.temp.test(c.name)&&!TH_RX.prog.test(c.name));
+  if(temp&&(time||prog)){
+    let y=null, unit='';
+    if(kind==='dsc'){
+      const hfs=cols.filter(c=>TH_RX.hf.test(c.name)&&!TH_RX.hfBase.test(c.name)), base=find(TH_RX.hfBase);
+      const hf=hfs.find(c=>/unsubtracted/i.test(c.name))||hfs[0]; if(!hf) throw new Error('找不到熱流(Heat Flow)欄');
+      y=hf.v.map((v,i)=>v-(base&&isFinite(base.v[i])?base.v[i]:0)); unit=/w\s*\/\s*g/i.test(hf.name)?'W/g':'mW';
+    }else{
+      const ws=cols.filter(c=>TH_RX.weight.test(c.name)&&!/baseline|deriv/i.test(c.name)), base=cols.find(c=>/baseline\s*weight/i.test(c.name));
+      const w=ws.find(c=>/unsubtracted/i.test(c.name))||ws[0]; if(!w) throw new Error('找不到重量(Weight)欄');
+      y=w.v.map((v,i)=>v-(base&&isFinite(base.v[i])?base.v[i]:0)); unit=/%/.test(w.name)?'%':'mg';
+    }
+    return [{x:temp.v, y, t:time?time.v:null, prog:prog?prog.v:null, unit, col:''}];
+  }
+  // 整理過的表:溫度欄 + 訊號欄。TGA 同一組裡已經有「名稱」(mg)時,旁邊的「名稱%」不重複列(百分比本來就會算)
+  const out=[]; let lastT=null;
+  cols.forEach(c=>{
+    if(TH_RX.temp.test(c.name)){ lastT=c; return; }
+    const tc=lastT||cols[0]; if(c===tc) return;
+    if(kind==='tga'&&/deriv|dtg/i.test(c.name)) return;
+    const unit=kind==='dsc'?(/w\s*\/\s*g/i.test(c.name)?'W/g':'mW'):(/%/.test(c.name)?'%':'mg');
+    out.push({x:tc.v, y:c.v, t:null, prog:null, unit, col:c.label||c.name, raw:c.name, tc});
+  });
+  const keep=out.filter(c=>!(kind==='tga'&&/%\s*$/.test(c.raw)&&out.some(o=>o!==c&&o.tc===c.tc&&o.raw.trim()===c.raw.replace(/\s*%\s*$/,'').trim())));
+  keep.forEach(c=>{ delete c.tc; delete c.raw; });
+  if(!keep.length) throw new Error('找不到溫度欄與訊號欄');
+  return keep;
+}
+/* 去掉缺值:x、y(與時間、程序溫度)都要有數字才留 */
+function thClean(c){
+  const keep=[]; for(let i=0;i<c.x.length;i++) if(isFinite(c.x[i])&&isFinite(c.y[i])&&(!c.t||isFinite(c.t[i]))) keep.push(i);
+  const pick=a=>a?keep.map(i=>a[i]):null;
+  return Object.assign({},c,{x:pick(c.x),y:pick(c.y),t:pick(c.t),prog:pick(c.prog)});
+}
+/* 依溫度程序切成升溫、降溫、恆溫段。有時間就用程序溫度(沒有就用樣品溫度)對時間的速率,沒有時間就看前後各 5 點的溫度變化。
+   太短的段(少於 20 點)併到前一段 */
+function thSegments(c){
+  const n=c.x.length, ref=c.prog||c.x, kinds=new Array(n);
+  // 判斷升降溫的窗:有時間欄看 ±5 點的速率;沒有時間欄看 ±w 點的溫差,w 要大到前後溫差有 1 °C 左右
+  // (取樣很密或升溫很慢時,±5 點只差零點零幾度,整條會被當成恆溫)
+  let w=5;
+  if(!c.t&&n>40){ const d=[]; for(let i=1;i<n;i++){ const v=Math.abs(ref[i]-ref[i-1]); if(v>0) d.push(v); }
+    const md=thMedian(d); if(md>0) w=Math.max(5,Math.min(Math.ceil(0.5/md),Math.floor(n/20))); }
+  for(let i=0;i<n;i++){
+    const a=Math.max(0,i-w), b=Math.min(n-1,i+w), dT=ref[b]-ref[a];
+    if(c.t){ const dt=c.t[b]-c.t[a]; const r=dt>0?dT/dt:0; kinds[i]=r>0.5?'heat':r<-0.5?'cool':'iso'; }
+    else kinds[i]=dT>0.2?'heat':dT<-0.2?'cool':'iso';
+  }
+  const segs=[]; let s=0;
+  for(let i=1;i<=n;i++){ if(i===n||kinds[i]!==kinds[s]){ segs.push({kind:kinds[s],a:s,b:i}); s=i; } }
+  const merged=[];
+  segs.forEach(g=>{ if(g.b-g.a<20&&merged.length){ merged[merged.length-1].b=g.b; } else merged.push(Object.assign({},g)); });
+  const out=[]; merged.forEach(g=>{ const p=out[out.length-1]; if(p&&p.kind===g.kind) p.b=g.b; else out.push(g); });
+  // 先丟掉恆溫與太短的段再編號(開頭一小段沒地方併,以前會佔掉「第 1 次」)
+  const keep=out.filter(g=>g.kind!=='iso'&&g.b-g.a>=20);
+  let nh=0, nc=0;
+  keep.forEach(g=>{
+    g.label=g.kind==='heat'?`第 ${++nh} 次升溫`:`第 ${++nc} 次降溫`;
+    if(c.t){
+      // 分類窗會把相鄰恆溫的幾點算進這一段,用端點相減會低估速率:兩端各去掉 w 點,中段做直線擬合
+      const a=g.a+w, b=g.b-w;
+      if(b-a>=5) g.rate=thLine(c.t.slice(a,b),ref.slice(a,b)).m;
+      else { const dt=c.t[g.b-1]-c.t[g.a]; g.rate=dt>0?(ref[g.b-1]-ref[g.a])/dt:0; }
+    }
+    g.t0=c.x[g.a]; g.t1=c.x[g.b-1];
+  });
+  return keep;
+}
+/* 均勻溫度格點(重新取樣),之後的平滑、微分都在格點上做。xs 必須單調(升溫或降溫段) */
+function thResample(x,y,h){
+  const inc=x[x.length-1]>=x[0], idx=x.map((v,i)=>i).sort((a,b)=>inc?x[a]-x[b]:x[b]-x[a]);
+  const xs=[], ys=[]; let last=null;
+  idx.forEach(i=>{ if(last!==null&&x[i]===last){ ys[ys.length-1]=(ys[ys.length-1]+y[i])/2; return; } xs.push(x[i]); ys.push(y[i]); last=x[i]; });
+  if(!inc){ xs.reverse(); ys.reverse(); }                  // 一律由低溫到高溫
+  const n=xs.length;
+  if(!(Math.abs(xs[0])<1e6&&Math.abs(xs[n-1])<1e6)) throw new Error('溫度數值不合理');
+  const k0=Math.ceil(xs[0]/h-1e-9), k1=Math.floor(xs[n-1]/h+1e-9);
+  if(k1-k0>2e6) throw new Error('溫度數值不合理');
+  if(n<2||k1-k0<1) return {x:xs.slice(),y:ys.slice()};    // 溫度幾乎沒變(例如只有恆溫)
+  const g=[], gy=[]; let k=0;
+  for(let q=k0;q<=k1;q++){
+    const v=q*h;
+    while(k<n-2&&xs[k+1]<v) k++;
+    const x0=xs[k], x1=xs[k+1]; const f=x1>x0?(v-x0)/(x1-x0):0;
+    g.push(+v.toFixed(6)); gy.push(ys[k]+(ys[k+1]-ys[k])*Math.min(1,Math.max(0,f)));
+  }
+  return {x:g,y:gy};
+}
+/* Savitzky–Golay(二次)平滑與一次微分,窗寬 2m+1 點;兩端縮窗 */
+function thSg(y,m,deriv){
+  const n=y.length, out=new Array(n);
+  for(let i=0;i<n;i++){
+    const k=Math.min(m,i,n-1-i);
+    if(k<1){ out[i]=deriv?(i>0&&i<n-1?(y[i+1]-y[i-1])/2:(i===0?y[1]-y[0]:y[n-1]-y[n-2])):y[i]; continue; }
+    let s=0;
+    if(deriv){ let den=0; for(let j=-k;j<=k;j++){ s+=j*y[i+j]; den+=j*j; } out[i]=s/den; }
+    else{ const kk=k*(k+1), den=(2*k+3)*(2*k-1)*(2*k+1)/3;   // 二次 SG 平滑係數 (3(3k²+3k−1) − 15j²) / ((2k+3)(2k+1)(2k−1)) ×…
+      let w=0; for(let j=-k;j<=k;j++){ const c=3*kk-1-5*j*j; s+=c*y[i+j]; w+=c; } out[i]=s/w; }
+  }
+  return out;
+}
+function thMedian(a){ const s=a.filter(isFinite).slice().sort((p,q)=>p-q); return s.length?s[Math.floor(s.length/2)]:0; }
+/* 直線最小平方 */
+function thLine(xs,ys){ let n=0,sx=0,sy=0,sxx=0,sxy=0; xs.forEach((x,i)=>{ const y=ys[i]; if(!isFinite(y)) return; n++; sx+=x; sy+=y; sxx+=x*x; sxy+=x*y; });
+  const d=n*sxx-sx*sx; const m=d?(n*sxy-sx*sy)/d:0; return {m, b:n?(sy-m*sx)/n:0}; }
+
+/* ============ DSC 分析:均勻格點、找峰、找 Tg、手動量測 ============
+   熱流一律用「吸熱為正」的原始方向分析(PerkinElmer 匯出的值就是吸熱為正),畫圖時才依「吸熱朝上 / 朝下」翻轉 */
+function dscGrid(item, seg, rateIn){
+  const xs=item.x.slice(seg.a,seg.b), ys=item.y.slice(seg.a,seg.b);
+  const steps=[]; for(let i=1;i<xs.length;i++){ const d=Math.abs(xs[i]-xs[i-1]); if(d>0) steps.push(d); }
+  const h=Math.max(0.1,Math.min(1,thMedian(steps)||0.5));
+  const g=thResample(xs,ys,h);
+  // 每段一開始儀器還在追溫度,樣品溫度與熱流會有一段上衝或下沉:前 1 分鐘(換成溫度)或溫度跨度的 8% 不拿來自動找峰;
+  // 結尾快到折返溫度時曲線常會彎(半分鐘或跨度的 3%)也略過
+  // 沒有時間欄(整理過的表)又沒填速率時,當作實驗室較快的 40 °C/min 來跳過,寧可少找一點
+  const span=g.x[g.x.length-1]-g.x[0], rate=Math.abs(rateIn||seg.rate||0), r=rate||40;
+  const skip=Math.max(r*1.0, span*0.08), skipEnd=Math.max(r*0.5, span*0.03);
+  const lo=seg.kind==='cool'?g.x[0]+skipEnd:g.x[0]+skip, hi=seg.kind==='cool'?g.x[g.x.length-1]-skip:g.x[g.x.length-1]-skipEnd;
+  return {x:g.x, y:g.y, h, lo, hi, rate, cool:seg.kind==='cool'};
+}
+function thMovingMedian(y,half){
+  const n=y.length, out=new Array(n);
+  for(let i=0;i<n;i++){ const a=Math.max(0,i-half), b=Math.min(n-1,i+half); out[i]=thMedian(y.slice(a,b+1)); }
+  return out;
+}
+/* 線性基線上的峰:起點、終點、峰頂、起始溫度(前緣最大斜率的切線和基線的交點)、面積 */
+function dscPeakAt(G, ys, ia, ib, dir){
+  const x=G.x, bl=i=>ys[ia]+(ys[ib]-ys[ia])*(x[i]-x[ia])/((x[ib]-x[ia])||1);
+  let ip=ia, best=-Infinity;
+  for(let i=ia;i<=ib;i++){ const v=dir*(ys[i]-bl(i)); if(v>best){ best=v; ip=i; } }
+  // 轉變開始的那一側(升溫段是低溫側,降溫段是高溫側)斜率最大的點做切線,和基線的交點是起始溫度
+  let is=-1, sm=0;
+  if(G.cool){ for(let i=ip+1;i<ib;i++){ const s=-dir*(ys[i+1]-ys[i-1])/(x[i+1]-x[i-1]); if(s>sm){ sm=s; is=i; } } }
+  else for(let i=ia+1;i<ip;i++){ const s=dir*(ys[i+1]-ys[i-1])/(x[i+1]-x[i-1]); if(s>sm){ sm=s; is=i; } }
+  let onset=null;
+  if(sm>0&&is>0){
+    const slope=(ys[is+1]-ys[is-1])/(x[is+1]-x[is-1]), bm=(ys[ib]-ys[ia])/((x[ib]-x[ia])||1);
+    if(Math.abs(slope-bm)>1e-12){ const T=(ys[ia]-bm*x[ia]-ys[is]+slope*x[is])/(slope-bm);
+      if(G.cool?(T>=x[ip]-1e-9&&T<=x[ib]+1):(T>=x[ia]-1&&T<=x[ip]+1e-9)) onset=T; }
+  }
+  let area=0; for(let i=ia;i<ib;i++) area+=((ys[i]-bl(i))+(ys[i+1]-bl(i+1)))/2*(x[i+1]-x[i]);   // 單位:熱流 × °C
+  return {kind:'peak', dir, t:x[ip], y:ys[ip], h:dir*(ys[ip]-bl(ip)), t1:x[ia], t2:x[ib], onset, area};
+}
+/* Tg:轉折點前後各取一段直線(玻璃態、橡膠態的基線),轉折點的切線和兩條基線的交點是起始與結束,
+   曲線落在兩條基線正中間的溫度是中點 Tg */
+function dscTgAt(G, ys, ia, ib, ii){
+  const x=G.x, n=ib-ia, q=Math.max(3,Math.round(n*0.25));
+  const pre=thLine(x.slice(ia,ia+q),ys.slice(ia,ia+q)), post=thLine(x.slice(ib-q,ib+1),ys.slice(ib-q,ib+1));
+  const slope=(ys[ii+1]-ys[ii-1])/(x[ii+1]-x[ii-1]);
+  const cross=(L)=>Math.abs(slope-L.m)>1e-12?(L.b-ys[ii]+slope*x[ii])/(slope-L.m):null;
+  const onset=cross(pre), end=cross(post);
+  let mid=null;
+  for(let i=ia;i<ib;i++){ const m0=(pre.m*x[i]+pre.b+post.m*x[i]+post.b)/2, m1=(pre.m*x[i+1]+pre.b+post.m*x[i+1]+post.b)/2;
+    if((ys[i]-m0)*(ys[i+1]-m1)<=0&&ys[i]!==ys[i+1]){ const f=(m0-ys[i])/((ys[i+1]-ys[i])-(m1-m0)||1); mid=x[i]+f*(x[i+1]-x[i]); if(Math.abs(mid-x[ii])<(x[ib]-x[ia])/2) break; } }
+  const step=(post.m*x[ii]+post.b)-(pre.m*x[ii]+pre.b);
+  let e2=0, ne=0;                                                   // 兩段基線本身的直線擬合殘差(均方根)
+  for(let i=ia;i<ia+q;i++){ const d=ys[i]-(pre.m*x[i]+pre.b); e2+=d*d; ne++; }
+  for(let i=ib-q;i<=ib;i++){ const d=ys[i]-(post.m*x[i]+post.b); e2+=d*d; ne++; }
+  return {kind:'tg', t:mid!=null?mid:x[ii], onset, end, step, fitErr:Math.sqrt(e2/Math.max(1,ne)), t1:x[ia], t2:x[ib], y:ys[ii]};
+}
+/* 自動找峰與 Tg(保守:寧可少標,不要亂標)。opts.sens:靈敏度倍數(1 = 預設) */
+function dscAutoEvents(G, opts){
+  const sens=(opts&&opts.sens)||1, x=G.x, n=x.length;
+  if(n<40) return [];
+  const m=Math.max(2,Math.round(1.5/G.h)), ys=thSg(G.y,m,false);
+  const noise=1.4826*thMedian(G.y.map((v,i)=>Math.abs(v-ys[i])))||1e-6;
+  const range=Math.max(...ys)-Math.min(...ys)||1;
+  const thr=Math.max(15*noise,0.02*range)/sens;
+  const inWin=i=>x[i]>=G.lo&&x[i]<=G.hi;
+  // 峰:扣掉基線(寬窗移動中位數)後殘差的局部極值。基線會被寬峰拉偏、在峰旁邊造出假峰,
+  // 所以找到的峰先從曲線上挖掉(兩端連直線)再估一次基線、重找,最多三輪
+  let ev=[], work=ys.slice();
+  for(let pass=0;pass<3;pass++){
+    const base=thSg(thMovingMedian(work,Math.round(30/G.h)),Math.round(5/G.h),false);
+    const r=ys.map((v,i)=>v-base[i]), found=[];
+    for(let i=2;i<n-2;i++){
+      if(!inWin(i)) continue;
+      const v=r[i], dir=v>0?1:-1;
+      if(Math.abs(v)<thr) continue;
+      if(!(dir*v>=dir*r[i-1]&&dir*v>=dir*r[i+1]&&dir*v>=dir*r[i-2]&&dir*v>=dir*r[i+2])) continue;
+      // 往兩邊走到殘差回到峰高的 5% 以內(或反向)
+      let a=i, b=i; const lim=Math.abs(v)*0.05;
+      while(a>0&&dir*r[a]>lim&&x[i]-x[a]<80) a--;
+      while(b<n-1&&dir*r[b]>lim&&x[b]-x[i]<80) b++;
+      const w=x[b]-x[a]; if(w<1.5||w>120) continue;
+      if(!inWin(a)||!inWin(b)) continue;                     // 整個峰都要在可信的範圍裡
+      if(found.some(e=>x[i]>=e.d1-2&&x[i]<=e.d2+2)) continue;
+      const pk=dscPeakAt(G,ys,a,b,dir);
+      if(pk.h<thr*0.8) continue;
+      // 兩端高低差比峰還大的是台階(Tg 那種),不是峰
+      if(Math.abs(ys[b]-ys[a])>1.5*pk.h) continue;
+      // 附近(峰外左右各 40 °C)本來就起伏很大的,這個峰只是其中一個起伏:要高過那一帶起伏的 4 倍
+      const rough=[]; for(let j=0;j<n;j++){ if((x[j]>=x[a]-40&&x[j]<x[a])||(x[j]>x[b]&&x[j]<=x[b]+40)) rough.push(Math.abs(r[j])); }
+      if(rough.length>10&&pk.h<4*1.4826*thMedian(rough)) continue;
+      // 積分範圍:上面找峰用的是殘差回到峰高 5% 的位置,兩端還在峰上,面積會少一到兩成。再往外走到殘差掉進雜訊
+      // (或峰高的 0.5%)為止;一路記著走過的最低點,殘差比它高出一個雜訊以上就停(開始爬上旁邊另一個峰了,
+      // 只比前一點會被緩緩上升騙過去,把鄰峰一起吃掉),一樣不超過 80 °C、不出可信範圍。
+      // 延伸後峰頂若換了位置就不要延伸。延伸只用來算面積;重疊判斷、挖峰、大峰區都用偵測範圍 d1–d2
+      const lim2=Math.max(2*noise,0.005*Math.abs(v));
+      let ea=a, eb=b, mn=dir*r[a];
+      while(ea>0&&inWin(ea-1)&&x[i]-x[ea-1]<80){ const q=dir*r[ea-1]; if(mn<=lim2||q>mn+noise) break; ea--; if(q<mn) mn=q; }
+      mn=dir*r[b];
+      while(eb<n-1&&inWin(eb+1)&&x[eb+1]-x[i]<80){ const q=dir*r[eb+1]; if(mn<=lim2||q>mn+noise) break; eb++; if(q<mn) mn=q; }
+      let fin=pk, fa=a, fb=b;
+      if(ea<a||eb>b){ const wide=dscPeakAt(G,ys,ea,eb,dir); if(wide.h>=0.8*pk.h&&Math.abs(wide.t-pk.t)<1){ fin=wide; fa=ea; fb=eb; } }
+      fin.ia=fa; fin.ib=fb; fin.da=a; fin.db=b; fin.d1=x[a]; fin.d2=x[b]; found.push(fin);
+    }
+    const same=found.length===ev.length&&found.every((e,k)=>Math.abs(e.t-ev[k].t)<1);
+    ev=found; if(same) break;
+    work=ys.slice();
+    found.forEach(e=>{ for(let j=e.da;j<=e.db;j++) work[j]=ys[e.da]+(ys[e.db]-ys[e.da])*(x[j]-x[e.da])/((x[e.db]-x[e.da])||1); });
+  }
+  // 大峰前後(各一個峰寬)是它的爬升與回落,不另外找峰或 Tg
+  const big=ev.filter(e=>e.h>0.25*range).map(e=>[e.d1-(e.d2-e.d1),e.d2+(e.d2-e.d1)]);
+  const nearBig=t=>big.some(([p,q])=>t>=p&&t<=q);
+  for(let k=ev.length-1;k>=0;k--) if(ev[k].h<=0.25*range&&nearBig(ev[k].t)) ev.splice(k,1);
+  // Tg:只在升溫段找。一次微分(扣掉慢慢變的部分)的吸熱方向小峰,寬度 3 到 20 °C,而且前後基線真的差了一階
+  if(opts&&opts.kind==='cool') return ev.sort((p,q)=>p.t-q.t);
+  const md=Math.max(3,Math.round(3/G.h)), d=thSg(ys,md,true).map(v=>v/G.h);
+  const dbase=thMovingMedian(d,Math.round(25/G.h)), dr=d.map((v,i)=>v-dbase[i]);
+  const dnoise=1.4826*thMedian(dr.map(Math.abs))||1e-9;
+  const tgs=[];
+  for(let i=3;i<n-3;i++){
+    if(!inWin(i)||dr[i]<=0) continue;
+    if(!(dr[i]>=dr[i-1]&&dr[i]>=dr[i+1]&&dr[i]>=dr[i-3]&&dr[i]>=dr[i+3])) continue;
+    if(dr[i]<12*dnoise/sens) continue;
+    let a=i, b=i; while(a>0&&dr[a]>dr[i]/2) a--; while(b<n-1&&dr[b]>dr[i]/2) b++;
+    const fw=x[b]-x[a]; if(fw<3||fw>20) continue;
+    if(nearBig(x[i])) continue;
+    // 台階在微分上是單獨一個鼓包;旁邊緊接著反方向的凹(先掉下去再回來,或峰的另一半)就不是 Tg
+    let dmin=0; for(let j=Math.max(0,i-Math.round(3*fw/G.h));j<=Math.min(n-1,i+Math.round(3*fw/G.h));j++) if(dr[j]<dmin) dmin=dr[j];
+    if(dmin<-0.35*dr[i]) continue;
+    const ia=Math.max(0,i-Math.round(Math.max(20,1.5*fw)/G.h)), ib=Math.min(n-1,i+Math.round(Math.max(20,1.5*fw)/G.h));
+    if(x[ia]<G.lo-1e-9||x[ib]>G.hi+1e-9) continue;
+    const tg=dscTgAt(G,ys,ia,ib,i);
+    if(!(tg.step>Math.max(30*noise,0.015*range)/sens)||tg.onset==null||tg.end==null||!(tg.onset<tg.t&&tg.t<tg.end)) continue;
+    // 真的轉折是一個利落的台階:轉折寬度 3 到 25 °C(更窄的是儀器跳一下),台階比兩段基線本身的彎曲(直線擬合的殘差)大 4 倍以上
+    if(tg.end-tg.onset>25||tg.end-tg.onset<3||!(tg.step>4*tg.fitErr)) continue;
+    // 比台階高很多的峰剛好在這裡:那是峰,不是 Tg
+    if(ev.some(e=>e.t>=tg.onset-5&&e.t<=tg.end+5&&e.h>=2*tg.step)) continue;
+    if(tgs.some(e=>Math.abs(e.t-tg.t)<15)) continue;
+    tgs.push(tg);
+  }
+  // 台階被移動中位數基線切成的半個峰(Tg 附近、比台階矮的),拿掉
+  ev=ev.filter(e=>!tgs.some(g=>e.t>=g.onset-10&&e.t<=g.end+10&&e.h<2*g.step));
+  return ev.concat(tgs).sort((p,q)=>p.t-q.t);
+}
+/* 手動:使用者在圖上框的溫度範圍 */
+function dscMeasure(G, kind, T1, T2){
+  const x=G.x, lo=Math.min(T1,T2), hi=Math.max(T1,T2);
+  let ia=x.findIndex(v=>v>=lo), ib=-1; for(let i=x.length-1;i>=0;i--) if(x[i]<=hi){ ib=i; break; }
+  if(ia<0||ib-ia<6) return null;
+  const ys=thSg(G.y,Math.max(2,Math.round(1.5/G.h)),false);
+  if(kind==='tg'){
+    const d=thSg(ys,Math.max(2,Math.round(2/G.h)),true);
+    const n=ib-ia, a=ia+Math.round(n*0.2), b=ib-Math.round(n*0.2);
+    let ii=a, best=-Infinity; for(let i=a;i<=b;i++){ const v=Math.abs(d[i]); if(v>best){ best=v; ii=i; } }
+    // 框的地方沒有明顯台階時,切線幾乎和基線平行,交點會跑到框外很遠:那種起點、終點不算
+    const tg=dscTgAt(G,ys,ia,ib,ii);
+    if(tg.onset!=null&&!(tg.onset>=x[ia]-1&&tg.onset<=tg.t)) tg.onset=null;
+    if(tg.end!=null&&!(tg.end>=tg.t&&tg.end<=x[ib]+1)) tg.end=null;
+    return tg;
+  }
+  const up=dscPeakAt(G,ys,ia,ib,1), dn=dscPeakAt(G,ys,ia,ib,-1);
+  return up.h>=dn.h?up:dn;
+}
+/* 峰面積(熱流 × °C)換成焓:÷ 升溫速率(°C/min)× 60 = mJ;再 ÷ 樣品重(mg)= J/g */
+function dscEnthalpy(ev, rate, mass, unit){
+  if(ev.kind!=='peak'||!rate) return null;
+  const e=Math.abs(ev.area)/Math.abs(rate)*60;                 // mW·s = mJ;W/g 的話是 J/g
+  if(unit==='W/g') return e;
+  return mass>0?e/mass:null;
+}
+
+/* ============ TGA:重量百分比、DTG 與各階段失重 ============
+   重量一律換成「相對起始重量的百分比」:起始重量取最前面 5 點的平均(單位已經是 % 的欄就照原值)。
+   DTG = −dW/dT(%/°C),在均勻溫度格點上用 Savitzky–Golay 一次微分算,平滑寬度(°C)可調。
+   失重峰 = DTG 的局部最大值;相鄰兩峰之間 DTG 最低的地方當作階段分界,各階段的失重 = 起點重量 − 終點重量 */
+function tgaGrid(item, seg){
+  const a=seg?seg.a:0, b=seg?seg.b:item.x.length;
+  const xs=item.x.slice(a,b), ys0=item.y.slice(a,b);
+  let w0=100;
+  if(item.unit!=='%'){
+    // 起始重量用整條曲線(不是只有這一段)的最前面 5 點,換段時百分比的基準才一致
+    const head=item.y.slice(0,5).filter(isFinite); w0=head.length?head.reduce((p,q)=>p+q,0)/head.length:1;
+    if(!(Math.abs(w0)>1e-12)) w0=1;
+  }
+  const ys=item.unit==='%'?ys0:ys0.map(v=>v/w0*100);
+  const dx=[]; for(let i=1;i<xs.length;i++){ const d=Math.abs(xs[i]-xs[i-1]); if(d>0) dx.push(d); }
+  const h=Math.min(2,Math.max(0.1,thMedian(dx)||0.5));
+  const R=thResample(xs,ys,h);
+  return {x:R.x, y:R.y, h, w0, unit:item.unit, lo:R.x[0], hi:R.x[R.x.length-1]};
+}
+/* DTG(%/°C,失重為正)。smooth 是平滑窗的總寬度(°C) */
+function tgaDtg(G, smooth){
+  const m=Math.max(2,Math.round((smooth||10)/2/G.h));
+  const ys=thSg(G.y,Math.max(1,Math.round(m/2)),false);
+  return thSg(ys,m,true).map(v=>-v/G.h);
+}
+/* 失重峰候選:opts {smooth, sens}。回傳 {dtg, cand:[{i, t, rate, prom}]},cand 依突出度由大到小 */
+function tgaCandidates(G, opts){
+  opts=opts||{};
+  const sens=opts.sens||1, n=G.x.length, x=G.x;
+  const d=tgaDtg(G, opts.smooth);
+  if(n<10) return {dtg:d, cand:[]};
+  // 雜訊:DTG 與它自己的移動中位數之差(整條的)
+  const mm=thMovingMedian(d,Math.max(3,Math.round(5/G.h)));
+  const noise=1.4826*thMedian(d.map((v,i)=>Math.abs(v-mm[i])))||1e-9;
+  const m=Math.max(2,Math.round((opts.smooth||10)/2/G.h)), edge=2*m;
+  let dmax=0; for(let i=edge;i<n-edge;i++) if(d[i]>dmax) dmax=d[i];
+  const minProm=Math.max(6*noise,0.02*dmax,0.001)/sens;
+  // 局部粗糙度:DTG 再平滑一次的殘差,取前後 40 °C 的中位數。高溫段常整片抖動,
+  // 只看整條的雜訊會把抖動當成一串小峰;平滑背景上的小峰則要留下
+  const s2=thSg(d,m,false), rr=d.map((v,i)=>Math.abs(v-s2[i])), W=Math.round(40/G.h);
+  const rough=i=>1.4826*thMedian(rr.slice(Math.max(0,i-W),Math.min(n,i+W+1)));
+  // 局部最大值,再算突出度(往兩邊走到更高的點之前的最低值)。兩端各兩個平滑半寬內的微分不可靠,不找
+  const cand=[];
+  const half=Math.max(1,Math.round(2/G.h));
+  for(let i=edge;i<n-edge;i++){
+    if(!(d[i]>=0.03*dmax/sens)) continue;   // 失重速率本身太小(不到最大峰的 3%)的不算
+    let ok=true; for(let j=Math.max(0,i-half);j<=Math.min(n-1,i+half);j++) if(d[j]>d[i]||(d[j]===d[i]&&j<i)){ ok=false; break; }
+    if(!ok) continue;
+    let lmin=d[i], j=i; while(j>0&&d[j-1]<=d[i]){ j--; if(d[j]<lmin) lmin=d[j]; }
+    let rmin=d[i]; j=i; while(j<n-1&&d[j+1]<=d[i]){ j++; if(d[j]<rmin) rmin=d[j]; }
+    const prom=d[i]-Math.max(lmin,rmin);
+    if(prom<minProm||prom<35*rough(i)/sens) continue;
+    cand.push({i, t:x[i], rate:d[i], prom});
+  }
+  cand.sort((p,q)=>q.prom-p.prom);
+  return {dtg:d, cand};
+}
+/* 使用者框的範圍裡 DTG 最高的點(手動加峰);範圍裡沒有資料回傳 -1 */
+function tgaPeakIn(G, d, T1, T2){
+  const lo=Math.min(T1,T2), hi=Math.max(T1,T2); let best=-1;
+  for(let i=0;i<G.x.length;i++){ if(G.x[i]<lo||G.x[i]>hi) continue; if(best<0||d[i]>d[best]) best=i; }
+  return best;
+}
+/* 各階段:相鄰兩峰之間 DTG 最低處當分界,第一段從曲線開頭、最後一段到曲線結尾。idxs 是峰在格點上的位置(會排序) */
+function tgaSteps(G, d, idxs){
+  const n=G.x.length, x=G.x, keep=[...new Set(idxs)].filter(i=>i>=0&&i<n).sort((p,q)=>p-q);
+  const cuts=[0];
+  for(let k=0;k<keep.length-1;k++){
+    let jm=keep[k]; for(let j=keep[k];j<=keep[k+1];j++) if(d[j]<d[jm]) jm=j;
+    cuts.push(jm);
+  }
+  cuts.push(n-1);
+  return keep.map((i,k)=>{ const a=cuts[k], b=cuts[k+1];
+    return {i, t:x[i], rate:d[i], t1:x[a], t2:x[b], w1:G.y[a], w2:G.y[b], loss:G.y[a]-G.y[b]}; });
+}
+/* 自動:突出度前 max 個 */
+function tgaAnalyze(G, opts){
+  const c=tgaCandidates(G, opts), n=G.x.length;
+  return {dtg:c.dtg, peaks:tgaSteps(G, c.dtg, c.cand.slice(0,(opts&&opts.max)||8).map(p=>p.i)), residue:G.y[n-1], tEnd:G.x[n-1]};
+}
+
+/* ---- DSC / TGA 頁面:兩頁共用曲線庫、圖例、拖曳量測、存入圖譜;各自的計算與畫圖在 dsc… / tga… ---- */
+const TH_COLORS=FTIR_COLORS.concat(['#0e8074','#b4436c','#5b6770','#c98a00','#1b4b43']);
+const TH_DEFAULTS={
+  dsc:{endo:'up',perMass:true,offset:0,auto:true,sens:1,showLabels:true,showTitle:true,title:'',showAxisTitles:true,showTickLabels:true,legend:{show:true,pos:'auto',frame:false},xmin:null,xmax:null,
+    yunit:'auto',ySkipEnds:true,ymin:null,ymax:null,ystep:null},
+  tga:{mode:'both',dtgDown:true,smooth:10,sens:1,topN:6,showLabels:true,showTitle:true,title:'',showAxisTitles:true,showTickLabels:true,legend:{show:true,pos:'auto',frame:false},xmin:null,xmax:null,
+    wUnit:'%',dUnit:'C',wMin:null,wMax:null,wStep:null,dMin:null,dMax:null,dStep:null}
+};
+function thModule(kind,label){
+  return {kind,pre:kind,label,lib:[],editingId:null,current:null,inited:false,measuring:false,
+    st:Object.assign({sel:[]},JSON.parse(JSON.stringify(TH_DEFAULTS[kind])))};
+}
+const DSC_M=thModule('dsc','DSC'), TGA_M=thModule('tga','TGA');
+const thEl=(M,id)=>document.getElementById(M.pre+id);
+const thModOf=kind=>kind==='dsc'?DSC_M:TGA_M;
+
+/* 讀檔:Excel 每個工作表各自拆曲線;文字檔先當 UTF-8,有亂碼再用 Big5(Excel 另存的 CSV 常是 Big5) */
+async function thReadCurves(M,f){
+  const buf=await new Promise(res=>{ const rd=new FileReader(); rd.onload=()=>res(rd.result); rd.onerror=()=>res(null); rd.readAsArrayBuffer(f); });
+  if(!buf) throw new Error('讀取失敗');
+  let tables;
+  if(/\.xlsx?$/i.test(f.name)){
+    if(typeof XLSX==='undefined') throw new Error('Excel 讀取元件沒有載入(可能擋了外網),請改存成 CSV');
+    tables=thParseSheets(buf);
+    if(!tables.length) throw new Error('工作表裡找不到數字欄');
+  }else{
+    let text=new TextDecoder('utf-8').decode(buf);
+    if(text.includes('�')){ try{ text=new TextDecoder('big5').decode(buf); }catch(_e){} }
+    tables=[{sheet:'',cols:thParseText(text)}];
+  }
+  const out=[], errs=[];
+  tables.forEach(tb=>{
+    try{ thCurvesFromCols(tb.cols,M.kind).forEach(c=>{ const cc=thClean(c); if(cc.x.length<20) return;
+      if(cc.x.some(v=>!(Math.abs(v)<=5000))){ errs.push('溫度欄的數值不合理(超過 ±5000 °C)'); return; }
+      cc.col=(tables.length>1&&tb.sheet?tb.sheet+' / ':'')+(c.col||''); out.push(cc); }); }
+    catch(e){ errs.push(e&&e.message?e.message:String(e)); }
+  });
+  if(!out.length) throw new Error(errs[0]||'找不到可用的曲線');
+  return out;
+}
+/* 溫度程序一直沒變(或只有一段)時,整條當一段 */
+function thSegsOf(c){
+  const s=thSegments(c);
+  return s.length?s:[{kind:'heat',a:0,b:c.x.length,label:'全部',rate:0,t0:c.x[0],t1:c.x[c.x.length-1]}];
+}
+function thDefaultSeg(M,segs){
+  if(M.kind==='dsc'){ const s=segs.find(g=>g.label==='第 2 次升溫')||segs.find(g=>g.kind==='heat')||segs[0]; return s.label; }
+  const heat=segs.filter(g=>g.kind==='heat'), pool=heat.length?heat:segs;
+  return pool.slice().sort((p,q)=>(q.b-q.a)-(p.b-p.a))[0].label;
+}
+function thSegOf(item){ return item.segs.find(s=>s.label===item.seg)||item.segs[0]; }
+function thSegText(s){ return `${s.label}(${s.t0.toFixed(0)}→${s.t1.toFixed(0)} °C${s.rate?','+Math.abs(s.rate).toFixed(0)+' °C/min':''})`; }
+/* 每條曲線、每一段各自記:刪掉的自動標示(hide)、改過的標示文字(lab)、手動量測(man) */
+function thEvOf(item,segLabel){
+  if(!item.ev[segLabel]) item.ev[segLabel]={hide:[],lab:{},man:[]};
+  return item.ev[segLabel];
+}
+/* 自動標示刪掉後,改了靈敏度或平滑峰位會移一兩度,±3 °C 內都算同一個 */
+function thHidden(hide,prefix,t){ return hide.some(k=>{ if(!k.startsWith(prefix)) return false; const v=+k.slice(prefix.length); return isFinite(v)&&Math.abs(v-t)<=3; }); }
+function thUpdateSaveLabel(M){ const b=thEl(M,'Save'); if(b) b.textContent=M.editingId?'更新此圖譜':'存入圖譜'; }
+async function thHandleFiles(M,list){
+  const files=[...list]; if(!files.length) return [];
+  M.editingId=null; thUpdateSaveLabel(M);
+  const added=[];
+  for(const f of files){
+    let curves; try{ curves=await thReadCurves(M,f); }catch(e){ notify(f.name+':'+(e&&e.message?e.message:'讀取失敗')); continue; }
+    const base=f.name.replace(/\.(csv|txt|xlsx?)$/i,'');
+    curves.forEach((c,k)=>{
+      const bare=String(c.col||'').replace(/^.* \/ /,'');
+      const generic=!bare||/^(unsubtracted\s+)?(weight|heat\s*flow)\b|^欄 \d+$/i.test(bare);
+      const name=curves.length===1?base:(generic?`${base}-${k+1}`:bare);
+      const segs=thSegsOf(c);
+      const id=M.pre+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+      const item={id,name,file:f,fname:f.name,col:c.col||'',x:c.x,y:c.y,t:c.t,prog:c.prog,unit:c.unit,segs,seg:thDefaultSeg(M,segs),rate:null,mass:null,ev:{}};
+      M.lib.push(item); added.push(item);
+    });
+  }
+  if(!M.st.sel.length&&added.length) M.st.sel=[added[0].id];
+  thRenderLib(M); thRender(M);
+  return added;
+}
+function thRenderLib(M){
+  const box=thEl(M,'Lib'); if(!box) return; box.innerHTML='';
+  thEl(M,'LibCount').textContent=M.lib.length?M.lib.length+' 條':'';
+  M.lib.forEach(item=>{
+    const idx=M.st.sel.indexOf(item.id);
+    const el=document.createElement('div'); el.className='ftir-row'+(idx>=0?' sel':'');
+    el.innerHTML=`<input type="checkbox" ${idx>=0?'checked':''}><span class="swatch" style="background:${idx>=0?TH_COLORS[idx%TH_COLORS.length]:'transparent'}"></span><span class="nm" title="點兩下改名">${escapeHtml(item.name)}</span><span class="rm" title="移除暫存">✕</span>`;
+    el.querySelector('input').onchange=e=>{
+      if(e.target.checked){ if(!M.st.sel.includes(item.id)) M.st.sel.push(item.id); }
+      else M.st.sel=M.st.sel.filter(x=>x!==item.id);
+      thRenderLib(M); thRender(M); };
+    el.querySelector('.nm').ondblclick=async()=>{ const nm=await promptDialog('曲線名稱',item.name); if(nm===null) return; const t=nm.trim(); if(!t) return; item.name=t; thRenderLib(M); thRender(M); };
+    el.querySelector('.rm').onclick=()=>{ M.lib=M.lib.filter(x=>x.id!==item.id); M.st.sel=M.st.sel.filter(x=>x!==item.id); thRenderLib(M); thRender(M); };
+    box.appendChild(el);
+  });
+}
+function thRender(M,opts){ return M.kind==='dsc'?dscRender(M,opts):tgaRender(M,opts); }
+function thEmpty(M){
+  const wrap=thEl(M,'Plotwrap');
+  wrap.innerHTML=`<div class="ftir-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="52" height="52"><path d="M3 3v18h18M7 15l3-4 3 3 4-6"/></svg><div>上傳 PerkinElmer 匯出的 CSV,或整理好的 Excel(溫度欄 + ${M.kind==='dsc'?'熱流':'重量'}欄)以開始</div></div>`;
+  thEl(M,'Curvewrap').innerHTML=''; thEl(M,'Tablewrap').innerHTML='';
+  ['DlPng','DlSvg','DlCsv','Save','Measure'].forEach(b=>thEl(M,b).disabled=true);
+  thSetMeasuring(M,false); M.current=null;
+}
+
+/* ---- 畫圖共用 ---- */
+function thTextW(s,fs){ return [...String(s)].reduce((w,ch)=>w+(/[⺀-鿿豈-﫿＀-￯　-〿]/.test(ch)?fs:fs*0.55),0); }
+function thNum(v,d){ return (v==null||!isFinite(v))?'':(+v).toFixed(d); }
+function thSig(v,n){ return (v==null||!isFinite(v))?'':String(+(+v).toPrecision(n)); }   // 有效位數(小樣品的 mg/°C 很小)
+/* 顯示範圍:兩格都空就用資料的範圍;填反自動對調。手填或圖譜存的範圍只收 −300 到 3000 °C */
+const TH_T_LO=-300, TH_T_HI=3000;
+/* 刻度:和 ftirNiceTicks 一樣挑 1、2、5 的間距,但格數有上限,數值大到小數點後放不下時直接不畫(不會無窮迴圈) */
+function thTicks(lo,hi,count,step){
+  const span=hi-lo; if(!(span>0)||!isFinite(span)) return [];
+  if(!(step>0&&span/step<=60)){ const raw=span/count, mag=Math.pow(10,Math.floor(Math.log10(raw))), nr=raw/mag; step=(nr<1.5?1:nr<3?2:nr<7?5:10)*mag; }
+  const k0=Math.ceil(lo/step-1e-9), k1=Math.floor(hi/step+1e-9);
+  if(!(k1-k0<=400)||Math.abs(k0)>1e12||Math.abs(k1)>1e12) return [];
+  const t=[]; for(let k=k0;k<=k1;k++) t.push(+(k*step).toFixed(10)); return t;
+}
+function thXRange(st,xsList){
+  let lo=Infinity,hi=-Infinity; xsList.forEach(xs=>xs.forEach(v=>{ if(isFinite(v)){ if(v<lo) lo=v; if(v>hi) hi=v; } }));
+  if(!isFinite(lo)){ lo=0; hi=1; }
+  const ok=v=>v!=null&&isFinite(v)&&v>=TH_T_LO&&v<=TH_T_HI;
+  let a=ok(st.xmin)?st.xmin:lo, b=ok(st.xmax)?st.xmax:hi;
+  if(a>b){ const t=a; a=b; b=t; }
+  if(b-a<1){ a=lo; b=hi; }
+  return [a,b];
+}
+/* 曲線路徑:每個像素欄只留第一點、最低、最高、最後一點,點數上萬時存進圖譜的 SVG 才不會太大 */
+function thPathD(xs,ys,X,Y,xmin,xmax,acc){
+  let d='', col=null, buf=[];
+  const put=p=>{ d+=(d?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)+' '; if(acc) acc.push(p); };
+  const flush=()=>{ if(!buf.length) return;
+    let lo=buf[0], hi=buf[0]; buf.forEach(p=>{ if(p[1]<lo[1]) lo=p; if(p[1]>hi[1]) hi=p; });
+    const keep=[...new Set([buf[0],lo,hi,buf[buf.length-1]])].sort((p,q)=>p[2]-q[2]); keep.forEach(put); buf=[]; };
+  for(let i=0;i<xs.length;i++){
+    const x=xs[i], y=ys[i]; if(!isFinite(x)||!isFinite(y)||x<xmin||x>xmax) continue;
+    const px=X(x), py=Y(y), c=Math.round(px);
+    if(c!==col){ flush(); col=c; }
+    buf.push([px,py,i]);
+  }
+  flush();
+  return d||'M0 0';
+}
+function thXAxis(S,st,X,xmin,xmax,m,ph){
+  const ticks=thTicks(xmin,xmax,9); if(ticks.length<2) return;
+  const step=ticks[1]-ticks[0], half=step/2;
+  thTicks(xmin,xmax,0,half).forEach(v=>{
+    const major=Math.abs(v/step-Math.round(v/step))<1e-6, px=X(v).toFixed(1);
+    S.push(`<line x1="${px}" y1="${m.t+ph}" x2="${px}" y2="${m.t+ph-(major?7:4)}" stroke="#111" stroke-width="1"/>`);
+    if(major&&st.showTickLabels) S.push(`<text x="${px}" y="${m.t+ph+21}" font-size="15" text-anchor="middle" fill="#111">${+v.toFixed(step<1?2:step<10?1:0)}</text>`);
+  });
+}
+/* 縱軸刻度:有填間距(而且不會畫出太多格)就照填的,否則自動;小數位數跟著間距走 */
+function thTickDec(step){ const t=String(+(+step).toPrecision(6)); if(/e/i.test(t)) return 6; const i=t.indexOf('.'); return i<0?0:Math.min(6,t.length-i-1); }
+function thYTicks(S,st,Y,lo,hi,x0,side,show,step){
+  const ticks=thTicks(lo,hi,6,step);
+  const gap=ticks.length>1?ticks[1]-ticks[0]:(hi-lo), dec=thTickDec(gap);
+  ticks.forEach(v=>{ if(v<lo-1e-9||v>hi+1e-9) return; const py=Y(v).toFixed(1);
+    S.push(`<line x1="${x0}" y1="${py}" x2="${x0+(side<0?7:-7)}" y2="${py}" stroke="#111" stroke-width="1"/>`);
+    if(show) S.push(`<text x="${x0+(side<0?-9:9)}" y="${(+py+5).toFixed(1)}" font-size="14" text-anchor="${side<0?'end':'start'}" fill="#111">${(Math.abs(v)<gap*1e-6?0:v).toFixed(dec)}</text>`); });
+}
+/* 縱軸範圍:最小、最大各自可以手填(單位同縱軸),空著用自動;填反或一樣就整個回到自動 */
+function thYRange(autoLo,autoHi,mn,mx){
+  let lo=(mn!=null&&isFinite(mn))?mn:autoLo, hi=(mx!=null&&isFinite(mx))?mx:autoHi;
+  if(!(hi>lo)){ lo=autoLo; hi=autoHi; }
+  return [lo,hi];
+}
+const TH_SMALL_UNIT={mW:'μW','W/g':'mW/g'};
+/* 圖例位置選「自動」時,在四個角與左右中間裡挑曲線點(與標籤)最少的地方 */
+function thLegendSvg(rows,lg,m,pw,ph,pts){
+  if(!lg.show||!rows.length) return '';
+  const lh=20,padx=10,pady=8;
+  const bw=Math.max(...rows.map(r=>thTextW(r.name,13.5)))+padx*2+34, bh=rows.length*lh+pady*2;
+  const at=p=>[p.includes('l')?m.l+12:m.l+pw-bw-12, p.includes('t')?m.t+10:p.includes('b')?m.t+ph-bh-10:m.t+(ph-bh)/2];
+  let pos=lg.pos||'auto';
+  if(pos==='auto'){
+    let best=Infinity; pos='tr';
+    ['tr','tl','br','bl','mr','ml'].forEach(p=>{ const [x,y]=at(p);
+      const n=(pts||[]).reduce((c,q)=>c+(q[0]>=x-4&&q[0]<=x+bw+4&&q[1]>=y-4&&q[1]<=y+bh+4?1:0),0);
+      if(n<best){ best=n; pos=p; } });
+  }
+  const [lx,ly]=at(pos);
+  const S=[];
+  if(lg.frame) S.push(`<rect x="${lx}" y="${ly}" width="${bw.toFixed(1)}" height="${bh}" fill="#fff" stroke="#999" stroke-width="0.8" rx="4"/>`);
+  rows.forEach((r,i)=>{ const yy=ly+pady+lh*i+lh/2;
+    S.push(`<line x1="${lx+padx}" y1="${yy}" x2="${lx+padx+26}" y2="${yy}" stroke="${r.c}" stroke-width="2"${r.dash?' stroke-dasharray="5 3"':''}/>`);
+    S.push(`<text x="${lx+padx+32}" y="${yy+5}" font-size="13.5" fill="#111">${ftirEscXml(r.name)}</text>`); });
+  return S.join('');
+}
+/* 標籤擺放:放在曲線外側(dir -1 往上、+1 往下),和已放好的標籤重疊就再往外推;太遠時畫一條細線接回去 */
+function thPlaceLabels(S,labels,m,pw,ph,acc){
+  const placed=[];
+  labels.sort((p,q)=>p.x-q.x).forEach(L=>{
+    const fs=L.fs||14, w=thTextW(L.text,fs), h=fs+3;
+    let base=L.dir<0?L.y-8:L.y+8+fs;
+    let box=null;
+    for(let k=0;k<10;k++){
+      box={x1:L.x-w/2-2,x2:L.x+w/2+2,y1:base-fs,y2:base+3};
+      if(!placed.some(b=>b.x1<box.x2&&box.x1<b.x2&&b.y1<box.y2&&box.y1<b.y2)) break;
+      base+=L.dir*h;
+    }
+    base=Math.max(m.t+fs+2,Math.min(m.t+ph-4,base));
+    box={x1:L.x-w/2-2,x2:L.x+w/2+2,y1:base-fs,y2:base+3};
+    placed.push(box);
+    if(acc) for(let x=box.x1;x<=box.x2;x+=6) acc.push([x,base-fs/2]);
+    const near=L.dir<0?base+3:base-fs;
+    if(Math.abs(near-L.y)>12) S.push(`<line x1="${L.x.toFixed(1)}" y1="${(L.y+L.dir*3).toFixed(1)}" x2="${L.x.toFixed(1)}" y2="${near.toFixed(1)}" stroke="${L.c}" stroke-width="0.6"/>`);
+    S.push(`<text x="${L.x.toFixed(1)}" y="${base.toFixed(1)}" font-size="${fs}" text-anchor="middle" fill="${L.c}" font-family="Times New Roman,serif">${ftirEscXml(L.text)}</text>`);
+  });
+}
+function thNiceStep(v){ const p=Math.pow(10,Math.floor(Math.log10(v))), n=v/p; return (n<1.5?1:n<3.5?2:n<7.5?5:10)*p; }
+function thYAt(G,t){
+  const x=G.x; if(t<=x[0]) return G.y[0]; if(t>=x[x.length-1]) return G.y[x.length-1];
+  let i=Math.min(x.length-2,Math.max(0,Math.floor((t-x[0])/G.h)));
+  while(i>0&&x[i]>t) i--; while(i<x.length-2&&x[i+1]<t) i++;
+  const f=(t-x[i])/((x[i+1]-x[i])||1); return G.y[i]+(G.y[i+1]-G.y[i])*f;
+}
+
+/* ---- 拖曳量測:「手動量測」按下後,在圖上拖一段溫度範圍 ---- */
+function thSetMeasuring(M,on){
+  M.measuring=!!on;
+  const b=thEl(M,'Measure'), w=thEl(M,'Plotwrap');
+  if(b){ b.classList.toggle('btn-primary',M.measuring); b.classList.toggle('btn-ghost',!M.measuring); b.textContent=M.measuring?'在圖上拖曳一段範圍…(按這裡取消)':'手動量測:在圖上拖曳範圍'; }
+  if(w) w.classList.toggle('measuring',M.measuring);
+}
+function thBindMeasure(M){
+  const wrap=thEl(M,'Plotwrap'); let st=null;
+  const toT=cx=>{ const c=M.current, svg=wrap.querySelector('svg'); if(!c||!svg) return null;
+    const r=svg.getBoundingClientRect(), mp=c.map, vx=(cx-r.left)*mp.W/r.width;
+    return Math.max(mp.xmin,Math.min(mp.xmax,mp.xmin+(vx-mp.l)/mp.pw*(mp.xmax-mp.xmin))); };
+  const draw=cx=>{ if(!st) return; const svg=wrap.querySelector('svg'); if(!svg) return;
+    const wr=wrap.getBoundingClientRect(), sr=svg.getBoundingClientRect();
+    const a=Math.min(st.cx,cx), b=Math.max(st.cx,cx);
+    Object.assign(st.box.style,{left:(a-wr.left+wrap.scrollLeft)+'px',width:Math.max(1,b-a)+'px',top:(sr.top-wr.top+wrap.scrollTop)+'px',height:sr.height+'px'}); };
+  const end=()=>{ if(st&&st.box) st.box.remove(); st=null; };
+  wrap.addEventListener('pointerdown',e=>{
+    if(!M.measuring||!M.current||e.button>0) return;
+    e.preventDefault(); const T=toT(e.clientX); if(T==null) return;
+    st={cx:e.clientX,T,box:document.createElement('div')}; st.box.className='th-selbox'; wrap.appendChild(st.box);
+    try{ wrap.setPointerCapture(e.pointerId); }catch(_e){} draw(e.clientX);
+  });
+  wrap.addEventListener('pointermove',e=>{ if(st) draw(e.clientX); });
+  wrap.addEventListener('pointerup',e=>{
+    if(!st) return; const T1=st.T, T2=toT(e.clientX); end();
+    if(T2==null) return;
+    if(Math.abs(T2-T1)<2){ showToast('範圍太窄,請拖曳至少 2 °C'); return; }
+    thOnRange(M,Math.min(T1,T2),Math.max(T1,T2));
+  });
+  wrap.addEventListener('pointercancel',end);
+}
+function thAskDialog(msg,curves,actions){
+  return new Promise(resolve=>{
+    const ov=document.createElement('div'); ov.className='ui-dialog-overlay';
+    ov.innerHTML='<div class="ui-dialog" role="dialog" aria-modal="true"><div class="ui-dialog-msg"></div><div class="th-askcurve"></div><div class="ui-dialog-actions"></div></div>';
+    ov.querySelector('.ui-dialog-msg').textContent=msg;
+    let sel=null;
+    if(curves.length>1){ sel=document.createElement('select'); sel.className='th-asksel';
+      curves.forEach((c,i)=>{ const o=document.createElement('option'); o.value=String(i); o.textContent=c; sel.appendChild(o); });
+      ov.querySelector('.th-askcurve').appendChild(sel); }
+    const act=ov.querySelector('.ui-dialog-actions'), prevFocus=document.activeElement;
+    const done=v=>{ document.removeEventListener('keydown',onKey,true); ov.remove(); try{ if(prevFocus&&prevFocus.focus) prevFocus.focus(); }catch(_e){} resolve(v); };
+    const onKey=e=>{ if(e.key==='Escape'){ e.stopImmediatePropagation(); e.preventDefault(); done(null); } };
+    const cancel=document.createElement('button'); cancel.type='button'; cancel.className='btn btn-ghost'; cancel.textContent='取消'; cancel.onclick=()=>done(null); act.appendChild(cancel);
+    actions.forEach(a=>{ const b=document.createElement('button'); b.type='button'; b.className='btn '+(a.primary?'btn-primary':'btn-ghost'); b.textContent=a.label;
+      b.onclick=()=>done({action:a.v,curve:sel?+sel.value:0}); act.appendChild(b); });
+    document.addEventListener('keydown',onKey,true);
+    ov.addEventListener('click',e=>{ if(e.target===ov) done(null); });
+    document.body.appendChild(ov);
+    setTimeout(()=>{ (sel||act.querySelector('.btn-primary')||cancel).focus(); },20);
+  });
+}
+async function thOnRange(M,T1,T2){
+  const tr=(M.current&&M.current.traces)||[]; if(!tr.length) return;
+  const names=tr.map(t=>t.item.name), rng=`${T1.toFixed(1)}–${T2.toFixed(1)} °C`;
+  const r=M.kind==='dsc'
+    ?await thAskDialog(`框選了 ${rng},要量什麼?${tr.length>1?'\n先選要量哪一條曲線。':''}`,names,[{v:'tg',label:'Tg(玻璃轉移)'},{v:'peak',label:'吸熱或放熱峰',primary:true}])
+    :await thAskDialog(`框選了 ${rng},在這段範圍裡 DTG 最高的地方加一個失重峰。${tr.length>1?'\n先選要加在哪一條曲線。':''}`,names,[{v:'peak',label:'加入失重峰',primary:true}]);
+  if(!r) return;
+  const t=tr[r.curve]; if(!t) return;
+  const item=t.item, seg=thSegOf(item), ev=thEvOf(item,seg.label);
+  const mm={id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),kind:r.action,T1:+T1.toFixed(2),T2:+T2.toFixed(2)};
+  if(M.kind==='dsc'){ const G=item._g&&item._g.G; if(!G||!dscMeasure(G,mm.kind,mm.T1,mm.T2)){ notify('這段範圍沒有足夠的資料點,請框大一點。'); return; } }
+  else{ const P=item._g&&item._a, i=P?tgaPeakIn(item._g.G,item._a.dtg,mm.T1,mm.T2):-1;
+    if(i<0){ notify('這段範圍沒有資料。'); return; }
+    const near=(t.P.steps||[]).find(s=>Math.abs(s.t-item._g.G.x[i])<2);
+    if(near){ notify(`這段範圍 DTG 最高的地方(${item._g.G.x[i].toFixed(1)} °C)已經標了 ${near.t.toFixed(1)} °C 的峰。`); return; } }
+  ev.man.push(mm);
+  thSetMeasuring(M,false);
+  thRender(M);
+}
+/* 刪掉一筆標示:自動的記進 hide(按「還原」可以找回來),手動的直接移除 */
+function thDropEvent(M,item,key){
+  const seg=thSegOf(item), ev=thEvOf(item,seg.label);
+  if(key.startsWith('m:')){ const id=key.slice(2); ev.man=ev.man.filter(x=>x.id!==id); delete ev.lab[key]; }
+  else if(!ev.hide.includes(key)) ev.hide.push(key);
+  thRender(M);
+}
+
+/* ============ DSC ============ */
+function dscRate(item,seg){ return item.rate>0?item.rate:Math.abs(seg.rate||0); }
+const DSC_TYPE_TEXT={tg:'Tg(玻璃轉移)',endo:'吸熱峰',exo:'放熱峰'};
+function dscPrep(M,item){
+  const st=M.st, seg=thSegOf(item), rate=dscRate(item,seg), gk=seg.label+'|'+rate;
+  if(!item._g||item._g.k!==gk){ item._g={k:gk,G:dscGrid(item,seg,rate)}; item._a=null; }
+  const G=item._g.G, ev=thEvOf(item,seg.label);
+  let auto=[];
+  if(st.auto){ const ak=String(st.sens); if(!item._a||item._a.k!==ak) item._a={k:ak,ev:dscAutoEvents(G,{sens:st.sens,kind:seg.kind})}; auto=item._a.ev; }
+  const mass=item.mass>0?item.mass:null, out=[];
+  const deco=(e,key,manual)=>{
+    const typ=e.kind==='tg'?'tg':(e.dir>0?'endo':'exo');
+    const def=typ==='tg'?'Tg':typ==='endo'?'Tm':'Tc';
+    let dh=null, dhU='';
+    if(e.kind==='peak'&&rate>0){ const ej=Math.abs(e.area)/rate*60;               // mW·s = mJ;W/g 的話直接是 J/g
+      if(item.unit==='W/g'){ dh=ej; dhU='J/g'; } else if(mass){ dh=ej/mass; dhU='J/g'; } else { dh=ej; dhU='mJ'; } }
+    let dcp=null;
+    if(e.kind==='tg'&&rate>0&&isFinite(e.step)){ const c=Math.abs(e.step)/(rate/60); if(item.unit==='W/g') dcp=c; else if(mass) dcp=c/mass; }
+    const lab=ev.lab[key];
+    return Object.assign({},e,{key,manual,typ,def,label:(typeof lab==='string'&&lab.trim())?lab.trim():def,dh,dhU,dcp,yv:thYAt(G,e.t)});
+  };
+  auto.forEach(e=>{ const pre='a:'+(e.kind==='tg'?'tg':e.dir>0?'en':'ex')+':'; if(thHidden(ev.hide,pre,e.t)) return; out.push(deco(e,pre+Math.round(e.t),false)); });
+  ev.man.forEach(mm=>{ const e=dscMeasure(G,mm.kind,mm.T1,mm.T2); if(e) out.push(deco(e,'m:'+mm.id,true)); });
+  out.sort((p,q)=>p.t-q.t);
+  return {seg,G,rate,mass,events:out,hidden:ev.hide.length};
+}
+function dscRender(M,opts){
+  const st=M.st, wrap=thEl(M,'Plotwrap'); if(!wrap) return;
+  const chosen=st.sel.map(id=>M.lib.find(x=>x.id===id)).filter(Boolean);
+  if(!chosen.length){ thEmpty(M); return; }
+  const sgn=st.endo==='down'?-1:1;
+  const traces=chosen.map((item,k)=>{
+    const P=dscPrep(M,item), seg=P.seg;
+    const sc=(item.unit==='mW'&&st.perMass&&P.mass)?1/P.mass:1, unit=sc!==1?'W/g':item.unit;
+    return {item,P,c:TH_COLORS[k%TH_COLORS.length],unit,sc,
+      xs:item.x.slice(seg.a,seg.b), ys0:item.y.slice(seg.a,seg.b).map(v=>v*sc)};
+  });
+  const title=st.showTitle?(st.title||(chosen.length===1?chosen[0].name:'')):'';
+  const built=dscBuildSVG(M,{traces,title,sgn});
+  M.current={traces,built,name:chosen.length===1?chosen[0].name:'overlay',multi:chosen.length>1,items:chosen,map:built.map};
+  wrap.innerHTML=built.svg;
+  if(!(opts&&opts.keepCurves)) dscRenderCurves(M,traces);
+  if(!(opts&&opts.keepTable)) dscRenderTable(M,traces);
+  thEnableOutputs(M);
+}
+/* 輸出鈕:儲存還在進行時「存入圖譜」維持停用(重畫不能把它打開,否則會存成兩張) */
+function thEnableOutputs(M){ ['DlPng','DlSvg','DlCsv','Save','Measure'].forEach(b=>{ thEl(M,b).disabled=(b==='Save'&&!!M.saving); }); }
+function dscBuildSVG(M,spec){
+  const st=M.st, {traces,title,sgn}=spec;
+  const W=1240,H=560,m={l:100,r:28,t:title?62:40,b:70},pw=W-m.l-m.r,ph=H-m.t-m.b;
+  const [xmin,xmax]=thXRange(st,traces.map(t=>t.xs));
+  // 縱軸自動範圍只看可信的那一段:每段開頭儀器還在追溫度的上衝、結尾快到折返溫度的彎曲常比訊號大很多,
+  // 算進去整條曲線就被壓平(超出的部分會被裁掉);可信段裡一個點都沒有(例如顯示範圍只框了開頭)才全部都看
+  const inX=x=>x>=xmin&&x<=xmax;
+  // 每條各自判斷:可信段在顯示範圍裡一個點都沒有(段太短,或只框了開頭)的那條就全部都看,不然疊圖時它會被裁到看不見
+  traces.forEach(t=>{ const G=t.P.G; t.winOk=!!st.ySkipEnds&&G.lo<=G.hi&&t.xs.some(x=>inX(x)&&x>=G.lo&&x<=G.hi); });
+  const inWin=(t,x)=>!t.winOk||(x>=t.P.G.lo&&x<=t.P.G.hi);
+  const ext=(key,ok)=>{ let lo=Infinity,hi=-Infinity;
+    traces.forEach(t=>t.xs.forEach((x,i)=>{ const v=t[key][i]; if(!isFinite(v)||!inX(x)||!ok(t,x)) return; if(v<lo) lo=v; if(v>hi) hi=v; }));
+    return [lo,hi]; };
+  let win=inWin, [b0,b1]=ext('ys0',win);
+  if(!isFinite(b0)){ win=()=>true; [b0,b1]=ext('ys0',win); }
+  // 單位:自動時起伏不到 0.2 就換成千分之一的單位(mW → μW、W/g → mW/g),刻度才不會是一串小數
+  const fac=st.yunit==='x1000'?1000:st.yunit==='x1'?1:((isFinite(b0)&&b1-b0<0.2)?1000:1);
+  const off=+st.offset||0;                                  // 錯開的量,單位同縱軸(換算後)
+  traces.forEach((t,k)=>{ t.fac=fac; t.dunit=fac===1?t.unit:(TH_SMALL_UNIT[t.unit]||t.unit);
+    t.off=k*off*sgn;                                        // 吸熱朝下時軸是反的,往畫面上方移要減
+    t.ys=t.ys0.map(v=>v*fac+t.off); });
+  let [ymin,ymax]=ext('ys',win);
+  if(!isFinite(ymin)){ ymin=0; ymax=1; }
+  if(ymax-ymin<1e-12){ const d=Math.abs(ymax)*0.01||0.5; ymin-=d; ymax+=d; }
+  const any=st.showLabels&&traces.some(t=>t.P.events.length), pad=(ymax-ymin)*(any?0.15:0.06);
+  const [yLo,yHi]=thYRange(ymin-pad,ymax+pad,st.ymin,st.ymax);
+  const ylabel='Heat flow ('+[...new Set(traces.map(t=>t.dunit))].join(' / ')+')';
+  const X=v=>m.l+(v-xmin)/(xmax-xmin)*pw;
+  const Y=sgn>0?(v=>m.t+(yHi-v)/(yHi-yLo)*ph):(v=>m.t+(v-yLo)/(yHi-yLo)*ph);   // 吸熱朝下:軸反過來,數值照原本的正負
+  const cid='thc'+Math.random().toString(36).slice(2,9);
+  const S=[`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`,`<rect width="${W}" height="${H}" fill="#fff"/>`,
+    `<defs><clipPath id="${cid}"><rect x="${m.l}" y="${m.t}" width="${pw}" height="${ph}"/></clipPath></defs>`];
+  thXAxis(S,st,X,xmin,xmax,m,ph);
+  const stacked=(+st.offset>0)&&traces.length>1;     // 錯開疊圖時刻度數字只對第一條成立,改畫比例尺
+  thYTicks(S,st,Y,yLo,yHi,m.l,-1,st.showTickLabels&&!stacked,st.ystep);
+  const pts=[];
+  traces.forEach(t=>S.push(`<path d="${thPathD(t.xs,t.ys,X,Y,xmin,xmax,pts)}" fill="none" stroke="${t.c}" stroke-width="1.4" stroke-linejoin="round" clip-path="url(#${cid})"/>`));
+  if(st.showLabels){
+    const labels=[];
+    traces.forEach(t=>t.P.events.forEach(e=>{
+      if(e.t<xmin||e.t>xmax) return;
+      const yd=e.yv*t.sc*t.fac+t.off, px=X(e.t), py=Y(yd);
+      if(py<m.t-2||py>m.t+ph+2) return;                 // 手動縮放後跑出框外的不標
+      if(e.kind==='tg'){
+        S.push(`<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="3.2" fill="#fff" stroke="${t.c}" stroke-width="1.3"/>`);
+        labels.push({x:px,y:py,dir:-1,c:t.c,text:`${e.label} ${e.t.toFixed(1)} °C`});
+      }else{
+        const up=e.dir*sgn>0;                       // 峰尖在畫面上朝上還是朝下
+        labels.push({x:px,y:py,dir:up?-1:1,c:t.c,text:`${e.label} ${e.t.toFixed(1)} °C`});
+      }
+    }));
+    thPlaceLabels(S,labels,m,pw,ph,pts);
+  }
+  if(stacked){
+    const unit=traces[0].dunit, len=thNiceStep((yHi-yLo)*0.18), x0=m.l+22, yb=m.t+ph-24, yt=yb-Math.abs(Y(yLo+len)-Y(yLo));
+    S.push(`<path d="M${x0-5} ${yt.toFixed(1)}H${x0+5}M${x0} ${yt.toFixed(1)}V${yb}M${x0-5} ${yb}H${x0+5}" stroke="#111" stroke-width="1.2" fill="none"/>`);
+    for(let y=yt;y<=yb;y+=6) pts.push([x0,y]);
+    S.push(`<text x="${x0+10}" y="${((yt+yb)/2+5).toFixed(1)}" font-size="14" fill="#111">${+len.toPrecision(3)} ${ftirEscXml(unit)}</text>`);
+  }
+  S.push(thLegendSvg(traces.map(t=>({c:t.c,name:t.item.name})),st.legend,m,pw,ph,pts));
+  S.push(`<rect x="${m.l}" y="${m.t}" width="${pw}" height="${ph}" fill="none" stroke="#111" stroke-width="1.1"/>`);
+  // 吸熱方向:框左上角外面畫一支箭頭
+  const ax=m.l+8, ay1=m.t-9, ay0=m.t-29;
+  S.push(sgn>0?`<path d="M${ax} ${ay1}V${ay0+4}M${ax-4} ${ay0+8}L${ax} ${ay0}L${ax+4} ${ay0+8}" stroke="#111" stroke-width="1.3" fill="none"/>`
+    :`<path d="M${ax} ${ay0}V${ay1-4}M${ax-4} ${ay1-8}L${ax} ${ay1}L${ax+4} ${ay1-8}" stroke="#111" stroke-width="1.3" fill="none"/>`);
+  S.push(`<text x="${ax+10}" y="${ay1-4}" font-size="15" fill="#111">Endo</text>`);
+  if(st.showAxisTitles){
+    S.push(`<text x="${m.l+pw/2}" y="${H-14}" font-size="17" text-anchor="middle" fill="#111">Temperature (°C)</text>`);
+    S.push(`<text x="20" y="${m.t+ph/2}" font-size="17" text-anchor="middle" fill="#111" transform="rotate(-90 20 ${m.t+ph/2})">${ftirEscXml(ylabel)}</text>`);
+  }
+  if(title) S.push(`<text x="${m.l+pw/2}" y="30" font-size="19" text-anchor="middle" fill="#111">${ftirEscXml(title)}</text>`);
+  S.push('</svg>');
+  return {svg:S.join(''),map:{W,l:m.l,pw,xmin,xmax,ylo:yLo,yhi:yHi,fac}};
+}
+function thSwatch(c){ return `<span class="swatch" style="background:${c}"></span>`; }
+function dscRenderCurves(M,traces){
+  const rows=traces.map(t=>{ const it=t.item, seg=t.P.seg;
+    const segCell=it.segs.length>1?`<select data-k="seg">${it.segs.map(s=>`<option value="${escapeHtml(s.label)}"${s.label===seg.label?' selected':''}>${escapeHtml(thSegText(s))}</option>`).join('')}</select>`:escapeHtml(thSegText(seg));
+    const rateCell=`<input type="number" data-k="rate" step="any" min="0" value="${it.rate>0?it.rate:''}" placeholder="${seg.rate?Math.abs(seg.rate).toFixed(1):'未知'}">`;
+    const massCell=it.unit==='W/g'?'<span class="th-muted">已是 W/g</span>':`<input type="number" data-k="mass" step="any" min="0" value="${it.mass>0?it.mass:''}" placeholder="未填">`;
+    return `<tr data-id="${escapeHtml(it.id)}"><td class="nmc">${thSwatch(t.c)}${escapeHtml(it.name)}</td><td>${segCell}</td><td>${rateCell}</td><td>${massCell}</td></tr>`; }).join('');
+  const box=thEl(M,'Curvewrap');
+  box.innerHTML=`<div class="th-sub">曲線設定</div><div class="th-tablewrap"><table class="th-table"><thead><tr><th>曲線</th><th>升降溫段</th><th>速率 (°C/min)</th><th>樣品重 (mg)</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="ftir-hint">速率空著就用檔案裡的時間算;整理過的表沒有時間欄,要自己填才算得出 ΔH 與 ΔCp。填了樣品重,ΔH 換成 J/g,左側勾「換算成 W/g」時曲線也會除以重量。</div>`;
+  thBindCurveInputs(M,box);
+}
+function thBindCurveInputs(M,box){
+  box.querySelectorAll('tr[data-id]').forEach(tr=>{
+    const item=M.lib.find(x=>x.id===tr.dataset.id); if(!item) return;
+    tr.querySelectorAll('[data-k]').forEach(inp=>inp.addEventListener('change',()=>{
+      const k=inp.dataset.k;
+      if(k==='seg'){ item.seg=inp.value; thRender(M); return; }
+      const v=parseFloat(inp.value); item[k]=(isFinite(v)&&v>0)?v:null;
+      thRender(M,{keepCurves:true});
+    }));
+  });
+}
+function dscRenderTable(M,traces){
+  const box=thEl(M,'Tablewrap');
+  const rows=[]; let hidden=0;
+  traces.forEach(t=>{ hidden+=t.P.hidden; t.P.events.forEach(e=>{
+    const rng=e.kind==='tg'?(e.onset!=null&&e.end!=null?`${thNum(e.onset,1)}–${thNum(e.end,1)}`:''):`${thNum(e.t1,1)}–${thNum(e.t2,1)}`;
+    const dh=e.kind==='tg'?'—':(e.dh!=null?`${thNum(e.dh,2)} ${e.dhU}`:'<span class="th-muted">要填速率</span>');
+    const dcp=e.kind!=='tg'?'—':(e.dcp!=null?thNum(e.dcp,3):'<span class="th-muted">要填重量與速率</span>');
+    rows.push(`<tr data-id="${escapeHtml(t.item.id)}" data-key="${escapeHtml(e.key)}"><td class="nmc">${thSwatch(t.c)}${escapeHtml(t.item.name)}</td>
+      <td><input type="text" class="th-lab" maxlength="16" value="${escapeHtml(e.label)}" data-def="${escapeHtml(e.def)}"></td><td>${DSC_TYPE_TEXT[e.typ]}</td>
+      <td class="num">${thNum(e.onset,1)||'—'}</td><td class="num"><b>${thNum(e.t,1)}</b></td><td class="num">${rng}</td>
+      <td class="num">${dh}</td><td class="num">${dcp}</td><td>${e.manual?'手動':'自動'}</td><td><button type="button" class="th-x" title="刪除這筆">✕</button></td></tr>`); }); });
+  box.innerHTML=`<div class="th-sub">轉變<span class="th-subtools">${hidden?'<button type="button" class="btn btn-ghost btn-sm" data-act="restore">還原刪掉的自動標示</button>':''}</span></div>`
+    +(rows.length?`<div class="th-tablewrap"><table class="th-table"><thead><tr><th>曲線</th><th>標示</th><th>類型</th><th class="num">Onset (°C)</th><th class="num">峰溫 / Tg 中點 (°C)</th><th class="num">範圍 (°C)</th><th class="num">ΔH</th><th class="num">ΔCp (J/g·°C)</th><th>來源</th><th></th></tr></thead><tbody>${rows.join('')}</tbody></table></div>
+      <div class="ftir-hint">自動判讀只是起點:峰用兩端連直線當基線,Onset 是前緣最陡處的切線和基線的交點;Tg 用前後兩段基線與轉折切線求起點、終點,中點是曲線落在兩條基線正中間的溫度。標示可以直接改字(例如 Tcc、Td),判錯的按 ✕ 刪掉,漏掉的用左側「手動量測」補。</div>`
+      :`<div class="ftir-hint">${M.st.auto?'這段沒有自動找到明顯的 Tg 或吸放熱峰。':'自動判讀已關閉。'}可以按左側「手動量測」,在圖上拖曳一段溫度範圍來量 Tg 或峰。</div>`);
+  box.querySelectorAll('tr[data-key]').forEach(tr=>{
+    const item=M.lib.find(x=>x.id===tr.dataset.id); if(!item) return;
+    const key=tr.dataset.key, seg=thSegOf(item);
+    tr.querySelector('.th-lab').addEventListener('change',e=>{ const ev=thEvOf(item,seg.label), v=e.target.value.trim().slice(0,16);
+      if(v) ev.lab[key]=v; else { delete ev.lab[key]; e.target.value=e.target.dataset.def||''; } thRender(M,{keepCurves:true,keepTable:true}); });
+    tr.querySelector('.th-x').addEventListener('click',()=>thDropEvent(M,item,key));
+  });
+  const rb=box.querySelector('[data-act="restore"]');
+  if(rb) rb.onclick=()=>{ traces.forEach(t=>{ thEvOf(t.item,t.P.seg.label).hide=[]; }); thRender(M); };
+}
+function dscCsv(M){
+  let csv='﻿sample,segment,label,type,onset_C,peak_or_midpoint_C,from_C,to_C,dH,dH_unit,dCp_J_per_g_C,source\n';
+  const q=s=>'"'+String(s).replace(/"/g,'""')+'"';
+  M.current.traces.forEach(t=>t.P.events.forEach(e=>{
+    const a=e.kind==='tg'?e.onset:e.t1, b=e.kind==='tg'?e.end:e.t2;
+    csv+=[q(t.item.name),q(t.P.seg.label),q(e.label),e.typ,thNum(e.onset,2),thNum(e.t,2),thNum(a,2),thNum(b,2),e.dh!=null?thNum(e.dh,3):'',e.dh!=null?e.dhU:'',e.dcp!=null?thNum(e.dcp,4):'',e.manual?'manual':'auto'].join(',')+'\n'; }));
+  return csv;
+}
+function dscPeaksForSave(cur){
+  const out=[];
+  cur.traces.forEach(t=>t.P.events.forEach(e=>out.push({sample:t.item.name,seg:t.P.seg.label,tag:e.label,full:t.item.name+' '+e.label,kind:e.typ,
+    t:+e.t.toFixed(2),onset:e.onset!=null?+e.onset.toFixed(2):null,end:e.kind==='tg'&&e.end!=null?+e.end.toFixed(2):null,
+    dh:e.dh!=null?+e.dh.toFixed(3):null,dh_unit:e.dh!=null?e.dhU:'',dcp:e.dcp!=null?+e.dcp.toFixed(4):null})));
+  return out;
+}
+
+/* ============ TGA ============ */
+function tgaPrep(M,item){
+  const st=M.st, seg=thSegOf(item);
+  if(!item._g||item._g.k!==seg.label){ item._g={k:seg.label,G:tgaGrid(item,seg)}; item._a=null; }
+  const G=item._g.G, ak=st.smooth+'|'+st.sens;
+  if(!item._a||item._a.k!==ak){ const c=tgaCandidates(G,{smooth:st.smooth,sens:st.sens}); item._a={k:ak,dtg:c.dtg,cand:c.cand}; }
+  const d=item._a.dtg, ev=thEvOf(item,seg.label);
+  const picks=new Map();
+  item._a.cand.slice(0,st.topN).forEach(c=>{ if(!thHidden(ev.hide,'a:',c.t)) picks.set(c.i,{key:'a:'+Math.round(c.t),manual:false}); });
+  ev.man.forEach(mm=>{ const i=tgaPeakIn(G,d,mm.T1,mm.T2); if(i<0) return;
+    if([...picks.keys()].some(j=>Math.abs(G.x[j]-G.x[i])<2)) return;
+    picks.set(i,{key:'m:'+mm.id,manual:true}); });
+  const steps=tgaSteps(G,d,[...picks.keys()]).map(s=>Object.assign(s,picks.get(s.i)));
+  const n=G.x.length, m=Math.max(2,Math.round((st.smooth||10)/2/G.h));
+  return {seg,G,dtg:d,steps,residue:G.y[n-1],tEnd:G.x[n-1],edge:2*m,hidden:ev.hide.length};
+}
+function tgaRate(item,seg){ return item.rate>0?item.rate:Math.abs(seg.rate||0); }
+function tgaRender(M,opts){
+  const st=M.st, wrap=thEl(M,'Plotwrap'); if(!wrap) return;
+  const chosen=st.sel.map(id=>M.lib.find(x=>x.id===id)).filter(Boolean);
+  if(!chosen.length){ thEmpty(M); return; }
+  const dsg=st.dtgDown?-1:1;
+  const traces=chosen.map((item,k)=>{
+    const P=tgaPrep(M,item), seg=P.seg, w0=P.G.w0, rate=tgaRate(item,seg);
+    // 單位:mg 只有原始檔是 mg 的曲線能換(百分比的檔沒有起始重量);每分鐘要有升溫速率,沒有就維持每 °C
+    const mg=st.wUnit==='mg'&&item.unit==='mg', perMin=st.dUnit==='min'&&rate>0;
+    const wf=mg?w0/100:1, df=wf*(perMin?rate:1), wu=mg?'mg':'%';
+    return {item,P,c:TH_COLORS[k%TH_COLORS.length],rate,wf,df,wu,du:wu+'/'+(perMin?'min':'°C'),
+      xs:item.x.slice(seg.a,seg.b), ys:item.y.slice(seg.a,seg.b).map(v=>(item.unit==='%'?v:v/w0*100)*wf),
+      dx:P.G.x, dy:P.dtg.map(v=>v*dsg*df)};
+  });
+  const title=st.showTitle?(st.title||(chosen.length===1?chosen[0].name:'')):'';
+  const built=tgaBuildSVG(M,{traces,title,dsg});
+  M.current={traces,built,name:chosen.length===1?chosen[0].name:'overlay',multi:chosen.length>1,items:chosen,map:built.map};
+  wrap.innerHTML=built.svg;
+  if(!(opts&&opts.keepCurves)) tgaRenderCurves(M,traces);
+  if(!(opts&&opts.keepTable)) tgaRenderTable(M,traces);
+  thEnableOutputs(M);
+}
+function tgaBuildSVG(M,spec){
+  const st=M.st, {traces,title,dsg}=spec, mode=st.mode;
+  const both=mode==='both', showTg=mode!=='dtg', showDtg=mode!=='tg';
+  const W=1240,H=560,m={l:100,r:both?104:28,t:title?52:28,b:70},pw=W-m.l-m.r,ph=H-m.t-m.b;
+  const [xmin,xmax]=thXRange(st,traces.map(t=>t.xs));
+  const X=v=>m.l+(v-xmin)/(xmax-xmin)*pw;
+  const labelsOn=st.showLabels&&traces.some(t=>t.P.steps.length);
+  // 重量軸:自動時貼著資料;百分比而且失重超過一半時才畫滿 0–100%,失重不多的曲線才不會被壓平
+  let wmin=Infinity,wmax=-Infinity;
+  traces.forEach(t=>t.xs.forEach((x,i)=>{ if(x<xmin||x>xmax) return; const v=t.ys[i]; if(!isFinite(v)) return; if(v<wmin) wmin=v; if(v>wmax) wmax=v; }));
+  if(!isFinite(wmin)){ wmin=0; wmax=100; }
+  if(traces.every(t=>t.wu==='%')&&wmax-wmin>50){ wmin=Math.min(0,wmin); wmax=Math.max(100,wmax); }
+  if(wmax-wmin<1e-12){ const d=Math.abs(wmax)*0.01||0.5; wmin-=d; wmax+=d; }
+  const wpad=(wmax-wmin)*0.05;
+  const [wLo,wHi]=thYRange(wmin-wpad,wmax+wpad*(!showDtg&&labelsOn?3:1),st.wMin,st.wMax);
+  // DTG 軸:兩端(平滑窗內)的微分不可靠,不拿來定範圍
+  let dmin=Infinity,dmax=-Infinity;
+  traces.forEach(t=>t.dx.forEach((x,i)=>{ if(x<xmin||x>xmax||i<t.P.edge||i>=t.dx.length-t.P.edge) return; const v=t.dy[i]; if(v<dmin) dmin=v; if(v>dmax) dmax=v; }));
+  if(!isFinite(dmin)){ dmin=-1; dmax=0; }
+  if(dmax-dmin<1e-12){ const d=Math.abs(dmax)*0.01||0.5; dmin-=d; dmax+=d; }
+  const dspan=dmax-dmin, room=labelsOn?0.16:0.06;
+  const [dLo,dHi]=thYRange(dmin-dspan*(dsg<0?room:0.06),dmax+dspan*(dsg>0?room:0.06),st.dMin,st.dMax);
+  const YW=v=>m.t+(wHi-v)/(wHi-wLo)*ph, YD=v=>m.t+(dHi-v)/(dHi-dLo)*ph;
+  const cid='thc'+Math.random().toString(36).slice(2,9);
+  const S=[`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`,`<rect width="${W}" height="${H}" fill="#fff"/>`,
+    `<defs><clipPath id="${cid}"><rect x="${m.l}" y="${m.t}" width="${pw}" height="${ph}"/></clipPath></defs>`];
+  thXAxis(S,st,X,xmin,xmax,m,ph);
+  if(showTg) thYTicks(S,st,YW,wLo,wHi,m.l,-1,st.showTickLabels,st.wStep);
+  if(showDtg) thYTicks(S,st,YD,dLo,dHi,both?m.l+pw:m.l,both?1:-1,st.showTickLabels,st.dStep);
+  const pts=[];
+  traces.forEach(t=>{
+    if(showTg) S.push(`<path d="${thPathD(t.xs,t.ys,X,YW,xmin,xmax,pts)}" fill="none" stroke="${t.c}" stroke-width="1.5" stroke-linejoin="round" clip-path="url(#${cid})"/>`);
+    if(showDtg) S.push(`<path d="${thPathD(t.dx,t.dy,X,YD,xmin,xmax,pts)}" fill="none" stroke="${t.c}" stroke-width="1.1" stroke-linejoin="round"${both?' stroke-dasharray="5 3"':''} clip-path="url(#${cid})"/>`);
+  });
+  if(st.showLabels){
+    const labels=[], inBox=py=>py>=m.t-2&&py<=m.t+ph+2;        // 手動縮放後跑出框外的不標
+    traces.forEach(t=>t.P.steps.forEach(s=>{
+      if(s.t<xmin||s.t>xmax) return; const px=X(s.t);
+      if(showDtg){ const py=YD(s.rate*dsg*t.df); if(inBox(py)) labels.push({x:px,y:py,dir:dsg<0?1:-1,c:t.c,text:`${s.t.toFixed(1)} °C`}); }
+      else{ const py=YW(thYAt(t.P.G,s.t)*t.wf); if(!inBox(py)) return;
+        S.push(`<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="3" fill="#fff" stroke="${t.c}" stroke-width="1.3"/>`);
+        labels.push({x:px,y:py,dir:-1,c:t.c,text:`${s.t.toFixed(1)} °C`}); }
+    }));
+    thPlaceLabels(S,labels,m,pw,ph,pts);
+  }
+  // 有的曲線換得了單位、有的換不了(沒有速率、原始檔是百分比)時,圖例上標出每條的單位
+  const mixed=new Set(traces.map(t=>(showTg?t.wu:'')+'|'+(showDtg?t.du:''))).size>1;
+  const rows=traces.map(t=>({c:t.c,name:mixed?`${t.item.name} (${[showTg?t.wu:'',showDtg?t.du:''].filter(Boolean).join(', ')})`:t.item.name}));
+  if(both) rows.push({c:'#111',name:'TG'},{c:'#111',name:'DTG',dash:true});
+  S.push(thLegendSvg(rows,st.legend,m,pw,ph,pts));
+  S.push(`<rect x="${m.l}" y="${m.t}" width="${pw}" height="${ph}" fill="none" stroke="#111" stroke-width="1.1"/>`);
+  const uj=k=>[...new Set(traces.map(t=>t[k]))].join(' / ');
+  // 每 °C 是 dW/dT,每分鐘是 dW/dt;兩種混在一起就只寫 DTG
+  const nMin=traces.filter(t=>/\/min$/.test(t.du)).length, dv=nMin===traces.length?'dW/dt':nMin===0?'dW/dT':'';
+  const wLabel='Weight ('+uj('wu')+')', dLabel=(dv?'DTG, '+(dsg<0?'':'−')+dv+' (':'DTG (')+uj('du')+')';
+  if(st.showAxisTitles){
+    S.push(`<text x="${m.l+pw/2}" y="${H-14}" font-size="17" text-anchor="middle" fill="#111">Temperature (°C)</text>`);
+    S.push(`<text x="20" y="${m.t+ph/2}" font-size="17" text-anchor="middle" fill="#111" transform="rotate(-90 20 ${m.t+ph/2})">${ftirEscXml(showTg?wLabel:dLabel)}</text>`);
+    if(both) S.push(`<text x="${W-18}" y="${m.t+ph/2}" font-size="17" text-anchor="middle" fill="#111" transform="rotate(90 ${W-18} ${m.t+ph/2})">${ftirEscXml(dLabel)}</text>`);
+  }
+  if(title) S.push(`<text x="${m.l+pw/2}" y="30" font-size="19" text-anchor="middle" fill="#111">${ftirEscXml(title)}</text>`);
+  S.push('</svg>');
+  return {svg:S.join(''),map:{W,l:m.l,pw,xmin,xmax,wlo:wLo,whi:wHi,dlo:dLo,dhi:dHi}};
+}
+function tgaRenderCurves(M,traces){
+  const rows=traces.map(t=>{ const it=t.item, seg=t.P.seg;
+    const segCell=it.segs.length>1?`<select data-k="seg">${it.segs.map(s=>`<option value="${escapeHtml(s.label)}"${s.label===seg.label?' selected':''}>${escapeHtml(thSegText(s))}</option>`).join('')}</select>`:escapeHtml(thSegText(seg));
+    const rateCell=`<input type="number" data-k="rate" step="any" min="0" value="${it.rate>0?it.rate:''}" placeholder="${seg.rate?Math.abs(seg.rate).toFixed(1):'未知'}">`;
+    return `<tr data-id="${escapeHtml(it.id)}"><td class="nmc">${thSwatch(t.c)}${escapeHtml(it.name)}</td><td>${segCell}</td><td>${rateCell}</td>
+      <td class="num">${it.unit==='%'?'—':thNum(t.P.G.w0,3)+' mg'}</td><td class="num"><b>${thNum(t.P.residue,2)} %</b>(${thNum(t.P.tEnd,0)} °C)</td></tr>`; }).join('');
+  const box=thEl(M,'Curvewrap');
+  box.innerHTML=`<div class="th-sub">曲線設定</div><div class="th-tablewrap"><table class="th-table"><thead><tr><th>曲線</th><th>升溫段</th><th>速率 (°C/min)</th><th class="num">起始重量</th><th class="num">殘餘量</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="ftir-hint">分析一律用相對起始重量(最前面 5 點的平均)的百分比;殘餘量是這一段最後一點的重量。速率空著就用檔案裡的時間算,只有 DTG 選「每分鐘」時才用得到;沒有速率的曲線 DTG 維持每 °C。</div>`;
+  thBindCurveInputs(M,box);
+}
+function tgaRenderTable(M,traces){
+  const box=thEl(M,'Tablewrap');
+  const rows=[]; let hidden=0;
+  traces.forEach(t=>{ hidden+=t.P.hidden; t.P.steps.forEach(s=>{
+    rows.push(`<tr data-id="${escapeHtml(t.item.id)}" data-key="${escapeHtml(s.key)}"><td class="nmc">${thSwatch(t.c)}${escapeHtml(t.item.name)}</td>
+      <td class="num"><b>${thNum(s.t,1)}</b></td><td class="num">${thSig(s.rate*t.df,3)} <span class="th-muted">${escapeHtml(t.du)}</span></td><td class="num">${thNum(s.t1,0)}–${thNum(s.t2,0)}</td>
+      <td class="num">${thNum(s.loss,2)}</td><td>${s.manual?'手動':'自動'}</td><td><button type="button" class="th-x" title="刪除這個峰">✕</button></td></tr>`); }); });
+  box.innerHTML=`<div class="th-sub">失重階段<span class="th-subtools">${hidden?'<button type="button" class="btn btn-ghost btn-sm" data-act="restore">還原刪掉的自動峰</button>':''}</span></div>`
+    +(rows.length?`<div class="th-tablewrap"><table class="th-table"><thead><tr><th>曲線</th><th class="num">DTG 峰溫 (°C)</th><th class="num">最大失重速率</th><th class="num">階段範圍 (°C)</th><th class="num">失重 (%)</th><th>來源</th><th></th></tr></thead><tbody>${rows.join('')}</tbody></table></div>
+      <div class="ftir-hint">相鄰兩個 DTG 峰之間失重速率最低的地方當階段分界,第一段從曲線開頭算起、最後一段算到結尾。判錯的峰按 ✕ 刪掉,階段會跟著重分;漏掉的用左側「手動量測」框一段範圍補上。</div>`
+      :'<div class="ftir-hint">沒有找到明顯的失重峰。可以調低靈敏度門檻,或用左側「手動量測」框一段範圍。</div>');
+  box.querySelectorAll('tr[data-key]').forEach(tr=>{
+    const item=M.lib.find(x=>x.id===tr.dataset.id); if(!item) return;
+    tr.querySelector('.th-x').addEventListener('click',()=>thDropEvent(M,item,tr.dataset.key));
+  });
+  const rb=box.querySelector('[data-act="restore"]');
+  if(rb) rb.onclick=()=>{ traces.forEach(t=>{ thEvOf(t.item,t.P.seg.label).hide=[]; }); thRender(M); };
+}
+function tgaCsv(M){
+  const q=s=>'"'+String(s).replace(/"/g,'""')+'"';
+  let csv='﻿sample,segment,dtg_peak_C,max_rate_pct_per_C,from_C,to_C,mass_loss_pct,source\n';
+  M.current.traces.forEach(t=>t.P.steps.forEach(s=>{ csv+=[q(t.item.name),q(t.P.seg.label),thNum(s.t,2),thNum(s.rate,4),thNum(s.t1,1),thNum(s.t2,1),thNum(s.loss,3),s.manual?'manual':'auto'].join(',')+'\n'; }));
+  csv+='\nsample,segment,residue_pct,at_C\n';
+  M.current.traces.forEach(t=>{ csv+=[q(t.item.name),q(t.P.seg.label),thNum(t.P.residue,3),thNum(t.P.tEnd,1)].join(',')+'\n'; });
+  return csv;
+}
+function tgaPeaksForSave(cur){
+  const out=[];
+  cur.traces.forEach(t=>{
+    t.P.steps.forEach(s=>out.push({sample:t.item.name,seg:t.P.seg.label,kind:'step',tag:'',full:t.item.name,t:+s.t.toFixed(2),rate:+s.rate.toFixed(4),t1:+s.t1.toFixed(1),t2:+s.t2.toFixed(1),loss:+s.loss.toFixed(3)}));
+    if(isFinite(t.P.tEnd)&&isFinite(t.P.residue)) out.push({sample:t.item.name,seg:t.P.seg.label,kind:'res',tag:'',full:t.item.name,t:+t.P.tEnd.toFixed(1),val:+t.P.residue.toFixed(3)});
+  });
+  return out;
+}
+
+/* ---- 設定快照(存入圖譜時一併記下,送回圖譜分析時套回去) ---- */
+function thSettingsSnapshot(M){
+  const st=M.st, out={};
+  Object.keys(TH_DEFAULTS[M.kind]).forEach(k=>{ out[k]=k==='legend'?Object.assign({},st.legend):st[k]; });
+  out.items=st.sel.map(id=>M.lib.find(x=>x.id===id)).filter(Boolean).map(it=>({file:it.fname,col:it.col,name:it.name,seg:it.seg,rate:it.rate||null,mass:it.mass||null,ev:it.ev}));
+  return out;
+}
+function thApplySettings(M,st0){
+  const st=st0||{}, D=TH_DEFAULTS[M.kind], s=M.st;
+  const bool=(v,d)=>typeof v==='boolean'?v:d, num=(v,d)=>(typeof v==='number'&&isFinite(v))?v:d;
+  Object.keys(D).forEach(k=>{
+    const d=D[k];
+    if(k==='legend'){ const lg=st.legend||{}; s.legend={show:bool(lg.show,d.show),pos:['auto','tr','tl','br','bl'].includes(lg.pos)?lg.pos:d.pos,frame:bool(lg.frame,d.frame)}; }
+    else if(d===null){ const v=num(st[k],null); s[k]=(v==null)?null:(k==='xmin'||k==='xmax')?((v>=TH_T_LO&&v<=TH_T_HI)?v:null):(Math.abs(v)<1e9?v:null); }
+    else if(typeof d==='boolean') s[k]=bool(st[k],d);
+    else if(typeof d==='number') s[k]=num(st[k],d);
+    else s[k]=typeof st[k]==='string'?st[k]:d;
+  });
+  const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+  s.sens=clamp(s.sens,0.5,3); s.offset=Math.max(0,s.offset||0);
+  if(M.kind==='tga'){ s.smooth=Math.round(clamp(s.smooth,2,30)); s.topN=Math.round(clamp(s.topN,1,12)); }
+  if(M.kind==='dsc'&&!['up','down'].includes(s.endo)) s.endo='up';
+  if(M.kind==='tga'&&!['both','tg','dtg'].includes(s.mode)) s.mode='both';
+  if(M.kind==='dsc'&&!['auto','x1','x1000'].includes(s.yunit)) s.yunit='auto';
+  if(M.kind==='tga'&&!['%','mg'].includes(s.wUnit)) s.wUnit='%';
+  if(M.kind==='tga'&&!['C','min'].includes(s.dUnit)) s.dUnit='C';
+  ['ystep','wStep','dStep'].forEach(k=>{ if(k in s&&!(s[k]>0)) s[k]=null; });
+  thSyncControls(M);
+}
+/* 圖譜文件是使用者寫的:每條曲線的標示資料逐欄檢查 */
+function thCleanEv(ev){
+  const out={}; if(!ev||typeof ev!=='object') return out;
+  Object.keys(ev).slice(0,20).forEach(seg=>{ const e=ev[seg]||{};
+    out[seg]={hide:Array.isArray(e.hide)?e.hide.filter(x=>typeof x==='string').slice(0,200):[],
+      lab:Object.fromEntries(Object.entries(e.lab&&typeof e.lab==='object'?e.lab:{}).filter(([k,v])=>typeof v==='string').slice(0,200).map(([k,v])=>[k,v.slice(0,16)])),
+      man:Array.isArray(e.man)?e.man.filter(m=>m&&typeof m.id==='string'&&['tg','peak'].includes(m.kind)&&isFinite(m.T1)&&isFinite(m.T2)).slice(0,100).map(m=>({id:m.id,kind:m.kind,T1:+m.T1,T2:+m.T2})):[]}; });
+  return out;
+}
+/* 送回來的原始檔:依「檔名 + 欄名」對回存圖譜時的那幾條,名稱、段、速率、重量、標示照舊 */
+function thRestoreItems(M,saved,added){
+  const used=new Set(), sel=[];
+  (Array.isArray(saved)?saved:[]).forEach(sv=>{
+    if(!sv) return;
+    const it=added.find(x=>!used.has(x)&&x.fname===sv.file&&x.col===(sv.col||'')); if(!it) return;
+    used.add(it);
+    if(typeof sv.name==='string'&&sv.name.trim()) it.name=sv.name.trim().slice(0,80);
+    if(typeof sv.seg==='string'&&it.segs.some(s=>s.label===sv.seg)) it.seg=sv.seg;
+    it.rate=(typeof sv.rate==='number'&&sv.rate>0)?sv.rate:null;
+    it.mass=(typeof sv.mass==='number'&&sv.mass>0)?sv.mass:null;
+    it.ev=thCleanEv(sv.ev);
+    sel.push(it.id);
+  });
+  return sel.length?sel:added.map(x=>x.id);
+}
+function thSyncControls(M){
+  const s=M.st, el=id=>thEl(M,id);
+  el('ShowTitle').checked=s.showTitle; el('Title').value=s.title;
+  el('ShowAxisTitles').checked=s.showAxisTitles; el('ShowTickLabels').checked=s.showTickLabels;
+  el('Xmin').value=s.xmin==null?'':s.xmin; el('Xmax').value=s.xmax==null?'':s.xmax;
+  el('ShowLegend').checked=s.legend.show; el('LegendPos').value=s.legend.pos; el('LegendFrame').checked=s.legend.frame;
+  el('Sens').value=s.sens; el('SensOut').textContent=(+s.sens).toFixed(1);
+  el('ShowLabels').checked=s.showLabels;
+  if(M.kind==='dsc'){
+    document.querySelectorAll('#dscEndo button').forEach(b=>b.classList.toggle('on',b.dataset.v===s.endo));
+    el('PerMass').checked=s.perMass; el('Offset').value=s.offset||''; el('Auto').checked=s.auto;
+    el('Yunit').value=s.yunit; el('Yskip').checked=s.ySkipEnds;
+    ['Ymin','Ymax','Ystep'].forEach(k=>{ const v=s[k[0].toLowerCase()+k.slice(1)]; el(k).value=v==null?'':v; });
+  }else{
+    document.querySelectorAll('#tgaMode button').forEach(b=>b.classList.toggle('on',b.dataset.v===s.mode));
+    document.querySelectorAll('#tgaDtgDir button').forEach(b=>b.classList.toggle('on',b.dataset.v===(s.dtgDown?'down':'up')));
+    el('Smooth').value=s.smooth; el('SmoothOut').textContent=s.smooth+' °C';
+    el('Topn').value=s.topN; el('TopnOut').textContent=s.topN;
+    document.querySelectorAll('#tgaWunit button').forEach(b=>b.classList.toggle('on',b.dataset.v===s.wUnit));
+    document.querySelectorAll('#tgaDunit button').forEach(b=>b.classList.toggle('on',b.dataset.v===s.dUnit));
+    ['wMin','wMax','wStep','dMin','dMax','dStep'].forEach(k=>{ el(k[0].toUpperCase()+k.slice(1)).value=s[k]==null?'':s[k]; });
+  }
+}
+async function thSaveToGallery(M){
+  if(M.saving) return;
+  if(!M.current){ notify('目前沒有可儲存的圖譜。'); return; }
+  if(!currentUser){ notify('尚未登入。'); return; }
+  const prev=M.editingId?spectraItems.find(s=>s.id===M.editingId):null;
+  if(M.editingId&&!prev){ M.editingId=null; thUpdateSaveLabel(M); showToast('原本那張圖譜已經被刪除,這次會存成新的一張'); }
+  const cur=M.current;
+  const name=await promptDialog('圖譜名稱',prev?prev.name:(cur.name==='overlay'?M.label+' 疊圖':cur.name)); if(name===null) return;
+  const trimmed=name.trim(); if(!trimmed){ notify('名稱不可空白。'); return; }
+  const rec={id:prev?prev.id:'spec-'+Date.now()+Math.random().toString(36).slice(2,6),type:M.kind,name:trimmed,svg:cur.built.svg,
+    peaks:M.kind==='dsc'?dscPeaksForSave(cur):tgaPeaksForSave(cur),settings:JSON.parse(JSON.stringify(thSettingsSnapshot(M))),
+    bind_type:'',bind_id:'',bind_label:'',editable:false,
+    created_by_uid:currentUser.uid,created_by:currentUser.name||currentUser.email||'',created_at:new Date().toISOString()};
+  if(prev){ rec.bind_type=prev.bind_type||''; rec.bind_id=prev.bind_id||''; rec.bind_label=prev.bind_label||'';
+    rec.created_by_uid=prev.created_by_uid; rec.created_by=prev.created_by; rec.created_at=prev.created_at; rec._doc_id=prev._doc_id; }
+  // 同一個檔可能拆成好幾條曲線,只上傳一次;從這張圖譜載回來的檔已經在上面,不再上傳
+  const seen=new Set(), entries=[];
+  (cur.items||[]).forEach(i=>{ if(!i.file||(prev&&i.fromSpec===prev.id)||seen.has(i.file)) return; seen.add(i.file); entries.push({name:i.file.name,blob:i.file}); });
+  // 單筆圖譜上限 900 KB(TGA 疊很多條、TG 與 DTG 都畫時會超過):先估,超過就不上傳檔案、直接說原因
+  const probe=Object.assign({},rec,{files:[...((prev&&prev.files)||[]),...entries.map(e=>({name:e.name,size:e.blob.size||0,
+    path:'lab-photos/spectra-files/'+'x'.repeat(28)+'/'+rec.id+'/'+'0'.repeat(28)+'_'+e.name,url:'x'.repeat(380)+e.name,uploaded_at:new Date().toISOString()}))]});
+  if(prev) probe.fig_paths=probe.files.map(f=>f.path);
+  const est=new TextEncoder().encode(JSON.stringify(probe)).length+300;
+  const tooBig=kb=>`這張圖約 ${kb} KB,超過單筆圖譜的上限 900 KB。請減少疊圖的曲線數${M.kind==='tga'?',或改成「只有 TG」或「只有 DTG」':''}再存。`;
+  if(est>900*1024){ notify(tooBig(Math.round(est/1024))); return; }
+  const btn=thEl(M,'Save'); M.saving=true; btn.disabled=true; btn.textContent='儲存中…';
+  let ok=false, newFiles=[], size=0;
+  try{
+    newFiles=await uploadSpectrumFiles(rec.id,entries);
+    rec.files=[...((prev&&prev.files)||[]),...newFiles];
+    if(prev){ const fp=galFigPaths(prev,cur.items||[],newFiles); if(fp) rec.fig_paths=fp; }
+    // 上傳後再量一次實際大小(估的是近似值),超過就不送出,免得只看到「存入失敗」
+    size=new TextEncoder().encode(JSON.stringify(rec)).length;
+    if(size<=900*1024) ok=await fsSetItem('spectra',rec);
+  }finally{ M.saving=false; btn.disabled=!M.current; thUpdateSaveLabel(M); }
+  if(ok){ upsertLocal(spectraItems,rec); showToast(prev?'✅ 已更新圖譜':'✅ 已存入圖譜'); M.editingId=null; thUpdateSaveLabel(M); }
+  else{ newFiles.forEach(f=>deleteStoredPhoto(f.path)); notify(size>900*1024?tooBig(Math.round(size/1024)):'存入失敗,請檢查網路與 Firestore 權限。'); }
+}
+function thInit(M){
+  if(M.inited) return; M.inited=true;
+  const el=id=>thEl(M,id), st=M.st, R=o=>thRender(M,o);
+  const drop=el('Drop'), fileInput=el('File');
+  drop.onclick=()=>fileInput.click();
+  ['dragover','dragenter'].forEach(e=>drop.addEventListener(e,ev=>{ ev.preventDefault(); drop.classList.add('over'); }));
+  ['dragleave','drop'].forEach(e=>drop.addEventListener(e,ev=>{ ev.preventDefault(); drop.classList.remove('over'); }));
+  drop.addEventListener('drop',ev=>thHandleFiles(M,ev.dataTransfer.files));
+  fileInput.onchange=()=>{ thHandleFiles(M,fileInput.files); fileInput.value=''; };
+  el('SelAll').onclick=()=>{ st.sel=M.lib.map(x=>x.id); thRenderLib(M); R(); };
+  el('ClearSel').onclick=()=>{ st.sel=[]; thRenderLib(M); R(); };
+  el('Wipe').onclick=async()=>{ if(await confirmDialog(`確定清空這台電腦暫存的 ${M.label} 曲線?已存入圖譜的不受影響。`)){ M.lib=[]; st.sel=[]; M.editingId=null; thUpdateSaveLabel(M); thRenderLib(M); R(); } };
+  el('ShowTitle').onchange=e=>{ st.showTitle=e.target.checked; R({keepCurves:true,keepTable:true}); };
+  el('Title').oninput=e=>{ st.title=e.target.value; R({keepCurves:true,keepTable:true}); };
+  el('ShowAxisTitles').onchange=e=>{ st.showAxisTitles=e.target.checked; R({keepCurves:true,keepTable:true}); };
+  el('ShowTickLabels').onchange=e=>{ st.showTickLabels=e.target.checked; R({keepCurves:true,keepTable:true}); };
+  el('Xmin').oninput=e=>{ const v=parseFloat(e.target.value); st.xmin=isFinite(v)?v:null; R({keepCurves:true,keepTable:true}); };
+  el('Xmax').oninput=e=>{ const v=parseFloat(e.target.value); st.xmax=isFinite(v)?v:null; R({keepCurves:true,keepTable:true}); };
+  el('ShowLegend').onchange=e=>{ st.legend.show=e.target.checked; R({keepCurves:true,keepTable:true}); };
+  el('LegendPos').onchange=e=>{ st.legend.pos=e.target.value; R({keepCurves:true,keepTable:true}); };
+  el('LegendFrame').onchange=e=>{ st.legend.frame=e.target.checked; R({keepCurves:true,keepTable:true}); };
+  el('ShowLabels').onchange=e=>{ st.showLabels=e.target.checked; R({keepCurves:true,keepTable:true}); };
+  // 靈敏度要重算,拖動時只更新數字,放開才重畫
+  el('Sens').oninput=e=>{ el('SensOut').textContent=(+e.target.value).toFixed(1); };
+  el('Sens').onchange=e=>{ st.sens=+e.target.value; R({keepCurves:true}); };
+  el('Measure').onclick=()=>thSetMeasuring(M,!M.measuring);
+  if(M.kind==='dsc'){
+    ftirSeg('#dscEndo',v=>{ st.endo=v; R({keepCurves:true,keepTable:true}); });
+    el('PerMass').onchange=e=>{ st.perMass=e.target.checked; R({keepCurves:true,keepTable:true}); };
+    // 單位選「自動」時,手填的數值(錯開量、最小、最大、間距)一填就把單位固定在當下的,免得資料一變就差 1000 倍
+    const pinUnit=()=>{ if(st.yunit==='auto'&&M.current&&M.current.map&&M.current.map.fac){ st.yunit=M.current.map.fac===1000?'x1000':'x1'; el('Yunit').value=st.yunit; } };
+    el('Offset').oninput=e=>{ const v=parseFloat(e.target.value); st.offset=isFinite(v)&&v>0?v:0; if(st.offset) pinUnit(); R({keepCurves:true,keepTable:true}); };
+    el('Auto').onchange=e=>{ st.auto=e.target.checked; R({keepCurves:true}); };
+    el('Yunit').onchange=e=>{ st.yunit=e.target.value; R({keepCurves:true,keepTable:true}); };
+    el('Yskip').onchange=e=>{ st.ySkipEnds=e.target.checked; R({keepCurves:true,keepTable:true}); };
+    ['Ymin','Ymax','Ystep'].forEach(k=>{ el(k).oninput=e=>{ const v=parseFloat(e.target.value), key=k[0].toLowerCase()+k.slice(1); st[key]=isFinite(v)&&(k!=='Ystep'||v>0)?v:null; if(st[key]!=null) pinUnit(); R({keepCurves:true,keepTable:true}); }; });
+  }else{
+    ftirSeg('#tgaMode',v=>{ st.mode=v; R({keepCurves:true,keepTable:true}); });
+    ftirSeg('#tgaDtgDir',v=>{ st.dtgDown=v==='down'; R({keepCurves:true,keepTable:true}); });
+    el('Smooth').oninput=e=>{ el('SmoothOut').textContent=e.target.value+' °C'; };
+    el('Smooth').onchange=e=>{ st.smooth=+e.target.value; R({keepCurves:true}); };
+    el('Topn').oninput=e=>{ el('TopnOut').textContent=e.target.value; };
+    el('Topn').onchange=e=>{ st.topN=+e.target.value; R({keepCurves:true}); };
+    ftirSeg('#tgaWunit',v=>{ st.wUnit=v; R({keepCurves:true}); });
+    ftirSeg('#tgaDunit',v=>{ st.dUnit=v; R({keepCurves:true}); });
+    ['wMin','wMax','wStep','dMin','dMax','dStep'].forEach(k=>{ el(k[0].toUpperCase()+k.slice(1)).oninput=e=>{ const v=parseFloat(e.target.value); st[k]=isFinite(v)&&(!/Step$/.test(k)||v>0)?v:null; R({keepCurves:true,keepTable:true}); }; });
+  }
+  el('DlSvg').onclick=()=>{ if(!M.current) return; ftirSaveBlob(new Blob([M.current.built.svg],{type:'image/svg+xml'}),M.current.name+'.svg'); };
+  el('DlPng').onclick=async()=>{ if(!M.current) return; try{ const b=await galSvgToPngBlob(M.current.built.svg,3); ftirSaveBlob(b,M.current.name+'.png'); }catch(e){ notify('PNG 產生失敗:'+(e&&e.message?e.message:'')); } };
+  el('DlCsv').onclick=()=>{ if(!M.current) return; ftirSaveBlob(new Blob([M.kind==='dsc'?dscCsv(M):tgaCsv(M)],{type:'text/csv'}),M.current.name+(M.kind==='dsc'?'_transitions.csv':'_steps.csv')); };
+  el('Save').onclick=()=>thSaveToGallery(M);
+  thBindMeasure(M);
+  thSyncControls(M);
+  thRenderLib(M); R();
+}
+
 /* ============ 比色計算(檢量線 → 當量濃度) ============
    照實驗室原本的 Excel 排法做成試算表格:欄是濃度點 / 樣品,列是 RAW1–3、Blank,底下接自動算的 Test、Mean、SD 與當量。
    Test = RAW − Blank;檢量線用各濃度 Test 平均值做最小平方回歸;當量 = ((Test − b) / m) / (樣品濃度/1000) mg/g;SE = SD/√n。
@@ -11050,6 +12511,19 @@ async function galCopyImage(rec, btn){
     btn.disabled=false;btn.textContent=old;
   }
 }
+/* DSC / TGA 圖譜的數值表(圖譜文件是使用者寫的,數字都要再確認是數字) */
+function galThermalRows(rec){
+  const n=(v,d)=>(typeof v==='number'&&isFinite(v))?v.toFixed(d):'—', t=v=>escapeHtml(String(v==null?'':v));
+  const ps=Array.isArray(rec.peaks)?rec.peaks.filter(p=>p&&typeof p==='object'):[];
+  if(rec.type==='dsc'){
+    const typ={tg:'Tg',endo:'吸熱',exo:'放熱'};
+    return ps.map(p=>`<tr><td>${t(p.sample)}</td><td>${t(p.seg)}</td><td>${t(p.tag)}<span class="th-muted"> ${typ[p.kind]||''}</span></td><td class="num">${n(p.onset,1)}</td><td class="num"><b>${n(p.t,1)}</b></td>`
+      +`<td class="num">${typeof p.dh==='number'?n(p.dh,2)+' '+t(p.dh_unit||''):'—'}</td><td class="num">${n(p.dcp,3)}</td></tr>`).join('');
+  }
+  return ps.map(p=>p.kind==='res'
+    ?`<tr><td>${t(p.sample)}</td><td class="num">殘餘量</td><td class="num">${n(p.t,0)} °C</td><td class="num"><b>${n(p.val,2)}</b></td></tr>`
+    :`<tr><td>${t(p.sample)}</td><td class="num"><b>${n(p.t,1)}</b></td><td class="num">${n(p.t1,0)}–${n(p.t2,0)}</td><td class="num">${n(p.loss,2)}</td></tr>`).join('');
+}
 function openGalDetail(id){
   const rec=spectraItems.find(s=>s.id===id);if(!rec)return;
   const canManage=currentUser&&(rec.created_by_uid===currentUser.uid||isAdmin());
@@ -11071,7 +12545,8 @@ function openGalDetail(id){
       +`<td>${isFinite(+p.val)?(+p.val).toFixed(2):''}</td>`
       +cell(ident)+'</tr>';
   };
-  const peakRows=(rec.peaks||[]).map((p,i)=>isGc?gcRow(p,i)
+  const isTh=rec.type==='dsc'||rec.type==='tga';
+  const peakRows=isTh?galThermalRows(rec):(rec.peaks||[]).map((p,i)=>isGc?gcRow(p,i)
     :rec.type==='uv'?`<tr><td class="num">${(+p.wn).toFixed(1)}</td><td class="num">${isFinite(+p.val)?(+p.val).toFixed(3):''}</td><td>${escapeHtml(p.sample||'')}</td></tr>`
     :`<tr><td class="num">${(+p.wn).toFixed(2)}</td><td class="tag">${escapeHtml(p.tag||'—')}</td><td>${escapeHtml(p.full||'')}</td></tr>`).join('');
   galOpenId=rec.id;
@@ -11112,6 +12587,9 @@ function openGalDetail(id){
           <th>Peak #</th><th>Compound</th><th>Retention time (min)</th><th>KI</th>
           <th>rKI</th><th>Area(%)</th><th>Identification</th>
         </tr></thead><tbody>${peakRows}</tbody></table></div>`
+      :isTh?`<div class="th-tablewrap" style="margin-top:16px;"><table class="th-table"><thead><tr>${rec.type==='dsc'
+          ?'<th>樣品</th><th>段</th><th>轉變</th><th class="num">Onset (°C)</th><th class="num">峰溫 / Tg 中點 (°C)</th><th class="num">ΔH</th><th class="num">ΔCp (J/g·°C)</th>'
+          :'<th>樣品</th><th class="num">DTG 峰溫 (°C)</th><th class="num">階段範圍 (°C)</th><th class="num">失重 / 殘餘量 (%)</th>'}</tr></thead><tbody>${peakRows}</tbody></table></div>`
       :`<table style="margin-top:16px;"><thead><tr>${rec.type==='uv'?'<th style="text-align:right">λmax (nm)</th><th style="text-align:right">數值</th><th>樣品</th>':'<th style="text-align:right">波數 cm⁻¹</th><th>官能基</th><th>建議歸屬(中文)</th>'}</tr></thead><tbody>${peakRows}</tbody></table>`):''}
   `;
   document.getElementById('galDetailOverlay').classList.add('show');
@@ -11160,7 +12638,8 @@ function openGalDetail(id){
       if(ok){ (rec.files||[]).forEach(f=>deleteStoredPhoto(f.path)); showToast('已刪除');document.getElementById('galDetailOverlay').classList.remove('show');
         // 圖譜分析裡正在「更新此圖譜」的就是這張:改回存成新的一張
         if(ftirEditingId===rec.id){ ftirEditingId=null; ftirUpdateSaveLabel(); }
-        if(uvEditingId===rec.id){ uvEditingId=null; uvUpdateSaveLabel(); } }
+        if(uvEditingId===rec.id){ uvEditingId=null; uvUpdateSaveLabel(); }
+        [DSC_M,TGA_M].forEach(M=>{ if(M.editingId===rec.id){ M.editingId=null; thUpdateSaveLabel(M); } }); }
       else notify('刪除失敗。');
     };
   }
@@ -11216,7 +12695,7 @@ function ftirApplySettings(st){
    原始檔在 Storage,下載網址本身就允許跨來源讀取。FTIR 與 UV-Vis 載進各自的暫存光譜;
    能管理這張圖譜的人(建立者或管理員)載入後按鈕變成「更新此圖譜」,覆蓋原本那張(疊圖也可以),
    這些檔已經在這張圖譜上,更新時不會再上傳一次。GC 的原始檔是本工具的完整匯出檔,送進 GC 工具還原成樣品 */
-const GAL_LOADABLE={ ftir:/\.(asp|spc)$/i, uv:/\.(dat|csv|txt)$/i, gc:/\.csv$/i };
+const GAL_LOADABLE={ ftir:/\.(asp|spc)$/i, uv:/\.(dat|csv|txt)$/i, gc:/\.csv$/i, dsc:/\.(csv|txt|xlsx|xls)$/i, tga:/\.(csv|txt|xlsx|xls)$/i };
 /* 只從本專案的 Storage 下載(圖譜文件是使用者寫的,網址不能全信) */
 const GAL_FILE_PREFIX='https://firebasestorage.googleapis.com/v0/b/'+firebaseConfig.storageBucket+'/o/';
 async function galFetchFile(f){
@@ -11251,7 +12730,7 @@ async function galSendToAnalysis(rec, list, canManage, btn){
   if(!got.length) return;
   // 下載期間使用者已經關掉這張或去開別的視窗,就不要再切頁(會把別的視窗關掉)
   if(galOpenId!==rec.id || !document.getElementById('galDetailOverlay').classList.contains('show')){ showToast('已取消送到圖譜分析'); return; }
-  const tab=rec.type==='uv'?'uv':rec.type==='gc'?'gc':'ftir';
+  const tab=['uv','gc','dsc','tga'].includes(rec.type)?rec.type:'ftir';
   document.getElementById('galDetailOverlay').classList.remove('show');
   switchPage('spectra');
   const tb=document.querySelector(`#spTabs .sp-tab[data-sp="${tab}"]`); if(tb) tb.click();
@@ -11280,6 +12759,17 @@ async function galSendToAnalysis(rec, list, canManage, btn){
     uvApplySettings(rec.settings||{ymode:rec.ymode});
     uvEditingId=canManage?rec.id:null;
     uvRenderLib(); uvRender(); uvUpdateSaveLabel();
+  }else if(tab==='dsc'||tab==='tga'){
+    // 同一個檔可能拆成好幾條曲線;依存圖譜時記下的「檔名 + 欄名」把名稱、段、速率、重量、標示套回去
+    const M=thModOf(tab);
+    const added=await thHandleFiles(M,got);
+    if(!added.length) return;
+    added.forEach(x=>{ x.fromSpec=rec.id; x.srcPath=paths.get(x.file)||''; });
+    const st=rec.settings||{};
+    thApplySettings(M,st);
+    M.st.sel=thRestoreItems(M,st.items,added);
+    M.editingId=canManage?rec.id:null;
+    thRenderLib(M); thRender(M); thUpdateSaveLabel(M);
   }else{
     const files=await Promise.all(got.map(async f=>({ name:f.name, text:await f.text() })));
     gcWhenReady(()=>gcPost({ gcImportFiles:files }));
