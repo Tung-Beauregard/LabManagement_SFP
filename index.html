@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="app-version" content="2026.11.02.1">
+<meta name="app-version" content="2026.11.04.1">
 <meta name="theme-color" content="#1B4B43" id="metaThemeColor">
 <title>SFPLAB 實驗室管理系統</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>">
@@ -557,6 +557,11 @@
   .print-report .rep-grid .sub{font-size:7.5px;color:#444;font-weight:400;margin-top:1px;}
   .print-report .rep-grid .cellline{padding:1px 0;}
   .print-report .rep-grid .cellline + .cellline{border-top:1px dotted #999;margin-top:2px;padding-top:3px;}
+  .print-report .rep-move{display:flex;flex-direction:column;align-items:center;gap:2px;margin-top:4px;}
+  .print-report .rep-move button{width:20px;height:18px;padding:0;border:1px solid #888;border-radius:2px;background:#fff;color:#000;font-size:9px;line-height:1;cursor:pointer;}
+  .print-report .rep-move button:hover:not(:disabled){background:#000;color:#fff;}
+  .print-report .rep-move button:disabled{opacity:.25;cursor:default;}
+  .rep-order-hint{margin-right:auto;font-size:12px;color:var(--ink-soft);}
   .print-report .report-foot{font-size:9px;margin-top:8px;}
   .print-report{background:#fff;color:#000;font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif;padding:18px;}
   .print-report h1{font-size:20px;text-align:center;margin:0 0 4px;}
@@ -581,6 +586,7 @@
     body.printing-purchase-report #printRoot #purchasePrintArea{display:block !important;width:auto;max-width:none;margin:0;padding:0;}
     .print-report .rep-grid thead{display:table-header-group;}
     .print-report .rep-grid tr{page-break-inside:avoid;}
+    .print-report .rep-move{display:none !important;}
     /* 其他頁面直接列印:只留主內容,側欄、按鈕、彈窗、提示都不印 */
     body:not(.printing-purchase-report) .sidebar,
     body:not(.printing-purchase-report) .hamburger-btn,
@@ -2450,7 +2456,9 @@
     <div class="overlay" id="purchaseReportOverlay" style="z-index:80;">
       <div class="modal" style="max-width:1050px;">
         <button class="close" aria-label="關閉" id="purchaseReportClose">✕</button>
-        <div class="toolbar" style="justify-content:flex-end;">
+        <div class="toolbar" style="justify-content:flex-end;padding-right:40px;">
+          <span class="rep-order-hint">預設依新增時間排列;用 # 欄的 ▲▼ 調整順序,按鈕不會印出來。</span>
+          <button class="btn btn-ghost" id="purchaseReportResetOrder">恢復依時間排序</button>
           <button class="btn btn-primary" id="purchaseReportPrintBtn">列印</button>
         </div>
         <div id="purchasePrintArea" class="print-report"></div>
@@ -8794,8 +8802,37 @@ async function deletePriceComparison(id){
 }
 
 /* ---- 已詢價待審核：黑白勾選／簽名報表（第一版） ---- */
+/* 品項順序:預設依新增時間(舊的在前);預覽畫面用 ▲▼ 調過的順序記在這台電腦(localStorage),
+   之後新進來的待審核項目接在後面,一樣照時間排。只影響這張表,不改採買資料 */
+const CP_REPORT_ORDER_KEY='cp-report-order';
+function cpReportLoadOrder(){
+  try{ const a=JSON.parse(localStorage.getItem(CP_REPORT_ORDER_KEY)||'[]'); return Array.isArray(a)?a.filter(x=>typeof x==='string'):[]; }catch(_e){ return []; }
+}
+function cpReportSaveOrder(ids){
+  try{ if(ids&&ids.length) localStorage.setItem(CP_REPORT_ORDER_KEY,JSON.stringify(ids)); else localStorage.removeItem(CP_REPORT_ORDER_KEY); }catch(_e){}
+}
+function cpReviewItemsOrdered(){
+  const byTime=cpItems.filter(i=>i.status==='quoted').slice()
+    .sort((a,b)=>String(a.created_at||'').localeCompare(String(b.created_at||''))||String(a.id).localeCompare(String(b.id)));
+  const saved=cpReportLoadOrder(); if(!saved.length) return byTime;
+  const pos=new Map(saved.map((id,k)=>[id,k]));
+  return byTime.filter(i=>pos.has(i.id)).sort((a,b)=>pos.get(a.id)-pos.get(b.id)).concat(byTime.filter(i=>!pos.has(i.id)));
+}
+function cpReportMove(id,dir){
+  const ids=cpReviewItemsOrdered().map(i=>i.id), k=ids.indexOf(id), j=k+dir;
+  if(k<0||j<0||j>=ids.length) return;
+  [ids[k],ids[j]]=[ids[j],ids[k]];
+  cpReportSaveOrder(ids);
+  cpReportRefresh(id,dir);
+}
+/* 重畫預覽;剛按的那顆按鈕還能按就把焦點放回去(用鍵盤連按) */
+function cpReportRefresh(id,dir){
+  const area=document.getElementById('purchasePrintArea');
+  area.innerHTML=buildPurchaseReviewReport();
+  if(id){ const b=[...area.querySelectorAll('[data-mv]')].find(x=>x.dataset.id===id&&+x.dataset.mv===dir); if(b&&!b.disabled) b.focus(); }
+}
 function buildPurchaseReviewReport(){
-  const reviewItems=cpItems.filter(i=>i.status==='quoted');
+  const reviewItems=cpReviewItemsOrdered();
   const generatedAt=new Date().toLocaleString('zh-TW',{hour12:false});
 
   /* 先把每個品項的比價矩陣算好,再取所有廠商的聯集當成欄位 */
@@ -8835,7 +8872,9 @@ function buildPurchaseReviewReport(){
     const span=Math.max(rows.length,1);
     const nameCell=`<td rowspan="${span}" class="c-name first">${escapeHtml(item.name_zh||'-')}${item.name_en?`<div class="sub">${escapeHtml(item.name_en)}</div>`:''}</td>`;
     const casCell=`<td rowspan="${span}" class="first">${escapeHtml(item.cas||'-')}</td>`;
-    const idxCell=`<td rowspan="${span}" class="first">${itemIndex+1}</td>`;
+    const idxCell=`<td rowspan="${span}" class="first">${itemIndex+1}<span class="rep-move">`
+      +`<button type="button" data-mv="-1" data-id="${escapeHtml(item.id)}" title="往上移" aria-label="往上移"${itemIndex===0?' disabled':''}>▲</button>`
+      +`<button type="button" data-mv="1" data-id="${escapeHtml(item.id)}" title="往下移" aria-label="往下移"${itemIndex===data.length-1?' disabled':''}>▼</button></span></td>`;
     const decCell=`<td rowspan="${span}" class="first"><span class="paper-box"></span></td>`;
 
     if(!rows.length){
@@ -8884,6 +8923,11 @@ function openPurchaseReviewReport(){
   document.getElementById('purchaseReportOverlay').classList.add('show');
 }
 document.getElementById('cpPrintReportBtn').addEventListener('click',openPurchaseReviewReport);
+document.getElementById('purchasePrintArea').addEventListener('click',e=>{
+  const b=e.target.closest('[data-mv]'); if(!b||b.disabled) return;
+  cpReportMove(b.dataset.id,+b.dataset.mv);
+});
+document.getElementById('purchaseReportResetOrder').addEventListener('click',()=>{ cpReportSaveOrder([]); cpReportRefresh(); });
 document.getElementById('purchaseReportClose').addEventListener('click',()=>document.getElementById('purchaseReportOverlay').classList.remove('show'));
 document.getElementById('purchaseReportPrintBtn').addEventListener('click',()=>{
   const area=document.getElementById('purchasePrintArea');
