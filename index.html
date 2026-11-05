@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="app-version" content="2026.11.04.1">
+<meta name="app-version" content="2026.11.05.1">
 <meta name="theme-color" content="#1B4B43" id="metaThemeColor">
 <title>SFPLAB 實驗室管理系統</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>">
@@ -1743,6 +1743,14 @@
               <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
                 <button type="button" class="btn btn-ghost btn-sm" id="ftirRangeReset">全範圍</button>
                 <span class="ftir-hint" id="ftirRangeHint" style="margin-top:0;"></span>
+              </div>
+              <div class="field row2" style="margin:12px 0 6px;">
+                <div><label style="font-size:12px;">Y 軸下限</label><input type="number" id="ftirYmin" step="any" placeholder="自動"></div>
+                <div><label style="font-size:12px;">Y 軸上限</label><input type="number" id="ftirYmax" step="any" placeholder="自動"></div>
+              </div>
+              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                <button type="button" class="btn btn-ghost btn-sm" id="ftirYReset">Y 軸自動</button>
+                <span class="ftir-hint" id="ftirYHint" style="margin-top:0;"></span>
               </div>
             </div>
 
@@ -10331,8 +10339,19 @@ function ftirBuildSVG(spec){
     }
   }
   const single=traces.length===1;
-  const yLo=single?(traces[0]._min-0.04*maxSingle):(xr?-0.1*maxSingle:-0.03);
-  const yHi=single?(traces[0]._min+maxSingle*(labelMode==='both'?1.5:1.34)):(offset+0.18*maxSingle);
+  // 單譜照原始數值畫,刻度就是真正的吸光度(以前畫成 y−最小值,基線不在 0 時曲線會偏離刻度)
+  if(single)traces[0]._base=traces[0]._min;
+  const yAutoLo=single?(traces[0]._min-0.04*maxSingle):(xr?-0.1*maxSingle:-0.03);
+  const yAutoHi=single?(traces[0]._min+maxSingle*(labelMode==='both'?1.5:1.34)):(offset+0.18*maxSingle);
+  // yrange={lo,hi} 由 ftirRender 給,null 的一端用自動值;兩端都填但填反就對調,上下限相同或不合理就整個用自動
+  const yr=spec.yrange||{};
+  let yLo=yAutoLo,yHi=yAutoHi,yState='auto';
+  if(yr.lo!=null||yr.hi!=null){
+    let lo=yr.lo!=null?yr.lo:yAutoLo, hi=yr.hi!=null?yr.hi:yAutoHi;
+    if(yr.lo!=null&&yr.hi!=null&&hi<lo){const t=hi;hi=lo;lo=t;}
+    if(hi>lo){yLo=lo;yHi=hi;yState='manual';}else yState='bad';
+  }
+  const yManual=yState==='manual';
   const yt=ftirNiceTicks(yLo,yHi,7),ytm=ftirNiceTicks(yLo,yHi,14);
   const yStep=yt.length>1?yt[1]-yt[0]:1, yDec=Math.max(2,Math.ceil(-Math.log10(yStep)-1e-9));
   if(yDec>2&&showTickLabels){m.l+=7*(yDec-2);pw=W-m.l-m.r;}
@@ -10357,6 +10376,12 @@ function ftirBuildSVG(spec){
     S.push(`<text x="${px.toFixed(1)}" y="${(m.t+11).toFixed(1)}" font-size="10" text-anchor="middle" fill="#333">${wn.toFixed(0)}</text>`);
   });
   const markers=[];
+  // 手動 Y 範圍時,曲線與峰標籤裁在框內;clipPath id 每張圖不同,藝廊同一頁有多張圖時才不會互相套錯
+  const lblUnit=(yManual&&yAutoHi>yAutoLo)?maxSingle*(yHi-yLo)/(yAutoHi-yAutoLo):maxSingle;   // 標籤離峰尖的間距在畫面上維持跟自動時一樣
+  if(yManual){
+    const cid='ftirClip'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+    S.push(`<defs><clipPath id="${cid}"><rect x="${m.l}" y="${m.t}" width="${pw}" height="${ph}"/></clipPath></defs><g clip-path="url(#${cid})">`);
+  }
   traces.forEach((t,ti)=>{
     const c=FTIR_COLORS[ti%FTIR_COLORS.length];
     let d='';
@@ -10368,19 +10393,21 @@ function ftirBuildSVG(spec){
       const yy=p.abs-t._min+t._base,px=X(p.wn),py=Y(yy);
       let lab=p.wn.toFixed(decimals);
       if(labelMode==='both'){const tg=ftirAssign(p.wn).tag;if(tg)lab+=' '+ftirPlain(tg).replace(/\s*\(.*$/,'');}
-      const gap=maxSingle*(0.012+0.03*(k%3));        // 標籤底端離峰尖的間距,錯開相鄰標籤高度
+      const gap=lblUnit*(0.012+0.03*(k%3));          // 標籤底端離峰尖的間距,錯開相鄰標籤高度
       const anchorY=Y(yy+gap);                         // 文字起點:峰尖上方
       const pinned=(guides||[]).some(g=>Math.abs(g-p.wn)<0.51);
       // 繞峰尖上方點 rotate(-90):文字由下往上讀,text-anchor=start 讓文字從錨點往上長(end 會往下長、壓在峰上);
       // middle baseline 使字幹中線落在峰尖 px 正上方
       // 位移同時套在座標與旋轉中心上,整個標籤平移,角度與對齊方式不變
-      if(showPeakLabels){
+      const out=yManual&&(yy<yLo||yy>yHi);          // 峰尖在 Y 範圍外:不標,表格滑過時也不畫圈
+      if(showPeakLabels&&!out){
         const lx=px+labelDx, ly=anchorY-labelDy;
         S.push(`<text class="pk" data-wn="${p.wn.toFixed(2)}" style="cursor:pointer" x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" font-size="9.5" font-weight="${pinned?'700':'400'}" fill="${c}" text-anchor="start" dominant-baseline="middle" transform="rotate(-90 ${lx.toFixed(1)} ${ly.toFixed(1)})">${lab}</text>`);
       }
-      markers.push({px,py,ti});
+      markers.push(out?{px,py,ti,out:true}:{px,py,ti});
     });
   });
+  if(yManual)S.push(`</g>`);
   S.push(`<g id="ftirHl"></g>`);
   if(legend.show && traces.length>1){
     const rows=traces.map((t,i)=>({c:FTIR_COLORS[i%FTIR_COLORS.length],name:t.name})).slice().reverse();
@@ -10401,14 +10428,14 @@ function ftirBuildSVG(spec){
   }
   if(title)S.push(`<text x="${m.l+pw/2}" y="26" font-size="16" text-anchor="middle" fill="#111">${ftirEscXml(title)}</text>`);
   S.push(`</svg>`);
-  return {svg:S.join(''),markers,geom:{m,ph}};
+  return {svg:S.join(''),markers,geom:{m,ph},yinfo:{state:yState,lo:yLo,hi:yHi,autoLo:yAutoLo,autoHi:yAutoHi,dec:yDec}};
 }
 
 /* ============ FTIR 狀態 ============ */
 let FTIR_LIB=[];   // {id,name,n,first,last,y} 僅暫存本機記憶體
 const ftirState={sel:[],ymode:'abs',atrRef:2000,prom:0.02,topN:14,
   labelMode:'num',showPeakLabels:true,labelDx:0,labelDy:0,decimals:2,showTitle:true,title:'',
-  showAxisTitles:true,showTickLabels:true,guides:[],xmin:null,xmax:null,
+  showAxisTitles:true,showTickLabels:true,guides:[],xmin:null,xmax:null,ymin:null,ymax:null,
   smooth:{fft:false,fftCut:30,sg:false,sgWin:9,sgOrd:2},
   legend:{show:true,pos:'tr',frame:false}};
 let ftirCurrent=null;
@@ -10440,6 +10467,13 @@ function initFtirOnce(){
       if(nv===ftirState[k])return;ftirState[k]=nv;ftirRender();};
     el.onchange=apply; el.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();apply();}};});
   fq('#ftirRangeReset').onclick=()=>{ftirState.xmin=null;ftirState.xmax=null;fq('#ftirXmin').value='';fq('#ftirXmax').value='';ftirRender();};
+  // Y 軸範圍:空白＝自動,可以填負數與 0(吸光度基線常在 0 附近)
+  [['#ftirYmin','ymin'],['#ftirYmax','ymax']].forEach(([sel,k])=>{const el=fq(sel);
+    const apply=()=>{const v=parseFloat(el.value);const nv=isFinite(v)?v:null;
+      if(nv==null&&(el.value!==''||(el.validity&&el.validity.badInput)))el.value='';
+      if(nv===ftirState[k])return;ftirState[k]=nv;ftirRender();};
+    el.onchange=apply; el.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();apply();}};});
+  fq('#ftirYReset').onclick=()=>{ftirState.ymin=null;ftirState.ymax=null;fq('#ftirYmin').value='';fq('#ftirYmax').value='';ftirRender();};
   fq('#ftirShowLegend').onchange=e=>{ftirState.legend.show=e.target.checked;ftirRender();};
   fq('#ftirLegendPos').onchange=e=>{ftirState.legend.pos=e.target.value;ftirRender();};
   fq('#ftirLegendFrame').onchange=e=>{ftirState.legend.frame=e.target.checked;ftirRender();};
@@ -10538,7 +10572,7 @@ function ftirRender(){
   const multi=chosen.length>1;
   if(!chosen.length){wrap.innerHTML='<div class="ftir-empty" id="ftirEmpty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="52" height="52"><path d="M3 3v18h18M7 15l3-4 3 3 4-6"/></svg><div>上傳 .asp 或 .spc 光譜檔以開始</div></div>';tw.innerHTML='';
     ['#ftirDlPng','#ftirDlSvg','#ftirDlCsv','#ftirSave'].forEach(s=>fq(s).disabled=true);ftirCurrent=null;
-    const rh=fq('#ftirRangeHint');if(rh)rh.textContent='';ftirSmoothHints([]);ftirSmoothWarn([],null);return;}
+    const rh=fq('#ftirRangeHint');if(rh)rh.textContent='';ftirYHint(null,false);ftirSmoothHints([]);ftirSmoothWarn([],null);return;}
   const xr=ftirResolveRange(chosen);
   ftirSmoothHints(chosen);
   ftirSmoothWarn(chosen,xr);
@@ -10559,13 +10593,24 @@ function ftirRender(){
     labelMode:ftirState.labelMode,decimals:ftirState.decimals,legend:ftirState.legend,
     showPeakLabels:ftirState.showPeakLabels,labelDx:ftirState.labelDx,labelDy:ftirState.labelDy,
     showAxisTitles:ftirState.showAxisTitles,showTickLabels:ftirState.showTickLabels,
-    guides:multi?ftirState.guides:[],xrange:xr});
+    guides:multi?ftirState.guides:[],xrange:xr,yrange:{lo:ftirState.ymin,hi:ftirState.ymax}});
+  ftirYHint(built.yinfo,multi);
   ftirCurrent={traces,built,name:chosen.length===1?chosen[0].name:'overlay',ymode:ftirState.ymode,multi,items:chosen,xrange:xr};
   wrap.innerHTML=built.svg;
   ftirCurrent._svg=wrap.querySelector('svg');
   if(multi)ftirCurrent._svg.querySelectorAll('.pk').forEach(t=>{t.onclick=()=>ftirToggleGuide(parseFloat(t.getAttribute('data-wn')));});
   ftirRenderTable(traces,multi);
   ['#ftirDlPng','#ftirDlSvg','#ftirDlCsv','#ftirSave'].forEach(s=>fq(s).disabled=false);
+}
+// Y 軸提示:自動時寫出目前的自動範圍,方便照著填;疊圖的 Y 值是位移堆疊後的高度
+function ftirYHint(yi,multi){
+  const el=fq('#ftirYHint');if(!el)return;
+  if(!yi){el.textContent='';return;}
+  const f=v=>{const s=v.toFixed(yi.dec);return /^-0(\.0*)?$/.test(s)?s.slice(1):s;};
+  const auto=`${f(yi.autoLo)} 至 ${f(yi.autoHi)}`;
+  el.textContent=yi.state==='manual'?`目前 ${f(yi.lo)} 至 ${f(yi.hi)}(自動是 ${auto}),框外的曲線與峰標籤不畫。`:
+    yi.state==='bad'?`上限要大於下限,目前用自動 ${auto}。`:
+    `目前自動 ${auto}。`+(multi?'疊圖的 Y 值是位移後的高度。':'');
 }
 function ftirRenderTable(traces,multi){
   let head=`<tr>${multi?'<th>樣品</th>':''}<th style="text-align:right">波數 cm⁻¹</th><th>官能基</th><th>建議歸屬(中文)</th>${multi?'<th>比較線</th>':''}</tr>`;
@@ -10593,8 +10638,8 @@ function ftirHighlight(i){
   if(!ftirCurrent||!ftirCurrent._svg)return;const g=ftirCurrent._svg.querySelector('#ftirHl');if(!g)return;
   if(i<0){g.innerHTML='';return;}
   const mk=ftirCurrent.built.markers[i];if(!mk)return;const {m,ph}=ftirCurrent.built.geom;
-  g.innerHTML=`<line x1="${mk.px}" y1="${m.t}" x2="${mk.px}" y2="${m.t+ph}" stroke="#c0392b" stroke-width="0.8" stroke-dasharray="4 3" opacity="0.6"/>
-    <circle cx="${mk.px}" cy="${mk.py}" r="4.5" fill="none" stroke="#c0392b" stroke-width="1.6"/>`;
+  g.innerHTML=`<line x1="${mk.px}" y1="${m.t}" x2="${mk.px}" y2="${m.t+ph}" stroke="#c0392b" stroke-width="0.8" stroke-dasharray="4 3" opacity="0.6"/>`+
+    (mk.out?'':`<circle cx="${mk.px}" cy="${mk.py}" r="4.5" fill="none" stroke="#c0392b" stroke-width="1.6"/>`);
 }
 function ftirSaveBlob(b,name){const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
 function ftirDownloadPng(){
@@ -10655,7 +10700,7 @@ async function ftirSaveToGallery(){
     showPeakLabels:ftirState.showPeakLabels, labelDx:ftirState.labelDx, labelDy:ftirState.labelDy,
     showTitle:ftirState.showTitle, title:ftirState.title,
     showAxisTitles:ftirState.showAxisTitles, showTickLabels:ftirState.showTickLabels,
-    xmin:ftirState.xmin, xmax:ftirState.xmax, smooth:Object.assign({},ftirState.smooth) };
+    xmin:ftirState.xmin, xmax:ftirState.xmax, ymin:ftirState.ymin, ymax:ftirState.ymax, smooth:Object.assign({},ftirState.smooth) };
   if(single){
     const src=FTIR_LIB.find(x=>x.id===ftirState.sel[0]);
     if(src){
@@ -12730,6 +12775,9 @@ function ftirApplySettings(st){
   if(st.showTickLabels!=null){ftirState.showTickLabels=st.showTickLabels;fq('#ftirShowTickLabels').checked=st.showTickLabels;}
   ftirState.xmin=isFinite(st.xmin)&&st.xmin>0?st.xmin:null; ftirState.xmax=isFinite(st.xmax)&&st.xmax>0?st.xmax:null;
   fq('#ftirXmin').value=ftirState.xmin==null?'':ftirState.xmin; fq('#ftirXmax').value=ftirState.xmax==null?'':ftirState.xmax;
+  // Y 軸範圍:舊圖譜沒有這兩個欄位就是自動(isFinite(null) 會是 true,所以先確認是數字)
+  {const num=v=>typeof v==='number'&&isFinite(v)?v:null; ftirState.ymin=num(st.ymin); ftirState.ymax=num(st.ymax);
+    fq('#ftirYmin').value=ftirState.ymin==null?'':ftirState.ymin; fq('#ftirYmax').value=ftirState.ymax==null?'':ftirState.ymax;}
   // 平滑設定:舊圖譜沒有這個欄位就是不平滑
   {const sm=st.smooth||{}; ftirState.smooth={fft:!!sm.fft,fftCut:isFinite(sm.fftCut)&&sm.fftCut>0?+sm.fftCut:30,sg:!!sm.sg,
     sgWin:isFinite(sm.sgWin)&&sm.sgWin>=5?+sm.sgWin:9,sgOrd:[2,3,4].includes(+sm.sgOrd)?+sm.sgOrd:2}; ftirSyncSmoothUI();}
