@@ -84,6 +84,10 @@
 ## 主要模組現況
 
 - **藥品危害性(GHS)**:`GHS` 照官方 GHS01–09 排序,`code`(explosive、flammable、oxidizing、gas、corrosive、toxic、irritant、health、environment、none)存在藥品的 `hazards` 陣列,不可改名(gas 是 2026-10 新增)。圖示是官方 GHS 圖示(Wikimedia Commons 的 GHS-pictogram-*.svg,公有領域),清掉 metadata 與編輯器屬性後內嵌在 `GHS_PICTO`,`ghsIconSvg(code,size)` 畫出來。新增/編輯表單的選擇器是大圖示方塊(手機一排三個),可複選、選到的打勾,「無/未知」和其他互斥;狀態一律由 `syncHazPicker()` 對齊
+- **藥品的兩個號碼**:藥品編號 `CHEM-0012` 是身分,一瓶一號、永遠不改,QR 與網址都用它;櫃位編號(`A上-3`)給人找東西、歸位用,存成數字 `slot_no`,顯示時由 `slotPrefix(location)` 加上去(藥品櫃A-上 → A上、溶劑櫃A → 溶A、溶劑櫃小A → 小A、LC溶劑櫃 → LC、冷凍與冷凍庫都是「冷凍」,其他位置用名稱本身),`slotCode(item)` 組字。號碼以前綴為一組:表單欄位留空就自動編該組最大號 +1(`nextSlotNo`),換位置時欄位清空改編新的一組;自己填的號碼撞到別瓶會擋下,但號碼和原本相同時不擋(已經重號的瓶子也要能改存量);照片上傳完會再查一次,存完 4 秒後還有重號就跳警告。`handleSave` 整筆重建文件,`slot_no` 一定要在 payload 裡。舊文件沒有 `slot_no`,顯示空白,下次編輯存檔時自動編號。2026-10 依原本 Excel 藥品清單的原編號順序編好號
+- **櫃子**:`cabinetOf(location)` 把「藥品櫃A-上/中/下」合成「藥品櫃A」,其他位置自己就是一個櫃子。藥品清單位置選單最上面有「整個櫃子」(值是 `cab:藥品櫃A`),`?item=cab:藥品櫃A` 會切到藥品清單並套用這個篩選(`applyCabinetFilter`,同時清掉搜尋字與危害篩選)
+- **掃描 QR**(藥品清單工具列、Ctrl+K「掃描」):動態建立 `#qrScanOverlay`,有 `BarcodeDetector` 就用,沒有(iOS Safari、桌機 Chrome)才臨時從 jsdelivr 載入 jsQR 1.4.0(cdnjs 沒有這個套件)。掃到的字交給 `parseScannedCode`:網址只取 `?item=`,不會照著網址跳轉;只有編號(瓶蓋)就到藥品、樣品、試材、儀器清單找。開項目一律走 `openItemLink(type,id)`(`tryDeepLink` 也用它),找不到回傳 false。相機在關閉、切頁(`closeAllModals` 只拿掉 show,用 MutationObserver 跟著關)、切到背景時都會停;「改用拍照辨識」在手機會切到相機 App,這時只暫停即時畫面(`pauseQrLive`),回來還要收照片
+- **藥品標籤**(管理員功能頁):勾選藥品或櫃子後下載給 EPSON Label Editor「匯入資料」用的 Excel(SheetJS)。實驗室的標籤機是 LW-600P(180 dpi,QR 一格最小 0.28 mm),12 mm 帶放不下網址 QR,所以瓶蓋(12 mm 方形)的 QR 只放藥品編號、下面印櫃位編號,要用網站的掃描;瓶身與櫃子(24 mm)的 QR 是網址。網址一律用 `LABEL_BASE_URL`(正式網址),在本機預覽產生的標籤才不會帶到 localhost。Label Editor 的範本(.lea 是 MFC 二進位格式)由使用者在 Label Editor 裡做,網站只產生資料
 - **採購流程**:看板(6 欄含「已審核待訂購」)、比價工具(SheetJS 匯入 Excel)、支援藥品與耗材/儀器維修兩種類型
 - **採買比價審核表**(`buildPurchaseReviewReport`):品項預設依新增時間(舊的在前);預覽畫面 # 欄的 ▲▼ 可調順序,編號整張連號,按鈕列印時藏起來(`.rep-move`)。調過的順序存在這台電腦的 localStorage(`cp-report-order`,`cpReviewItemsOrdered`),之後新進來的待審核項目接在後面照時間排;「恢復依時間排序」清掉。只影響這張表,不改採買資料
 - **儀器管理**:緊湊格狀卡片、房號色碼(602/603/經德/林場)、軟體備份記錄、使用步驟頁
@@ -120,9 +124,12 @@
 
 ### 表單共通的地雷(藥品、試材、樣品三個表單同一套寫法)
 - **草稿計時器**:`debounce()` 回傳的函式有 `cancel()` 與 `flush()`。關閉表單時編輯模式要 `cancel()`、新增模式要 `flush()`;儲存成功後先 `cancel()` 再 `clearDraft()`。以前沒有這兩步,700ms 的計時器會在表單關閉、`editingId` 被設回 null 之後才觸發,把剛編輯的既有資料整張存成「新增草稿」,下次按新增就冒出上一筆的內容(踩過的坑)
-- **儲存鎖**:用「第幾次開啟表單」的計數(`smpFormSession` / `smpSavingSession`,試材是 `mat…`)擋同一張表單重複送出,只停用儲存、刪除、清除三顆鈕;**取消與 ✕ 不能鎖**,離線時 Firestore 的 `set()` 要等連線回來才會結束,鎖住就關不掉表單。表單上的值在第一個 await 之前一次抓齊,儲存完成時只有畫面上還是同一次開啟的表單才收尾(關表單、清草稿);使用者中途去開了別筆,就不要動那張表單。建立者欄位要從函式開頭抓到的 `existingItem` 取
-- 「複製並編輯」與「以此試材新增樣品」開的是預先填好的新增表單,手上有草稿時先 `confirmReplaceSmpDraft()` 問過再取代,不要把兩份內容混在一起
-- 表格列的刪除鈕與縮圖一律 `createElement` / `addEventListener` 綁定,不要用 inline `onclick` 拼字串;寫進 `innerHTML` 的資料欄位一律過 `escapeHtml`
+- **儲存鎖**:用「第幾次開啟表單」的計數(`smpFormSession` / `smpSavingSession`,試材是 `mat…`,藥品是 `chem…`)擋同一張表單重複送出,只停用儲存、刪除、清除三顆鈕;**取消與 ✕ 不能鎖**,離線時 Firestore 的 `set()` 要等連線回來才會結束,鎖住就關不掉表單。表單上的值在第一個 await 之前一次抓齊,儲存完成時只有畫面上還是同一次開啟的表單才收尾(關表單、清草稿);使用者中途去開了別筆,就不要動那張表單。建立者欄位要從函式開頭抓到的 `existingItem` 取
+- **編輯存檔以最新文件為底**(`mergeOntoLatest(list, existingItem, data)`):表單只認得自己的欄位,直接 `set(表單內容)` 會洗掉別的功能或新版程式寫進去的欄位(藥品的 `slot_no` 就被這樣洗掉過)。合併只做第一層,樣品的 `moisture` 另外合併。新增欄位時表單照樣要把自己的欄位寫齊,不能靠合併補
+- **藥品存量**:扣庫存是另一條路(使用登記的 transaction),藥品表單開著時存量可能已經被扣過。開表單時記下存量(`chemFormQtyAtOpen`),存檔時欄位沒動過就沿用即時同步拿到的最新存量,不要把開表單時的舊數字寫回去
+- 「複製並編輯」與「以此試材新增樣品」開的是預先填好的新增表單,手上有草稿時先 `confirmReplaceSmpDraft()` 問過再取代,不要把兩份內容混在一起;採購的「快速新增至藥品清單」同理,用 `openForm(null,{noDraft:true})` 開、`await` 完才填值(`openForm` 是 async,不等的話草稿會在之後蓋掉帶入的值)。只有這種新增存好才移除那張採購卡,記號是 `chemCpSourceId`(只在快速新增設定,開表單與關表單都清掉);不要再借用採購對話框的 `cpActionId`,它在標記訂購 / 到貨時也會被設上
+- 表格列的刪除鈕與縮圖一律 `createElement` / `addEventListener` 綁定,不要用 inline `onclick` 拼字串;寫進 `innerHTML` 的資料欄位一律過 `escapeHtml`(數字欄位也一樣,文件裡存的不一定是數字)。還留著的 inline `onclick` 字串參數用 `jsArg(v)`(轉成 JS 字串常值再跳脫;`'${escapeHtml(v)}'` 擋不住,瀏覽器會先把 `&#39;` 還原成引號),放進 `src` / `href` 的網址用 `safeUrl(u)`,圖譜存的 SVG 用 `sanitizeSvg(svg)`(只留繪圖元素;各圖譜工具新增元素種類時要加進 `SVG_SAFE_TAGS`)
+- **藥品使用登記**的編號是 `CUL-<文件代號>`(一般成員只同步得到自己的紀錄,從本機清單取最大號加一會人人都是 CUL-0001);舊資料裡仍有不同人同編號的紀錄,所以刪除一律認 `_doc_id`。「儲存並扣除庫存」不經過 `fsSetItem`,有自己的防連點(`culSaving`)
 
 ---
 
@@ -165,7 +172,7 @@
 ### 比色計算(圖譜分析頁的「比色計算」子標籤)
 - 對應實驗室的 Excel 檢量線表:Test = RAW − Blank(各濃度各自的 Blank);檢量線用各濃度 Test 平均值做最小平方回歸,圖上標 y = mx + b 與 R²,誤差棒是三重複 SD
 - 樣品當量 = ((Test − b) / m) ÷ (樣品濃度/1000),單位 mg 標準品當量 / g 樣品;SE = SD/√n(原 Excel 的 `STDEV/(3*(1/2))` 是 `^` 打成 `*` 的手誤,已改正)
-- 版面照原本的 Excel 做成試算表格(`table.as-sheet`):欄是濃度點 / 樣品,列是濃度、RAW1–3、Blank,底下接自動算的 Test、Mean、SD、當量列。白格直接打字(`input` 事件只重算計算列,不重畫輸入格,焦點不會跑掉),Enter / 上下鍵換列,點一格 Ctrl+V 可貼整塊 Excel 範圍(`assayPasteAt`,左側整欄都不是數字就當標籤欄略過),欄可加減
+- 版面照原本的 Excel 做成試算表格(`table.as-sheet`):欄是濃度點 / 樣品,列是濃度、RAW1–3、Blank,底下接自動算的 Test、Mean、SD、當量列。白格直接打字(`input` 事件只重算計算列,不重畫輸入格,焦點不會跑掉),Enter / 上下鍵換列,點一格 Ctrl+V 可貼整塊 Excel 範圍(`assayPasteAt`,左側整欄都不是數字就當標籤欄略過;只去掉結尾的空列,中間的空列照樣佔一列,範圍內的空格會清掉,跟 Excel 貼上一個矩形一樣。以前把中間空列濾掉,只做二重複時 Blank 會往上補進 RAW3),欄可加減
 - 框選:拖曳或 Shift+點選矩形範圍、點列名選整列、點欄號選整欄(`asSel`),Delete 清空、Ctrl+C 以 `copy` 事件寫成 TSV;計算列只換 `tr.calc` 所以框選在重算後仍保留,整張重畫時才清掉
 - 輸出:複製結果(跟 Excel 同樣直式排列的 TSV)、CSV(每列一個樣品)、檢量線 PNG/SVG
 - **匯出 Excel**(`assayXlsxParts` / `assayExportXlsx`):用 JSZip 直接組 OOXML,不經 SheetJS(社群版不能寫圖表與樣式)。排法與原本範本相同(列 2–11 檢量線、13–29 樣品),格子放活的公式(IF/COUNT 保護空格、AVERAGE、STDEV、SLOPE/INTERCEPT/RSQ 放在資料右邊兩欄外、QT 與 SE 參照斜率截距格),`fullCalcOnLoad` 讓 Excel 開檔即重算;另附原生散佈圖(`xl/charts/chart1.xml`,線性趨勢線顯示方程式與 R²)錨在檢量線右側

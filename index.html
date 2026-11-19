@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="app-version" content="2026.11.05.1">
+<meta name="app-version" content="2026.11.19.1">
 <meta name="theme-color" content="#1B4B43" id="metaThemeColor">
 <title>SFPLAB 實驗室管理系統</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>">
@@ -292,6 +292,32 @@
   .loc-freeze{background:#0D3B66;color:#fff;}
   .loc-fridge{background:#CFE8F7;color:#0B4870;}
   .id-badge{font-family:var(--mono);font-size:11.5px;color:var(--pine-deep);background:var(--tint);padding:3px 9px;border-radius:var(--radius-sm);display:inline-block;white-space:nowrap;}
+  .slot-code{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink);border:1.5px solid var(--ink);padding:2px 7px;border-radius:var(--radius-sm);display:inline-block;white-space:nowrap;margin-left:6px;vertical-align:middle;}
+  .label-tags-row .slot-code, .lbl-row .slot-code, .tag-stack .slot-code{margin-left:0;}
+  .lbl-row .slot-code.dup{border-color:var(--danger);color:var(--danger);}
+  .slot-input-row{display:flex;align-items:center;gap:6px;}
+  .slot-prefix{font-family:var(--mono);font-weight:700;font-size:14px;color:var(--ink);min-width:3.2em;}
+  .slot-input-row input{max-width:130px;}
+  .slot-hint{font-size:12px;color:var(--ink-soft);margin-top:5px;min-height:1.2em;}
+  .slot-hint.warn{color:var(--danger);font-weight:600;}
+  .modal.qr-scan-modal{max-width:440px;}
+  .qr-scan-view{position:relative;background:#000;border-radius:var(--radius);overflow:hidden;aspect-ratio:1/1;}
+  .qr-scan-view video{width:100%;height:100%;object-fit:cover;display:block;}
+  .qr-scan-frame{position:absolute;inset:16%;border:2px solid rgba(255,255,255,.85);border-radius:var(--radius);box-shadow:0 0 0 2000px rgba(0,0,0,.28);pointer-events:none;}
+  .qr-scan-msg{font-size:13px;color:var(--ink-soft);margin-top:10px;line-height:1.6;}
+  .qr-scan-msg.warn{color:var(--danger);font-weight:600;}
+  .lbl-toolbar{margin-bottom:8px;}
+  .lbl-pickbar{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-soft);margin-bottom:6px;}
+  .lbl-pickbar label{display:flex;align-items:center;gap:5px;font-weight:600;color:var(--ink);}
+  .lbl-pickbar input{width:auto;}
+  .lbl-row{cursor:pointer;justify-content:flex-start !important;gap:8px;}
+  .lbl-row input{width:auto;flex-shrink:0;}
+  .lbl-row .lbl-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .lbl-row .lbl-none{font-size:11px;color:var(--ink-soft);border:1px dashed var(--line);padding:2px 6px;border-radius:var(--radius-sm);white-space:nowrap;}
+  .lbl-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+  .lbl-howto{margin-top:12px;font-size:12.5px;color:var(--ink-soft);line-height:1.7;}
+  .lbl-howto summary{cursor:pointer;font-weight:600;color:var(--ink);}
+  .lbl-howto ol{margin:6px 0 0;padding-left:20px;}
   .qty-low{color:var(--danger);font-weight:700;}
   .thumb{width:34px;height:34px;border-radius:var(--radius-sm);object-fit:cover;border:1px solid var(--line);background:var(--line-soft);flex-shrink:0;vertical-align:middle;margin-right:10px;}
   .cell-head{vertical-align:middle;}
@@ -1324,6 +1350,7 @@
         <button class="btn btn-ghost" id="chemExportJsonBtn">匯出備份</button>
         <button class="btn btn-ghost" id="chemImportJsonBtn">匯入備份</button>
         <input type="file" id="chemImportJsonInput" accept="application/json" class="visually-hidden-file">
+        <button class="btn btn-ghost" id="chemScanBtn" type="button">📷 掃描 QR</button>
         <button class="btn btn-primary" id="addBtn">＋ 新增藥品</button>
       </div>
 
@@ -1521,6 +1548,44 @@
       </div>
       <div class="section-title">指派與抽籤紀錄</div>
       <div class="today-card" id="dutyDrawHistory"></div>
+
+      <div class="section-title">藥品標籤(EPSON Label Editor)</div>
+      <div class="management-grid">
+        <div class="management-card">
+          <h3>瓶蓋與瓶身標籤</h3>
+          <div class="help">勾選要印的藥品,下載 Excel,在 Label Editor 用「匯入資料」帶進範本列印。瓶蓋(12 mm 方形):QR 是藥品編號,下面印櫃位編號,用網站的「掃描 QR」掃;瓶身(24 mm):QR 是網址,手機相機掃了就開這一瓶。</div>
+          <div class="toolbar lbl-toolbar">
+            <select id="lblFilterLoc"><option value="">所有位置</option></select>
+            <input type="text" id="lblSearch" placeholder="搜尋名稱 / 編號 / 櫃位">
+          </div>
+          <div class="lbl-pickbar"><label><input type="checkbox" id="lblSelectAll"> 全選目前列出的</label><span id="lblCount"></span></div>
+          <div class="setting-list" id="lblChemList"></div>
+          <div class="lbl-actions">
+            <button class="btn btn-primary btn-sm" id="lblCapBtn" type="button" disabled>下載瓶蓋標籤(12 mm)</button>
+            <button class="btn btn-primary btn-sm" id="lblBodyBtn" type="button" disabled>下載瓶身標籤(24 mm)</button>
+          </div>
+        </div>
+        <div class="management-card">
+          <h3>櫃子標籤</h3>
+          <div class="help">貼在櫃門上(24 mm)。掃了開藥品清單,並篩出這個櫃子的全部藥品(藥品櫃是上中下三層一起)。</div>
+          <div class="lbl-pickbar"><label><input type="checkbox" id="lblCabSelectAll"> 全選</label><span id="lblCabCount"></span></div>
+          <div class="setting-list" id="lblCabList"></div>
+          <div class="lbl-actions">
+            <button class="btn btn-primary btn-sm" id="lblCabBtn" type="button" disabled>下載櫃子標籤(24 mm)</button>
+          </div>
+          <details class="lbl-howto">
+            <summary>第一次用:在 Label Editor 做範本(每種只要做一次)</summary>
+            <ol>
+              <li>開 Label Editor,新增時選「匯入(橫書)」;膠帶寬度選 12 mm(瓶蓋)或 24 mm(瓶身、櫃子),瓶蓋的長度設 12 mm。</li>
+              <li>按「載入匯入資料」,選剛下載的 Excel,選「覆寫目前資料」。</li>
+              <li>在資料視窗把第一欄(QR)的屬性改成 QR Code,錯誤修正選 M,大小選小或中。</li>
+              <li>按「匯入」圖示,一次選一欄拖到標籤上,照示意圖排好位置與字的大小。</li>
+              <li>另存成範本(例如「瓶蓋.lea」)。以後只要開範本、載入新的 Excel、勾要印的列、列印。</li>
+              <li>Excel 第 1 列是欄位名稱,列印時不要勾第 1 列。</li>
+            </ol>
+          </details>
+        </div>
+      </div>
     </section>
 
     <!-- ================= PAGE: 總管理員功能 ================= -->
@@ -2866,6 +2931,11 @@
         </select>
       </div>
     </div>
+    <div class="field">
+      <label>櫃位編號(印在瓶蓋標籤上;留空就自動編下一號)</label>
+      <div class="slot-input-row"><span class="slot-prefix" id="f_slot_prefix">-</span><input type="number" id="f_slot_no" min="1" step="1" inputmode="numeric" placeholder="自動"></div>
+      <div class="slot-hint" id="f_slot_hint"></div>
+    </div>
     <div class="field row2">
       <div><label>級別</label>
         <select id="f_grade">
@@ -2939,6 +3009,7 @@
       </div>
       <div class="label-tags-row" id="d_tagsRow">
         <span id="d_location"></span>
+        <span id="d_slot"></span>
         <span id="d_haz"></span>
       </div>
       <div class="label-primary-row">
@@ -3563,7 +3634,7 @@ const DEFAULT_CHEM_LOCATIONS = [
 let CHEM_LOCATIONS = DEFAULT_CHEM_LOCATIONS.slice();
 function locCategory(loc){
   if(!loc) return 'other';
-  if(loc==='冷凍') return 'freeze';
+  if(loc.startsWith('冷凍')) return 'freeze';
   if(loc==='冷藏') return 'fridge';
   if(loc.startsWith('藥品櫃')) return 'chem';
   if(loc.startsWith('溶劑櫃') || loc==='LC溶劑櫃') return 'solvent';
@@ -3574,6 +3645,33 @@ function locTag(loc){
   const cat = locCategory(loc);
   const cls = cat==='chem' ? 'loc-chem' : cat==='solvent' ? 'loc-solvent' : cat==='freeze' ? 'loc-freeze' : cat==='fridge' ? 'loc-fridge' : 'plain-tag';
   return `<span class="loc-tag ${cls}">${escapeHtml(loc)}</span>`;
+}
+/* ---- 櫃位編號(A上-3):櫃 + 層 + 第幾瓶,給人找東西、歸位用;藥品編號 CHEM-xxxx 才是永遠不變的身分 ----
+   號碼以「前綴」為一組(冷凍、冷凍庫都算「冷凍」),新瓶或換位置時拿這一組目前最大號 +1 */
+function slotPrefix(loc){
+  const s = String(loc||'').trim();
+  let m;
+  if((m = /^藥品櫃(.+?)-?([上中下])$/.exec(s))) return m[1] + m[2];
+  if((m = /^溶劑櫃小(.+)$/.exec(s))) return '小' + m[1];
+  if((m = /^溶劑櫃(.+)$/.exec(s))) return '溶' + m[1];
+  if(s==='LC溶劑櫃') return 'LC';
+  if(/^冷凍/.test(s)) return '冷凍' + s.replace(/^冷凍庫?/, '');
+  return s;
+}
+function slotCode(item){
+  const n = item ? Number(item.slot_no) : 0;
+  return n>0 && item.location ? `${slotPrefix(item.location)}-${n}` : '';
+}
+function nextSlotNo(prefix, exceptId){
+  let max = 0;
+  (items||[]).forEach(i=>{ if(i.id!==exceptId && slotPrefix(i.location)===prefix){ const n = Number(i.slot_no)||0; if(n>max) max = n; } });
+  return max + 1;
+}
+/* 櫃子:藥品櫃A-上/中/下 合成「藥品櫃A」,其他位置自己就是一個櫃子(櫃子標籤、掃描後篩選用) */
+function cabinetOf(loc){
+  const s = String(loc||'').trim();
+  const m = /^(藥品櫃.+?)-?[上中下]$/.exec(s);
+  return m ? m[1] : s;
 }
 
 const PART_OPTIONS = ['根','枝條','嫩枝','葉','花','全果','果皮','種子','木材','心材','邊材','樹皮','其他'];
@@ -3617,7 +3715,7 @@ DEFAULT_NAV_ORDER.forEach(page=>{
   NAV_LABEL_TARGETS.push({ page, node });
   const h1 = document.querySelector(`#page-${page} .hdr h1`);
   if(h1 && h1.children.length===0 && h1.textContent.trim()===def) NAV_LABEL_TARGETS.push({ page, node:h1.firstChild });
-  document.querySelectorAll(`.dash-quick button[onclick="switchPage('${page}')"]`).forEach(b=>{
+  document.querySelectorAll(`.dash-quick button[onclick="switchPage(${jsArg(page)})"]`).forEach(b=>{
     const t = navTextNode(b);
     if(t && t.textContent.trim()===def) NAV_LABEL_TARGETS.push({ page, node:t });
   });
@@ -3707,20 +3805,46 @@ function ghsInfo(code){ return GHS.find(g=>g.code===code) || {label:code,color:'
 function buildItemUrl(type, id){
   return `${location.origin}${location.pathname}?item=${type}:${encodeURIComponent(id)}`;
 }
+/* 印出去的標籤一律用正式網址;在本機預覽時產生的標籤才不會帶到 localhost */
+const LABEL_BASE_URL = 'https://tung-beauregard.github.io/LabManagement_SFP/';
+function labelItemUrl(type, id){
+  return `${LABEL_BASE_URL}?item=${type}:${encodeURIComponent(id)}`;
+}
 let pendingDeepLinkRaw = new URLSearchParams(location.search).get('item');
 function tryDeepLink(){
   if(!pendingDeepLinkRaw || !currentUser) return;
   const idx = pendingDeepLinkRaw.indexOf(':');
   if(idx<0) return;
   const type = pendingDeepLinkRaw.slice(0, idx);
-  const id = decodeURIComponent(pendingDeepLinkRaw.slice(idx+1));
+  let id = pendingDeepLinkRaw.slice(idx+1);
+  try{ id = decodeURIComponent(id); }catch(e){}
   pendingDeepLinkRaw = null;
-  setTimeout(()=>{
-    if(type==='chem'){ switchPage('chemicals'); openDetail(id); }
-    else if(type==='smp'){ switchPage('samples'); openSmpDetail(id); }
-    else if(type==='mat'){ switchPage('materials'); openMatDetail(id); }
-    else if(type==='instr'){ switchPage('instrumentManual'); openImDetail(id); }
-  }, 60);
+  setTimeout(()=>{ openItemLink(type, id); }, 60);
+}
+/* 依類型與編號打開項目(網址的 ?item= 與掃描 QR 共用);找不到就回傳 false,不切頁 */
+function openItemLink(type, id){
+  if(type==='chem'){
+    if(!items.some(i=>i.id===id)) return false;
+    switchPage('chemicals'); openDetail(id); return true;
+  }
+  if(type==='smp'){
+    if(!smpItems.some(i=>i.id===id)) return false;
+    switchPage('samples'); openSmpDetail(id); return true;
+  }
+  if(type==='mat'){
+    if(!matItems.some(i=>i.id===id)) return false;
+    switchPage('materials'); openMatDetail(id); return true;
+  }
+  if(type==='instr'){
+    if(!INSTRUMENTS_ALL().some(i=>i.name===id)) return false;
+    switchPage('instrumentManual'); openImDetail(id); return true;
+  }
+  if(type==='cab'){
+    const known = CHEM_LOCATIONS.concat(items.map(i=>i.location)).some(l=>l && cabinetOf(l)===id);
+    if(!known) return false;
+    switchPage('chemicals'); applyCabinetFilter(id); return true;
+  }
+  return false;
 }
 function openLightbox(src){
   if(!src) return;
@@ -3735,6 +3859,47 @@ document.getElementById('lightboxOverlay').addEventListener('click', closeLightb
 
 function escapeHtml(s){
   return String(s ?? '').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+/* 放進 onclick="fn(…)" 的字串參數:先轉成 JS 字串常值,再做 HTML 跳脫。
+   單用 escapeHtml 不夠:瀏覽器會先把 &#39; 還原成引號,才交給 JS 解析 */
+function jsArg(v){ return escapeHtml(JSON.stringify(String(v ?? ''))); }
+/* 放進 src / href 的網址:只收 http(s)、data:image、blob,其他(例如 javascript:)一律不放 */
+function safeUrl(u){
+  const s = String(u ?? '').trim();
+  return /^(https?:\/\/|data:image\/|blob:)/i.test(s) ? escapeHtml(s) : '';
+}
+/* 圖譜文件裡的 svg 是使用者存進來的資料,放進網頁前先整理:
+   用 DOMParser 以 SVG(不是 HTML)解析,解析當下不會執行任何東西;只留畫圖用的元素,
+   拿掉 on* 屬性、javascript: 與不是 # 開頭的連結。各圖譜工具產生的 SVG 只用到這些元素,畫面不變。
+   解析失敗就改用 <img> 顯示(圖片裡的 SVG 不會執行程式)。以內容為鍵快取,即時同步重畫時不必再解析 */
+const SVG_SAFE_TAGS = new Set(['svg','g','path','line','polyline','polygon','rect','circle','ellipse','text','tspan','defs','clippath','lineargradient','radialgradient','stop','title','desc','marker','pattern','mask','symbol','use']);
+const svgSafeCache = new Map();
+function sanitizeSvg(str){
+  if(!str) return '';
+  str = String(str);
+  if(svgSafeCache.has(str)) return svgSafeCache.get(str);
+  let out = '';
+  try{
+    const doc = new DOMParser().parseFromString(String(str), 'image/svg+xml');
+    const root = doc.documentElement;
+    if(root && root.localName==='svg' && !doc.getElementsByTagName('parsererror').length){
+      const clean = el=>{
+        for(const a of [...el.attributes]){
+          const n = a.name.toLowerCase(), v = a.value.replace(/[\s\u0000-\u001f]+/g,'').toLowerCase();
+          if(n.startsWith('on') || v.includes('javascript:') || ((n==='href' || n.endsWith(':href')) && !a.value.trim().startsWith('#'))) el.removeAttribute(a.name);
+        }
+        for(const c of [...el.children]){ if(SVG_SAFE_TAGS.has(c.localName.toLowerCase())) clean(c); else c.remove(); }
+      };
+      clean(root);
+      out = new XMLSerializer().serializeToString(root);
+    }else{
+      const s = String(str).replace(/^\s*<svg(?![^>]*\bxmlns=)/i, '<svg xmlns="http://www.w3.org/2000/svg"');
+      out = `<img alt="" style="width:100%;height:100%;object-fit:contain;" src="data:image/svg+xml;charset=utf-8,${encodeURIComponent(s)}">`;
+    }
+  }catch(_e){ out = ''; }
+  if(svgSafeCache.size > 500) svgSafeCache.clear();
+  svgSafeCache.set(str, out);
+  return out;
 }
 /* ---- toast 輕量通知(成功/一般回饋用,錯誤仍用 alert)---- */
 function showToast(msg, kind, ms){
@@ -3897,7 +4062,8 @@ function cmdkIndex(){
     out.push({g:'動作',label,sub:'',kw:'新增 add',run:()=>{ switchPage(page); setTimeout(()=>{ const b=document.getElementById(id); if(b) b.click(); },60); }}); });
   out.push({g:'動作',label:currentTheme()==='night'?'切換成日間模式':'切換成夜間模式',sub:'',kw:'theme 主題 夜間 日間',run:()=>document.getElementById('themeToggleBtn').click()});
   out.push({g:'動作',label:document.documentElement.getAttribute('data-skin')==='botanic'?'切換成經典風格':'切換成標本館風格',sub:'',kw:'skin 風格',run:()=>document.getElementById('skinToggleBtn').click()});
-  (items||[]).forEach(i=>out.push({g:'藥品',label:i.name_zh||i.id,sub:[i.id,i.location].filter(Boolean).join(' · '),kw:[i.name_en,i.cas,i.iupac,i.id].filter(Boolean).join(' '),run:()=>{ switchPage('chemicals'); openDetail(i.id); }}));
+  out.push({g:'動作',label:'掃描 QR',sub:'用相機掃瓶蓋、瓶身或櫃子上的 QR',kw:'scan qr 掃描 條碼 相機 camera',run:()=>openQrScanner()});
+  (items||[]).forEach(i=>{ const sc=slotCode(i); out.push({g:'藥品',label:i.name_zh||i.id,sub:[sc,i.id,i.location].filter(Boolean).join(' · '),kw:[i.name_en,i.cas,i.iupac,i.id,sc].filter(Boolean).join(' '),run:()=>{ switchPage('chemicals'); openDetail(i.id); }}); });
   (matItems||[]).forEach(i=>out.push({g:'試材',label:i.name_zh||i.species||i.id,sub:i.id,kw:[i.species,i.source,i.id].filter(Boolean).join(' '),run:()=>{ switchPage('materials'); openMatDetail(i.id); }}));
   (smpItems||[]).forEach(i=>out.push({g:'樣品',label:i.name_zh||i.id,sub:i.id,kw:[i.species,i.extractor,i.solvent,i.id].filter(Boolean).join(' '),run:()=>{ switchPage('samples'); openSmpDetail(i.id); }}));
   const instNames=[].concat((INSTRUMENTS_BUILTIN||[]).map(i=>((instOverrides||{})[i.name]||{}).name||i.name),(customInstruments||[]).map(i=>i&&i.name?i.name:String(i)));
@@ -4154,6 +4320,14 @@ function upsertLocal(list, item){
   const i=list.findIndex(x=>x&&((item._doc_id&&x._doc_id===item._doc_id)||(item.id!=null&&x.id===item.id)));
   if(i>=0) list[i]=item; else list.push(item);
   return list;
+}
+/* 編輯既有資料時,以即時同步到的最新文件為底,再蓋上表單的欄位。表單只認得自己那幾個欄位,
+   直接 set(表單內容) 會把別的功能或新版程式寫進去的欄位整個洗掉(例如藥品的 slot_no)。
+   只合併第一層;巢狀物件要不要合併由呼叫端決定 */
+function mergeOntoLatest(list, existingItem, data){
+  if(!existingItem) return data;
+  const latest = (existingItem._doc_id && (list||[]).find(x=>x && x._doc_id===existingItem._doc_id)) || existingItem;
+  return Object.assign({}, latest, data);
 }
 
 /* ======================================================
@@ -4800,7 +4974,7 @@ function switchPage(name){
   closeAllModals();
   document.body.classList.toggle('nav-compact', name !== 'dashboard');
   if(name==='admin') renderAdminTable();
-  if(name==='adminTools') renderDutyAdminTools();
+  if(name==='adminTools'){ renderDutyAdminTools(); renderChemLabelTools(); }
   if(name==='superAdminTools') renderSuperAdminTools();
   if(name==='library') renderLibraryAll();
   if(name==='spectra') initFtirOnce();
@@ -4925,7 +5099,7 @@ function populateLocationSelect(currentValue){
   if(currentValue && !locations.includes(currentValue)) locations.push(currentValue);
   document.getElementById('f_location').innerHTML = '<option value="">請選擇位置</option>' + locations.map(l=>`<option value="${escapeHtml(l)}">${escapeHtml(l)}${!CHEM_LOCATIONS.includes(l)?'（舊位置）':''}</option>`).join('');
 }
-const CHEM_FIELD_IDS = ['f_name_zh','f_name_en','f_iupac','f_cas','f_location','f_grade','f_quantity','f_unit','f_purchase_date','f_low_threshold','f_sds','f_note'];
+const CHEM_FIELD_IDS = ['f_name_zh','f_name_en','f_iupac','f_cas','f_location','f_slot_no','f_grade','f_quantity','f_unit','f_purchase_date','f_low_threshold','f_sds','f_note'];
 const CHEM_DRAFT_KEY = 'draft-chemical';
 const saveChemDraftDebounced = debounce(()=>{ if(!editingId && document.getElementById('formOverlay').classList.contains('show')) saveDraft(CHEM_DRAFT_KEY, gatherChemDraft()); }, 700);
 function gatherChemDraft(){
@@ -4944,7 +5118,38 @@ function applyChemDraft(d){
   syncHazPicker();
   if(d.state){ document.querySelectorAll('input[name="f_state"]').forEach(r=>{ r.checked = (r.value===d.state); }); }
   if(d.photo){ document.getElementById('photoPreview').src = d.photo; document.getElementById('photoPreview').style.display='block'; }
+  syncChemSlotUi(false);
 }
+/* 櫃位編號欄:前綴跟著位置走。編輯時位置沒變就保留原號,換了位置就清空,存檔時自動編該組下一號 */
+let chemFormOrigSlot = null;
+function syncChemSlotUi(fromLocationChange){
+  const loc = document.getElementById('f_location').value;
+  const inp = document.getElementById('f_slot_no');
+  const hint = document.getElementById('f_slot_hint');
+  const prefix = loc ? slotPrefix(loc) : '';
+  const orig = chemFormOrigSlot;
+  document.getElementById('f_slot_prefix').textContent = prefix ? prefix + '-' : '-';
+  if(fromLocationChange && orig) inp.value = (loc===orig.location && orig.slot_no) ? orig.slot_no : '';
+  hint.classList.remove('warn');
+  if(!loc){ hint.textContent = '先選存放位置'; return; }
+  const typed = parseInt(inp.value, 10);
+  const origCode = orig && orig.slot_no ? `${slotPrefix(orig.location)}-${orig.slot_no}` : '';
+  const kept = !!origCode && typed > 0 && `${prefix}-${typed}`===origCode;
+  let text = '';
+  if(typed > 0){
+    const clash = items.find(i=>i.id!==editingId && slotPrefix(i.location)===prefix && Number(i.slot_no)===typed);
+    if(clash){
+      text = kept ? `${prefix}-${typed} 和「${clash.name_zh||clash.id}」重號了,建議其中一瓶換號碼` : `${prefix}-${typed} 已經是「${clash.name_zh||clash.id}」,請換一個號碼,或清空讓系統自動編號`;
+      hint.classList.add('warn');
+    }
+  }else{
+    text = `存檔時自動編為 ${prefix}-${nextSlotNo(prefix, editingId)}`;
+  }
+  if(origCode && !kept) text += (text ? ';' : '') + `原本是 ${origCode},記得重印瓶蓋標籤`;
+  hint.textContent = text;
+}
+document.getElementById('f_location').addEventListener('change', ()=>syncChemSlotUi(true));
+document.getElementById('f_slot_no').addEventListener('input', ()=>syncChemSlotUi(false));
 /* 危害性選擇:大圖示方塊,可複選,選到的打勾;「無/未知」和其他互斥 */
 function syncHazPicker(){
   document.querySelectorAll('#hazPicker .haz-chip').forEach(chip=>{
@@ -4981,7 +5186,10 @@ function populateFilters(){
   const locSel = document.getElementById('filterLoc');
   const curLoc = locSel.value;
   const filterLocations = [...new Set(CHEM_LOCATIONS.concat(items.map(i=>i.location).filter(Boolean)))];
-  locSel.innerHTML = '<option value="">所有位置</option>' + filterLocations.map(l=>`<option value="${escapeHtml(l)}">${escapeHtml(l)}</option>`).join('');
+  const locOpts = filterLocations.map(l=>`<option value="${escapeHtml(l)}">${escapeHtml(l)}</option>`).join('');
+  const cabs = [...new Set(filterLocations.filter(l=>cabinetOf(l)!==l).map(cabinetOf))];
+  const cabOpts = cabs.map(c=>`<option value="cab:${escapeHtml(c)}">${escapeHtml(c)}(整櫃)</option>`).join('');
+  locSel.innerHTML = '<option value="">所有位置</option>' + (cabOpts ? `<optgroup label="整個櫃子">${cabOpts}</optgroup><optgroup label="單一位置">${locOpts}</optgroup>` : locOpts);
   locSel.value = curLoc;
   const hazSel = document.getElementById('filterHaz');
   const curHaz = hazSel.value;
@@ -4999,10 +5207,10 @@ function renderTable(){
   const fLoc = document.getElementById('filterLoc').value;
   const fHaz = document.getElementById('filterHaz').value;
   let filtered = items.filter(i=>{
-    if(fLoc && i.location !== fLoc) return false;
+    if(fLoc && (fLoc.startsWith('cab:') ? cabinetOf(i.location)!==fLoc.slice(4) : i.location!==fLoc)) return false;
     if(fHaz && !(i.hazards||[]).includes(fHaz)) return false;
     if(search){
-      const hay = [i.name_zh,i.name_en,i.cas,i.location,i.iupac].join(' ').toLowerCase();
+      const hay = [i.name_zh,i.name_en,i.cas,i.location,i.iupac,i.id,slotCode(i)].join(' ').toLowerCase();
       if(!hay.includes(search)) return false;
     }
     return true;
@@ -5016,23 +5224,52 @@ function renderTable(){
     tr.className = 'row';
     const isLow = item.low_threshold !== '' && item.low_threshold != null && Number(item.quantity) <= Number(item.low_threshold);
     tr.innerHTML = `
-      <td class="cell-thumb">${item.photo ? `<img class="thumb" src="${item.photo}" style="cursor:zoom-in;" onclick="event.stopPropagation();openLightbox(this.src)">` : ''}</td>
+      <td class="cell-thumb">${item.photo ? `<img class="thumb" src="${safeUrl(item.photo)}" style="cursor:zoom-in;" onclick="event.stopPropagation();openLightbox(this.src)">` : ''}</td>
       <td class="cell-name"><div class="name-block"><div class="name-zh">${escapeHtml(item.name_zh)}</div><div class="name-en">${escapeHtml(item.name_en||'')}</div></div></td>
-      <td data-label="位置">${locTag(item.location)}</td>
-      <td data-label="存量" class="${isLow?'qty-low':''}">${item.quantity ?? '-'} ${escapeHtml(item.unit||'')}</td>
+      <td data-label="位置">${slotCode(item) ? `<span class="tag-stack">${locTag(item.location)}<span class="slot-code">${escapeHtml(slotCode(item))}</span></span>` : locTag(item.location)}</td>
+      <td data-label="存量" class="${isLow?'qty-low':''}">${escapeHtml(item.quantity ?? '-')} ${escapeHtml(item.unit||'')}</td>
       <td data-label="級別">${item.grade ? `<span class="plain-tag">${escapeHtml(item.grade)}</span>` : '-'}</td>
-      <td data-label="危害性"><div class="haz-row">${(item.hazards||[]).map(c=>{const g=ghsInfo(c);return `<span class="haz-tag" style="background:${g.color}">${ghsIconSvg(c)}${g.label}</span>`;}).join('') || '<span style="color:var(--ink-soft);font-size:12px;">-</span>'}</div></td>
+      <td data-label="危害性"><div class="haz-row">${(item.hazards||[]).map(c=>{const g=ghsInfo(c);return `<span class="haz-tag" style="background:${g.color}">${ghsIconSvg(c)}${escapeHtml(g.label)}</span>`;}).join('') || '<span style="color:var(--ink-soft);font-size:12px;">-</span>'}</div></td>
       <td data-label="SDS頁數">${escapeHtml(item.sds_pages||'-')}</td>
-      <td class="cell-actions">${isAdmin() ? `<button class="btn btn-ghost btn-sm btn-row-delete" onclick="quickDeleteChem('${item.id}', event)" title="刪除">✕</button>` : ''}</td>
+      <td class="cell-actions">${isAdmin() ? `<button class="btn btn-ghost btn-sm btn-row-delete" onclick="quickDeleteChem(${jsArg(item.id)}, event)" title="刪除">✕</button>` : ''}</td>
     `;
     tr.addEventListener('click', ()=> openDetail(item.id));
     tbody.appendChild(tr);
   });
 }
-function renderAll(){ populateFilters(); renderStats(); renderTable(); }
+function renderAll(){
+  populateFilters(); renderStats(); renderTable();
+  const adminToolsPage = document.getElementById('page-adminTools');
+  if(adminToolsPage && adminToolsPage.classList.contains('active')) renderChemLabelTools();
+}
+/* 掃了櫃子標籤:切到整櫃篩選,清掉搜尋字與危害篩選,免得殘留的條件把清單蓋掉 */
+function applyCabinetFilter(cab){
+  const search = document.getElementById('search');
+  if(search.value){ search.value = ''; search.dispatchEvent(new Event('input')); }
+  document.getElementById('filterHaz').value = '';
+  populateFilters();
+  const locSel = document.getElementById('filterLoc');
+  locSel.value = [...locSel.options].some(o=>o.value==='cab:'+cab) ? 'cab:'+cab : cab;
+  renderTable();
+}
 
-async function openForm(id){
+let chemFormSession = 0;            // 每開一次藥品表單加一,用來分辨「儲存完成時畫面上是不是同一張表單」
+let chemSavingSession = -1;         // 正在儲存的是哪一次開啟的表單;-1 表示沒有
+let chemFormQtyAtOpen = null;       // 開編輯表單時的存量;存檔時存量沒動過就沿用最新值
+let chemCpSourceId = null;          // 由「快速新增至藥品清單」帶入時的採購項目;只有這種新增存好後才移除那張卡
+/* 儲存鎖只擋同一張表單重複送出,不擋關閉:離線時 set() 要等連線回來才會結束,鎖住取消鈕表單就關不掉 */
+function setChemSavingUi(on){
+  ['saveBtn','deleteBtn','clearChemBtn'].forEach(id=>{ document.getElementById(id).disabled = on; });
+  document.getElementById('saveBtn').textContent = on ? '儲存中…' : '儲存';
+}
+const chemQtyNorm = v=> (v==null || v==='') ? null : Number(v);
+async function openForm(id, opts){
+  opts = opts || {};
+  chemFormSession++;
+  setChemSavingUi(false);
+  chemCpSourceId = null;
   editingId = id || null;
+  chemFormQtyAtOpen = id ? chemQtyNorm((items.find(i=>i.id===id)||{}).quantity) : null;
   selectedHaz = new Set();
   const existingLocation = id ? ((items.find(i=>i.id===id)||{}).location||'') : '';
   populateLocationSelect(existingLocation);
@@ -5047,6 +5284,8 @@ async function openForm(id){
     document.getElementById('f_iupac').value = item.iupac||'';
     document.getElementById('f_cas').value = item.cas||'';
     document.getElementById('f_location').value = item.location||'';
+    document.getElementById('f_slot_no').value = Number(item.slot_no)>0 ? Number(item.slot_no) : '';
+    chemFormOrigSlot = { location:item.location||'', slot_no:Number(item.slot_no)>0 ? Number(item.slot_no) : null };
     document.getElementById('f_grade').value = item.grade||'';
     document.querySelectorAll('input[name="f_state"]').forEach(r=>{ r.checked = (r.value === item.state); });
     document.getElementById('f_quantity').value = item.quantity ?? '';
@@ -5059,23 +5298,28 @@ async function openForm(id){
     (item.hazards||[]).forEach(c=>selectedHaz.add(c));
     renderHazPicker();
   }else{
-    ['f_name_zh','f_name_en','f_iupac','f_cas','f_location','f_grade','f_quantity','f_unit','f_purchase_date','f_low_threshold','f_sds','f_note'].forEach(id=>document.getElementById(id).value='');
+    chemFormOrigSlot = null;
+    ['f_name_zh','f_name_en','f_iupac','f_cas','f_location','f_slot_no','f_grade','f_quantity','f_unit','f_purchase_date','f_low_threshold','f_sds','f_note'].forEach(id=>document.getElementById(id).value='');
     document.querySelectorAll('input[name="f_state"]').forEach(r=>{ r.checked = false; });
     renderHazPicker();
-    const draft = await loadDraft(CHEM_DRAFT_KEY);
-    applyChemDraft(draft);
+    if(!opts.noDraft){
+      const draft = await loadDraft(CHEM_DRAFT_KEY);
+      applyChemDraft(draft);
+    }
   }
+  syncChemSlotUi(false);
   document.getElementById('formOverlay').classList.add('show');
 }
 function closeForm(){
   if(editingId) saveChemDraftDebounced.cancel(); else saveChemDraftDebounced.flush();   // 編輯模式關閉後才觸發的計時器會把既有資料存成新增草稿
-  document.getElementById('formOverlay').classList.remove('show'); editingId = null; if(typeof cpActionId !== 'undefined') cpActionId = null;
+  document.getElementById('formOverlay').classList.remove('show'); editingId = null; chemCpSourceId = null;
 }
 function clearChemForm(){
   CHEM_FIELD_IDS.forEach(fid=>document.getElementById(fid).value='');
   document.querySelectorAll('input[name="f_state"]').forEach(r=>{ r.checked = false; });
   selectedHaz = new Set();
   syncHazPicker();
+  syncChemSlotUi(false);
   document.getElementById('photoPreview').style.display = 'none';
   document.getElementById('photoPreview').src = '';
   saveChemDraftDebounced.cancel();
@@ -5093,53 +5337,104 @@ document.querySelectorAll('input[name="f_state"]').forEach(r=>{
 });
 
 async function handleSave(){
-  const existingItem = editingId ? items.find(i=>i.id===editingId) : null;
-  if(editingId){
-    if(!canEdit(existingItem)){ notify('只有建立者本人或管理員能編輯這筆資料。'); return; }
-  }
+  const session = chemFormSession;
+  if(chemSavingSession === session) return;                // 手機連點兩下會各跑一輪,存出兩筆
+  const editId = editingId, isEdit = !!editId;
+  const existingItem = isEdit ? items.find(i=>i.id===editId) : null;
+  if(isEdit && !existingItem){ notify('這筆藥品已經被刪除,無法儲存。'); return; }
+  if(isEdit && !canEdit(existingItem)){ notify('只有建立者本人或管理員能編輯這筆資料。'); return; }
   const name_zh = document.getElementById('f_name_zh').value.trim();
   const location = document.getElementById('f_location').value;
   if(!name_zh || !location){ notify('請至少填寫「中文名稱」與「存放位置」'); return; }
-  const recordId = editingId || genId(items, 'CHEM');
-  let photoInfo;
-  try{ photoInfo = await uploadPreviewPhoto('photoPreview','chemicals',recordId,'bottle',existingItem&&existingItem.photo_path); }
-  catch(err){ notify(err.message || '照片上傳失敗。'); return; }
-  const data = {
+  const recordId = editId || genId(items, 'CHEM');
+  // 櫃位編號:留空就自動編這一組的下一號;號碼和原本一樣就不擋(已經重號的瓶子也要能改存量)
+  const slotPre = slotPrefix(location);
+  const typedSlot = parseInt(document.getElementById('f_slot_no').value, 10);
+  const slotAuto = !(typedSlot > 0);
+  const slotKept = !slotAuto && !!existingItem && slotPrefix(existingItem.location)===slotPre && Number(existingItem.slot_no)===typedSlot;
+  const slotTaken = n=>items.find(i=>i.id!==recordId && slotPrefix(i.location)===slotPre && Number(i.slot_no)===n);
+  let slot_no = slotAuto ? nextSlotNo(slotPre, recordId) : typedSlot;
+  const slotClashMsg = c=>`櫃位編號 ${slotPre}-${slot_no} 已經是「${c.name_zh||c.id}」,請換一個號碼,或清空讓系統自動編號。`;
+  if(!slotAuto && !slotKept && slotTaken(slot_no)){ notify(slotClashMsg(slotTaken(slot_no))); return; }
+  /* 表單上的值在第一個 await 之前一次抓齊;儲存途中使用者可以關掉表單去開別筆,之後再讀 DOM 會讀到別筆 */
+  const val = fid=> document.getElementById(fid).value;
+  const quantityForm = chemQtyNorm(val('f_quantity'));
+  // 表單開著時別人登記使用扣了庫存:存量欄沒動過,就沿用存檔當下最新的存量,不要把開表單時的舊數字寫回去
+  const quantityTouched = !isEdit || quantityForm !== chemFormQtyAtOpen;
+  const cpSourceId = isEdit ? null : chemCpSourceId;
+  const nowIso = new Date().toISOString();
+  const formData = {
     id: recordId,
     _doc_id: existingItem ? existingItem._doc_id : null,
     name_zh,
-    name_en: document.getElementById('f_name_en').value.trim(),
-    iupac: document.getElementById('f_iupac').value.trim(),
-    cas: document.getElementById('f_cas').value.trim(),
+    name_en: val('f_name_en').trim(),
+    iupac: val('f_iupac').trim(),
+    cas: val('f_cas').trim(),
     location,
-    grade: document.getElementById('f_grade').value,
+    slot_no,
+    grade: val('f_grade'),
     state: (document.querySelector('input[name="f_state"]:checked') || {}).value || '',
-    quantity: document.getElementById('f_quantity').value === '' ? null : Number(document.getElementById('f_quantity').value),
-    unit: document.getElementById('f_unit').value.trim(),
-    purchase_date: document.getElementById('f_purchase_date').value,
-    low_threshold: document.getElementById('f_low_threshold').value === '' ? null : Number(document.getElementById('f_low_threshold').value),
-    sds_pages: document.getElementById('f_sds').value.trim(),
-    note: document.getElementById('f_note').value.trim(),
+    quantity: quantityForm,
+    unit: val('f_unit').trim(),
+    purchase_date: val('f_purchase_date'),
+    low_threshold: chemQtyNorm(val('f_low_threshold')),
+    sds_pages: val('f_sds').trim(),
+    note: val('f_note').trim(),
     hazards: [...selectedHaz],
-    photo: photoInfo.url,
-    photo_path: photoInfo.path,
-    updated_at: new Date().toISOString(),
+    photo: null,
+    photo_path: null,
+    updated_at: nowIso,
     updated_by_uid: (currentUser && currentUser.uid) || null,
-    created_by_uid: editingId ? (items.find(i=>i.id===editingId)?.created_by_uid || null) : ((currentUser && currentUser.uid) || null),
-    created_by: editingId ? (items.find(i=>i.id===editingId)?.created_by || (currentUser && currentUser.code) || null) : ((currentUser && currentUser.code) || null),
-    created_at: editingId ? (items.find(i=>i.id===editingId)?.created_at || new Date().toISOString()) : new Date().toISOString()
+    /* 建立者資訊一律取自開始儲存時抓到的 existingItem,不要在 await 之後重讀全域的 editingId */
+    created_by_uid: isEdit ? (existingItem.created_by_uid || null) : ((currentUser && currentUser.uid) || null),
+    created_by: isEdit ? (existingItem.created_by || (currentUser && currentUser.code) || null) : ((currentUser && currentUser.code) || null),
+    created_at: isEdit ? (existingItem.created_at || nowIso) : nowIso
   };
-  const ok = await fsSetItem('chemicals', data);
-  if(!ok){ if(photoInfo.uploaded) await deleteStoredPhoto(photoInfo.path); notify('儲存失敗,請檢查網路連線後再試一次。'); return; }
-  if(editingId){ items[items.findIndex(i=>i.id===editingId)] = data; }
-  else{ upsertLocal(items, data); }
-  if(existingItem && existingItem.photo_path && existingItem.photo_path!==photoInfo.path) await deleteStoredPhoto(existingItem.photo_path);
-  saveChemDraftDebounced.cancel();
-  if(!editingId) await clearDraft(CHEM_DRAFT_KEY);
-  const cpIdToRemove = (!editingId && typeof cpActionId !== 'undefined') ? cpActionId : null;
-  closeForm();
+  chemSavingSession = session;
+  setChemSavingUi(true);
+  let saved = false, data = null;
+  try{
+    let photoInfo;
+    try{ photoInfo = await uploadPreviewPhoto('photoPreview','chemicals',recordId,'bottle',existingItem&&existingItem.photo_path); }
+    catch(err){ notify(err.message || '照片上傳失敗。'); return; }
+    // 上傳照片這段時間別人可能剛存了同一號:自動編的就改下一號,自己填的就擋下來
+    if(!slotKept && slotTaken(slot_no)){
+      if(slotAuto) slot_no = nextSlotNo(slotPre, recordId);
+      else{ const c = slotTaken(slot_no); if(photoInfo.uploaded) await deleteStoredPhoto(photoInfo.path); notify(slotClashMsg(c)); return; }
+    }
+    formData.slot_no = slot_no;
+    formData.photo = photoInfo.url;
+    formData.photo_path = photoInfo.path;
+    data = mergeOntoLatest(items, existingItem, formData);
+    if(!quantityTouched){
+      const latest = items.find(i=>i._doc_id && i._doc_id===existingItem._doc_id) || existingItem;
+      data.quantity = chemQtyNorm(latest.quantity);
+    }
+    const ok = await fsSetItem('chemicals', data);
+    if(!ok){ if(photoInfo.uploaded) await deleteStoredPhoto(photoInfo.path); notify('儲存失敗,請檢查網路連線後再試一次。'); return; }
+    upsertLocal(items, data);
+    if(existingItem && existingItem.photo_path && existingItem.photo_path!==photoInfo.path) await deleteStoredPhoto(existingItem.photo_path);
+    saved = true;
+  }finally{
+    if(chemSavingSession === session) chemSavingSession = -1;
+    if(chemFormSession === session) setChemSavingUi(false);
+  }
+  if(!saved) return;
+  if(!slotKept){
+    // 兩個人幾乎同時存同一組時,本機清單還沒看到對方;等即時同步跟上再查一次
+    setTimeout(()=>{
+      const dup = items.find(i=>i.id!==data.id && slotPrefix(i.location)===slotPre && Number(i.slot_no)===data.slot_no);
+      if(dup) showToast(`櫃位編號 ${slotPre}-${data.slot_no} 和「${dup.name_zh||dup.id}」重複了,請編輯其中一瓶換號碼。`, 'error', 9000);
+    }, 4000);
+  }
+  /* 表單還停在同一次開啟才收尾;使用者中途已經關掉、或去開了別筆,就不要動現在畫面上的表單 */
+  const formOpen = document.getElementById('formOverlay').classList.contains('show');
+  const sameForm = chemFormSession === session;
+  if(sameForm) saveChemDraftDebounced.cancel();
+  if(!isEdit && (sameForm || !(formOpen && !editingId))) await clearDraft(CHEM_DRAFT_KEY);   // 另外開了一張新增表單的話,草稿現在是那一張的
+  if(sameForm && formOpen) closeForm();
   renderAll();
-  if(cpIdToRemove) await removeCpAfterAdd(cpIdToRemove);
+  if(cpSourceId) await removeCpAfterAdd(cpSourceId);
 }
 async function handleDelete(){
   if(!editingId || !isAdmin()) return;
@@ -5176,16 +5471,17 @@ function openDetail(id){
   document.getElementById('d_iupac').textContent = item.iupac || '';
   document.getElementById('d_cas').textContent = item.cas || '-';
   document.getElementById('d_location').innerHTML = locTag(item.location);
+  document.getElementById('d_slot').innerHTML = slotCode(item) ? `<span class="slot-code">${escapeHtml(slotCode(item))}</span>` : '';
   document.getElementById('d_qty').textContent = (item.quantity ?? '-') + ' ' + (item.unit||'');
   document.getElementById('d_date').textContent = item.purchase_date || '-';
   document.getElementById('d_sds').textContent = item.sds_pages || '-';
-  document.getElementById('d_haz').innerHTML = (item.hazards||[]).map(c=>{const g=ghsInfo(c);return `<span class="haz-tag" style="background:${g.color}">${ghsIconSvg(c)}${g.label}</span>`;}).join(' ') || '-';
+  document.getElementById('d_haz').innerHTML = (item.hazards||[]).map(c=>{const g=ghsInfo(c);return `<span class="haz-tag" style="background:${g.color}">${ghsIconSvg(c)}${escapeHtml(g.label)}</span>`;}).join(' ') || '-';
   document.getElementById('d_note').textContent = item.note || '';
   document.getElementById('d_id').textContent = item.id;
   const creatorAcc = findAccount(item.created_by);
   document.getElementById('d_creator').textContent = item.created_by ? (creatorAcc ? (creatorAcc.name||creatorAcc.code) : item.created_by) : '未知';
   document.getElementById('editFromDetailBtn').style.display = canEdit(item) ? 'inline-block' : 'none';
-  document.getElementById('d_photoWrap').innerHTML = item.photo ? `<img src="${item.photo}" style="max-width:100%;max-height:140px;border-radius:var(--radius-sm);border:1px solid var(--line);cursor:zoom-in;" onclick="openLightbox(this.src)">` : '';
+  document.getElementById('d_photoWrap').innerHTML = item.photo ? `<img src="${safeUrl(item.photo)}" style="max-width:100%;max-height:140px;border-radius:var(--radius-sm);border:1px solid var(--line);cursor:zoom-in;" onclick="openLightbox(this.src)">` : '';
   const topHaz = (item.hazards||[])[0];
   document.getElementById('detailStripe').style.background = topHaz ? ghsInfo(topHaz).color : '#B9C4BF';
   const qrTarget = document.getElementById('qrTarget');
@@ -5220,9 +5516,9 @@ function downloadCsv(filename, headers, rows){
   a.click();
 }
 function exportCsv(){
-  const headers = ['編號','名稱(中)','名稱(英)','IUPAC名','CAS No.','位置','存量','單位','購買日期','危害性','SDS頁數','備註'];
+  const headers = ['編號','名稱(中)','名稱(英)','IUPAC名','CAS No.','位置','櫃位編號','存量','單位','購買日期','危害性','SDS頁數','備註'];
   const rows = items.map(i=>[
-    i.id, i.name_zh, i.name_en, i.iupac, i.cas, i.location, i.quantity, i.unit, i.purchase_date,
+    i.id, i.name_zh, i.name_en, i.iupac, i.cas, i.location, slotCode(i), i.quantity, i.unit, i.purchase_date,
     (i.hazards||[]).map(c=>ghsInfo(c).label).join('/'), i.sds_pages, i.note
   ]);
   downloadCsv(`藥品清單_${localDateISO()}.csv`, headers, rows);
@@ -5240,6 +5536,335 @@ document.getElementById('filterHaz').addEventListener('change', renderTable);
 document.getElementById('exportBtn').addEventListener('click', exportCsv);
 document.getElementById('formOverlay').addEventListener('click', (e)=>{ if(e.target.id==='formOverlay') closeForm(); });
 document.getElementById('detailOverlay').addEventListener('click', (e)=>{ if(e.target.id==='detailOverlay') closeDetail(); });
+document.getElementById('chemScanBtn').addEventListener('click', ()=>openQrScanner());
+
+/* ======================================================
+   掃描 QR:瓶蓋的藥品編號、瓶身與櫃子的網址、樣品等其他標籤都能掃
+   有 BarcodeDetector 就用它;沒有(iOS Safari、桌機 Chrome)才臨時載入 jsQR(cdnjs 沒有這個套件)
+   掃到的內容只在站內開項目,不會照著網址跳轉
+====================================================== */
+const JSQR_URL = 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js';
+let jsQrPromise = null;
+function loadJsQr(){
+  if(window.jsQR) return Promise.resolve(window.jsQR);
+  if(!jsQrPromise) jsQrPromise = new Promise((resolve, reject)=>{
+    const sc = document.createElement('script');
+    sc.src = JSQR_URL;
+    sc.async = true;
+    sc.onload = ()=> window.jsQR ? resolve(window.jsQR) : reject(new Error('jsQR'));
+    sc.onerror = ()=>{ jsQrPromise = null; reject(new Error('jsQR')); };
+    document.head.appendChild(sc);
+  });
+  return jsQrPromise;
+}
+async function makeQrDecoder(){
+  if('BarcodeDetector' in window){
+    try{
+      const formats = await BarcodeDetector.getSupportedFormats();
+      if(formats.includes('qr_code')){
+        const det = new BarcodeDetector({ formats:['qr_code'] });
+        return async src=>{ const r = await det.detect(src); return r.length ? r[0].rawValue : null; };
+      }
+    }catch(e){}
+  }
+  const jsQR = await loadJsQr();
+  const cv = document.createElement('canvas');
+  const ctx = cv.getContext('2d', { willReadFrequently:true });
+  // 瓶蓋的 QR 只有 6 mm,縮太小會讀不到;即時畫面最長邊 960,照片 1800
+  return async (src, maxDim)=>{
+    const w0 = src.videoWidth || src.naturalWidth || src.width, h0 = src.videoHeight || src.naturalHeight || src.height;
+    if(!w0 || !h0) return null;
+    const k = Math.min(1, (maxDim || 960) / Math.max(w0, h0));
+    cv.width = Math.round(w0 * k); cv.height = Math.round(h0 * k);
+    ctx.drawImage(src, 0, 0, cv.width, cv.height);
+    const img = ctx.getImageData(0, 0, cv.width, cv.height);
+    const r = jsQR(img.data, cv.width, cv.height, { inversionAttempts:'attemptBoth' });
+    return r ? r.data : null;
+  };
+}
+function loadImageFromFile(file){
+  return new Promise((resolve, reject)=>{
+    const url = URL.createObjectURL(file);
+    const im = new Image();
+    im.onload = ()=>{ URL.revokeObjectURL(url); resolve(im); };
+    im.onerror = ()=>{ URL.revokeObjectURL(url); reject(new Error('讀不到這張圖片')); };
+    im.src = url;
+  });
+}
+/* 掃到的文字 → {type, id}:網址取 ?item=;只有編號(瓶蓋)就到各清單找 */
+function parseScannedCode(raw){
+  let s = String(raw || '').replace(/^﻿/, '').trim();
+  if(!s) return null;
+  if(/^https?:\/\//i.test(s)){
+    let it = null;
+    try{ it = new URL(s).searchParams.get('item'); }catch(e){}
+    if(!it) return null;
+    s = it;
+  }
+  const m = /^(chem|smp|mat|instr|cab):(.+)$/.exec(s);
+  if(m){ let id = m[2]; try{ id = decodeURIComponent(id); }catch(e){} return { type:m[1], id }; }
+  const up = s.toUpperCase();
+  const chem = items.find(i=>String(i.id).toUpperCase()===up);
+  if(chem) return { type:'chem', id:chem.id };
+  const smp = smpItems.find(i=>i.id===s);
+  if(smp) return { type:'smp', id:smp.id };
+  const mat = matItems.find(i=>String(i.id).toUpperCase()===up);
+  if(mat) return { type:'mat', id:mat.id };
+  if(INSTRUMENTS_ALL().some(i=>i.name===s)) return { type:'instr', id:s };
+  return { type:'', id:s };
+}
+let qrScan = null;
+async function openQrScanner(){
+  if(qrScan) return;
+  if(typeof closeDrawer==='function') closeDrawer();
+  const ov = document.createElement('div');
+  ov.className = 'overlay show';
+  ov.id = 'qrScanOverlay';
+  ov.innerHTML = `<div class="modal qr-scan-modal">
+    <button class="close" aria-label="關閉" type="button">✕</button>
+    <h2>掃描 QR</h2>
+    <div class="qr-scan-view"><video playsinline muted autoplay></video><div class="qr-scan-frame"></div></div>
+    <div class="qr-scan-msg">正在開相機…</div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-sm" type="button" data-act="photo">改用拍照辨識</button>
+      <div style="flex:1;"></div>
+      <button class="btn btn-ghost" type="button" data-act="close">關閉</button>
+    </div>
+    <input type="file" accept="image/*" capture="environment" class="visually-hidden-file">
+  </div>`;
+  document.body.appendChild(ov);
+  const st = qrScan = { ov, stream:null, timer:0, decode:null, busy:false, closed:false, paused:false, picking:false, mo:null };
+  const msg = ov.querySelector('.qr-scan-msg');
+  const video = ov.querySelector('video');
+  const fileIn = ov.querySelector('input[type="file"]');
+  const setMsg = (t, warn)=>{ msg.textContent = t; msg.classList.toggle('warn', !!warn); };
+  ov.querySelector('.close').addEventListener('click', closeQrScanner);
+  ov.querySelector('[data-act="close"]').addEventListener('click', closeQrScanner);
+  ov.addEventListener('click', e=>{ if(e.target===ov) closeQrScanner(); });
+  ov.querySelector('[data-act="photo"]').addEventListener('click', ()=>{ st.picking = true; fileIn.click(); });
+  fileIn.addEventListener('cancel', ()=>{ st.picking = false; if(st.paused && !st.closed) setMsg('相機已暫停;可以再按「改用拍照辨識」,或關閉後重新掃描。'); });
+  fileIn.addEventListener('change', async ()=>{
+    st.picking = false;
+    const f = fileIn.files && fileIn.files[0];
+    fileIn.value = '';
+    if(st.closed) return;
+    if(!f){ if(st.paused) setMsg('相機已暫停;可以再按「改用拍照辨識」,或關閉後重新掃描。'); return; }
+    setMsg('辨識中…');
+    try{
+      if(!st.decode) st.decode = await makeQrDecoder();
+      const text = await st.decode(await loadImageFromFile(f), 1800);
+      if(st.closed) return;
+      if(text) finishQrScan(text);
+      else setMsg('這張照片找不到 QR,請靠近一點、對準後再拍一次。', true);
+    }catch(e){ if(!st.closed) setMsg('辨識失敗,請確認網路後再試一次。', true); }
+  });
+  // 切頁時 closeAllModals 只會拿掉 show,這裡跟著把相機關掉
+  st.mo = new MutationObserver(()=>{ if(!ov.classList.contains('show')) closeQrScanner(); });
+  st.mo.observe(ov, { attributes:true, attributeFilter:['class'] });
+  try{ st.decode = await makeQrDecoder(); }
+  catch(e){ if(!st.closed) setMsg('掃描元件載入失敗,請確認網路後再試。', true); return; }
+  if(st.closed) return;
+  if(!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)){
+    setMsg('這個瀏覽器不能直接開相機,請按「改用拍照辨識」。', true); return;
+  }
+  try{
+    st.stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:{ ideal:'environment' }, width:{ ideal:1280 }, height:{ ideal:720 } }, audio:false });
+  }catch(e){
+    if(!st.closed) setMsg('沒有拿到相機權限。請允許使用相機,或按「改用拍照辨識」。', true);
+    return;
+  }
+  if(st.closed || st.paused){ st.stream.getTracks().forEach(t=>t.stop()); st.stream = null; return; }
+  video.srcObject = st.stream;
+  try{ await video.play(); }catch(e){}
+  setMsg('對準瓶蓋、瓶身或櫃子上的 QR;瓶蓋的小 QR 拿近一點。');
+  const tick = async ()=>{
+    if(st.closed || st.paused) return;
+    if(!st.busy && video.readyState >= 2){
+      st.busy = true;
+      let text = null;
+      try{ text = await st.decode(video); }catch(e){}
+      st.busy = false;
+      if(text && !st.closed && !st.paused){ finishQrScan(text); return; }
+    }
+    if(!st.closed && !st.paused) st.timer = setTimeout(tick, 180);
+  };
+  tick();
+}
+function closeQrScanner(){
+  const st = qrScan;
+  if(!st) return;
+  st.closed = true;
+  qrScan = null;
+  clearTimeout(st.timer);
+  if(st.mo) st.mo.disconnect();
+  if(st.stream) st.stream.getTracks().forEach(t=>t.stop());
+  st.ov.remove();
+}
+function finishQrScan(text){
+  closeQrScanner();
+  const r = parseScannedCode(text);
+  if(r && r.type && openItemLink(r.type, r.id)) return;
+  notify(r ? `找不到「${r.id}」這個項目,可能已經刪除,或資料還沒載入完成。` : '這個 QR 不是實驗室系統的標籤。');
+}
+/* 切到背景就放掉相機;正在用拍照辨識(手機會切去相機 App)時只停即時畫面,回來還要收照片 */
+function pauseQrLive(st){
+  st.paused = true;
+  clearTimeout(st.timer);
+  if(st.stream){ st.stream.getTracks().forEach(t=>t.stop()); st.stream = null; }
+}
+document.addEventListener('visibilitychange', ()=>{
+  if(!document.hidden || !qrScan) return;
+  if(qrScan.picking) pauseQrLive(qrScan); else closeQrScanner();
+});
+
+/* ======================================================
+   藥品標籤(管理員功能):匯出給 EPSON Label Editor「匯入資料」用的 Excel
+   瓶蓋 12 mm:QR 只放藥品編號(網址放不進 12 mm 帶),下面印櫃位編號
+   瓶身 24 mm、櫃子 24 mm:QR 是正式網址,手機相機掃了直接開
+====================================================== */
+const lblSelected = new Set();
+const lblCabSelected = new Set();
+function lblFilterMatch(i, f){
+  return !f || (f.startsWith('cab:') ? cabinetOf(i.location)===f.slice(4) : i.location===f);
+}
+function lblSortItems(a, b){
+  const pa = slotPrefix(a.location), pb = slotPrefix(b.location);
+  if(pa!==pb) return pa.localeCompare(pb, 'zh-Hant', { numeric:true });
+  return (Number(a.slot_no) || 1e9) - (Number(b.slot_no) || 1e9) || String(a.id).localeCompare(String(b.id));
+}
+function lblVisibleItems(){
+  const f = document.getElementById('lblFilterLoc').value;
+  const q = document.getElementById('lblSearch').value.trim().toLowerCase();
+  return items.filter(i=>lblFilterMatch(i, f) && (!q || [i.name_zh, i.name_en, i.cas, i.id, slotCode(i), i.location].join(' ').toLowerCase().includes(q))).sort(lblSortItems);
+}
+function lblCabinets(){
+  const locs = [...new Set(CHEM_LOCATIONS.concat(items.map(i=>i.location).filter(Boolean)))];
+  return [...new Set(locs.map(cabinetOf))];
+}
+/* 櫃子標籤上的大字:藥品櫃A → A(小字「藥品櫃」);溶劑櫃 → A、小A、LC(小字「溶劑櫃」);其他就是名稱 */
+function lblCabText(cab){
+  let m;
+  if((m = /^藥品櫃(.+)$/.exec(cab))) return { big:m[1], small:'藥品櫃' };
+  if((m = /^溶劑櫃(.+)$/.exec(cab))) return { big:m[1], small:'溶劑櫃' };
+  if(cab==='LC溶劑櫃') return { big:'LC', small:'溶劑櫃' };
+  return { big:cab, small:'' };
+}
+function renderChemLabelTools(){
+  if(!isAdmin()) return;
+  const fSel = document.getElementById('lblFilterLoc');
+  const cur = fSel.value;
+  fSel.innerHTML = document.getElementById('filterLoc').innerHTML;
+  fSel.value = cur;
+  if(fSel.value!==cur) fSel.value = '';
+  const live = new Set(items.map(i=>i.id));
+  [...lblSelected].forEach(id=>{ if(!live.has(id)) lblSelected.delete(id); });
+  const list = lblVisibleItems();
+  const codeCount = {};
+  items.forEach(i=>{ const c = slotCode(i); if(c) codeCount[c] = (codeCount[c] || 0) + 1; });
+  const dupCodes = new Set(Object.keys(codeCount).filter(c=>codeCount[c] > 1));
+  const box = document.getElementById('lblChemList');
+  box.innerHTML = '';
+  if(!list.length) box.innerHTML = '<div class="setting-row"><span class="meta">沒有符合的藥品</span></div>';
+  list.forEach(i=>{
+    const row = document.createElement('label');
+    row.className = 'setting-row lbl-row';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = lblSelected.has(i.id);
+    cb.addEventListener('change', ()=>{ if(cb.checked) lblSelected.add(i.id); else lblSelected.delete(i.id); lblSyncCounts(); });
+    row.appendChild(cb);
+    const sc = slotCode(i);
+    const tag = document.createElement('span');
+    tag.className = sc ? 'slot-code' + (dupCodes.has(sc) ? ' dup' : '') : 'lbl-none';
+    tag.textContent = sc ? sc + (dupCodes.has(sc) ? ' 重號' : '') : '未編櫃位';
+    row.appendChild(tag);
+    const name = document.createElement('span');
+    name.className = 'lbl-name';
+    name.innerHTML = `${escapeHtml(i.name_zh || i.id)} <span class="meta">${escapeHtml(i.id)} · ${escapeHtml(i.location || '-')}</span>`;
+    row.appendChild(name);
+    box.appendChild(row);
+  });
+  const cabs = lblCabinets();
+  [...lblCabSelected].forEach(c=>{ if(!cabs.includes(c)) lblCabSelected.delete(c); });
+  const cbox = document.getElementById('lblCabList');
+  cbox.innerHTML = '';
+  cabs.forEach(c=>{
+    const row = document.createElement('label');
+    row.className = 'setting-row lbl-row';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = lblCabSelected.has(c);
+    cb.addEventListener('change', ()=>{ if(cb.checked) lblCabSelected.add(c); else lblCabSelected.delete(c); lblSyncCounts(); });
+    row.appendChild(cb);
+    const name = document.createElement('span');
+    name.className = 'lbl-name';
+    const n = items.filter(i=>cabinetOf(i.location)===c).length;
+    name.innerHTML = `${escapeHtml(c)} <span class="meta">${n} 瓶</span>`;
+    row.appendChild(name);
+    cbox.appendChild(row);
+  });
+  lblSyncCounts();
+}
+function lblSyncCounts(){
+  const vis = lblVisibleItems();
+  const picked = vis.filter(i=>lblSelected.has(i.id)).length;
+  document.getElementById('lblCount').textContent = `已選 ${lblSelected.size} 瓶` + (lblSelected.size!==picked ? `(目前列出的 ${picked} 瓶)` : '');
+  const all = document.getElementById('lblSelectAll');
+  all.checked = vis.length>0 && picked===vis.length;
+  all.indeterminate = picked>0 && picked<vis.length;
+  document.getElementById('lblCapBtn').disabled = !lblSelected.size;
+  document.getElementById('lblBodyBtn').disabled = !lblSelected.size;
+  const cabs = lblCabinets();
+  const cpicked = cabs.filter(c=>lblCabSelected.has(c)).length;
+  document.getElementById('lblCabCount').textContent = `已選 ${cpicked} 個`;
+  const call = document.getElementById('lblCabSelectAll');
+  call.checked = cabs.length>0 && cpicked===cabs.length;
+  call.indeterminate = cpicked>0 && cpicked<cabs.length;
+  document.getElementById('lblCabBtn').disabled = !cpicked;
+}
+function lblDownloadXlsx(filename, header, rows){
+  if(typeof XLSX==='undefined'){ notify('Excel 產生元件尚未載入,請確認網路後重新整理。'); return false; }
+  const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
+  ws['!cols'] = header.map((h, c)=>({ wch: Math.min(60, Math.max(8, ...[h, ...rows.map(r=>r[c])].map(v=>String(v ?? '').length * 1.3 + 2))) }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '標籤');
+  XLSX.writeFile(wb, filename);
+  return true;
+}
+function lblPickedItems(){
+  return items.filter(i=>lblSelected.has(i.id)).sort(lblSortItems);
+}
+document.getElementById('lblFilterLoc').addEventListener('change', renderChemLabelTools);
+document.getElementById('lblSearch').addEventListener('input', renderChemLabelTools);
+document.getElementById('lblSelectAll').addEventListener('change', e=>{
+  lblVisibleItems().forEach(i=>{ if(e.target.checked) lblSelected.add(i.id); else lblSelected.delete(i.id); });
+  renderChemLabelTools();
+});
+document.getElementById('lblCabSelectAll').addEventListener('change', e=>{
+  lblCabinets().forEach(c=>{ if(e.target.checked) lblCabSelected.add(c); else lblCabSelected.delete(c); });
+  renderChemLabelTools();
+});
+document.getElementById('lblCapBtn').addEventListener('click', ()=>{
+  if(!isAdmin()) return;
+  const list = lblPickedItems();
+  const noSlot = list.filter(i=>!slotCode(i)).length;
+  if(lblDownloadXlsx(`藥品標籤_瓶蓋12mm_${localDateISO()}.xlsx`, ['QR(藥品編號)', '櫃位編號', '名稱(核對用,不印)'], list.map(i=>[i.id, slotCode(i), i.name_zh || ''])))
+    showToast(`✅ 已下載 ${list.length} 張瓶蓋標籤` + (noSlot ? `;其中 ${noSlot} 瓶還沒有櫃位編號` : ''));
+});
+document.getElementById('lblBodyBtn').addEventListener('click', ()=>{
+  if(!isAdmin()) return;
+  const list = lblPickedItems();
+  if(lblDownloadXlsx(`藥品標籤_瓶身24mm_${localDateISO()}.xlsx`, ['QR(網址)', '中文名稱', '英文名稱', 'CAS', '櫃位編號', '藥品編號'],
+    list.map(i=>[labelItemUrl('chem', i.id), i.name_zh || '', i.name_en || '', i.cas ? 'CAS ' + i.cas : '', slotCode(i), i.id])))
+    showToast(`✅ 已下載 ${list.length} 張瓶身標籤`);
+});
+document.getElementById('lblCabBtn').addEventListener('click', ()=>{
+  if(!isAdmin()) return;
+  const cabs = lblCabinets().filter(c=>lblCabSelected.has(c));
+  if(lblDownloadXlsx(`藥品標籤_櫃子24mm_${localDateISO()}.xlsx`, ['QR(網址)', '大字', '小字', '櫃子'],
+    cabs.map(c=>{ const t = lblCabText(c); return [labelItemUrl('cab', c), t.big, t.small, c]; })))
+    showToast(`✅ 已下載 ${cabs.length} 張櫃子標籤`);
+});
 
 /* ======================================================
    試材清單
@@ -5557,9 +6182,10 @@ async function handleMatSave(){
     catch(err){ notify(err.message || '照片上傳失敗。'); return; }
     data.photo = photoInfo.url;
     data.photo_path = photoInfo.path;
-    const ok = await fsSetItem('materials', data);
+    const doc = mergeOntoLatest(matItems, existingItem, data);   // 表單不認得的欄位保留下來
+    const ok = await fsSetItem('materials', doc);
     if(!ok){ if(photoInfo.uploaded) await deleteStoredPhoto(photoInfo.path); notify('儲存失敗,請檢查網路連線後再試一次。'); return; }
-    upsertLocal(matItems, data);
+    upsertLocal(matItems, doc);
     if(existingItem && existingItem.photo_path && existingItem.photo_path!==photoInfo.path) await deleteStoredPhoto(existingItem.photo_path);
     saved = true;
   }finally{
@@ -6392,9 +7018,15 @@ async function handleSmpSave(){
     data.photo_extract = extractPhoto.url;   data.photo_extract_path = extractPhoto.path;
     data.photo_bottle = bottlePhoto.url;     data.photo_bottle_path = bottlePhoto.path;
     data.moisture.photo = moisturePhoto.url; data.moisture.photo_path = moisturePhoto.path;
-    const ok = await fsSetItem('samples', data);
+    // 表單不認得的欄位保留下來;含水量這個巢狀物件也一樣,只蓋表單上的那幾格
+    const doc = mergeOntoLatest(smpItems, existingItem, data);
+    if(existingItem){
+      const latestMoisture = (smpItems.find(i=>i._doc_id && i._doc_id===existingItem._doc_id) || existingItem).moisture;
+      if(latestMoisture && typeof latestMoisture==='object') doc.moisture = Object.assign({}, latestMoisture, data.moisture);
+    }
+    const ok = await fsSetItem('samples', doc);
     if(!ok){ await Promise.all(uploadedNow.map(deleteStoredPhoto)); notify('儲存失敗,請檢查網路連線後再試一次。'); return; }
-    upsertLocal(smpItems, data);
+    upsertLocal(smpItems, doc);
     if(existingItem){
       const oldPaths=[existingItem.photo_extract_path,existingItem.photo_bottle_path,existingItem.moisture&&existingItem.moisture.photo_path];
       const newPaths=[extractPhoto.path,bottlePhoto.path,moisturePhoto.path];
@@ -6651,7 +7283,7 @@ async function loadCulItems(){
 }
 function populateCulChemSelect(){
   const sel = document.getElementById('cul_chem');
-  sel.innerHTML = '<option value="">請選擇藥品</option>' + items.slice().sort((a,b)=>(a.name_zh||'').localeCompare(b.name_zh||'','zh-Hant')).map(i=>`<option value="${i.id}">${escapeHtml(i.name_zh)}(現有 ${i.quantity ?? '-'} ${escapeHtml(i.unit||'')})</option>`).join('');
+  sel.innerHTML = '<option value="">請選擇藥品</option>' + items.slice().sort((a,b)=>(a.name_zh||'').localeCompare(b.name_zh||'','zh-Hant')).map(i=>`<option value="${escapeHtml(i.id)}">${escapeHtml(i.name_zh)}(現有 ${escapeHtml(i.quantity ?? '-')} ${escapeHtml(i.unit||'')})</option>`).join('');
 }
 function openCulForm(){
   populateCulChemSelect();
@@ -6675,20 +7307,27 @@ document.getElementById('cul_chem').addEventListener('change', ()=>{
   const hazEl = document.getElementById('cul_hazWarning');
   if(chem && (chem.hazards||[]).length){
     hazEl.style.display = 'block';
-    hazEl.innerHTML = '⚠️ 此藥品具有危害性:' + chem.hazards.map(c=>ghsInfo(c).label).join('、') + ',請依SDS規範操作並穿戴適當防護具。';
+    hazEl.innerHTML = '⚠️ 此藥品具有危害性:' + chem.hazards.map(c=>escapeHtml(ghsInfo(c).label)).join('、') + ',請依SDS規範操作並穿戴適當防護具。';
   }else{
     hazEl.style.display = 'none';
   }
 });
+/* 扣庫存不經過 fsSetItem,沒有它的連點保護;手機上網路慢時按兩下會扣兩次,所以這裡自己鎖。取消鈕不鎖 */
+let culSaving = false;
 document.getElementById('culSaveBtn').addEventListener('click', async ()=>{
+  if(culSaving) return;
   const chemId = document.getElementById('cul_chem').value;
   const chem = items.find(i=>i.id===chemId);
   const amount = Number(document.getElementById('cul_amount').value);
   if(!chem){ notify('請選擇藥品'); return; }
   if(!amount || amount<=0){ notify('請輸入正確的使用量'); return; }
   const date = document.getElementById('cul_date').value || localDateISO();
+  const chemRef = db.collection('chemicals').doc(chem._doc_id);
+  const logRef = db.collection('chem-usage-logs').doc();
   const log = {
-    id: genId(culItems, 'CUL'),
+    /* 編號用文件代號產生。以前從本機清單取最大號加一,但一般成員只同步得到自己的紀錄,
+       每個人的第一筆都叫 CUL-0001。編號只在內部用,畫面上不顯示 */
+    id: 'CUL-' + logRef.id,
     chem_id: chem.id,
     chem_name: chem.name_zh,
     cas: chem.cas||'',
@@ -6701,9 +7340,9 @@ document.getElementById('culSaveBtn').addEventListener('click', async ()=>{
     user_code: (currentUser && currentUser.code) || null,
     created_at: new Date().toISOString()
   };
+  const saveBtn = document.getElementById('culSaveBtn');
+  culSaving = true; saveBtn.disabled = true;
   try{
-    const chemRef = db.collection('chemicals').doc(chem._doc_id);
-    const logRef = db.collection('chem-usage-logs').doc();
     log._doc_id = logRef.id;
     let committedQty = null;
     await db.runTransaction(async tx=>{
@@ -6725,15 +7364,17 @@ document.getElementById('culSaveBtn').addEventListener('click', async ()=>{
   }catch(err){
     console.error('chemical usage transaction failed:', err);
     notify(err.message || '儲存失敗,請檢查網路後再試一次。');
+  }finally{
+    culSaving = false; saveBtn.disabled = false;
   }
 });
-async function quickDeleteCul(id){
-  if(!isAdmin()) return;
+/* 舊資料裡不同人的紀錄可能編號相同(見上面),所以刪除一律認文件代號,不認編號 */
+async function quickDeleteCul(log){
+  if(!isAdmin() || !log) return;
   if(!await confirmDialog('確定要刪除這筆使用登記嗎?此動作不會自動恢復庫存,如需要請手動調整藥品存量。')) return;
-  const item = culItems.find(i=>i.id===id);
-  const ok = await fsDeleteItem('chem-usage-logs', id, item&&item._doc_id);
+  const ok = await fsDeleteItem('chem-usage-logs', log.id, log._doc_id);
   if(!ok){ notify('刪除失敗。'); return; }
-  culItems = culItems.filter(i=>i.id!==id);
+  culItems = culItems.filter(i=>log._doc_id ? i._doc_id!==log._doc_id : i!==log);
   renderCulAll();
 }
 function renderCulAll(){
@@ -6756,12 +7397,18 @@ function renderCulAll(){
     tr.innerHTML = `
       <td data-label="日期">${escapeHtml(log.date||'-')}</td>
       <td data-label="藥品">${escapeHtml(log.chem_name||'-')}</td>
-      <td data-label="使用量">${log.amount} ${escapeHtml(log.unit||'')}</td>
+      <td data-label="使用量">${escapeHtml(log.amount)} ${escapeHtml(log.unit||'')}</td>
       <td data-label="用途"><span class="plain-tag">${escapeHtml(log.purpose||'-')}</span></td>
       <td data-label="使用者">${escapeHtml(log.user_code||'-')}</td>
       <td data-label="備註">${escapeHtml(log.note||'-')}</td>
-      <td class="cell-actions">${isAdmin() ? `<button class="btn btn-ghost btn-sm btn-row-delete" onclick="quickDeleteCul('${log.id}')" title="刪除">✕</button>` : ''}</td>
+      <td class="cell-actions"></td>
     `;
+    if(isAdmin()){
+      const del = document.createElement('button');
+      del.className = 'btn btn-ghost btn-sm btn-row-delete'; del.title = '刪除'; del.textContent = '✕';
+      del.addEventListener('click', ()=>quickDeleteCul(log));
+      tr.querySelector('.cell-actions').appendChild(del);
+    }
     tbody.appendChild(tr);
   });
 }
@@ -6784,7 +7431,7 @@ document.getElementById('culQueryBtn').addEventListener('click', ()=>{
   const totalsHtml = Object.keys(totals).length
     ? Object.entries(totals).map(([u,v])=>`<span class="haz-tag" style="background:var(--pine);">總計 ${Math.round(v*1000)/1000} ${escapeHtml(u)}</span>`).join(' ')
     : '';
-  const rowsHtml = matches.map(l=>`<div class="slot-row"><span>${escapeHtml(l.date)} · ${escapeHtml(l.chem_name)} · ${escapeHtml(l.purpose||'-')}</span><span>${l.amount} ${escapeHtml(l.unit||'')}(${escapeHtml(l.user_code||'-')})</span></div>`).join('');
+  const rowsHtml = matches.map(l=>`<div class="slot-row"><span>${escapeHtml(l.date)} · ${escapeHtml(l.chem_name)} · ${escapeHtml(l.purpose||'-')}</span><span>${escapeHtml(l.amount)} ${escapeHtml(l.unit||'')}(${escapeHtml(l.user_code||'-')})</span></div>`).join('');
   wrap.innerHTML = `<div class="today-card">
     <div class="day-label">CAS ${escapeHtml(cas)} · 共 ${matches.length} 筆${from||to?`(${escapeHtml(from||'最早')} ~ ${escapeHtml(to||'最新')})`:''}</div>
     ${totalsHtml ? `<div style="margin-bottom:8px;">${totalsHtml}</div>` : ''}
@@ -6917,10 +7564,10 @@ function renderIulAll(){
       <td data-label="日期">${escapeHtml(r.date)}</td>
       <td data-label="時段">${escapeHtml(r.start_time)}–${escapeHtml(r.end_time)}</td>
       <td data-label="儀器">${escapeHtml(r.instrument)}</td>
-      <td data-label="實驗室"><span class="plain-tag">${roomLabel(r.room)}</span></td>
+      <td data-label="實驗室"><span class="plain-tag">${escapeHtml(roomLabel(r.room))}</span></td>
       <td data-label="用途">${escapeHtml(r.purpose||'-')}</td>
       <td data-label="預約人">${escapeHtml(r.user_code||'-')}</td>
-      <td class="cell-actions">${(isAdmin()||(currentUser&&r.user_uid===currentUser.uid)) ? `<button class="btn btn-ghost btn-sm btn-row-delete" onclick="quickDeleteIul('${r.id}')" title="取消預約">✕</button>` : ''}</td>
+      <td class="cell-actions">${(isAdmin()||(currentUser&&r.user_uid===currentUser.uid)) ? `<button class="btn btn-ghost btn-sm btn-row-delete" onclick="quickDeleteIul(${jsArg(r.id)})" title="取消預約">✕</button>` : ''}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -6945,7 +7592,7 @@ function renderIulTodayTomorrow(){
   wrap.innerHTML = days.map(d=>{
     const list = iulItems.filter(r=> r.date===d.date && (!fRoom || r.room===fRoom)).sort((a,b)=>a.start_time.localeCompare(b.start_time));
     const rows = list.length
-      ? list.map(r=>`<div class="slot-row"><span>${escapeHtml(r.start_time)}–${escapeHtml(r.end_time)} · ${escapeHtml(r.instrument)}(${roomLabel(r.room)})</span><span style="color:var(--ink-soft);">${escapeHtml(r.user_code||'-')}</span></div>`).join('')
+      ? list.map(r=>`<div class="slot-row"><span>${escapeHtml(r.start_time)}–${escapeHtml(r.end_time)} · ${escapeHtml(r.instrument)}(${escapeHtml(roomLabel(r.room))})</span><span style="color:var(--ink-soft);">${escapeHtml(r.user_code||'-')}</span></div>`).join('')
       : `<div class="slot-empty">沒有預約</div>`;
     return `<div class="today-card"><div class="day-label">${d.label} · ${d.date}</div>${rows}</div>`;
   }).join('');
@@ -6959,7 +7606,7 @@ function renderIulCalendar(){
     const date = todayISO(i);
     const count = iulItems.filter(r=> r.date===date && (!fRoom || r.room===fRoom)).length;
     const d = new Date(date+'T00:00:00');
-    html += `<div class="cal-cell ${date===today?'today':''}" data-date="${date}" onclick="showIulCalendarDay('${date}')">
+    html += `<div class="cal-cell ${date===today?'today':''}" data-date="${date}" onclick="showIulCalendarDay(${jsArg(date)})">
       <div class="cal-date">${d.getMonth()+1}/${d.getDate()}</div>
       <div class="cal-count ${count?'':'zero'}">${count||'-'}</div>
     </div>`;
@@ -6972,7 +7619,7 @@ function showIulCalendarDay(date){
   const fRoom = document.getElementById('iulFilterRoom').value;
   const list = iulItems.filter(r=> r.date===date && (!fRoom || r.room===fRoom)).sort((a,b)=>a.start_time.localeCompare(b.start_time));
   const rows = list.length
-    ? list.map(r=>`<div class="slot-row"><span>${escapeHtml(r.start_time)}–${escapeHtml(r.end_time)} · ${escapeHtml(r.instrument)}(${roomLabel(r.room)})</span><span style="color:var(--ink-soft);">${escapeHtml(r.user_code||'-')}</span></div>`).join('')
+    ? list.map(r=>`<div class="slot-row"><span>${escapeHtml(r.start_time)}–${escapeHtml(r.end_time)} · ${escapeHtml(r.instrument)}(${escapeHtml(roomLabel(r.room))})</span><span style="color:var(--ink-soft);">${escapeHtml(r.user_code||'-')}</span></div>`).join('')
     : `<div class="slot-empty">這天沒有預約</div>`;
   document.getElementById('iulCalendarDayDetail').innerHTML = `<div class="today-card"><div class="day-label">${date}</div>${rows}</div>`;
 }
@@ -7188,7 +7835,7 @@ function renderDutyAdminTools(){
     <tr><td data-label="使用者"><div class="name-zh">${escapeHtml(a.code||'-')}</div><div class="name-en">${escapeHtml(a.name||'')}</div></td><td data-label="角色">${escapeHtml(roleLabel(a.role))}</td><td data-label="權重"><input type="number" min="0" step="0.1" class="role-select duty-weight-input" data-uid="${escapeHtml(a.uid)}" value="${Number(dutyAdminData.weights[a.uid]??1)}" style="width:90px;"></td></tr>`).join('');
   renderDutyCurrentAssignment();
   const history=dutyAdminData.history.slice(0,100);
-  document.getElementById('dutyDrawHistory').innerHTML=history.length?history.map(h=>`<div class="history-row"><b>${escapeHtml(h.week_key||'-')}</b> · ${h.source==='draw'?'加權抽籤':'手動指派'} → <b>${escapeHtml(h.user_label||ownerLabel(h.user_uid))}</b><br><span style="color:var(--ink-soft);">${escapeHtml(fmtDateTime(h.at))} · 操作者 ${escapeHtml(ownerLabel(h.by_uid))}${h.source==='draw'&&h.total_weight!=null?` · 總權重 ${h.total_weight}`:''}</span></div>`).join(''):'<div class="slot-empty">尚無指派或抽籤紀錄</div>';
+  document.getElementById('dutyDrawHistory').innerHTML=history.length?history.map(h=>`<div class="history-row"><b>${escapeHtml(h.week_key||'-')}</b> · ${h.source==='draw'?'加權抽籤':'手動指派'} → <b>${escapeHtml(h.user_label||ownerLabel(h.user_uid))}</b><br><span style="color:var(--ink-soft);">${escapeHtml(fmtDateTime(h.at))} · 操作者 ${escapeHtml(ownerLabel(h.by_uid))}${h.source==='draw'&&h.total_weight!=null?` · 總權重 ${escapeHtml(h.total_weight)}`:''}</span></div>`).join(''):'<div class="slot-empty">尚無指派或抽籤紀錄</div>';
 }
 function renderDutyCurrentAssignment(){
   const week=selectedDutyWeek(), a=dutyAdminData.assignments[week];
@@ -7312,7 +7959,7 @@ function renderSbLogTable(){
       <td data-label="日期">${escapeHtml(r.date)}</td>
       <td data-label="檔名">${escapeHtml(r.filename||'-')}</td>
       <td data-label="內容">${(r.includes||[]).map(i=>`<span class="plain-tag">${escapeHtml(i)}</span>`).join(' ')}</td>
-      <td class="cell-actions">${isAdmin() ? `<button class="btn btn-ghost btn-sm btn-row-delete" onclick="undoBackupLog('${escapeHtml(r.name)}','${r.id}')">刪除</button>` : ''}</td>
+      <td class="cell-actions">${isAdmin() ? `<button class="btn btn-ghost btn-sm btn-row-delete" onclick="undoBackupLog(${jsArg(r.name)},${jsArg(r.id)})">刪除</button>` : ''}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -7340,11 +7987,11 @@ function renderSbTable(){
     tr.innerHTML = `
       <td data-label="儀器"><b>${escapeHtml(r.name)}</b></td>
       <td data-label="實驗室"><span class="plain-tag">${escapeHtml(SB_ROOM[r.name])}室</span></td>
-      <td data-label="備份週期">${r.cycle}個月一次</td>
+      <td data-label="備份週期">${escapeHtml(r.cycle)}個月一次</td>
       <td data-label="上次備份">${escapeHtml(last||'-')}</td>
       <td data-label="下次到期">${escapeHtml(next||'-')}</td>
       <td data-label="狀態">${statusHtml}</td>
-      <td class="cell-actions">${isAdmin() ? `<button class="btn btn-ghost btn-sm" onclick="markBackedUp('${escapeHtml(r.name)}')">新增備份紀錄</button>` : ''}</td>
+      <td class="cell-actions">${isAdmin() ? `<button class="btn btn-ghost btn-sm" onclick="markBackedUp(${jsArg(r.name)})">新增備份紀錄</button>` : ''}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -7465,13 +8112,13 @@ function todoRowHtml(item){
   const rowClass = item.done ? 'done' : overdue ? 'overdue-row' : isToday ? 'today-row' : '';
   const canRemove = isAdmin() || item.created_by_uid===(currentUser&&currentUser.uid);
   return `<div class="todo-row ${rowClass}">
-    <input type="checkbox" ${item.done?'checked':''} onchange="toggleTodoDone('${item.id}', this.checked)">
+    <input type="checkbox" ${item.done?'checked':''} onchange="toggleTodoDone(${jsArg(item.id)}, this.checked)">
     <span class="todo-title">${escapeHtml(item.title)}${todoVisibilityBadge(item)}</span>
     ${item.due_date ? `<span class="todo-date ${overdue?'overdue':''}">${escapeHtml(item.due_date)}</span>` : ''}
     <div class="todo-actions">
-      <button class="btn-icon" onclick="addTodoToGCal('${item.id}')" title="加入 Google 日曆">📅</button>
-      <button class="btn-icon" onclick="downloadTodoIcs('${item.id}')" title="下載 .ics(可設定提醒)">⬇️</button>
-      ${canRemove ? `<button class="btn-icon btn-row-delete" onclick="quickDeleteTodo('${item.id}')" title="刪除">✕</button>` : ''}
+      <button class="btn-icon" onclick="addTodoToGCal(${jsArg(item.id)})" title="加入 Google 日曆">📅</button>
+      <button class="btn-icon" onclick="downloadTodoIcs(${jsArg(item.id)})" title="下載 .ics(可設定提醒)">⬇️</button>
+      ${canRemove ? `<button class="btn-icon btn-row-delete" onclick="quickDeleteTodo(${jsArg(item.id)})" title="刪除">✕</button>` : ''}
     </div>
   </div>`;
 }
@@ -7537,7 +8184,7 @@ function renderTodoCalendar(){
     const date = todayISO(i);
     const count = visible.filter(t=>t.due_date===date).length;
     const d = new Date(date+'T00:00:00');
-    html += `<div class="cal-cell ${date===today?'today':''}" data-date="${date}" onclick="showTodoCalendarDay('${date}')">
+    html += `<div class="cal-cell ${date===today?'today':''}" data-date="${date}" onclick="showTodoCalendarDay(${jsArg(date)})">
       <div class="cal-date">${d.getMonth()+1}/${d.getDate()}</div>
       <div class="cal-count ${count?'':'zero'}">${count||'-'}</div>
     </div>`;
@@ -7591,11 +8238,11 @@ function todoDoneRowHtml(item){
   const who = item.done_by || item.created_by || '';
   const canRemove = isAdmin() || item.created_by_uid===(currentUser&&currentUser.uid);
   return `<div class="todo-row done">
-    <input type="checkbox" checked onchange="toggleTodoDone('${item.id}', this.checked)">
+    <input type="checkbox" checked onchange="toggleTodoDone(${jsArg(item.id)}, this.checked)">
     <span class="todo-title">${escapeHtml(item.title)}${todoVisibilityBadge(item)}</span>
     <span class="todo-date">${escapeHtml(date||'無日期')}${who?' · '+escapeHtml(who):''}</span>
     <div class="todo-actions">
-      ${canRemove ? `<button class="btn-icon btn-row-delete" onclick="quickDeleteTodo('${item.id}')" title="刪除">✕</button>` : ''}
+      ${canRemove ? `<button class="btn-icon btn-row-delete" onclick="quickDeleteTodo(${jsArg(item.id)})" title="刪除">✕</button>` : ''}
     </div>
   </div>`;
 }
@@ -7700,9 +8347,9 @@ function renderImGrid(){
     const fileCount = entry && entry.files ? entry.files.length : 0;
     const maintCount = entry && entry.maintenance ? entry.maintenance.length : 0;
     return `<div class="im-card" data-instrument-name="${escapeHtml(inst.name)}" style="--im-room:${imRoomColor(inst.room)};">
-      ${inst.photo ? `<img class="im-card-photo" src="${inst.photo}" alt="" loading="lazy">` : ''}
+      ${inst.photo ? `<img class="im-card-photo" src="${safeUrl(inst.photo)}" alt="" loading="lazy">` : ''}
       <div class="im-card-name">${escapeHtml(inst.name)}</div>
-      <div class="im-card-room">${roomLabel(inst.room)}</div>
+      <div class="im-card-room">${escapeHtml(roomLabel(inst.room))}</div>
       ${(hasNotes||fileCount||maintCount) ? `<div class="im-card-badges">${hasNotes?'📖':''}${fileCount?'📎':''}${maintCount?'🔧':''}</div>` : ''}
     </div>`;
   }).join('');
@@ -7754,7 +8401,7 @@ function renderImPhotoGallery(){
   const entry = ensureImEntry(imCurrentName);
   document.getElementById('im_photoGallery').innerHTML = entry.photos.map((src,idx)=>`
     <div style="position:relative;">
-      <img src="${src}" style="width:64px;height:64px;object-fit:cover;border-radius:var(--radius-sm);border:1px solid var(--line);cursor:zoom-in;" onclick="openLightbox(this.src)">
+      <img src="${safeUrl(src)}" style="width:64px;height:64px;object-fit:cover;border-radius:var(--radius-sm);border:1px solid var(--line);cursor:zoom-in;" onclick="openLightbox(this.src)">
       ${isAdmin() ? `<button onclick="removeImPhoto(${idx})" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:#B23A2E;color:#fff;border:none;font-size:10.5px;cursor:pointer;">✕</button>` : ''}
     </div>
   `).join('');
@@ -7807,8 +8454,8 @@ function renderImMaintList(){
     <div class="today-card">
       <div class="day-label">${escapeHtml(m.date||'-')} · ${escapeHtml(m.by||'-')}</div>
       <div style="font-size:12.5px;margin-bottom:6px;">${escapeHtml(m.desc||'')}</div>
-      ${m.photo ? `<img src="${m.photo}" style="width:64px;height:64px;object-fit:cover;border-radius:var(--radius-sm);border:1px solid var(--line);cursor:zoom-in;" onclick="openLightbox(this.src)">` : ''}
-      ${isAdmin() ? `<div style="margin-top:6px;"><button class="btn btn-ghost btn-sm btn-row-delete" onclick="removeImMaint('${m.id}')">刪除這筆</button></div>` : ''}
+      ${m.photo ? `<img src="${safeUrl(m.photo)}" style="width:64px;height:64px;object-fit:cover;border-radius:var(--radius-sm);border:1px solid var(--line);cursor:zoom-in;" onclick="openLightbox(this.src)">` : ''}
+      ${isAdmin() ? `<div style="margin-top:6px;"><button class="btn btn-ghost btn-sm btn-row-delete" onclick="removeImMaint(${jsArg(m.id)})">刪除這筆</button></div>` : ''}
     </div>
   `).join('') : `<div class="slot-empty">還沒有維修紀錄</div>`;
 }
@@ -8169,7 +8816,7 @@ function renderImFileList(){
   el.innerHTML = entry.files.length ? entry.files.map((f,idx)=>{
     const canDelete = isAdmin() || f.by_uid===(currentUser&&currentUser.uid);
     return `<div class="im-file-row">
-      <a href="${escapeHtml(f.url)}" target="_blank" rel="noopener" class="im-file-link">${imFileIcon(f.name)} ${escapeHtml(f.name)}</a>
+      <a href="${safeUrl(f.url)||'#'}" target="_blank" rel="noopener" class="im-file-link">${imFileIcon(f.name)} ${escapeHtml(f.name)}</a>
       <span class="im-file-meta">${imFileSizeLabel(f.size)} · ${escapeHtml(f.by||'-')}</span>
       ${canDelete ? `<button class="im-file-del" onclick="removeImFile(${idx})" title="刪除附件">✕</button>` : ''}
     </div>`;
@@ -8316,7 +8963,7 @@ function openCpForm(id, defaultType){
   document.getElementById('cp_consumable_spec').value = (item && type==='consumable') ? item.pack||'' : '';
 
   const instSel = document.getElementById('cp_instrument_select');
-  instSel.innerHTML = INSTRUMENTS_ALL().map(i=>`<option value="${escapeHtml(i.name)}">${escapeHtml(i.name)}(${roomLabel(i.room)})</option>`).join('');
+  instSel.innerHTML = INSTRUMENTS_ALL().map(i=>`<option value="${escapeHtml(i.name)}">${escapeHtml(i.name)}(${escapeHtml(roomLabel(i.room))})</option>`).join('');
   if(item && type==='instrument_maintenance') instSel.value = item.name_zh||'';
   document.getElementById('cp_instrument_issue').value = (item && type==='instrument_maintenance') ? item.note||'' : '';
 
@@ -8460,12 +9107,12 @@ function openCpDetail(id){
   if(item.purity) metaParts.push(`純度 ${escapeHtml(item.purity)}`);
   if((item.package_sizes||[]).length) metaParts.push(`需求包裝 ${escapeHtml(item.package_sizes.join('、'))}`);
   if(item.vendor) metaParts.push(`廠商 ${escapeHtml(item.vendor)}`);
-  if(item.price!=null) metaParts.push(`價格 $${item.price}`);
+  if(item.price!=null) metaParts.push(`價格 $${escapeHtml(item.price)}`);
   if(item.pack) metaParts.push(`包裝 ${escapeHtml(item.pack)}`);
-  if(item.order_sent_date) metaParts.push(`送出日 ${item.order_sent_date}`);
-  if(item.received_date) metaParts.push(`到貨日 ${item.received_date}`);
-  if(item.ready_date) metaParts.push(`入庫確認日 ${item.ready_date}`);
-  if(item.sds_date) metaParts.push(`SDS日期 ${item.sds_date}`);
+  if(item.order_sent_date) metaParts.push(`送出日 ${escapeHtml(item.order_sent_date)}`);
+  if(item.received_date) metaParts.push(`到貨日 ${escapeHtml(item.received_date)}`);
+  if(item.ready_date) metaParts.push(`入庫確認日 ${escapeHtml(item.ready_date)}`);
+  if(item.sds_date) metaParts.push(`SDS日期 ${escapeHtml(item.sds_date)}`);
   if(item.note) metaParts.push(`備註 ${escapeHtml(item.note)}`);
   document.getElementById('cpd_meta').innerHTML = metaParts.map(t=>`<span>${t}</span>`).join('');
 
@@ -8475,39 +9122,39 @@ function openCpDetail(id){
     const cmp = item.comparison_id ? cmpItems.find(c=>c.id===item.comparison_id) : null;
     if(canAct){
       actions.push(cmp
-        ? `<button class="btn btn-primary btn-sm" onclick="closeCpDetail();openCmpDetail('${cmp.id}')">📋 繼續填寫比價資料</button>`
-        : `<button class="btn btn-primary btn-sm" onclick="cpStartComparison('${id}')">🧮 新增比價資料</button>`);
-      actions.push(`<button class="btn btn-ghost btn-sm" onclick="openCpForm('${id}')">編輯</button>`);
+        ? `<button class="btn btn-primary btn-sm" onclick="closeCpDetail();openCmpDetail(${jsArg(cmp.id)})">📋 繼續填寫比價資料</button>`
+        : `<button class="btn btn-primary btn-sm" onclick="cpStartComparison(${jsArg(id)})">🧮 新增比價資料</button>`);
+      actions.push(`<button class="btn btn-ghost btn-sm" onclick="openCpForm(${jsArg(id)})">編輯</button>`);
     }
   }
   if(canAct && item.status==='quoted'){
     const cmp = item.comparison_id ? cmpItems.find(c=>c.id===item.comparison_id) : null;
-    if(cmp) actions.push(`<button class="btn btn-primary btn-sm" onclick="closeCpDetail();openCmpDetail('${cmp.id}')">查看比價結果/決定廠商</button>`);
+    if(cmp) actions.push(`<button class="btn btn-primary btn-sm" onclick="closeCpDetail();openCmpDetail(${jsArg(cmp.id)})">查看比價結果/決定廠商</button>`);
   }
   if(canAct && item.status==='reviewed'){
-    actions.push(`<button class="btn btn-primary btn-sm" onclick="closeCpDetail();openCpOrder('${id}')">標記已訂購</button>`);
+    actions.push(`<button class="btn btn-primary btn-sm" onclick="closeCpDetail();openCpOrder(${jsArg(id)})">標記已訂購</button>`);
     const cmp = item.comparison_id ? cmpItems.find(c=>c.id===item.comparison_id) : null;
-    if(cmp) actions.push(`<button class="btn btn-ghost btn-sm" onclick="closeCpDetail();openCmpDetail('${cmp.id}')">查看比價結果</button>`);
+    if(cmp) actions.push(`<button class="btn btn-ghost btn-sm" onclick="closeCpDetail();openCmpDetail(${jsArg(cmp.id)})">查看比價結果</button>`);
   }
   if(canAct && item.status==='ordered'){
-    actions.push(`<button class="btn btn-primary btn-sm" onclick="closeCpDetail();openCpReceive('${id}')">標記已到貨</button>`);
+    actions.push(`<button class="btn btn-primary btn-sm" onclick="closeCpDetail();openCpReceive(${jsArg(id)})">標記已到貨</button>`);
   }
   if(canAct && item.status==='delivered'){
-    actions.push(`<button class="btn btn-primary btn-sm" onclick="cpMarkReady('${id}')">確認可入庫</button>`);
+    actions.push(`<button class="btn btn-primary btn-sm" onclick="cpMarkReady(${jsArg(id)})">確認可入庫</button>`);
   }
   if(canAct && item.status==='ready'){
     if(item.type==='instrument_maintenance'){
-      actions.push(`<button class="btn btn-primary btn-sm" onclick="cpLogMaintenance('${id}')">登記維修紀錄並完成</button>`);
+      actions.push(`<button class="btn btn-primary btn-sm" onclick="cpLogMaintenance(${jsArg(id)})">登記維修紀錄並完成</button>`);
     }else if(item.type==='consumable'){
-      actions.push(`<button class="btn btn-primary btn-sm" onclick="cpArchiveConsumable('${id}')">確認入庫,完成</button>`);
+      actions.push(`<button class="btn btn-primary btn-sm" onclick="cpArchiveConsumable(${jsArg(id)})">確認入庫,完成</button>`);
     }else{
-      actions.push(`<button class="btn btn-primary btn-sm" onclick="quickAddCpToChem('${id}')">快速新增至藥品清單</button>`);
+      actions.push(`<button class="btn btn-primary btn-sm" onclick="quickAddCpToChem(${jsArg(id)})">快速新增至藥品清單</button>`);
     }
   }
   if(isAdmin()){
     const idx = CP_STAGE_ORDER.indexOf(item.status);
-    if(idx>0) actions.push(`<button class="btn btn-ghost btn-sm" onclick="cpStepBack('${id}')">↩ 回上一步</button>`);
-    actions.push(`<button class="btn btn-ghost btn-sm btn-row-delete" onclick="quickDeleteCp('${id}')">刪除</button>`);
+    if(idx>0) actions.push(`<button class="btn btn-ghost btn-sm" onclick="cpStepBack(${jsArg(id)})">↩ 回上一步</button>`);
+    actions.push(`<button class="btn btn-ghost btn-sm btn-row-delete" onclick="quickDeleteCp(${jsArg(id)})">刪除</button>`);
   }
   document.getElementById('cpDetailActions').innerHTML = actions.join('');
   document.getElementById('cpd_logs').innerHTML = cpLogListHtml(item, '這筆項目在加入操作紀錄功能前建立,沒有歷史紀錄。');
@@ -8614,13 +9261,15 @@ async function cpMarkReady(id){
 }
 
 /* ---- 快速新增至藥品清單 ---- */
-function quickAddCpToChem(id){
+async function quickAddCpToChem(id){
   const item = cpItems.find(i=>i.id===id);
   if(!item) return;
-  cpActionId = id;
+  /* 手上有新增藥品草稿時先問:不問的話,舊草稿會在表單開好之後才套上去,把帶入的名稱整個蓋掉 */
+  if(await loadDraft(CHEM_DRAFT_KEY) && !await confirmDialog('你有一份還沒儲存的新增藥品草稿;繼續的話會用這筆採購項目的資料取代它,確定嗎?', {okText:'取代草稿'})) return;
   closeCpDetail();
   switchPage('chemicals');
-  openForm(null);
+  await openForm(null, {noDraft:true});
+  chemCpSourceId = id;                     // 只有這張表單存好,才把這筆採購項目移除
   document.getElementById('f_name_zh').value = item.name_zh||'';
   document.getElementById('f_name_en').value = item.name_en||'';
   document.getElementById('f_cas').value = item.cas||'';
@@ -8666,7 +9315,8 @@ async function cpArchiveConsumable(id){
 async function removeCpAfterAdd(id){
   if(!id) return;
   const item = cpItems.find(i=>i.id===id);
-  const ok = await fsDeleteItem('chem-purchases', id, item&&item._doc_id);
+  if(!item || item.status!=='ready') return;   // 只移除「確認可入庫」的項目;別人已經處理掉或退回上一步就不動
+  const ok =await fsDeleteItem('chem-purchases', id, item&&item._doc_id);
   if(!ok){ notify('藥品已新增,但原待購買項目未能自動移除,請稍後重試。'); return; }
   cpItems = cpItems.filter(i=>i.id!==id);
   renderCpKanban();
@@ -8677,7 +9327,7 @@ function renderCpKanban(){
   const kanban = document.getElementById('cpKanban');
   kanban.innerHTML = CP_STAGE_ORDER.map(stage=>{
     const list = cpItems.filter(i=>i.status===stage);
-    const cards = list.map(i=>`<div class="cp-card" onclick="openCpDetail('${i.id}')">${escapeHtml(cpCardLabel(i))}</div>`).join('');
+    const cards = list.map(i=>`<div class="cp-card" onclick="openCpDetail(${jsArg(i.id)})">${escapeHtml(cpCardLabel(i))}</div>`).join('');
     return `<div class="cp-col ${CP_STAGE_CLASS[stage]}${list.length?'':' is-empty'}">
       <div class="cp-col-header"><span><span class="cp-dot"></span>${CP_STAGE_LABEL[stage]}</span><span>${list.length}</span></div>
       ${cards}
@@ -8694,7 +9344,7 @@ function renderCpReviewList(){
   const wrap = document.getElementById('cpReviewList');
   wrap.innerHTML = list.length ? list.map(i=>{
     const cmp = i.comparison_id ? cmpItems.find(c=>c.id===i.comparison_id) : null;
-    return `<div class="today-card" style="cursor:pointer;" onclick="${cmp?`openCmpDetail('${cmp.id}')`:`openCpDetail('${i.id}')`}">
+    return `<div class="today-card" style="cursor:pointer;" onclick="${cmp?`openCmpDetail(${jsArg(cmp.id)})`:`openCpDetail(${jsArg(i.id)})`}">
       <div class="day-label">${escapeHtml(cpCardLabel(i))}</div>
       <div style="font-size:11.5px;color:var(--ink-soft);">${cmp ? '點擊查看比價明細並決定廠商' : '尚未建立比價資料,點擊查看詳情'}</div>
     </div>`;
@@ -8713,7 +9363,7 @@ function renderCpCancelledList(){
     <div class="today-card">
       <div class="slot-row" style="border-top:none;">
         <span>${escapeHtml(cpCardLabel(i))}</span>
-        ${isAdmin() ? `<button class="btn btn-ghost btn-sm" onclick="cpRestoreItem('${i.id}')">恢復</button>` : ''}
+        ${isAdmin() ? `<button class="btn btn-ghost btn-sm" onclick="cpRestoreItem(${jsArg(i.id)})">恢復</button>` : ''}
       </div>
     </div>
   `).join('');
@@ -8763,8 +9413,8 @@ function cmpCardHtml(record){
   if(record.decided_vendor){
     priceLine = `<div style="font-size:11.5px;color:var(--pine-deep);margin-top:6px;font-weight:600;">✅ ${escapeHtml(record.decided_vendor)}</div>`;
   }else if(cheapest){
-    priceLine = `<div style="font-size:16px;font-weight:800;color:var(--pine-deep);margin-top:6px;">$${cheapest.unitPrice.value.toFixed(3)}/${cheapest.unitPrice.unit}</div>
-      <div style="font-size:10.5px;color:var(--ink-soft);">🏆 ${escapeHtml(cheapest.vendorLabel)}${cheapest.purity?` · ${escapeHtml(cheapest.purity)}`:''} · ${cheapest.amount}${escapeHtml(cheapest.unit)} · $${cheapest.price}</div>`;
+    priceLine = `<div style="font-size:16px;font-weight:800;color:var(--pine-deep);margin-top:6px;">$${cheapest.unitPrice.value.toFixed(3)}/${escapeHtml(cheapest.unitPrice.unit)}</div>
+      <div style="font-size:10.5px;color:var(--ink-soft);">🏆 ${escapeHtml(cheapest.vendorLabel)}${cheapest.purity?` · ${escapeHtml(cheapest.purity)}`:''} · ${escapeHtml(cheapest.amount)}${escapeHtml(cheapest.unit)} · $${escapeHtml(cheapest.price)}</div>`;
   }else{
     priceLine = `<div style="font-size:11px;color:var(--ink-soft);margin-top:8px;">尚未填價格</div>`;
   }
@@ -8901,10 +9551,10 @@ function buildPurchaseReviewReport(){
         const list=(key && row.byVendor[key]) ? row.byVendor[key] : [];
         const sep=i?'vsep':'';
         if(!list.length){ tr += `<td class="${sep} ${cls}">-</td><td class="${cls}">-</td>`; return; }
-        const priceCell=list.map(e=>`<div class="cellline"><span class="paper-box"></span> <b>$${e.price}</b>${e.purity?`<div class="sub">${escapeHtml(e.purity)}</div>`:''}</div>`).join('');
+        const priceCell=list.map(e=>`<div class="cellline"><span class="paper-box"></span> <b>$${escapeHtml(e.price)}</b>${e.purity?`<div class="sub">${escapeHtml(e.purity)}</div>`:''}</div>`).join('');
         const unitCell=list.map(e=>{
           const isCheapest=d.matrix.cheapest && d.matrix.cheapest.vendorKey===key && d.matrix.cheapest.idx===e.idx;
-          return `<div class="cellline">${e.unitPrice?`$${e.unitPrice.value.toFixed(2)}/${e.unitPrice.unit}${isCheapest?' ★':''}`:'-'}${e.purity?'<div class="sub">&nbsp;</div>':''}</div>`;
+          return `<div class="cellline">${e.unitPrice?`$${e.unitPrice.value.toFixed(2)}/${escapeHtml(e.unitPrice.unit)}${isCheapest?' ★':''}`:'-'}${e.purity?'<div class="sub">&nbsp;</div>':''}</div>`;
         }).join('');
         tr += `<td class="${sep} ${cls}">${priceCell}</td><td class="${cls}">${unitCell}</td>`;
       });
@@ -8959,12 +9609,12 @@ document.getElementById('purchaseReportPrintBtn').addEventListener('click',()=>{
 function cmpEntryRowHtml(vendorKey, entry, idx){
   const e = entry || {purity:'', amount:'', unit:'mL', price:'', note:''};
   const up = cmpEntryUnitPrice(e);
-  return `<div class="cmp-entry-row" data-vendor="${vendorKey}" data-idx="${idx}" style="display:flex;align-items:center;gap:5px;padding:4px 0;flex-wrap:wrap;">
+  return `<div class="cmp-entry-row" data-vendor="${escapeHtml(vendorKey)}" data-idx="${escapeHtml(idx)}" style="display:flex;align-items:center;gap:5px;padding:4px 0;flex-wrap:wrap;">
     <input type="text" class="cmp-e-purity" value="${escapeHtml(e.purity||'')}" placeholder="純度" style="width:76px;">
-    <input type="number" class="cmp-e-amount" value="${(e.amount!==''&&e.amount!=null)?e.amount:''}" placeholder="量" style="width:56px;">
+    <input type="number" class="cmp-e-amount" value="${(e.amount!==''&&e.amount!=null)?escapeHtml(e.amount):''}" placeholder="量" style="width:56px;">
     <select class="cmp-e-unit" style="width:58px;">${CMP_UNIT_OPTIONS.map(u=>`<option value="${u}" ${e.unit===u?'selected':''}>${u}</option>`).join('')}</select>
-    <input type="number" class="cmp-e-price" value="${(e.price!==''&&e.price!=null)?e.price:''}" placeholder="價格" style="width:68px;">
-    <span class="cmp-e-unitprice" style="font-size:10.5px;color:var(--ink-soft);width:66px;flex-shrink:0;">${up?`$${up.value.toFixed(2)}/${up.unit}`:'-'}</span>
+    <input type="number" class="cmp-e-price" value="${(e.price!==''&&e.price!=null)?escapeHtml(e.price):''}" placeholder="價格" style="width:68px;">
+    <span class="cmp-e-unitprice" style="font-size:10.5px;color:var(--ink-soft);width:66px;flex-shrink:0;">${up?`$${up.value.toFixed(2)}/${escapeHtml(up.unit)}`:'-'}</span>
     <input type="text" class="cmp-e-note" value="${escapeHtml(e.note||'')}" placeholder="備註(選填)" style="width:96px;">
     <button type="button" class="btn-icon btn-row-delete" onclick="this.closest('.cmp-entry-row').remove()" title="刪除">✕</button>
   </div>`;
@@ -8977,7 +9627,7 @@ function cmpVendorBlockHtml(vendorKey, label, entries){
   return `<div class="cmp-vendor-block" data-vendor="${vendorKey}" style="border-bottom:1px solid var(--line);padding:10px 0;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
       ${nameInput}
-      <button type="button" class="btn btn-ghost btn-sm" onclick="cmpAddEntryRow('${vendorKey}')">＋ 新增規格</button>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="cmpAddEntryRow(${jsArg(vendorKey)})">＋ 新增規格</button>
     </div>
     <div class="cmp-entries" data-vendor="${vendorKey}">${rows}</div>
   </div>`;
@@ -9184,8 +9834,8 @@ function renderCmpResultTable(record){
           e.purity || ''
         ].filter(Boolean).join('　');
         return `<label class="cmp-cell">
-          <input type="radio" name="cmp_decision" value="${v}::${e.idx}" ${checked?'checked':''}>
-          <span class="cmp-cell-main">$${e.price}</span>${cmpNoteTip(e.note)}
+          <input type="radio" name="cmp_decision" value="${escapeHtml(v)}::${escapeHtml(e.idx)}" ${checked?'checked':''}>
+          <span class="cmp-cell-main">$${escapeHtml(e.price)}</span>${cmpNoteTip(e.note)}
           ${sub?`<span class="cmp-cell-sub">${escapeHtml(sub)}</span>`:''}
         </label>`;
       }).join('');
@@ -9939,8 +10589,9 @@ function dashGreetingText(){
   const timeGreet = h<5 ? '夜深了' : h<11 ? '早安' : h<14 ? '午安' : h<18 ? '下午好' : '晚安';
   return `${timeGreet},${escapeHtml(name)}`;
 }
+/* title 由呼叫端跳脫好(有時帶標記);meta 一律是純文字,在這裡跳脫。onclick 只能放程式裡寫死的字串 */
 function dashRow(title, meta, onclick){
-  return `<div class="dash-row" onclick="${onclick}"><span class="dash-row-title">${title}</span><span class="dash-row-meta">${meta||''}</span></div>`;
+  return `<div class="dash-row" onclick="${onclick}"><span class="dash-row-title">${title}</span><span class="dash-row-meta">${escapeHtml(meta||'')}</span></div>`;
 }
 function renderDashboard(){
   if(!currentUser) return;
@@ -9972,7 +10623,7 @@ function renderDashboard(){
     { n: myTodosSoon.length, label:'待辦即將到期', cls:'info', page:'todoList' }
   ].filter(c=>c.n>0);
   document.getElementById('dashAlertRow').innerHTML = chips.length
-    ? chips.map(c=>`<div class="dash-chip ${c.cls}" onclick="switchPage('${c.page}')"><span class="n">${c.n}</span>${c.label}</div>`).join('')
+    ? chips.map(c=>`<div class="dash-chip ${c.cls}" onclick="switchPage(${jsArg(c.page)})"><span class="n">${c.n}</span>${c.label}</div>`).join('')
     : '<div class="dash-ok-strip">✓ 目前沒有需要立即處理的警示</div>';
 
   // ---- 我的待辦事項 ----
@@ -10004,7 +10655,7 @@ function renderDashboard(){
 
   // ---- 需要注意的藥品 ----
   const chemAlertRows = [
-    ...lowStockItems.slice(0,4).map(i=> dashRow(`${escapeHtml(i.name_zh)}(低庫存)`, `${i.quantity ?? '-'} ${escapeHtml(i.unit||'')}`, `switchPage('chemicals')`)),
+    ...lowStockItems.slice(0,4).map(i=> dashRow(`${escapeHtml(i.name_zh)}(低庫存)`, `${i.quantity ?? '-'} ${i.unit||''}`, `switchPage('chemicals')`)),
     ...sdsExpiredItems.slice(0,4).map(i=> dashRow(`${escapeHtml(i.name_zh)}(SDS需更新)`, i.sds_date||'', `switchPage('chemPurchase')`))
   ];
   document.getElementById('dashChemAlerts').innerHTML = chemAlertRows.length ? chemAlertRows.join('') : '';
@@ -12362,10 +13013,18 @@ function assayRemoveCol(s,j){
 /* 從焦點格開始把 Excel 範圍填進去;整塊帶著左邊標籤欄(Con.、RAW1、Blank、空白)也行 */
 function assayPasteAt(s,r0,j0,text){
   const ROWS=s==='std'?AS_STD_ROWS:AS_SMP_ROWS;
-  let rows=text.replace(/\r/g,'').split('\n').filter(l=>l.trim()!=='').map(l=>(l.includes('\t')?l.split('\t'):l.trim().split(/[,\s]+/)).map(c=>c.trim()));
-  if(rows.length>=2 && rows.every(r=>asNum(r[0])===null)) rows=rows.map(r=>r.slice(1));
+  /* 只去掉結尾的空列(Excel 複製時最後會多一個換行)。中間的空列要留著佔一列:
+     例如只做二重複、RAW3 那列空著,以前把它濾掉,下面的 Blank 就往上補進 RAW3 */
+  let lines=text.replace(/\r/g,'').split('\n');
+  while(lines.length && lines[lines.length-1].trim()==='') lines.pop();
+  let rows=lines.map(l=> l.trim()==='' ? [] : (l.includes('\t')?l.split('\t'):l.trim().split(/[,\s]+/)).map(c=>c.trim()));
+  const filledRows=rows.filter(r=>r.some(c=>c!==''));
+  if(filledRows.length>=2 && filledRows.every(r=>asNum(r[0])===null)) rows=rows.map(r=>r.slice(1));
   else if(rows.length===1 && rows[0].length>1 && asNum(rows[0][0])===null && (r0!=='name'||rows[0][0]==='')) rows=[rows[0].slice(1)];
   rows.forEach(r=>{ while(r.length&&r[r.length-1]==='') r.pop(); });
+  /* 跟 Excel 貼上一個矩形一樣:範圍內的空格要清掉,不能留著上一批的數字(例如這批沒做的 RAW3) */
+  const pasteWidth=Math.max(0,...rows.map(r=>r.length));
+  rows.forEach(r=>{ while(r.length<pasteWidth) r.push(''); });
   const i0=ROWS.indexOf(r0); let filled=0;
   rows.forEach((cells,i)=>{ const rk=ROWS[i0+i]; if(!rk) return; cells.forEach((c,k)=>{ assayEnsureCol(s,j0+k); assaySetCell(s,rk,j0+k,c); filled++; }); });
   return filled;
@@ -12539,10 +13198,10 @@ function renderGallery(){
   empty.style.display='none';
   grid.innerHTML=list.map(s=>`
     <div class="gal-card" data-gal-id="${escapeHtml(s.id)}">
-      <div class="gal-thumb">${s.svg||''}</div>
+      <div class="gal-thumb">${sanitizeSvg(s.svg)}</div>
       <div class="gal-meta">
         <div class="gt" title="${escapeHtml(s.name)}">${escapeHtml(s.name)}</div>
-        <div class="gm"><span class="gal-type">${SPEC_TYPE_LABEL[s.type]||s.type}</span>${s.bind_label?'<span>'+escapeHtml(s.bind_label)+'</span>':''}<span>${escapeHtml(s.created_by||'')}</span><span>${(s.created_at||'').slice(0,10)}</span></div>
+        <div class="gm"><span class="gal-type">${escapeHtml(SPEC_TYPE_LABEL[s.type]||s.type)}</span>${s.bind_label?'<span>'+escapeHtml(s.bind_label)+'</span>':''}<span>${escapeHtml(s.created_by||'')}</span><span>${escapeHtml(String(s.created_at||'').slice(0,10))}</span></div>
       </div>
     </div>`).join('');
   grid.querySelectorAll('.gal-card').forEach(c=>c.onclick=()=>openGalDetail(c.dataset.galId));
@@ -12650,17 +13309,17 @@ function openGalDetail(id){
       ${canManage?'<button class="btn btn-ghost btn-sm" id="galRename" title="改圖譜名稱">✎ 改名</button>':''}
     </div>
     <div style="font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-bottom:14px;">
-      ${SPEC_TYPE_LABEL[rec.type]||rec.type} · ${fmtDateTime(rec.created_at)} · ${escapeHtml(rec.created_by||'')}
+      ${escapeHtml(SPEC_TYPE_LABEL[rec.type]||rec.type)} · ${escapeHtml(fmtDateTime(rec.created_at))} · ${escapeHtml(rec.created_by||'')}
       ${rec.bind_label?' · '+escapeHtml(rec.bind_label):''}
     </div>
     ${rec.svg?`<div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
       <button class="btn btn-ghost btn-sm" id="galCopyImg">📋 複製圖片</button>
     </div>`:''}
-    <div class="gd-svg">${rec.svg||''}</div>
+    <div class="gd-svg">${sanitizeSvg(rec.svg)}</div>
     ${files.length?`<div class="section-title">原始檔</div><div class="gd-files">${files.map((f,i)=>{
         const ok=loadRe.test(f.name||'')&&!!f.url;
         const on=ok&&(!figPaths||figPaths.has(f.path));
-        return `<div class="gd-file"><input type="checkbox" class="gd-pick" data-gal-file="${i}" ${ok?(on?'checked':''):'disabled title="這種檔不能送回圖譜分析"'}><span class="nm">${escapeHtml(f.name||'')}</span><span class="sz">${fmtFileSize(f.size)}</span><a class="btn btn-ghost btn-sm" href="${escapeHtml(f.url||'#')}" target="_blank" rel="noopener" download="${escapeHtml(f.name||'')}">下載</a></div>`;
+        return `<div class="gd-file"><input type="checkbox" class="gd-pick" data-gal-file="${i}" ${ok?(on?'checked':''):'disabled title="這種檔不能送回圖譜分析"'}><span class="nm">${escapeHtml(f.name||'')}</span><span class="sz">${fmtFileSize(f.size)}</span><a class="btn btn-ghost btn-sm" href="${safeUrl(f.url)||'#'}" target="_blank" rel="noopener" download="${escapeHtml(f.name||'')}">下載</a></div>`;
       }).join('')}</div>
       ${anyLoadable?`<div class="gd-files-act"><button class="btn btn-primary btn-sm" id="galToAnalysis">送到圖譜分析</button>
         <span class="ftir-hint">${rec.type==='gc'?'勾選的檔會在 GC 工具還原成樣品(含成分名稱與設定)。':(canManage?'勾選的檔會載進圖譜分析;調整後按「更新此圖譜」覆蓋這一張(疊圖也可以)。':'勾選的檔會載進圖譜分析,可以重新分析後另存一張。')}</span></div>`:''}`:''}
