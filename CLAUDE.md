@@ -68,7 +68,10 @@
 - **每個項目一份文件**,分散在各 collection(不是每個 collection 一份大文件)。原因:embedded base64 照片會讓單一文件逼近 1MB 上限
 - 共用設定用 blob 文件存在 `lab-data/` 底下(如 `system-settings-data`),用 `window.storage.set(KEY, JSON.stringify(data), true)` 寫入、`watchBlob(KEY, cb)` 即時同步
 - 扣庫存、值週打勾、圖書借還都用 `runTransaction`,避免並發覆蓋
-- 整批覆蓋(`fsReplaceAll`)只用於匯入備份,平常新增編輯都是單筆 `fsSetItem`
+- 整批覆蓋(`fsReplaceAll`)只用於匯入備份,平常新增編輯都是單筆 `fsSetItem`。`fsReplaceAll` 依筆數(400)與內容大小(約 8 MB)分批送出,圖譜一筆就可能接近 900 KB
+- `fsSetItem` 遇到同一筆資料正在存:內容完全相同(連點兩下)就共用前一次的結果;內容不同就排在前一次後面再寫一次(前一次是新增時,沿用它拿到的文件代號)。不要改回一律共用:斷線時 `set()` 要等連線回來才結束,使用者重開同一筆補資料再存,第二份內容會從來沒送出
+- **全部資料備份**(帳號管理頁):匯出前一定要 `appDataLoaded`(資料沒載完時記憶體裡的清單是空的,拿那種檔還原會清掉整個集合);圖譜(`spectra`)不在開頁時的初次載入,匯出當下直接向資料庫讀;GC 的四份共用資料原樣存字串在 `raw_blobs`,還原時原樣寫回;每個集合另記 `counts`。匯入前確認框列出各集合「備份幾筆 / 目前幾筆」,備份裡是空陣列而現在有資料的集合不動,並先自動下載一份目前的資料(`SFPLAB匯入前自動備份_日期.json`)。新增 collection 或共用 blob 時要記得加進 `FULL_BACKUP_COLLECTIONS` / `FULL_BACKUP_BLOBS` / `FULL_BACKUP_RAW_BLOBS`,並在 `FULL_BACKUP_LABELS` 給中文名稱。照片、儀器附件與圖譜原始檔在 Storage,不在備份檔裡
+- **換頁會收起所有彈窗**(`closeAllModals`):藥品、試材、樣品表單走各自的關閉函式(`FORM_CLOSERS`),新增模式才會把最後打的字存進草稿。快速搜尋(Ctrl+K)疊在表單上面也叫得出來,選了項目會換頁,所以 `cmdkRun` 先用 `dirtyFormOverlay()` 看有沒有沒存的修改,有就先問
 - **編號搶號(`id-claims` 集合)**:`CHEM-0012`、`W_Au_L_MeAcE_01` 這類「前綴+序號」的 id 是前端從清單取最大值加一算出來的,兩個人同一瞬間新增會算出同一號。`fsClaimFreeId` 先查該集合有沒有同 id 的既有文件,再用 transaction 在 `id-claims` 建「集合__編號」的佔位文件;搶輸的那邊會自動往下一號試並 toast 告知。正式寫入失敗時佔位文件會放掉。規則還沒放行 `id-claims` 或離線時 transaction 失敗,就退回只做查詢檢查,新增不會因此壞掉。佔位文件刻意不隨項目刪除而刪除,已印成 QR 的編號不該被重用
 
 ### 權限模型
@@ -149,7 +152,7 @@
 - **原始檔跟圖綁在一起**:存入圖譜時,FTIR 與 UV-Vis 把上傳的原始檔、GC 把每個樣品的完整匯出 CSV,用 `uploadSpectrumFiles()` 存到 Storage 的 `lab-photos/spectra-files/{uid}/{specId}/…`(與照片、儀器附件同根目錄、同規則),清單記在文件的 `files` 欄位;詳細頁列出可下載,刪圖譜時一併刪檔。舊文件沒有 `files`,讀取端要容忍
 
 ### UV-Vis(圖譜分析頁的 UV-Vis 子標籤)
-- 讀 Analytik Jena SPECORD 50 PLUS(WinASPECT)的 `.dat`:ASCII 標頭(NPOINTS、XUNITS、YUNITS…)後接 `XDATA=` / `YDATA=` 各 NPOINTS 個小端序 float32(另有內容相同的 OrgXData / OrgYData);也收兩欄「波長,數值」的 .csv / .txt
+- 讀 Analytik Jena SPECORD 50 PLUS(WinASPECT)的 `.dat`:ASCII 標頭(NPOINTS、XUNITS、YUNITS…)後接 `XDATA=` / `YDATA=` 各 NPOINTS 個小端序 float32(另有內容相同的 OrgXData / OrgYData);也收兩欄「波長,數值」的 .csv / .txt。標籤後面可能先接換行才是資料,換行有幾個位元組只用 XDATA 判斷一次(4×NPOINTS 個位元組後面接著 YDATA=),YDATA 用同樣的位移;不要改回「遇到 CR / LF 就跳過」,吸光值第一個位元組剛好是 0x0A / 0x0D 時整條光譜會錯位(約每 128 個檔一個)。疊圖顏色用 `UV_COLORS`(10 色)取餘數
 - **原始單位**:.dat 讀檔頭 YUNITS;兩欄的 CSV / TXT 沒有正式單位,`uvGuessUnit` 先看檔頭字樣、再看數值範圍(最大值 > 5 當百分比)猜一個,匯入時用 `uvUnitDialog` 一個檔一列請使用者確認(取消就不匯入那些文字檔)。文字檔在 `UV_LIB` 裡另存 `raw` 與 `srcUnit`,光譜清單上有單位選單可事後改,改了用 `uvRawToAbs` 重新換算
 - 匯入時一律換算成吸光度保存(%T、%R 用 −log₁₀(v/100)),三種顯示模式(吸收度、%T、KM)都從吸光度算;KM 與 FTIR 共用 `ftirTransform(x,y,'km')`,找峰共用 `ftirDetect`(%T 模式先反相找谷)
 - 同軸疊圖(不像 FTIR 會位移堆疊)、λmax 標籤水平放在峰上並高低錯開、可設顯示波長範圍;存入圖譜的 type 是 `uv`,peaks 用 `{sample,wn,val}`,藝廊詳細頁對 uv 顯示「λmax / 數值 / 樣品」欄
